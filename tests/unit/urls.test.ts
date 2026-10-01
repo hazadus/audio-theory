@@ -1,6 +1,6 @@
 // Проверяет построение URL: базовый путь, query, якоря, внешние и относительные адреса.
 import { describe, expect, it } from 'vitest';
-import { withBase } from '../../src/lib/urls';
+import { withBase } from '@/lib/urls';
 
 describe('withBase', () => {
   it.each([

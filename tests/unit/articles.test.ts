@@ -1,7 +1,7 @@
 // Проверяет схему frontmatter статьи, уникальность slug и справочник групп.
 import { describe, expect, it } from 'vitest';
-import { articleSchema, assertUniqueSlugs } from '../../src/lib/articles';
-import { topics } from '../../src/data/topics';
+import { articleSchema, assertUniqueSlugs } from '@/lib/articles';
+import { topics } from '@/data/topics';
 
 const valid = {
   slug: 'sampling',
