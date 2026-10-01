@@ -28,6 +28,9 @@ src/
     headings.ts ✅                   # Оглавление H2/H3 и уникальность якорей
     toc.ts ✅                        # Текущий раздел и подпись оглавления
     toc-controller.ts ✅             # Выделение раздела и раскрытие оглавления
+    heading-links.ts ✅              # Полный адрес раздела для копирования
+    heading-links-controller.ts ✅   # Копирование адреса по нажатию на «#» и статус
+    rehype-heading-links.mjs ✅      # Ссылка-якорь «#» в заголовках H2–H4
     article-content.ts ✅            # Источники, ссылки, листинги и нумерация блоков
     remark-heading-anchors.mjs ✅    # Синтаксис {#anchor} в заголовках MDX
     reading-time.ts ✅               # Подсчёт слов и время чтения по MDX
@@ -79,6 +82,7 @@ tests/                               # Unit-тесты и браузерные �
   unit/toc.test.ts ✅                 # Текущий раздел и подпись оглавления
   unit/article-content.test.ts ✅     # Правила содержимого статьи
   unit/heading-anchors.test.ts ✅     # Синтаксис {#anchor} и ошибки
+  unit/heading-links.test.ts ✅       # Адрес раздела и ссылка в заголовке
   unit/reading-time.test.ts ✅        # Подсчёт слов и оценка времени чтения
   unit/navigation.test.ts ✅          # Активный пункт навигации под префиксом
   e2e/layout.spec.ts ✅               # Шапка, подвал, ссылка перехода, компактное меню

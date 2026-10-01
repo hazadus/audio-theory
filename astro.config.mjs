@@ -4,6 +4,7 @@ import { unified } from '@astrojs/markdown-remark';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import remarkHeadingAnchors from './src/lib/remark-heading-anchors.mjs';
+import rehypeHeadingLinks from './src/lib/rehype-heading-links.mjs';
 import rehypeMathErrors from './src/lib/rehype-math-errors.mjs';
 import rehypeSiteUrls from './src/lib/rehype-site-urls.mjs';
 import { siteConfig } from './src/site.config.ts';
@@ -34,6 +35,7 @@ export default defineConfig({
       rehypePlugins: [
         [rehypeKatex, { output: 'htmlAndMathml', strict: 'ignore', trust: false }],
         rehypeMathErrors,
+        rehypeHeadingLinks,
         [rehypeSiteUrls, { getBase: () => resolvedBase }],
       ],
     }),

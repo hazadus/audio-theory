@@ -125,12 +125,15 @@ const links = (items: typeof data.related) =>
       </article>
     </div>
   </main>
+  <div class="copy-status" role="status" data-copy-status hidden></div>
 </BaseLayout>
 
 <script>
+  import { initHeadingLinks } from '@/lib/heading-links-controller';
   import { initToc } from '@/lib/toc-controller';
 
   initToc();
+  initHeadingLinks();
 </script>
 
 <style>
@@ -511,6 +514,64 @@ const links = (items: typeof data.related) =>
   .prose :global(h3),
   .prose :global(h4) {
     scroll-margin-top: 88px;
+  }
+
+  /* Ссылка `#` видна при наведении на заголовок и при фокусе; на тач-экране без hover остаётся приглушённой. */
+  .prose :global(.heading-link) {
+    margin-inline-start: 0.4em;
+    padding-inline: 0.2em;
+    border-radius: var(--radius-sm);
+    color: var(--color-text-muted);
+    font-family: var(--font-ui);
+    font-size: 0.75em;
+    font-weight: 400;
+    text-decoration: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .prose :global(.heading-link::before) {
+    content: '#';
+  }
+
+  .prose :global(:is(h2, h3, h4):hover .heading-link),
+  .prose :global(.heading-link:focus-visible) {
+    opacity: 1;
+  }
+
+  .prose :global(.heading-link:hover) {
+    color: var(--color-link);
+  }
+
+  @media (hover: none) {
+    .prose :global(.heading-link) {
+      opacity: 0.6;
+    }
+  }
+
+  .copy-status {
+    position: fixed;
+    inset-block-end: var(--space-5);
+    inset-inline: var(--space-4);
+    z-index: var(--z-toast);
+    width: fit-content;
+    max-width: calc(100vw - 2 * var(--space-4));
+    margin-inline: auto;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    font-family: var(--font-ui);
+    font-size: var(--text-sm);
+  }
+
+  .copy-status[data-state='success'] {
+    background: var(--color-success-bg);
+    color: var(--color-success);
+  }
+
+  .copy-status[data-state='error'] {
+    background: var(--color-surface-raised);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
   }
 
   .prose > :global(ul),
