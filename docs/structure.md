@@ -5,8 +5,8 @@
 ```text
 .agents/skills/{commit,execute,issue}/SKILL.md ✅ # Скиллы разработки Codex
 .claude/skills/{commit,execute,issue}/SKILL.md ✅ # Скиллы разработки Claude Code
-.agents/skills/write-article/SKILL.md   # Вход в скилл Codex
-.claude/skills/write-article/SKILL.md   # Вход в скилл Claude Code
+.agents/skills/write-article/SKILL.md ✅ # Вход в скилл Codex
+.claude/skills/write-article/SKILL.md ✅ # Вход в скилл Claude Code
 .github/workflows/pages.yml ✅        # Проверки, сборка и деплой
 docs/ ✅                             # Документация проекта
   overview.md ✅                    # Обзор устройства отдельных частей сайта
