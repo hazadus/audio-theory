@@ -20,7 +20,11 @@ jobs:
   build:
     name: Проверки и сборка
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 10
+    # Playwright 1.63.0-noble: браузеры и библиотеки уже установлены в образе.
+    container:
+      image: mcr.microsoft.com/playwright@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27
+      options: --init --ipc=host
     steps:
       - name: Получить полную Git-историю
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -52,9 +56,6 @@ jobs:
 
       - name: Проверить MDX, формулы и изоляцию тестовых материалов
         run: npm run test:mdx
-
-      - name: Установить браузеры и системные библиотеки
-        run: npx playwright install --with-deps chromium firefox webkit
 
       # Команда проверяет ссылки и ресурсы, строит Pagefind и тестирует обе сборки.
       - name: Собрать и проверить сайт в корне и под префиксом
