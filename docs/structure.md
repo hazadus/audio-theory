@@ -46,6 +46,7 @@ src/
     theme.ts ✅                      # Режимы темы, чтение и запись выбора, ранний скрипт
     theme-controller.ts ✅           # Общее состояние темы в окне для всех контролов
     navigation.ts ✅                 # Пункты основной навигации и активный пункт
+    search-dialog.ts ✅              # Правила открытия поиска по «/»
     urls.ts ✅                       # Построитель URL с базовым путём
     rehype-site-urls.mjs ✅           # Преобразование адресов в Markdown/MDX
     rehype-math-errors.mjs ✅         # Ошибки формул блокируют сборку
@@ -71,6 +72,8 @@ src/
     Equation.astro ✅                # Блочная формула с номером, прокруткой и <dl> обозначений
     Figure.astro ✅                  # Статичный рисунок: SVG с названием и описанием, подпись «Рис. N.»
     DataTable.astro ✅               # Таблица с caption, scope, закреплённым первым столбцом и прокруткой
+    SearchButton.astro ✅            # Кнопка поиска в шапке
+    SearchDialog.astro ✅            # Диалог поиска на <dialog>
     ThemeToggle.astro ✅             # Кнопка выбора светлой, тёмной и автоматической темы
   styles/                            # Токены, базовые стили и оформление статьи
     tokens.css ✅                    # Токены дизайн-системы для светлой и тёмной тем
@@ -93,6 +96,7 @@ tests/                               # Unit-тесты и браузерные �
   unit/artifact.test.ts ✅            # Цели ссылок и блокировка неверной сборки
   unit/production.test.ts ✅          # Smoke-команда, HTTP-ошибки и обязательные ресурсы
   e2e/home.spec.ts ✅                 # Начальная страница на статических сборках
+  e2e/search-dialog.spec.ts ✅        # Диалог поиска: фокус, закрытие, «/»
   e2e/search.spec.ts ✅               # Настоящий API Pagefind в корне и под префиксом
   fixtures/artifact/ ✅              # Контрольная сборка с ошибочной внутренней ссылкой
   unit/articles.test.ts ✅            # Схема статьи, slug и группы

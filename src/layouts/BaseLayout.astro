@@ -2,6 +2,7 @@
 // Общий каркас страницы: тема до CSS, ссылка перехода к содержимому, шапка и подвал.
 // Страница выводит основное содержимое в <main id="content">.
 import '@/styles/base.css';
+import SearchDialog from '@/components/SearchDialog.astro';
 import SiteFooter from '@/components/SiteFooter.astro';
 import SiteHeader from '@/components/SiteHeader.astro';
 import { themeInitScript } from '@/lib/theme';
@@ -30,6 +31,7 @@ const { title, description } = Astro.props;
     <SiteHeader />
     <slot />
     <SiteFooter />
+    <SearchDialog />
   </body>
 </html>
 

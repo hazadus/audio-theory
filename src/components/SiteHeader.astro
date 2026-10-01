@@ -1,6 +1,7 @@
 ---
 // Шапка: знак, основная навигация, тема и компактное меню. Пункты берутся из navigation.ts.
 import Icon from '@/components/Icon.astro';
+import SearchButton from '@/components/SearchButton.astro';
 import ThemeChoice from '@/components/ThemeChoice.astro';
 import ThemeToggle from '@/components/ThemeToggle.astro';
 import { isActive, navItems } from '@/lib/navigation';
@@ -49,6 +50,7 @@ const items = navItems.map((item) => ({
       </div>
     </div>
     <div class="actions">
+      <SearchButton />
       <div class="theme-wide">
         <ThemeToggle />
       </div>

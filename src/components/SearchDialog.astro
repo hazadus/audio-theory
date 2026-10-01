@@ -1,0 +1,349 @@
+---
+// Диалог поиска на нативном <dialog>: showModal даёт ограничение фокуса и недоступный фон.
+// Здесь только оболочка; выдача Pagefind и выбор результатов добавляются отдельными задачами.
+import Icon from '@/components/Icon.astro';
+---
+
+<dialog
+  class="search-dialog"
+  data-search-dialog
+  aria-labelledby="search-title"
+  data-pagefind-ignore
+>
+  <div class="panel">
+    <h2 id="search-title" class="visually-hidden">
+      Поиск
+    </h2>
+    <form class="field" role="search" data-search-form>
+      <span class="field-icon">
+        <Icon name="search" size={20} />
+      </span>
+      <input
+        type="text"
+        name="q"
+        data-search-input
+        aria-label="Поиск по материалам"
+        placeholder="Статья или термин"
+        autocomplete="off"
+        autocapitalize="off"
+        spellcheck="false"
+        enterkeyhint="search"
+      />
+      <kbd class="esc" aria-hidden="true">
+        Esc
+      </kbd>
+      <button type="button" class="cancel" data-search-close>
+        <span class="cancel-icon">
+          <Icon name="x" size={18} />
+        </span>
+        <span class="cancel-label">Отмена</span>
+      </button>
+    </form>
+    <div class="body" data-search-body>
+      <p class="hint">
+        Ищем по названиям, тексту статей и английским терминам. Например: «частота дискретизации»,
+        «Nyquist», «аналоговый сигнал».
+      </p>
+    </div>
+    <ul class="keys" aria-label="Горячие клавиши">
+      <li>
+        <kbd>↑</kbd>
+        <kbd>↓</kbd>выбор
+      </li>
+      <li>
+        <kbd>Enter</kbd>открыть
+      </li>
+      <li>
+        <kbd>Esc</kbd>закрыть
+      </li>
+    </ul>
+  </div>
+</dialog>
+
+<script>
+  import { shouldOpenSearch } from '@/lib/search-dialog';
+
+  const dialog = document.querySelector<HTMLDialogElement>('[data-search-dialog]');
+  const input = dialog?.querySelector<HTMLInputElement>('[data-search-input]');
+
+  if (dialog && input) {
+    let opener: HTMLElement | null = null;
+    let pressStartedOnBackdrop = false;
+
+    // Элемент для возврата фокуса: нажатая кнопка (Safari не фокусирует кнопку мышью) или текущий фокус.
+    const open = (from?: HTMLElement) => {
+      if (dialog.open) return;
+      const active = document.activeElement;
+      opener = from ?? (active instanceof HTMLElement && active !== document.body ? active : null);
+      document.documentElement.setAttribute('data-search-open', '');
+      dialog.showModal();
+      input.focus();
+    };
+
+    for (const trigger of document.querySelectorAll<HTMLElement>('[data-search-open]')) {
+      trigger.hidden = false;
+      trigger.addEventListener('click', () => open(trigger));
+    }
+
+    document.addEventListener('keydown', (event) => {
+      if (!shouldOpenSearch(event)) return;
+      event.preventDefault();
+      open();
+    });
+
+    // Tab по кругу внутри окна: без этого фокус из последнего элемента уходит в интерфейс браузера.
+    dialog.addEventListener('keydown', (event) => {
+      if (event.key !== 'Tab') return;
+      const items = [
+        ...dialog.querySelectorAll<HTMLElement>('input, button:not([disabled]), a[href]'),
+      ].filter((el) => el.getClientRects().length > 0);
+      if (items.length === 0) return;
+      // Переход делаем сами: Safari по умолчанию пропускает кнопки, и Tab выводил бы фокус из окна.
+      const index = items.indexOf(document.activeElement as HTMLElement);
+      const step = event.shiftKey ? -1 : 1;
+      const next = items[(index + step + items.length) % items.length];
+      event.preventDefault();
+      next.focus();
+    });
+
+    dialog.querySelector('[data-search-close]')?.addEventListener('click', () => dialog.close());
+    // Закрытие по затемнению: нажатие и отпускание должны оба прийтись на сам <dialog>, а не на панель.
+    dialog.addEventListener('pointerdown', (event) => {
+      pressStartedOnBackdrop = event.target === dialog;
+    });
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog && pressStartedOnBackdrop) dialog.close();
+    });
+    dialog.querySelector('[data-search-form]')?.addEventListener('submit', (event) => {
+      event.preventDefault();
+    });
+
+    // close срабатывает и для Esc, и для кнопки, и для затемнения: общий возврат состояния.
+    dialog.addEventListener('close', () => {
+      document.documentElement.removeAttribute('data-search-open');
+      if (opener?.isConnected) opener.focus();
+      opener = null;
+    });
+  }
+</script>
+
+<style is:global>
+  /* Прокрутка страницы под открытым диалогом заблокирована. */
+  html[data-search-open] {
+    overflow: hidden;
+  }
+
+  .search-dialog {
+    box-sizing: border-box;
+    width: min(640px, 100% - 2 * var(--page-gutter));
+    max-width: none;
+    max-height: calc(100dvh - 12vh - var(--space-6));
+    margin: 12vh auto 0;
+    padding: 0;
+    overflow: hidden;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-xl);
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-lg);
+    color: var(--color-text);
+    font-family: var(--font-ui);
+  }
+
+  .search-dialog::backdrop {
+    background: var(--color-scrim);
+  }
+
+  /* Высоту ограничивает панель, а не <dialog>: Safari сворачивает flex: 1 в автовысоте до 0. */
+  .search-dialog .panel {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100dvh - 12vh - var(--space-6));
+  }
+
+  .search-dialog .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .search-dialog .field {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 10px;
+    height: 56px;
+    margin: 0;
+    padding: 0 12px 0 16px;
+    border-bottom: var(--border-width) solid var(--color-border);
+  }
+
+  .search-dialog .field-icon {
+    display: inline-flex;
+    color: var(--color-text-muted);
+  }
+
+  .search-dialog input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-text);
+    font: inherit;
+    font-size: 1.125rem;
+  }
+
+  .search-dialog input:focus,
+  .search-dialog input:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+
+  /* Рамка фокуса у поля заменена видимой линией под строкой, чтобы фокус не пропадал. */
+  .search-dialog .field:focus-within {
+    box-shadow: inset 0 calc(-1 * var(--border-width-strong)) 0 var(--color-focus);
+  }
+
+  .search-dialog input::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  .search-dialog kbd {
+    padding: 3px 6px;
+    border: var(--border-width) solid var(--color-border);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    background: var(--color-surface);
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1;
+  }
+
+  .search-dialog .cancel {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+  }
+
+  .search-dialog .cancel:hover {
+    color: var(--color-text);
+  }
+
+  .search-dialog .cancel-icon {
+    display: inline-flex;
+  }
+
+  /* На широком экране подпись «Отмена» остаётся только как доступное имя кнопки с крестиком. */
+  .search-dialog .cancel-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .search-dialog .body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: var(--space-4) 18px;
+  }
+
+  .search-dialog .hint {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+    hyphens: manual;
+    line-height: 1.5;
+  }
+
+  .search-dialog .keys {
+    display: flex;
+    flex: none;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    margin: 0;
+    padding: 10px 16px;
+    border-top: var(--border-width) solid var(--color-border);
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    list-style: none;
+  }
+
+  .search-dialog .keys li {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .search-dialog .keys kbd {
+    padding: 1px 5px;
+    border-bottom-width: var(--border-width);
+    background: transparent;
+  }
+
+  /* Смартфон: весь экран, без скругления; в верхней строке поле и «Отмена». */
+  @media (width < 600px) {
+    .search-dialog {
+      width: 100%;
+      height: 100dvh;
+      max-height: none;
+      margin: 0;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    .search-dialog .panel {
+      height: 100%;
+      max-height: none;
+    }
+
+    .search-dialog .field {
+      height: auto;
+      padding: 8px 8px 8px 14px;
+    }
+
+    .search-dialog input {
+      height: 44px;
+      font-size: 1.25rem;
+    }
+
+    .search-dialog .esc,
+    .search-dialog .keys,
+    .search-dialog .cancel-icon {
+      display: none;
+    }
+
+    .search-dialog .cancel {
+      padding: 0 10px;
+      color: var(--color-link);
+      font-size: var(--text-ui);
+      font-weight: 500;
+    }
+
+    .search-dialog .cancel-label {
+      position: static;
+      width: auto;
+      height: auto;
+      margin: 0;
+      clip-path: none;
+    }
+  }
+</style>

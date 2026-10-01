@@ -1,0 +1,94 @@
+---
+// Кнопка поиска в шапке: на широком экране поле-подсказка с «/», на узком только иконка.
+// Без JS скрыта; вместо неё показано пояснение. Диалог открывает любой элемент с data-search-open.
+import Icon from '@/components/Icon.astro';
+---
+
+<button
+  type="button"
+  class="search-button"
+  data-search-open
+  aria-label="Поиск"
+  aria-keyshortcuts="/"
+  hidden
+>
+  <Icon name="search" size={18} />
+  <span class="label" aria-hidden="true">
+    Поиск
+  </span>
+  <kbd aria-hidden="true">/</kbd>
+</button>
+<noscript>
+  <span class="no-js">Поиск работает только с JavaScript.</span>
+</noscript>
+
+<style>
+  .search-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text);
+    cursor: pointer;
+  }
+
+  .search-button[hidden] {
+    display: none;
+  }
+
+  .label,
+  kbd {
+    display: none;
+  }
+
+  kbd {
+    padding: 3px 6px;
+    border: 1px solid var(--color-border);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    background: var(--color-bg);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1;
+  }
+
+  .no-js {
+    color: var(--color-text-muted);
+    font-family: var(--font-ui);
+    font-size: 0.8125rem;
+  }
+
+  @media (width >= 1024px) {
+    .search-button {
+      gap: 10px;
+      width: 200px;
+      height: 36px;
+      padding: 0 6px 0 10px;
+      border: var(--border-width) solid var(--color-border);
+      background: var(--color-surface);
+      color: var(--color-text-muted);
+      font-family: var(--font-ui);
+      font-size: var(--text-ui);
+    }
+
+    .search-button:hover {
+      border-color: var(--color-border-strong);
+      color: var(--color-text);
+    }
+
+    .label {
+      display: block;
+      flex: 1;
+      text-align: start;
+    }
+
+    kbd {
+      display: block;
+    }
+  }
+</style>
