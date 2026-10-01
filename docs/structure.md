@@ -23,6 +23,7 @@ src/
     articles.ts ✅                   # Схема frontmatter и уникальность slug
     links.ts ✅                      # Цели ссылок и их разрешение с базовым путём
     glossary.ts ✅                   # Схема глоссария и проверка терминов и целей
+    git-date.ts ✅                   # Дата последнего коммита файла и «Черновик»
     urls.ts ✅                       # Построитель URL с базовым путём
     rehype-site-urls.mjs ✅           # Преобразование адресов в Markdown/MDX
     rehype-math-errors.mjs ✅         # Ошибки формул блокируют сборку
@@ -52,6 +53,7 @@ tests/                               # Unit-тесты и браузерные �
   fixtures/artifact/ ✅              # Контрольная сборка с ошибочной внутренней ссылкой
   unit/articles.test.ts ✅            # Схема статьи, slug и группы
   unit/glossary.test.ts ✅            # Схема глоссария и разрешение целей
+  unit/git-date.test.ts ✅            # Git-дата во временном репозитории
   fixtures/articles/ ✅              # Служебные статьи коллекции
   fixtures/mdx/ ✅                   # Служебные материалы для проверки MDX
 astro.config.mjs ✅
@@ -61,7 +63,7 @@ package-lock.json ✅
 eslint.config.mjs ✅                 # ESLint для JavaScript, TypeScript и Astro
 .prettierrc.json ✅                   # Prettier с поддержкой Astro
 .prettierignore ✅                    # Исключение макетов и генерируемых файлов
-.env.example ✅                       # Тестовая переменная ARTICLES_DIR
+.env.example ✅                       # ARTICLES_DIR и ALLOW_DRAFT_ARTICLES
 vitest.config.ts ✅                   # Unit-тесты в Node.js
 playwright.config.ts ✅               # Три браузера, корень и префикс
 justfile ✅                          # dev, fmt, lint, typecheck, test, test-e2e, build
