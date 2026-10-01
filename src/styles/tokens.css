@@ -1,0 +1,30 @@
+:root {
+  color-scheme: light dark;
+  --color-bg: oklch(97.5% 0.008 85);
+  --color-text: oklch(25% 0.015 265);
+  --color-text-muted: oklch(48% 0.014 265);
+  --font-text: 'Literata', 'PT Serif', Georgia, 'Times New Roman', serif;
+  --font-ui: 'Golos Text', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --text-base: 1.125rem;
+  --text-4xl: 3rem;
+  --page-gutter: 32px;
+  --content-width: 42.5rem;
+  --space-6: 24px;
+  --space-9: 64px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: oklch(20.5% 0.012 255);
+    --color-text: oklch(91% 0.012 85);
+    --color-text-muted: oklch(73% 0.012 85);
+  }
+}
+
+@media (width < 600px) {
+  :root {
+    --text-base: 1.0625rem;
+    --text-4xl: 2.125rem;
+    --page-gutter: 20px;
+  }
+}

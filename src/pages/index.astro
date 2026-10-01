@@ -1,0 +1,63 @@
+---
+import '../styles/tokens.css';
+---
+
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Личный учебник по теории аудио и цифровой обработке звука."
+    />
+    <title>Теория аудио</title>
+  </head>
+  <body>
+    <main>
+      <h1>Теория аудио</h1>
+      <p>Личный учебник по теории аудио и цифровой обработке звука.</p>
+      <p class="status">Сайт в разработке. Материалы появятся позже.</p>
+    </main>
+  </body>
+</html>
+
+<style>
+  body {
+    margin: 0;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-text);
+    font-size: var(--text-base);
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+    hyphens: auto;
+  }
+
+  main {
+    max-width: var(--content-width);
+    margin: var(--space-9) auto;
+    padding-inline: var(--page-gutter);
+  }
+
+  h1 {
+    margin: 0 0 var(--space-6);
+    font-size: var(--text-4xl);
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    hyphens: none;
+  }
+
+  p {
+    margin: 0 0 var(--space-6);
+  }
+
+  .status {
+    color: var(--color-text-muted);
+    font-family: var(--font-ui);
+    font-size: 0.9375rem;
+    line-height: 1.45;
+  }
+</style>
