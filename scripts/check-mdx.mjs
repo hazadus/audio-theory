@@ -1,8 +1,7 @@
 // Проверяет сборку MDX, формулы, локальные ресурсы и исключение тестовых страниц из публикации.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtemp, readFile, readdir, rm, stat } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { mkdir, mkdtemp, readFile, readdir, rm, stat } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,7 +14,10 @@ assert.equal(
   rendererRequire('katex').version,
   'Версии CSS/шрифтов и рендерера KaTeX должны совпадать',
 );
-const temporary = await mkdtemp(join(tmpdir(), 'audio-theory-mdx-'));
+// Astro переносит ресурсы через rename: кеш и сборка должны быть на одном томе.
+const temporaryRoot = join(root, '.e2e');
+await mkdir(temporaryRoot, { recursive: true });
+const temporary = await mkdtemp(join(temporaryRoot, 'mdx-'));
 
 function build(config, outDir, base = '/') {
   return spawnSync(
