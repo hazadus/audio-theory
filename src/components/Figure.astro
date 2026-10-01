@@ -1,0 +1,69 @@
+---
+// Статичный рисунок: SVG в слоте получает название и описание, подпись «Рис. N.» стоит снизу.
+import { annotateSvg } from '@/lib/figure';
+
+interface Props {
+  /** Английский kebab-case; якорь для ссылок `#id`. */
+  id: string;
+  /** Номер рисунка в статье; рисунки и визуализации нумеруются одной последовательностью. */
+  number: number;
+  /** Видимая подпись без префикса «Рис. N.». */
+  caption: string;
+  /** Доступное описание: что показывает рисунок. */
+  alt: string;
+  /** Короткое название SVG; по умолчанию — подпись. */
+  name?: string;
+}
+
+const { id, number, caption, alt, name } = Astro.props;
+const svg = annotateSvg(await Astro.slots.render('default'), {
+  id,
+  title: name ?? caption,
+  description: alt,
+});
+---
+
+<figure class="figure" id={id}>
+  <div class="figure-frame" set:html={svg} />
+  <figcaption class="figure-caption">
+    <b>Рис. {number}.</b> {caption}
+  </figcaption>
+</figure>
+
+<style is:global>
+  .figure {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: var(--space-6) 0;
+    scroll-margin-top: 88px;
+  }
+
+  .figure-frame {
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--chart-bg);
+    overflow: hidden;
+  }
+
+  .figure-frame > svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    color: var(--chart-label);
+    font-family: var(--font-ui);
+    font-size: var(--text-chart);
+  }
+
+  .figure-caption {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+  }
+
+  .figure-caption b {
+    font-weight: 600;
+    color: var(--color-text);
+  }
+</style>

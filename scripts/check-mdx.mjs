@@ -100,6 +100,18 @@ try {
     assert.match(html, /<div class="equation" id="unnumbered">/);
     assert.equal((html.match(/class="equation-symbols"/g) ?? []).length, 1);
     assert.ok(html.includes('href="#nyquist-rate"'));
+    // Figure: SVG с названием и описанием, подпись снизу; DataTable: caption, scope, закреплённый первый столбец.
+    assert.match(
+      html,
+      /<figure class="figure" id="signal-path">[\s\S]*?<svg[^>]*role="img" aria-labelledby="signal-path-title signal-path-desc"[^>]*><title id="signal-path-title">Путь сигнала<\/title><desc id="signal-path-desc">Четыре блока[^<]*<\/desc>[\s\S]*?<figcaption class="figure-caption">\s*<b>Рис\. 1\.<\/b>/,
+    );
+    assert.match(
+      html,
+      /<caption id="sample-rates-caption"><span class="data-table-caption"><b>Таблица 1\.<\/b> Распространённые частоты дискретизации<\/span><\/caption>/,
+    );
+    assert.equal((html.match(/<th scope="col"/g) ?? []).length, 3);
+    assert.equal((html.match(/<th scope="row"/g) ?? []).length, 4);
+    assert.match(html, /<div class="data-table-scroll"[^>]*role="region"[^>]*tabindex="0"/);
     assert.doesNotMatch(html, /katex-error/);
     assert.match(html, /<script\b[^>]*type="module"/);
     assert.ok(html.includes(`href="${base}?topic=digital&amp;sort=alpha#content"`));

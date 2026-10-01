@@ -2,6 +2,8 @@ import SelfCheck from '@/components/SelfCheck.astro';
 import Callout from '@/components/Callout.astro';
 import CalloutCase from '@/components/CalloutCase.astro';
 import Equation from '@/components/Equation.astro';
+import Figure from '@/components/Figure.astro';
+import DataTable from '@/components/DataTable.astro';
 import Term from '@/components/Term.astro';
 import { withBase } from '@/lib/urls';
 
@@ -107,3 +109,48 @@ T_s = \frac{1}{f_s}
 $$
 
 </Equation>
+
+## Рисунки и таблицы
+
+Текст ссылается на [рисунок 1](#signal-path) и [таблицу 1](#sample-rates).
+
+<Figure
+  id="signal-path"
+  number={1}
+  caption="Путь сигнала: фильтр нижних частот → АЦП → обработка → ЦАП."
+  name="Путь сигнала"
+  alt="Четыре блока слева направо: фильтр нижних частот, АЦП, обработка и ЦАП, соединённые стрелками."
+>
+  <svg viewBox="0 0 480 120" xmlns="http://www.w3.org/2000/svg">
+    <g fill="none" stroke="var(--chart-axis)" stroke-width="1.5">
+      <rect x="8" y="40" width="96" height="40" rx="6" />
+      <rect x="132" y="40" width="96" height="40" rx="6" />
+      <rect x="256" y="40" width="96" height="40" rx="6" />
+      <rect x="380" y="40" width="92" height="40" rx="6" />
+      <path d="M104 60h28M228 60h28M352 60h28" />
+    </g>
+    <g fill="var(--chart-label)" font-size="16" text-anchor="middle">
+      <text x="56" y="64">ФНЧ</text>
+      <text x="180" y="64">АЦП</text>
+      <text x="304" y="64">Обработка</text>
+      <text x="426" y="64">ЦАП</text>
+    </g>
+  </svg>
+</Figure>
+
+<DataTable
+  id="sample-rates"
+  number={1}
+  caption="Распространённые частоты дискретизации"
+  columns={[
+    { label: '<i>f</i><sub>s</sub>, Гц', align: 'end' },
+    { label: '<i>f</i><sub>N</sub>, Гц', align: 'end' },
+    { label: 'Где применяется' },
+  ]}
+  rows={[
+    ['8 000', '4 000', 'Телефония'],
+    ['44 100', '22 050', 'Компакт-диск'],
+    ['48 000', '24 000', 'Видео и студийная запись'],
+    ['96 000', '48 000', 'Высокое разрешение'],
+  ]}
+/>
