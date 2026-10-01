@@ -2,6 +2,7 @@
 import { getCollection, render } from 'astro:content';
 import { assertUniqueSlugs } from '@/lib/articles';
 import { allowDraftEnv, getUpdatedDate } from '@/lib/git-date';
+import { resolveReadingMinutes } from '@/lib/reading-time';
 
 export async function getStaticPaths() {
   const articles = await getCollection('articles');
@@ -11,6 +12,7 @@ export async function getStaticPaths() {
 
 const { article } = Astro.props;
 const { Content } = await render(article);
+const readingMinutes = resolveReadingMinutes(article.body ?? '', article.data.readingMinutes);
 // Dev-сервер и сборка с ALLOW_DRAFT_ARTICLES=1 показывают «Черновик» для файла без коммита; иначе это ошибка.
 const updated = getUpdatedDate(article.filePath!, {
   allowDraft: import.meta.env.DEV || process.env[allowDraftEnv] === '1',
@@ -33,6 +35,7 @@ const updated = getUpdatedDate(article.filePath!, {
         ) : (
           <span>Черновик</span>
         )}
+        · {readingMinutes} мин чтения
       </p>
       <Content />
     </main>

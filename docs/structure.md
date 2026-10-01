@@ -9,6 +9,7 @@
 .claude/skills/write-article/SKILL.md   # Вход в скилл Claude Code
 .github/workflows/pages.yml ✅        # Проверки, сборка и деплой
 docs/ ✅                             # Документация проекта
+  overview.md ✅                    # Обзор устройства отдельных частей сайта
   deploy.md ✅                      # CI, GitHub Pages и проверка публикации
   design/ ✅                         # HTML-макеты
   authoring/                         # Общие правила и шаблон статьи
@@ -24,6 +25,7 @@ src/
     links.ts ✅                      # Цели ссылок и их разрешение с базовым путём
     glossary.ts ✅                   # Схема глоссария и проверка терминов и целей
     git-date.ts ✅                   # Дата последнего коммита файла и «Черновик»
+    reading-time.ts ✅               # Подсчёт слов и время чтения по MDX
     urls.ts ✅                       # Построитель URL с базовым путём
     rehype-site-urls.mjs ✅           # Преобразование адресов в Markdown/MDX
     rehype-math-errors.mjs ✅         # Ошибки формул блокируют сборку
@@ -54,6 +56,7 @@ tests/                               # Unit-тесты и браузерные �
   unit/articles.test.ts ✅            # Схема статьи, slug и группы
   unit/glossary.test.ts ✅            # Схема глоссария и разрешение целей
   unit/git-date.test.ts ✅            # Git-дата во временном репозитории
+  unit/reading-time.test.ts ✅        # Подсчёт слов и оценка времени чтения
   fixtures/articles/ ✅              # Служебные статьи коллекции
   fixtures/mdx/ ✅                   # Служебные материалы для проверки MDX
 astro.config.mjs ✅

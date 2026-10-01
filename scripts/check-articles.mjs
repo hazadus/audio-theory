@@ -32,6 +32,8 @@ try {
     const html = await readFile(join(validDir, slug, 'index.html'), 'utf8');
     assert.match(html, /Служебная статья/);
     assert.match(html, /Для чего нужна проверка\?/);
+    // test-wave задаёт readingMinutes: 3 вручную, у test-sampling оценка по тексту — минимум 1 минута.
+    assert.match(html, slug === 'test-wave' ? /3 мин чтения/ : /1 мин чтения/);
   }
 
   // Игнорируемый .e2e/ не имеет Git-истории: копия служебной статьи — «новый файл без коммита».
