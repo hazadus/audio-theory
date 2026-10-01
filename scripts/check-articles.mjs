@@ -129,6 +129,11 @@ try {
   assert.equal(published.status, 0, published.stdout + published.stderr);
   const files = await readdir(publishedDir, { recursive: true });
   assert.ok(!files.some((file) => file.includes('test-')), 'Служебные статьи опубликованы');
+  // В индекс Pagefind попадает только начальная страница: служебных статей в нём нет.
+  assert.match(
+    published.stdout + published.stderr,
+    /Артефакт проверен: 1 страниц; индекс Pagefind: 1 страниц/,
+  );
   console.log('Коллекция статей: маршруты из slug — OK');
   console.log(
     'Повторный slug, неизвестная группа, пустые поля и readingMinutes блокируют сборку — OK',
