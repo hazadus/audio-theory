@@ -43,8 +43,9 @@ try {
     assert.equal(valid.status, 0, valid.stdout + valid.stderr);
     const html = await readFile(join(validDir, '__test/mdx/index.html'), 'utf8');
     assert.match(html, /Служебный материал/);
-    assert.equal((html.match(/class="katex"/g) ?? []).length, 2);
-    assert.equal((html.match(/<math\s/g) ?? []).length, 2);
+    // 2 исходные формулы + 2 в обозначениях и 3 блока `Equation`.
+    assert.equal((html.match(/class="katex"/g) ?? []).length, 7);
+    assert.equal((html.match(/<math\s/g) ?? []).length, 7);
     assert.match(html, /class="katex-display"/);
     assert.match(html, /<mtext>Найквист<\/mtext>/);
     assert.match(html, /<annotation encoding="application\/x-tex">/);
@@ -83,6 +84,22 @@ try {
     assert.match(html, /<button[^>]*popovertarget="term-sample-rate-\d+"/);
     assert.match(html, /частоты дискретизации<\/a>/);
     assert.match(html, /href="https:\/\/ru\.wikipedia\.org\/wiki\/Частота_Найквиста"/);
+    // Equation: якорь, номер, формула с MathML, прокручиваемая область с клавиатуры и <dl> обозначений.
+    assert.match(
+      html,
+      /<div class="equation" id="nyquist-rate" data-numbered[^>]*>[\s\S]*?<div class="equation-math" role="group" aria-label="Формула 1" tabindex="0">[\s\S]*?<span class="equation-number" aria-hidden="true">\(1\)<\/span>/,
+    );
+    assert.match(
+      html,
+      /<dl class="equation-symbols">[\s\S]*?<dt><span class="katex">[\s\S]*?<dd>частота дискретизации, Гц<\/dd>/,
+    );
+    assert.match(
+      html,
+      /id="reconstruction"[\s\S]*?<span class="equation-number" aria-hidden="true">\(2\)<\/span>/,
+    );
+    assert.match(html, /<div class="equation" id="unnumbered">/);
+    assert.equal((html.match(/class="equation-symbols"/g) ?? []).length, 1);
+    assert.ok(html.includes('href="#nyquist-rate"'));
     assert.doesNotMatch(html, /katex-error/);
     assert.match(html, /<script\b[^>]*type="module"/);
     assert.ok(html.includes(`href="${base}?topic=digital&amp;sort=alpha#content"`));

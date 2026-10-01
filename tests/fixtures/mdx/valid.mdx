@@ -1,6 +1,7 @@
 import SelfCheck from '@/components/SelfCheck.astro';
 import Callout from '@/components/Callout.astro';
 import CalloutCase from '@/components/CalloutCase.astro';
+import Equation from '@/components/Equation.astro';
 import Term from '@/components/Term.astro';
 import { withBase } from '@/lib/urls';
 
@@ -38,9 +39,13 @@ $$
 
 ## Врезки
 
-<Callout type="definition" title="Частота дискретизации">Число отсчётов в секунду.</Callout>
+<Callout type="definition" title="Частота дискретизации">
+  Число отсчётов в секунду.
+</Callout>
 
-<Callout type="important" title="Условие">Спектр должен быть ограничен.</Callout>
+<Callout type="important" title="Условие">
+  Спектр должен быть ограничен.
+</Callout>
 
 <Callout type="mistake" title="Частота равна верхней границе">
 
@@ -60,6 +65,45 @@ $$
 
 </Callout>
 
-<Callout type="simplification" title="Идеальный фильтр">Модель считает фильтр идеальным.</Callout>
+<Callout type="simplification" title="Идеальный фильтр">
+  Модель считает фильтр идеальным.
+</Callout>
 
-<Callout type="note" title="К слову">Необязательная справка.</Callout>
+<Callout type="note" title="К слову">
+  Необязательная справка.
+</Callout>
+
+## Формулы
+
+Текст ссылается на [формулу (1)](#nyquist-rate).
+
+<Equation id="nyquist-rate" number={1}>
+
+$$
+f_s > 2 f_{\max}
+$$
+
+<Fragment slot="symbols">
+  <dt>$f_s$</dt>
+  <dd>частота дискретизации, Гц</dd>
+  <dt>$f_{\max}$</dt>
+  <dd>наибольшая частота в спектре сигнала, Гц</dd>
+</Fragment>
+
+</Equation>
+
+<Equation id="reconstruction" number={2}>
+
+$$
+x(t) = \sum_{n=-\infty}^{+\infty} x[n] \cdot \operatorname{sinc}\left(\frac{t - nT_s}{T_s}\right), \quad \operatorname{sinc}(u) = \frac{\sin(\pi u)}{\pi u}
+$$
+
+</Equation>
+
+<Equation id="unnumbered">
+
+$$
+T_s = \frac{1}{f_s}
+$$
+
+</Equation>

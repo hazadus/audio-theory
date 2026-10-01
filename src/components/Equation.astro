@@ -1,0 +1,141 @@
+---
+// Блочная формула: выражение (`$$…$$` в содержимом), необязательный номер справа и пояснение обозначений.
+// Обозначения передаются в слот `symbols` парами `<dt>` / `<dd>` и выводятся списком `<dl>` под формулой.
+interface Props {
+  /** Английский kebab-case; якорь для ссылок `#id`. */
+  id: string;
+  /** Номер формулы в статье (последовательность 1, 2, 3…). */
+  number?: number;
+}
+
+const { id, number } = Astro.props;
+const hasSymbols = Astro.slots.has('symbols');
+const label = number === undefined ? 'Формула' : `Формула ${number}`;
+---
+
+<div class="equation" id={id} data-numbered={number === undefined ? undefined : ''}>
+  <div class="equation-row">
+    <div class="equation-math" role="group" aria-label={label} tabindex="0">
+      <slot />
+    </div>
+    {number !== undefined && (
+      <span class="equation-number" aria-hidden="true">
+        ({number})
+      </span>
+    )}
+  </div>
+  {hasSymbols && (
+    <dl class="equation-symbols">
+      <slot name="symbols" />
+    </dl>
+  )}
+</div>
+
+<style is:global>
+  .equation {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-block: var(--space-6);
+    scroll-margin-top: 88px;
+  }
+
+  .equation-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .equation[data-numbered] .equation-row {
+    grid-template-columns: 3rem minmax(0, 1fr) 3rem;
+  }
+
+  .equation[data-numbered] .equation-math {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .equation-number {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+    font-family: var(--font-ui);
+    font-size: 15px;
+    color: var(--color-text-muted);
+  }
+
+  /* Длинное выражение прокручивается внутри блока; тени по краям показывают, что есть продолжение. */
+  .equation-math {
+    min-width: 0;
+    padding: var(--space-3) var(--space-2);
+    overflow-x: auto;
+    border-radius: var(--radius-md);
+    font-size: 24px;
+    color: var(--color-math);
+    background:
+      linear-gradient(to right, var(--color-bg) 50%, transparent) left center / 40px 100% no-repeat
+        local,
+      linear-gradient(to left, var(--color-bg) 50%, transparent) right center / 40px 100% no-repeat
+        local,
+      linear-gradient(to right, var(--color-border), transparent) left center / 14px 100% no-repeat
+        scroll,
+      linear-gradient(to left, var(--color-border), transparent) right center / 14px 100% no-repeat
+        scroll;
+  }
+
+  .equation-math:focus-visible {
+    box-shadow: var(--focus-ring);
+    outline: none;
+  }
+
+  .equation-math .katex-display {
+    margin: 0;
+    overflow: visible;
+  }
+
+  .equation-math .katex-display > .katex {
+    font-size: 1em;
+  }
+
+  .equation-symbols {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-1) 14px;
+    margin: 0;
+    padding-top: var(--space-3);
+    border-top: var(--border-width) solid var(--color-border);
+    font-family: var(--font-ui);
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+  }
+
+  .equation-symbols dt {
+    color: var(--color-text);
+  }
+
+  .equation-symbols dd {
+    margin: 0;
+  }
+
+  /* Узкий экран: номер уходит под формулу, вправо. */
+  @media (max-width: 480px) {
+    .equation[data-numbered] .equation-row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-1);
+    }
+
+    .equation[data-numbered] .equation-math {
+      grid-column: 1;
+    }
+
+    .equation-number {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    .equation-math {
+      font-size: 21px;
+    }
+  }
+</style>
