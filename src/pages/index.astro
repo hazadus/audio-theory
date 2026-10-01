@@ -1,5 +1,7 @@
 ---
 import '../styles/tokens.css';
+import { siteConfig } from '@/site.config';
+import { withBase } from '@/lib/urls';
 ---
 
 <!doctype html>
@@ -18,6 +20,9 @@ import '../styles/tokens.css';
       <h1>Теория аудио</h1>
       <p>Личный учебник по теории аудио и цифровой обработке звука.</p>
       <p class="status">Сайт в разработке. Материалы появятся позже.</p>
+      <p>
+        <a href={withBase('/')}>На главную</a> · <a href={siteConfig.repository}>GitHub</a>
+      </p>
     </main>
   </body>
 </html>

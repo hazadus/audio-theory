@@ -4,16 +4,34 @@ import { unified } from '@astrojs/markdown-remark';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeMathErrors from './src/lib/rehype-math-errors.mjs';
+import rehypeSiteUrls from './src/lib/rehype-site-urls.mjs';
+import { siteConfig } from './src/site.config.ts';
+
+let resolvedBase = siteConfig.base;
 
 export default defineConfig({
   output: 'static',
-  integrations: [mdx()],
+  site: siteConfig.site,
+  base: siteConfig.base,
+  trailingSlash: 'always',
+  integrations: [
+    {
+      name: 'site-urls',
+      hooks: {
+        'astro:config:done': ({ config }) => {
+          resolvedBase = config.base;
+        },
+      },
+    },
+    mdx(),
+  ],
   markdown: {
     processor: unified({
       remarkPlugins: [remarkMath],
       rehypePlugins: [
         [rehypeKatex, { output: 'htmlAndMathml', strict: 'ignore', trust: false }],
         rehypeMathErrors,
+        [rehypeSiteUrls, { getBase: () => resolvedBase }],
       ],
     }),
   },
