@@ -7,6 +7,7 @@ import remarkHeadingAnchors from './src/lib/remark-heading-anchors.mjs';
 import rehypeHeadingLinks from './src/lib/rehype-heading-links.mjs';
 import rehypeCodeBlocks from './src/lib/rehype-code-blocks.mjs';
 import rehypeMathErrors from './src/lib/rehype-math-errors.mjs';
+import rehypePagefind from './src/lib/rehype-pagefind.mjs';
 import rehypeSiteUrls from './src/lib/rehype-site-urls.mjs';
 import { siteConfig } from './src/site.config.ts';
 import buildArtifact from './scripts/build-artifact.mjs';
@@ -38,6 +39,7 @@ export default defineConfig({
       rehypePlugins: [
         [rehypeKatex, { output: 'htmlAndMathml', strict: 'ignore', trust: false }],
         rehypeMathErrors,
+        rehypePagefind,
         rehypeCodeBlocks,
         rehypeHeadingLinks,
         [rehypeSiteUrls, { getBase: () => resolvedBase }],

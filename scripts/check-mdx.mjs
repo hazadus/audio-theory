@@ -53,7 +53,7 @@ try {
     assert.match(html, /<button type="button" class="code-copy" data-code-copy hidden/);
     assert.match(html, /--astro-code-token-keyword\)/);
     assert.match(html, /<mtext>Найквист<\/mtext>/);
-    assert.match(html, /<annotation encoding="application\/x-tex">/);
+    assert.match(html, /<annotation encoding="application\/x-tex" data-pagefind-ignore[^>]*>/);
     assert.match(html, /aria-hidden="true"/);
     // SelfCheck: нативный <details>, ответ внутри.
     assert.match(

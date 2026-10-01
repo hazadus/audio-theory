@@ -54,13 +54,13 @@ const links = (items: typeof data.related) =>
         <p class="question">{data.question}</p>
         <div class="meta">
           {updated ? (
-            <span>
+            <span data-pagefind-ignore>
               Обновлено <time datetime={updated.slice(0, 10)}>{formatUpdatedDate(updated)}</time>
             </span>
           ) : (
-            <span>Черновик</span>
+            <span data-pagefind-ignore>Черновик</span>
           )}
-          <span class="reading">
+          <span class="reading" data-pagefind-ignore>
             <Icon name="clock" size={16} />
             {readingMinutes} мин чтения
           </span>
@@ -94,7 +94,7 @@ const links = (items: typeof data.related) =>
 
       <article class="body" data-article-body>
         {prerequisites.length > 0 && (
-          <aside class="prerequisites" aria-label="Что нужно знать заранее">
+          <aside class="prerequisites" aria-label="Что нужно знать заранее" data-pagefind-ignore>
             <div class="label">Что нужно знать заранее</div>
             <ul>
               {links(prerequisites).map((item) => (
@@ -109,7 +109,7 @@ const links = (items: typeof data.related) =>
         <div class="prose">
           <slot />
         </div>
-        <section class="related" aria-labelledby="related-title">
+        <section class="related" aria-labelledby="related-title" data-pagefind-ignore>
           <h2 id="related-title">Связанные темы</h2>
           <ul>
             {links(data.related).map((item) => (

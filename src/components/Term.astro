@@ -46,13 +46,14 @@ const Wrapper = define ? 'dfn' : 'span';
   <button
     type="button"
     class="term-button"
+    data-pagefind-ignore
     popovertarget={popoverId}
     aria-label={`Определение: ${entry.ru}`}
     data-term-button
   >
     ?
   </button>
-  <span class="term-popover" id={popoverId} popover="manual" data-term-popover>
+  <span class="term-popover" id={popoverId} popover="manual" data-term-popover data-pagefind-ignore>
     <strong>{entry.ru}</strong> (<i lang="en">{entry.en}</i>) — {entry.definition}
   </span>
 </span>

@@ -49,6 +49,7 @@ src/
     urls.ts ✅                       # Построитель URL с базовым путём
     rehype-site-urls.mjs ✅           # Преобразование адресов в Markdown/MDX
     rehype-math-errors.mjs ✅         # Ошибки формул блокируют сборку
+    rehype-pagefind.mjs ✅            # Исключает дубли формул KaTeX из индекса Pagefind
     rehype-code-blocks.mjs ✅         # Шапка языка и кнопка копирования у блоков кода
     code-block-controller.ts ✅      # Копирование кода и статус результата
   pages/                             # Статические маршруты Astro
