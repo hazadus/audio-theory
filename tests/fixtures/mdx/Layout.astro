@@ -1,0 +1,33 @@
+---
+import '@/styles/tokens.css';
+import '@/styles/math.css';
+---
+
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Проверка MDX и формул</title>
+  </head>
+  <body>
+    <main><slot /></main>
+  </body>
+</html>
+
+<style>
+  body {
+    margin: 0;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-text);
+    font-size: var(--text-base);
+    line-height: 1.65;
+  }
+
+  main {
+    max-width: var(--content-width);
+    margin: var(--space-9) auto;
+    padding-inline: var(--page-gutter);
+  }
+</style>

@@ -1,0 +1,6 @@
+@import 'katex/dist/katex.min.css';
+
+/* Кириллица в \text{} использует шрифт статьи, а символы — шрифты KaTeX. */
+.katex .cyrillic_fallback {
+  font-family: var(--font-text);
+}
