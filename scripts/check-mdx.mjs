@@ -51,7 +51,7 @@ try {
     assert.match(html, /Период равен единице/);
     assert.doesNotMatch(html, /<script\b|katex-error/);
     assert.ok(html.includes(`href="${base}?topic=digital&amp;sort=alpha#top"`));
-    assert.ok(html.includes('href="/audio-theory/?topic=digital#top"'));
+    assert.ok(html.includes(`href="${base}?topic=digital#top"`));
     assert.ok(html.includes(`href="${base}licenses/katex.txt"`));
     assert.ok(html.includes('href="https://example.org/audio?topic=digital#top"'));
     assert.ok(html.includes('href="#urls"'));

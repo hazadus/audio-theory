@@ -1,4 +1,5 @@
 import SelfCheck from './SelfCheck.astro';
+import { withBase } from '@/lib/urls';
 
 # Проверка MDX и формул
 
@@ -8,7 +9,7 @@ import SelfCheck from './SelfCheck.astro';
 
 [Главная с параметрами](/?topic=digital&sort=alpha#top)
 
-[Уже с префиксом](/audio-theory/?topic=digital#top)
+<a href={withBase(`${import.meta.env.BASE_URL}?topic=digital#top`)}>Уже с префиксом</a>
 
 [Лицензия KaTeX](/licenses/katex.txt)
 

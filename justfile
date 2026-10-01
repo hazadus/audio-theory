@@ -26,6 +26,6 @@ test:
 test-e2e:
     npm run test:e2e
 
-# Собирает статический сайт в dist/.
+# Собирает HTML и индекс Pagefind в dist/, проверяет локальные ссылки и ресурсы.
 build:
     npm run build

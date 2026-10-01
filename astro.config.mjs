@@ -6,6 +6,7 @@ import rehypeKatex from 'rehype-katex';
 import rehypeMathErrors from './src/lib/rehype-math-errors.mjs';
 import rehypeSiteUrls from './src/lib/rehype-site-urls.mjs';
 import { siteConfig } from './src/site.config.ts';
+import buildArtifact from './scripts/build-artifact.mjs';
 
 let resolvedBase = siteConfig.base;
 
@@ -15,6 +16,7 @@ export default defineConfig({
   base: siteConfig.base,
   trailingSlash: 'always',
   integrations: [
+    buildArtifact(),
     {
       name: 'site-urls',
       hooks: {
