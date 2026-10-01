@@ -147,14 +147,20 @@ try {
   }
 
   const publishedDir = join(temporary, 'published');
-  const published = build(publishedDir);
+  // Режим черновика: Git-даты проверены выше на фикстурах, здесь важен только состав публикации,
+  // в том числе до коммита новой настоящей статьи.
+  const published = build(publishedDir, undefined, { draft: true });
   assert.equal(published.status, 0, published.stdout + published.stderr);
   const files = await readdir(publishedDir, { recursive: true });
   assert.ok(!files.some((file) => file.includes('test-')), 'Служебные статьи опубликованы');
-  // В индекс Pagefind попадает только начальная страница: служебных статей в нём нет.
+  // В индекс Pagefind попадают начальная страница и настоящие статьи, служебных в нём нет.
+  const realArticles = (
+    await readdir(join(root, 'src/content/articles'), { recursive: true })
+  ).filter((file) => file.endsWith('.mdx')).length;
+  const pages = 1 + realArticles;
   assert.match(
     published.stdout + published.stderr,
-    /Артефакт проверен: 1 страниц; индекс Pagefind: 1 страниц/,
+    new RegExp(`Артефакт проверен: ${pages} страниц; индекс Pagefind: ${pages} страниц`),
   );
   console.log('Коллекция статей: маршруты из slug — OK');
   console.log(
