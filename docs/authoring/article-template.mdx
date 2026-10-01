@@ -1,0 +1,58 @@
+---
+slug: authoring-template
+title: Служебный шаблон статьи
+question: Как оформить объяснение, формулу и проверочный пример?
+topic: digital
+tags: [дискретизация, период]
+related:
+  - label: Дискретизация
+    description: Общее описание преобразования непрерывного сигнала в последовательность отсчётов.
+    target: { url: 'https://ru.wikipedia.org/wiki/Дискретизация' }
+---
+
+import Callout from '@/components/Callout.astro';
+import Equation from '@/components/Equation.astro';
+import SelfCheck from '@/components/SelfCheck.astro';
+
+Это служебный образец оформления, предназначенный для локальной проверки шаблона.
+
+## Понятие {#concept}
+
+При равномерной дискретизации частота дискретизации (sample rate) задаёт число отсчётов за секунду.
+Период дискретизации (sampling period) — интервал между соседними отсчётами.
+
+<Callout type="definition" title="Период дискретизации">
+
+При постоянной частоте дискретизации интервалы между отсчётами одинаковы.
+
+</Callout>
+
+## Пример расчёта {#calculation}
+
+Период и частота связаны [формулой (1)](#eq-sample-period).
+
+<Equation id="eq-sample-period" number={1}>
+
+$$
+T_s = \frac{1}{f_s}
+$$
+
+<Fragment slot="symbols">
+  <dt>$T_s$</dt><dd>период дискретизации, с;</dd>
+  <dt>$f_s$</dt><dd>частота дискретизации, Гц.</dd>
+</Fragment>
+
+</Equation>
+
+При $f_s = 8000$ Гц получаем $T_s = 0{,}000125$ с, или $0{,}125$ мс.
+Расчёт относится к равномерной дискретизации с положительной частотой.
+
+<SelfCheck question="Как изменится период при удвоении частоты дискретизации?">
+
+Период уменьшится вдвое: при 16 000 Гц он равен 0,0625 мс.
+
+</SelfCheck>
+
+## Источники {#sources}
+
+- [Steven W. Smith. The Scientist and Engineer's Guide to Digital Signal Processing, глава 3: The Sampling Theorem](https://www.dspguide.com/ch3/2.htm) — связь частоты отсчётов и представления сигнала.
