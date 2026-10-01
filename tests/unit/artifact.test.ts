@@ -66,7 +66,10 @@ test('проверяет ресурсы CSS и inline-стилей', async () =>
 });
 
 test('несуществующая внутренняя страница блокирует сборку Astro', async () => {
-  const directory = await mkdtemp(join(tmpdir(), 'audio-broken-build-'));
+  // outDir внутри проекта: в CI /tmp на другом устройстве, и Astro падает с EXDEV при rename ассетов.
+  const parent = join(process.cwd(), '.tmp');
+  await mkdir(parent, { recursive: true });
+  const directory = await mkdtemp(join(parent, 'audio-broken-build-'));
   temporary.push(directory);
   // Vitest передаёт свой BASE_URL=/ через окружение; сборка должна читать конфигурацию Astro.
   const environment = { ...process.env };
