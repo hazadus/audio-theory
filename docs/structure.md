@@ -44,6 +44,8 @@ src/
     urls.ts ✅                       # Построитель URL с базовым путём
     rehype-site-urls.mjs ✅           # Преобразование адресов в Markdown/MDX
     rehype-math-errors.mjs ✅         # Ошибки формул блокируют сборку
+    rehype-code-blocks.mjs ✅         # Шапка языка и кнопка копирования у блоков кода
+    code-block-controller.ts ✅      # Копирование кода и статус результата
   pages/                             # Статические маршруты Astro
     index.astro ✅                   # Начальная страница
     [slug].astro ✅                  # Маршруты статей из slug
@@ -69,6 +71,7 @@ src/
     fonts.css ✅                     # @font-face локальных шрифтов
     base.css ✅                      # Фон, шрифты, заголовки, выделение и фокус
     math.css ✅                      # Локальные стили и шрифты KaTeX
+    code.css ✅                      # Подсветка Shiki через --syntax-*, шапка и кнопка блока кода
   site.config.ts ✅                  # Адрес сайта, репозитория и базовый путь
 public/
   licenses/ ✅                       # Лицензии KaTeX, шрифтов и Lucide

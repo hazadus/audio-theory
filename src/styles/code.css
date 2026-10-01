@@ -1,0 +1,144 @@
+/* Блоки кода: Shiki (тема css-variables) красит токены через `--astro-code-*`, которые здесь связаны
+   с токенами дизайн-системы. Тема переключается значениями `light-dark()` в `tokens.css`, без JS. */
+:root {
+  --astro-code-foreground: var(--color-code-text);
+  --astro-code-background: var(--color-code-bg);
+  --astro-code-token-constant: var(--syntax-number);
+  --astro-code-token-string: var(--syntax-string);
+  --astro-code-token-comment: var(--syntax-comment);
+  --astro-code-token-keyword: var(--syntax-keyword);
+  --astro-code-token-parameter: var(--color-code-text);
+  --astro-code-token-function: var(--syntax-function);
+  --astro-code-token-string-expression: var(--syntax-string);
+  --astro-code-token-punctuation: var(--syntax-punctuation);
+  --astro-code-token-link: var(--syntax-function);
+}
+
+.code-block {
+  margin: var(--space-6) 0;
+  border-radius: var(--radius-md);
+  background: var(--color-code-bg);
+  overflow: hidden;
+}
+
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 6px 6px 6px 14px;
+  border-bottom: var(--border-width) solid var(--color-border);
+  font-family: var(--font-ui);
+}
+
+.code-lang {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.code-copy {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  font: 500 13px var(--font-ui);
+  cursor: pointer;
+}
+
+.code-copy[hidden] {
+  display: none;
+}
+
+.code-copy:hover {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.code-done-icon,
+.code-block[data-copy-state='success'] .code-copy-icon {
+  display: none;
+}
+
+.code-block[data-copy-state='success'] .code-done-icon {
+  display: block;
+}
+
+.code-block[data-copy-state='success'] .code-copy {
+  color: var(--color-success);
+}
+
+/* Успех виден на кнопке, а статус для скринридера скрыт визуально; ошибка показывается строкой над кодом. */
+.code-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.code-block[data-copy-state='error'] .code-status {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: var(--space-2) 14px;
+  border-bottom: var(--border-width) solid var(--color-border);
+  clip-path: none;
+  white-space: normal;
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+}
+
+.code-block pre {
+  margin: 0;
+  padding: 12px 14px 12px 0;
+  border-radius: 0;
+  font-size: var(--text-ui);
+  line-height: 1.6;
+  overflow-x: auto;
+}
+
+.code-block pre code {
+  display: block;
+  min-width: fit-content;
+  font-family: var(--font-mono);
+  font-size: inherit;
+  counter-reset: code-line;
+}
+
+/* Номера строк рисует CSS-счётчик: в DOM-тексте их нет, поэтому они не попадают в clipboard и выделение.
+   Колонка остаётся на месте при горизонтальной прокрутке кода. */
+.code-block pre .line::before {
+  content: counter(code-line);
+  counter-increment: code-line;
+  position: sticky;
+  left: 0;
+  display: inline-block;
+  box-sizing: content-box;
+  width: calc(var(--code-digits, 2) * 1ch);
+  margin-right: 14px;
+  padding: 0 10px 0 14px;
+  border-right: var(--border-width) solid var(--color-border);
+  background: var(--color-code-bg);
+  color: var(--syntax-comment);
+  text-align: right;
+  user-select: none;
+}
+
+@media (width < 600px) {
+  .code-block pre {
+    font-size: var(--text-sm);
+  }
+
+  /* Размер области нажатия на смартфоне — 44 px. */
+  .code-copy {
+    height: 44px;
+  }
+}

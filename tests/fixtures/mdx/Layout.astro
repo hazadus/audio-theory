@@ -1,5 +1,6 @@
 ---
 import '@/styles/tokens.css';
+import '@/styles/code.css';
 import '@/styles/math.css';
 ---
 
@@ -16,6 +17,12 @@ import '@/styles/math.css';
     </main>
   </body>
 </html>
+
+<script>
+  import { initCodeBlocks } from '@/lib/code-block-controller';
+
+  initCodeBlocks();
+</script>
 
 <style>
   body {

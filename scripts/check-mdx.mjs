@@ -47,6 +47,11 @@ try {
     assert.equal((html.match(/class="katex"/g) ?? []).length, 7);
     assert.equal((html.match(/<math\s/g) ?? []).length, 7);
     assert.match(html, /class="katex-display"/);
+    assert.equal((html.match(/<figure class="code-block"/g) ?? []).length, 2);
+    assert.match(html, /<span class="code-lang">JavaScript<\/span>/);
+    assert.match(html, /<span class="code-lang">C\+\+<\/span>/);
+    assert.match(html, /<button type="button" class="code-copy" data-code-copy hidden/);
+    assert.match(html, /--astro-code-token-keyword\)/);
     assert.match(html, /<mtext>Найквист<\/mtext>/);
     assert.match(html, /<annotation encoding="application\/x-tex">/);
     assert.match(html, /aria-hidden="true"/);

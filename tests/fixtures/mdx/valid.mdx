@@ -154,3 +154,21 @@ $$
     ['96 000', '48 000', 'Высокое разрешение'],
   ]}
 />
+
+## Листинги
+
+```js
+// Частота Найквиста
+function nyquist(sampleRate) {
+  const limit = sampleRate / 2;
+  return { limit, label: `${limit} Гц` };
+}
+
+console.log(nyquist(44100), 'очень длинная строка для проверки горизонтальной прокрутки на узком экране');
+```
+
+```cpp
+float process(float x, float gain) {
+  return x * gain; // усиление
+}
+```
