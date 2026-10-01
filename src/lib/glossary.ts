@@ -33,3 +33,10 @@ export function parseGlossary(data: unknown, articleSlugs: Iterable<string>): Gl
   }
   return entries;
 }
+
+/** Запись по `id` для `Term`; неизвестный термин останавливает сборку. */
+export function findTerm(entries: readonly GlossaryEntry[], id: string): GlossaryEntry {
+  const entry = entries.find((item) => item.id === id);
+  if (!entry) throw new Error(`Неизвестный термин глоссария «${id}»`);
+  return entry;
+}

@@ -51,7 +51,18 @@ try {
     assert.match(html, /aria-hidden="true"/);
     assert.match(html, /<details>\s*<summary>Как связаны период и частота\?<\/summary>/);
     assert.match(html, /Период равен единице/);
-    assert.doesNotMatch(html, /<script\b|katex-error/);
+    // Term: определение из глоссария, английское название с lang="en", ссылка и подсказка.
+    assert.match(html, /<dfn class="term-name first"/);
+    assert.match(html, /<i class="term-en" lang="en">sample rate<\/i>/);
+    assert.match(html, /частота дискретизации<\/a>/);
+    assert.match(html, /aria-describedby="term-sample-rate-\d+"/);
+    assert.match(html, /popover="manual"[^>]*>\s*<strong>частота дискретизации<\/strong>/);
+    assert.match(html, /Число отсчётов сигнала, снимаемых за одну секунду/);
+    assert.match(html, /<button[^>]*popovertarget="term-sample-rate-\d+"/);
+    assert.match(html, /частоты дискретизации<\/a>/);
+    assert.match(html, /href="https:\/\/ru\.wikipedia\.org\/wiki\/Частота_Найквиста"/);
+    assert.doesNotMatch(html, /katex-error/);
+    assert.match(html, /<script\b[^>]*type="module"/);
     assert.ok(html.includes(`href="${base}?topic=digital&amp;sort=alpha#content"`));
     assert.ok(html.includes(`href="${base}?topic=digital#content"`));
     assert.ok(html.includes(`href="${base}licenses/katex.txt"`));

@@ -33,6 +33,8 @@ src/
     rehype-heading-links.mjs ✅      # Ссылка-якорь «#» в заголовках H2–H4
     reading-progress.ts ✅           # Доля прочитанного и порог кнопки «Наверх»
     reading-progress-controller.ts ✅ # Полоса прогресса и кнопка «Наверх»
+    term.ts ✅                       # Положение подсказки термина и уникальные id
+    term-controller.ts ✅            # Открытие подсказок при наведении, фокусе и касании
     article-content.ts ✅            # Источники, ссылки, листинги и нумерация блоков
     remark-heading-anchors.mjs ✅    # Синтаксис {#anchor} в заголовках MDX
     reading-time.ts ✅               # Подсчёт слов и время чтения по MDX
@@ -54,6 +56,7 @@ src/
     SiteFooter.astro ✅              # Подвал с описанием и внешними ссылками
     ThemeChoice.astro ✅             # Три варианта темы для мобильного меню
     Icon.astro ✅                    # Иконки Lucide с обводкой 1.5/1.75 px
+    Term.astro ✅                    # Термин из глоссария: ссылка, английское название, подсказка
     ThemeToggle.astro ✅             # Кнопка выбора светлой, тёмной и автоматической темы
   styles/                            # Токены, базовые стили и оформление статьи
     tokens.css ✅                    # Токены дизайн-системы для светлой и тёмной тем
@@ -86,6 +89,7 @@ tests/                               # Unit-тесты и браузерные �
   unit/heading-anchors.test.ts ✅     # Синтаксис {#anchor} и ошибки
   unit/heading-links.test.ts ✅       # Адрес раздела и ссылка в заголовке
   unit/reading-progress.test.ts ✅    # Границы прогресса и порог «Наверх»
+  unit/term.test.ts ✅                # Положение подсказки, id и поиск термина
   unit/reading-time.test.ts ✅        # Подсчёт слов и оценка времени чтения
   unit/navigation.test.ts ✅          # Активный пункт навигации под префиксом
   e2e/layout.spec.ts ✅               # Шапка, подвал, ссылка перехода, компактное меню

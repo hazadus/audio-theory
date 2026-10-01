@@ -1,4 +1,5 @@
 import SelfCheck from './SelfCheck.astro';
+import Term from '@/components/Term.astro';
 import { withBase } from '@/lib/urls';
 
 # Проверка MDX и формул
@@ -28,3 +29,7 @@ $$
 <SelfCheck question="Как связаны период и частота?">
   Период равен единице, делённой на частоту.
 </SelfCheck>
+
+## Термины
+
+Первое упоминание: <Term id="sample-rate" firstMention define />. Повтор: <Term id="sample-rate">частоты дискретизации</Term>, а также <Term id="nyquist-frequency" />.
