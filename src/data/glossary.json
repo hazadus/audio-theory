@@ -1,16 +1,50 @@
 [
   {
+    "id": "sound-wave",
+    "ru": "звуковая волна",
+    "en": "sound wave",
+    "definition": "Распространяющиеся в упругой среде колебания давления: частицы среды колеблются около своих мест и передают сжатия и разрежения соседним.",
+    "target": {
+      "article": "sound-wave",
+      "anchor": "pressure"
+    }
+  },
+  {
+    "id": "sound-pressure",
+    "ru": "звуковое давление",
+    "en": "sound pressure",
+    "definition": "Отклонение давления в среде от равновесного, например атмосферного, вызванное звуковой волной. Измеряется в паскалях.",
+    "target": {
+      "article": "sound-wave",
+      "anchor": "amplitude"
+    }
+  },
+  {
+    "id": "analog-audio-signal",
+    "ru": "аналоговый аудиосигнал",
+    "en": "analog audio signal",
+    "definition": "Электрическое напряжение или ток, которое непрерывно во времени повторяет форму колебаний звукового давления.",
+    "target": {
+      "article": "sound-wave",
+      "anchor": "analog-signal"
+    }
+  },
+  {
     "id": "sample-rate",
     "ru": "частота дискретизации",
     "en": "sample rate",
     "definition": "Число отсчётов сигнала, снимаемых за одну секунду. Измеряется в герцах: 44 100 Гц означает 44 100 отсчётов в секунду.",
-    "target": { "url": "https://ru.wikipedia.org/wiki/Частота_дискретизации" }
+    "target": {
+      "url": "https://ru.wikipedia.org/wiki/Частота_дискретизации"
+    }
   },
   {
     "id": "nyquist-frequency",
     "ru": "частота Найквиста",
     "en": "Nyquist frequency",
     "definition": "Половина частоты дискретизации: наибольшая частота, которую дискретный сигнал может представить без наложения спектров.",
-    "target": { "url": "https://ru.wikipedia.org/wiki/Частота_Найквиста" }
+    "target": {
+      "url": "https://ru.wikipedia.org/wiki/Частота_Найквиста"
+    }
   }
 ]
