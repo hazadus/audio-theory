@@ -182,8 +182,10 @@ for (const [index, row] of rows.entries()) {
     font-weight: 600;
   }
 
+  /* Число с единицей не переносится: узкая таблица прокручивается, а не рвёт «0,05 мс» посимвольно. */
   .data-table [data-align='end'] {
     text-align: end;
+    white-space: nowrap;
   }
 
   .data-table td {
