@@ -17,7 +17,7 @@
 
 ## Разработка
 
-Нужны Node.js ≥ 22.12.0, npm ≥ 9.6.5 и [just](https://just.systems/). Зависимости зафиксированы в `package.json` и `package-lock.json`; установка из чистого checkout:
+Нужны Node.js 22 (≥ 22.13.0), 24 или ≥ 26, npm ≥ 9.6.5 и [just](https://just.systems/). Зависимости зафиксированы в `package.json` и `package-lock.json`; установка из чистого checkout:
 
 ```sh
 npm ci
@@ -51,11 +51,37 @@ npm run dev -- stop
 just build
 ```
 
-Результат находится в `dist/`: HTML и ресурсы для статического хостинга. Конфигурация Astro явно использует `output: 'static'`. TypeScript использует конфигурацию `astro/tsconfigs/strict`; отдельная проверка типов появится вместе с инструментами проверки в пункте 4. `just` показывает доступные команды; сейчас это `dev` и `build`.
+Результат находится в `dist/`: HTML и ресурсы для статического хостинга. Конфигурация Astro явно использует `output: 'static'`. TypeScript использует конфигурацию `astro/tsconfigs/strict`; `just` показывает доступные команды с русскими пояснениями.
 
 Новые открытые вопросы записывайте в `docs/questions.md`, согласованные требования — в `docs/spec.md`. Статьи проверяются автором на локальном сайте и публикуются только после одобрения.
 
 Импорты файлов из `src/` могут использовать алиас `@/`, заданный в `tsconfig.json`, например `@/styles/math.css`. Astro применяет его при разработке и сборке.
+
+## Проверки кода и браузерные тесты
+
+```sh
+just fmt                 # Prettier: форматирование исходников и конфигурации
+npm run fmt:check        # Проверка форматирования без записи
+just lint                # ESLint: JavaScript, TypeScript и Astro
+just typecheck           # Astro Check и tsc --noEmit
+just test                # Vitest: unit-тесты
+just build               # Статическая сборка
+just test-e2e            # Полный прогон Playwright на двух сборках
+```
+
+Prettier форматирует `.astro`, CSS, JavaScript, TypeScript и JSON; документация, HTML-макеты, MDX и генерируемые файлы исключены. ESLint проверяет код, включая служебные Astro-компоненты, но не демонстрационный рантайм макетов. Unit-тесты находятся в `tests/unit/`, браузерные сценарии — в `tests/e2e/`; Vitest не запускает сценарии Playwright. TypeScript закреплён на версии 6.0.3, совместимой с Astro Check и typescript-eslint.
+
+Перед первым браузерным прогоном установите браузеры:
+
+```sh
+npx playwright install chromium firefox webkit
+```
+
+В Linux CI используйте `npx playwright install --with-deps chromium firefox webkit`. `just test-e2e` последовательно создаёт сборки в `.e2e/root/` и `.e2e/prefixed/`, затем проверяет сайт в корне и под `/audio-theory/` в Chromium, Firefox и WebKit. Начальные сценарии проверяют текст, навигацию, стили, локальный ресурс и отсутствие служебного маршрута, а также чтение без JavaScript на ширине 390 px. Индекс Pagefind подключается в следующем пункте плана.
+
+Playwright запускает собственные preview-серверы на `127.0.0.1:4391` и `127.0.0.1:4392` и останавливает их после прогона. `--ignore-lock` оставляет процессы в foreground без общего lock-файла Astro; занятый порт вызывает ошибку, чужой сервер не используется. Локальный dev-сервер для авторской проверки работает независимо. Результаты и trace при ошибках сохраняются в `test-results/`; эти файлы и `.e2e/` не входят в Git.
+
+DOM можно исследовать через `page.locator()`, `page.getByRole()` и `page.evaluate()`, снимок сделать через `page.screenshot()`. Trace открывается командой `npx playwright show-trace <путь-к-trace.zip>`. При изменении критичного пользовательского пути, доступности элементов или обработки адресов нужен полный `just test-e2e`; отдельный файл его не заменяет. WebKit не заменяет ручную проверку настоящего Safari на Mac и iPhone. Общие команды `just screenshots` и `just test-production` появятся вместе с соответствующими задачами.
 
 ## Адреса сайта и базовый путь
 

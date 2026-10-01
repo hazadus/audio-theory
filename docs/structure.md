@@ -34,12 +34,19 @@ public/
 scripts/                             # Проверка контента и собранного сайта
   check-mdx.mjs ✅                   # Проверка MDX, формул и ресурсов
 tests/                               # Unit-тесты и браузерные сценарии
+  unit/urls.test.ts ✅                # Контракт URL и базового пути
+  e2e/home.spec.ts ✅                 # Начальная страница на статических сборках
   fixtures/mdx/ ✅                   # Служебные материалы для проверки MDX
 astro.config.mjs ✅
 tsconfig.json ✅
 package.json ✅
 package-lock.json ✅
-justfile ✅                          # Сейчас доступны dev и build
+eslint.config.mjs ✅                 # ESLint для JavaScript, TypeScript и Astro
+.prettierrc.json ✅                   # Prettier с поддержкой Astro
+.prettierignore ✅                    # Исключение макетов и генерируемых файлов
+vitest.config.ts ✅                   # Unit-тесты в Node.js
+playwright.config.ts ✅               # Три браузера, корень и префикс
+justfile ✅                          # dev, fmt, lint, typecheck, test, test-e2e, build
 ```
 
 Основной HTML создаётся при сборке. Клиентский JavaScript подключается к поиску, теме, навигации, фильтрам и интерактивному примеру по необходимости; полноценный клиентский фреймворк для первого выпуска не требуется. Макеты служат визуальными образцами: их демонстрационный рантайм не переносится в приложение.

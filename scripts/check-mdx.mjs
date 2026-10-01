@@ -10,14 +10,28 @@ import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const require = createRequire(import.meta.url);
 const rendererRequire = createRequire(require.resolve('rehype-katex'));
-assert.equal(require('katex').version, rendererRequire('katex').version,
-  'Версии CSS/шрифтов и рендерера KaTeX должны совпадать');
+assert.equal(
+  require('katex').version,
+  rendererRequire('katex').version,
+  'Версии CSS/шрифтов и рендерера KaTeX должны совпадать',
+);
 const temporary = await mkdtemp(join(tmpdir(), 'audio-theory-mdx-'));
 
 function build(config, outDir, base = '/') {
-  return spawnSync(process.execPath, [
-    'node_modules/astro/bin/astro.mjs', 'build', '--config', config, '--outDir', outDir, '--base', base,
-  ], { cwd: root, encoding: 'utf8' });
+  return spawnSync(
+    process.execPath,
+    [
+      'node_modules/astro/bin/astro.mjs',
+      'build',
+      '--config',
+      config,
+      '--outDir',
+      outDir,
+      '--base',
+      base,
+    ],
+    { cwd: root, encoding: 'utf8' },
+  );
 }
 
 try {
@@ -81,9 +95,14 @@ try {
   const files = await readdir(publishedDir, { recursive: true });
   assert.ok(!files.some((file) => file.includes('__test') || file.endsWith('.mdx')));
   for (const file of files.filter((file) => file.endsWith('.html'))) {
-    assert.doesNotMatch(await readFile(join(publishedDir, file), 'utf8'), /Служебный материал|unknownAudioCommand/);
+    assert.doesNotMatch(
+      await readFile(join(publishedDir, file), 'utf8'),
+      /Служебный материал|unknownAudioCommand/,
+    );
   }
-  console.log('MDX в корне и под /audio-theory/: ссылки, формулы с MathML и локальные ресурсы — OK');
+  console.log(
+    'MDX в корне и под /audio-theory/: ссылки, формулы с MathML и локальные ресурсы — OK',
+  );
   console.log('Неверная формула блокирует сборку; проверочные материалы не публикуются — OK');
 } finally {
   await rm(temporary, { recursive: true, force: true });

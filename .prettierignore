@@ -4,8 +4,8 @@ dist/
 .e2e/
 test-results/
 playwright-report/
-.env
-.env.*
-!.env.example
-*.log
-.DS_Store
+package-lock.json
+docs/
+.agents/
+.claude/
+public/
