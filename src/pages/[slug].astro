@@ -4,7 +4,7 @@ import { assertValidArticles } from '@/lib/article-content';
 import { assertUniqueSlugs } from '@/lib/articles';
 import { assertUniqueAnchors, getToc } from '@/lib/headings';
 import { allowDraftEnv, getUpdatedDate } from '@/lib/git-date';
-import BaseLayout from '@/layouts/BaseLayout.astro';
+import ArticleLayout from '@/layouts/ArticleLayout.astro';
 import { resolveReadingMinutes } from '@/lib/reading-time';
 
 export async function getStaticPaths() {
@@ -35,29 +35,6 @@ const updated = getUpdatedDate(article.filePath!, {
 });
 ---
 
-<BaseLayout title={article.data.title}>
-  <main id="content">
-    <h1>{article.data.title}</h1>
-    <p>{article.data.question}</p>
-    <p>
-      {updated ? (
-        <time datetime={updated}>Обновлено {updated.slice(0, 10)}</time>
-      ) : (
-        <span>Черновик</span>
-      )}
-      · {readingMinutes} мин чтения
-    </p>
-    {toc.length > 0 && (
-      <nav aria-label="Содержание">
-        <ol>
-          {toc.map((item) => (
-            <li data-depth={item.depth}>
-              <a href={`#${item.slug}`}>{item.text}</a>
-            </li>
-          ))}
-        </ol>
-      </nav>
-    )}
-    <Content />
-  </main>
-</BaseLayout>
+<ArticleLayout data={article.data} {toc} {updated} {readingMinutes}>
+  <Content />
+</ArticleLayout>

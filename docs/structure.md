@@ -41,6 +41,7 @@ src/
   assets/fonts/ ✅                   # Локальные WOFF2 Literata, Golos Text, JetBrains Mono
   layouts/
     BaseLayout.astro ✅              # Каркас страницы: тема, ссылка перехода, шапка, подвал
+    ArticleLayout.astro ✅           # Статья: крошки, метаданные, связи, колонки
   components/
     SiteHeader.astro ✅              # Шапка, навигация и компактное меню
     SiteFooter.astro ✅              # Подвал с описанием и внешними ссылками

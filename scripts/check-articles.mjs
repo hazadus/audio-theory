@@ -38,9 +38,10 @@ try {
 
   // Оглавление: H2/H3 в порядке документа, H4 нет; якоря остались при любых русских названиях.
   const sampling = await readFile(join(validDir, 'test-sampling', 'index.html'), 'utf8');
-  const tocHtml = sampling.match(/<nav aria-label="Содержание">([\s\S]*?)<\/nav>/)?.[1] ?? '';
+  const tocHtml =
+    sampling.match(/<nav[^>]*aria-label="Содержание"[^>]*>([\s\S]*?)<\/nav>/)?.[1] ?? '';
   const tocItems = [
-    ...tocHtml.matchAll(/<li data-depth="(\d)"[^>]*><a href="#([^"]+)">([^<]+)<\/a>/g),
+    ...tocHtml.matchAll(/<li data-depth="(\d)"[^>]*><a href="#([^"]+)"[^>]*>([^<]+)<\/a>/g),
   ];
   assert.deepEqual(
     tocItems.map(([, depth, id, text]) => [depth, id, text]),
@@ -55,6 +56,21 @@ try {
   assert.match(sampling, /<h4 id="[^"]+">Подробности<\/h4>/);
   assert.doesNotMatch(sampling, /\{#/);
 
+  // Layout: обязательные элементы есть в HTML без JS; блок предварительных знаний только при наличии данных.
+  const crumbs =
+    sampling.match(/<nav[^>]*aria-label="Хлебные крошки"[^>]*>([\s\S]*?)<\/nav>/)?.[1] ?? '';
+  assert.match(crumbs, /<a href="\/"[^>]*>Главная<\/a>/);
+  assert.match(crumbs, /Цифровой сигнал/);
+  assert.match(sampling, /<h1[^>]*>Служебная статья<\/h1>/);
+  assert.match(sampling, /Обновлено <time datetime="[^"]+"[^>]*>\d{1,2} [а-я]+ \d{4}<\/time>/);
+  assert.match(sampling, /проверка<\/li>\s*<li[^>]*>образец/);
+  assert.match(sampling, /<aside[^>]*aria-label="Что нужно знать заранее"/);
+  assert.match(sampling, /<h2[^>]*>Связанные темы<\/h2>/);
+  assert.match(sampling, /<h2 id="sources"/);
+  const waveHtml = await readFile(join(validDir, 'test-wave', 'index.html'), 'utf8');
+  assert.doesNotMatch(waveHtml, /Что нужно знать заранее/);
+  assert.match(waveHtml, /Основы звука/);
+
   // Ссылки на разделы: под префиксом базовый путь добавляется один раз, якорь сохраняется и существует.
   const prefixedDir = join(temporary, 'prefixed');
   const prefixed = build(prefixedDir, 'valid', { base: '/audio-theory/' });
@@ -63,6 +79,9 @@ try {
   assert.match(wave, /href="\/audio-theory\/test-sampling\/#aliasing"/);
   assert.match(wave, /href="\/audio-theory\/test-sampling\/#nyquist-frequency"/);
   assert.doesNotMatch(wave, /audio-theory\/audio-theory/);
+  const prefixedSampling = await readFile(join(prefixedDir, 'test-sampling', 'index.html'), 'utf8');
+  assert.match(prefixedSampling, /<a href="\/audio-theory\/"[^>]*>Главная<\/a>/);
+  assert.match(prefixedSampling, /href="\/audio-theory\/test-wave\/"/);
   const rootWave = await readFile(join(validDir, 'test-wave', 'index.html'), 'utf8');
   assert.match(rootWave, /href="\/test-sampling\/#aliasing"/);
 
@@ -84,7 +103,10 @@ try {
   const draftHtml = await readFile(join(draftOut, 'test-wave', 'index.html'), 'utf8');
   assert.match(draftHtml, /Черновик/);
   const committedHtml = await readFile(join(validDir, 'test-wave', 'index.html'), 'utf8');
-  assert.match(committedHtml, /Обновлено \d{4}-\d{2}-\d{2}/);
+  assert.match(
+    committedHtml,
+    /Обновлено <time datetime="\d{4}-\d{2}-\d{2}"[^>]*>\d{1,2} [а-я]+ \d{4}<\/time>/,
+  );
   assert.doesNotMatch(committedHtml, /Черновик/);
 
   // Содержимое: положительный материал со всеми правилами и превышением рекомендательных лимитов.
@@ -138,6 +160,7 @@ try {
   console.log(
     'Повторный slug, неизвестная группа, пустые поля и readingMinutes блокируют сборку — OK',
   );
+  console.log('Layout статьи: крошки, метаданные, предварительные знания и связанные темы — OK');
   console.log('Якоря {#anchor}, оглавление H2/H3 и ссылки на разделы под префиксом — OK');
   console.log('Повторный, неверный и неуместный якорь блокируют сборку — OK');
   console.log('Источники, ссылки, язык листингов, идентификаторы и нумерация блоков — OK');

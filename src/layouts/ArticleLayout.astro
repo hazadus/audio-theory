@@ -1,0 +1,485 @@
+---
+// Страница статьи: хлебные крошки, заголовок, вопрос, метаданные, оглавление, тело, источники и связанные темы.
+// Раздел «Источники» — часть тела MDX; предварительные знания и связанные темы берутся из frontmatter.
+import Icon from '@/components/Icon.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import type { ArticleData } from '@/lib/articles';
+import type { TocItem } from '@/lib/headings';
+import { resolveTarget } from '@/lib/links';
+import { topics } from '@/data/topics';
+import { formatUpdatedDate } from '@/lib/format-date';
+import { withBase } from '@/lib/urls';
+
+interface Props {
+  data: ArticleData;
+  toc: TocItem[];
+  /** ISO-дата последнего коммита файла; `null` — «Черновик». */
+  updated: string | null;
+  readingMinutes: number;
+}
+
+const { data, toc, updated, readingMinutes } = Astro.props;
+const group = topics.find((topic) => topic.id === data.topic)!;
+const prerequisites = data.prerequisites ?? [];
+
+const links = (items: typeof data.related) =>
+  items.map((item) => ({
+    ...item,
+    href: resolveTarget(item.target),
+    external: 'url' in item.target,
+  }));
+---
+
+<BaseLayout title={data.title}>
+  <main id="content" data-pagefind-body>
+    <div class="page">
+      <nav class="breadcrumbs" aria-label="Хлебные крошки" data-pagefind-ignore>
+        <ol>
+          <li class="home">
+            <a href={withBase('/')}>Главная</a>
+            <Icon name="chevron-right" size={14} />
+          </li>
+          <li class="group">
+            <Icon name="arrow-left" size={16} />
+            <span>{group.title}</span>
+          </li>
+        </ol>
+      </nav>
+
+      <header class="head">
+        <h1>{data.title}</h1>
+        <p class="question">{data.question}</p>
+        <div class="meta">
+          {updated ? (
+            <span>
+              Обновлено <time datetime={updated.slice(0, 10)}>{formatUpdatedDate(updated)}</time>
+            </span>
+          ) : (
+            <span>Черновик</span>
+          )}
+          <span class="reading">
+            <Icon name="clock" size={16} />
+            {readingMinutes} мин чтения
+          </span>
+          <ul class="tags" aria-label="Теги">
+            {data.tags.map((tag) => (
+              <li>{tag}</li>
+            ))}
+          </ul>
+        </div>
+      </header>
+
+      {toc.length > 0 && (
+        <div class="toc-cell" data-pagefind-ignore>
+          <nav class="toc" aria-label="Содержание">
+            <span class="toc-title">Содержание</span>
+            <ol>
+              {toc.map((item) => (
+                <li data-depth={item.depth}>
+                  <a href={`#${item.slug}`}>{item.text}</a>
+                </li>
+              ))}
+            </ol>
+          </nav>
+        </div>
+      )}
+
+      <article class="body">
+        {prerequisites.length > 0 && (
+          <aside class="prerequisites" aria-label="Что нужно знать заранее">
+            <div class="label">Что нужно знать заранее</div>
+            <ul>
+              {links(prerequisites).map((item) => (
+                <li>
+                  <a href={item.href}>{item.label}</a>
+                  <span class="note">{item.description}</span>
+                </li>
+              ))}
+            </ul>
+          </aside>
+        )}
+        <div class="prose">
+          <slot />
+        </div>
+        <section class="related" aria-labelledby="related-title">
+          <h2 id="related-title">Связанные темы</h2>
+          <ul>
+            {links(data.related).map((item) => (
+              <li>
+                <a href={item.href}>
+                  <span class="text">
+                    <span>{item.label}</span>
+                    <span class="note">{item.description}</span>
+                  </span>
+                  <Icon name={item.external ? 'external-link' : 'chevron-right'} size={16} />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </article>
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  /* Сетка макета 3-article: оглавление 240 px | зазор | текст 680 px; на узком экране одна колонка. */
+  .page {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--space-6);
+    width: min(var(--container-max), 100% - 2 * var(--page-gutter));
+    margin-inline: auto;
+    padding-top: var(--space-4);
+  }
+
+  .breadcrumbs,
+  .head,
+  .toc-cell,
+  .body {
+    min-width: 0;
+    max-width: var(--content-width);
+    width: 100%;
+    margin-inline: auto;
+  }
+
+  .breadcrumbs ol,
+  .tags,
+  .toc ol,
+  .prerequisites ul,
+  .related ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .breadcrumbs {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--color-text-muted);
+  }
+
+  .breadcrumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .breadcrumbs li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .breadcrumbs a {
+    color: var(--color-text-muted);
+  }
+
+  /* Смартфон: только родительская группа со стрелкой «назад»; планшет и десктоп: Главная › группа. */
+  .breadcrumbs .group :global(.icon) {
+    display: none;
+  }
+
+  @media (width < 600px) {
+    .breadcrumbs .home {
+      display: none;
+    }
+
+    .breadcrumbs .group :global(.icon) {
+      display: inline;
+    }
+  }
+
+  .head {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: -8px;
+  }
+
+  h1 {
+    margin: 0;
+  }
+
+  .question {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-lg);
+    font-style: italic;
+    line-height: var(--leading-normal);
+    text-wrap: pretty;
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-4);
+    color: var(--color-text-muted);
+    font-family: var(--font-ui);
+    font-size: 14px;
+  }
+
+  .reading {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: var(--text-xs);
+  }
+
+  .tags li {
+    padding: 2px var(--space-2);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-sm);
+    color: var(--color-text);
+  }
+
+  /* Смартфон и планшет: оглавление — рамка под метаданными; раскрытие добавляет отдельная задача. */
+  .toc {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--space-2) var(--space-2) var(--space-3);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    font-family: var(--font-ui);
+  }
+
+  .toc-title {
+    padding: var(--space-2) 10px;
+    color: var(--color-text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+  }
+
+  .toc a {
+    display: block;
+    padding: 6px 10px;
+    border-radius: var(--radius-md);
+    color: var(--color-text-muted);
+    font-size: 14px;
+    line-height: 1.4;
+    text-decoration: none;
+  }
+
+  .toc li[data-depth='3'] a {
+    padding-inline-start: 24px;
+    font-size: 13.5px;
+  }
+
+  .toc a:hover {
+    color: var(--color-accent-hover);
+  }
+
+  .body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  .prerequisites {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: var(--space-4) var(--space-5);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    font-family: var(--font-ui);
+  }
+
+  .label,
+  .related h2 {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+  }
+
+  .prerequisites ul {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    font-size: 15px;
+    line-height: var(--leading-normal);
+  }
+
+  .prerequisites li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 10px;
+    align-items: baseline;
+  }
+
+  .prerequisites a {
+    font-weight: 500;
+  }
+
+  .note {
+    color: var(--color-text-muted);
+  }
+
+  .related {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: var(--space-4);
+    font-family: var(--font-ui);
+  }
+
+  .related a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    min-height: 44px;
+    border-bottom: var(--border-width) solid var(--color-border);
+    color: var(--color-text);
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .related a:hover {
+    color: var(--color-link);
+  }
+
+  .related .text {
+    display: flex;
+    flex-direction: column;
+    padding-block: var(--space-2);
+  }
+
+  .related .note {
+    font-size: 13px;
+    font-weight: 400;
+  }
+
+  @media (width >= 1024px) {
+    .page {
+      grid-template-columns: var(--toc-width) minmax(0, var(--content-width));
+      column-gap: var(--space-7);
+      justify-content: start;
+      padding-top: 40px;
+    }
+
+    .breadcrumbs,
+    .head,
+    .body {
+      grid-column: 2;
+      margin-inline: 0;
+    }
+
+    /* Колонка оглавления занимает всю высоту статьи, а список прилипает под шапкой при прокрутке. */
+    .toc-cell {
+      grid-column: 1;
+      grid-row: 1 / span 3;
+      max-width: none;
+      margin-inline: 0;
+      padding-top: 180px;
+    }
+
+    .toc {
+      position: sticky;
+      top: 88px;
+      max-height: calc(100dvh - 88px - var(--space-6));
+      overflow-y: auto;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: none;
+    }
+
+    .toc-title {
+      padding-bottom: var(--space-2);
+    }
+  }
+
+  @media (width >= 1280px) {
+    .page {
+      column-gap: var(--space-9);
+    }
+  }
+
+  /* Тело статьи приходит из MDX без классов компонента. */
+  .prose {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  .prose > :global(*) {
+    margin: 0;
+  }
+
+  .prose > :global(p) {
+    text-wrap: pretty;
+  }
+
+  .prose > :global(h2) {
+    margin-top: var(--space-6);
+  }
+
+  .prose > :global(h3) {
+    margin-top: var(--space-4);
+  }
+
+  .prose :global(h2),
+  .prose :global(h3),
+  .prose :global(h4) {
+    scroll-margin-top: 88px;
+  }
+
+  .prose > :global(ul),
+  .prose > :global(ol) {
+    padding-inline-start: 1.4em;
+  }
+
+  /* «Источники» — компактный раздел в конце: малый заголовок капителью и список 15 px. */
+  .prose > :global(h2#sources) {
+    margin-top: var(--space-4);
+    color: var(--color-text-muted);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+  }
+
+  .prose > :global(h2#sources ~ ul),
+  .prose > :global(h2#sources ~ ol) {
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .prose > :global(h2#sources ~ ul > li + li),
+  .prose > :global(h2#sources ~ ol > li + li) {
+    margin-top: var(--space-2);
+  }
+
+  .prose :global(pre) {
+    overflow-x: auto;
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--color-code-bg);
+    color: var(--color-code-text);
+    font-size: var(--text-sm);
+  }
+
+  .prose :global(img),
+  .prose :global(svg),
+  .prose :global(table) {
+    max-width: 100%;
+  }
+</style>
