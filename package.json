@@ -11,6 +11,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "test:mdx": "node scripts/check-mdx.mjs",
+    "test:articles": "node scripts/check-articles.mjs",
     "preview": "astro preview",
     "fmt": "prettier --write \"**/*.{astro,css,js,mjs,ts,json}\"",
     "fmt:check": "prettier --check \"**/*.{astro,css,js,mjs,ts,json}\"",

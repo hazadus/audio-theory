@@ -1,0 +1,28 @@
+---
+import { getCollection, render } from 'astro:content';
+import { assertUniqueSlugs } from '@/lib/articles';
+
+export async function getStaticPaths() {
+  const articles = await getCollection('articles');
+  assertUniqueSlugs(articles);
+  return articles.map((article) => ({ params: { slug: article.data.slug }, props: { article } }));
+}
+
+const { article } = Astro.props;
+const { Content } = await render(article);
+---
+
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{article.data.title}</title>
+  </head>
+  <body>
+    <main>
+      <h1>{article.data.title}</h1>
+      <p>{article.data.question}</p>
+      <Content />
+    </main>
+  </body>
+</html>

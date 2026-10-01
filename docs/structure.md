@@ -14,17 +14,19 @@ docs/ ✅                             # Документация проекта
   authoring/                         # Общие правила и шаблон статьи
 src/
   content/articles/                  # Пять статей в MDX и будущие материалы
-  content.config.ts                  # Схема коллекции статей
-  data/topics.ts                     # Четыре тематические группы
+  content.config.ts ✅               # Коллекция статей
+  data/topics.ts ✅                  # Четыре тематические группы
   data/glossary.json                  # Единый источник определений
   components/                        # Каркас, учебные блоки, поиск и визуализация
   layouts/                           # Общая страница и страница статьи
   lib/                               # Метаданные, ссылки, расчёты и Web Audio
+    articles.ts ✅                   # Схема frontmatter и уникальность slug
     urls.ts ✅                       # Построитель URL с базовым путём
     rehype-site-urls.mjs ✅           # Преобразование адресов в Markdown/MDX
     rehype-math-errors.mjs ✅         # Ошибки формул блокируют сборку
   pages/                             # Статические маршруты Astro
     index.astro ✅                   # Начальная страница
+    [slug].astro ✅                  # Маршруты статей из slug
   styles/                            # Токены, базовые стили и оформление статьи
     tokens.css ✅                    # Используемые токены дизайн-системы
     math.css ✅                      # Локальные стили и шрифты KaTeX
@@ -34,6 +36,7 @@ public/
   licenses/katex.txt ✅              # Лицензия KaTeX
 scripts/                             # Проверка контента и собранного сайта
   build-artifact.mjs ✅              # Интеграция сборки индекса Pagefind и проверки артефакта
+  check-articles.mjs ✅              # Проверка коллекции статей
   check-artifact.mjs ✅              # Локальные страницы, HTML-якоря и ресурсы HTML/CSS
   check-mdx.mjs ✅                   # Проверка MDX, формул и ресурсов
   check-production.mjs ✅            # Сетевая проверка публичной страницы и ресурсов
@@ -45,6 +48,8 @@ tests/                               # Unit-тесты и браузерные �
   e2e/home.spec.ts ✅                 # Начальная страница на статических сборках
   e2e/search.spec.ts ✅               # Настоящий API Pagefind в корне и под префиксом
   fixtures/artifact/ ✅              # Контрольная сборка с ошибочной внутренней ссылкой
+  unit/articles.test.ts ✅            # Схема статьи, slug и группы
+  fixtures/articles/ ✅              # Служебные статьи коллекции
   fixtures/mdx/ ✅                   # Служебные материалы для проверки MDX
 astro.config.mjs ✅
 tsconfig.json ✅
@@ -53,6 +58,7 @@ package-lock.json ✅
 eslint.config.mjs ✅                 # ESLint для JavaScript, TypeScript и Astro
 .prettierrc.json ✅                   # Prettier с поддержкой Astro
 .prettierignore ✅                    # Исключение макетов и генерируемых файлов
+.env.example ✅                       # Тестовая переменная ARTICLES_DIR
 vitest.config.ts ✅                   # Unit-тесты в Node.js
 playwright.config.ts ✅               # Три браузера, корень и префикс
 justfile ✅                          # dev, fmt, lint, typecheck, test, test-e2e, build
