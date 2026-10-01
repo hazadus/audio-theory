@@ -124,7 +124,7 @@
 | `--font-mono` | `'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace` |
 | `--font-math` | `'Latin Modern Math', 'STIX Two Math', 'Cambria Math', math, var(--font-text)` |
 
-Основные шрифты размещаются локально в WOFF2 с кириллицей и латиницей; нужны normal и italic для Literata, веса 400–600 для текста и UI, 400 для кода. Использовать `font-display: swap`. KaTeX использует свой комплект шрифтов; `--font-math` предназначен для MathML и не заменяет шрифты KaTeX.
+Основные шрифты размещаются локально в WOFF2 с кириллицей и латиницей; нужны normal и italic для Literata, веса 400–600 для текста и UI, 400 для кода. Использовать `font-display: swap`. На `body` задаётся `-webkit-font-smoothing: antialiased`, как в макетах: без него на macOS текст заметно плотнее эталона. KaTeX использует свой комплект шрифтов; `--font-math` предназначен для MathML и не заменяет шрифты KaTeX.
 
 | Размер | Десктоп / планшет | Смартфон < 600 px |
 | --- | --- | --- |

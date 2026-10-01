@@ -17,6 +17,9 @@ body {
   line-height: var(--leading-relaxed);
   overflow-wrap: anywhere;
   hyphens: auto;
+  /* Как в макетах: на macOS и iOS текст в серой отрисовке тоньше и ближе к эталону. */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 h1,

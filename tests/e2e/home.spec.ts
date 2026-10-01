@@ -10,12 +10,13 @@ test('начальная страница, навигация и локальн�
   await expect(page.locator('html')).toHaveAttribute('lang', 'ru');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Теория аудио');
   await expect(page.getByRole('main')).toContainText('Личный учебник по теории аудио');
-  await expect(page.getByRole('link', { name: 'GitHub' })).toHaveAttribute(
+  await expect(page.locator('footer').getByRole('link', { name: 'GitHub' })).toHaveAttribute(
     'href',
     siteConfig.repository,
   );
-  await expect(page.getByRole('link', { name: 'На главную' })).toHaveAttribute('href', base);
-  await page.getByRole('link', { name: 'На главную' }).click();
+  const brand = page.locator('header').getByRole('link', { name: 'Теория аудио' });
+  await expect(brand).toHaveAttribute('href', base);
+  await brand.click();
   expect(new URL(page.url()).pathname).toBe(base);
 
   const styles = await page
@@ -70,8 +71,8 @@ test('шрифты, токены тем и иконки загружаются �
           statusFont: style('.status').fontFamily,
           background: style('body').backgroundColor,
           color: style('h1').color,
-          icon: document.querySelector('a.external svg')?.getAttribute('aria-hidden'),
-          stroke: document.querySelector('a.external svg')?.getAttribute('stroke-width'),
+          icon: document.querySelector('footer a svg')?.getAttribute('aria-hidden'),
+          stroke: document.querySelector('footer a svg')?.getAttribute('stroke-width'),
         };
       });
       expect(state.h1Font).toContain('Literata');
@@ -119,7 +120,7 @@ test('страница читается без JavaScript на узком экр
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
       390,
     );
-    await page.getByRole('link', { name: 'На главную' }).click();
+    await page.locator('header').getByRole('link', { name: 'Теория аудио' }).click();
     expect(new URL(page.url()).pathname).toBe(testInfo.project.metadata.base);
   } finally {
     await context.close();

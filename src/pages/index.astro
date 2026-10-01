@@ -1,44 +1,22 @@
 ---
-import '@/styles/base.css';
-import Icon from '@/components/Icon.astro';
-import ThemeToggle from '@/components/ThemeToggle.astro';
-import { siteConfig } from '@/site.config';
-import { themeInitScript } from '@/lib/theme';
-import { withBase } from '@/lib/urls';
+import BaseLayout from '@/layouts/BaseLayout.astro';
 ---
 
-<!doctype html>
-<html lang="ru">
-  <head>
-    <meta charset="UTF-8" />
-    <script is:inline set:html={themeInitScript} />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Личный учебник по теории аудио и цифровой обработке звука." />
-    <title>Теория аудио</title>
-  </head>
-  <body>
-    <main id="top" data-pagefind-body>
-      <h1>Теория аудио</h1>
-      <p>Личный учебник по теории аудио и цифровой обработке звука.</p>
-      <p class="status">Сайт в разработке. Материалы появятся позже.</p>
-      <p data-pagefind-ignore>
-        <a href={withBase('/')}>На главную</a> ·{' '}
-        <a class="external" href={siteConfig.repository}>
-          GitHub
-          <Icon name="external-link" size={16} />
-        </a>
-      </p>
-      <p data-pagefind-ignore>
-        <ThemeToggle />
-      </p>
-    </main>
-  </body>
-</html>
+<BaseLayout
+  title="Теория аудио"
+  description="Личный учебник по теории аудио и цифровой обработке звука."
+>
+  <main id="content" data-pagefind-body>
+    <h1>Теория аудио</h1>
+    <p>Личный учебник по теории аудио и цифровой обработке звука.</p>
+    <p class="status">Сайт в разработке. Материалы появятся позже.</p>
+  </main>
+</BaseLayout>
 
 <style>
   main {
     max-width: var(--content-width);
-    margin: var(--space-9) auto;
+    margin: var(--space-9) auto 0;
     padding-inline: var(--page-gutter);
   }
 
@@ -55,12 +33,5 @@ import { withBase } from '@/lib/urls';
     font-family: var(--font-ui);
     font-size: var(--text-ui);
     line-height: var(--leading-normal);
-  }
-
-  .external {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
-    color: var(--color-link-external);
   }
 </style>

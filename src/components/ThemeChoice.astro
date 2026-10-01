@@ -1,0 +1,108 @@
+---
+// Три взаимоисключающих варианта темы для мобильного меню; без JS скрыты.
+import Icon from '@/components/Icon.astro';
+
+const options = [
+  { value: 'light', label: 'Светлая', icon: 'sun' },
+  { value: 'dark', label: 'Тёмная', icon: 'moon' },
+  { value: 'auto', label: 'Авто', icon: 'monitor' },
+] as const;
+---
+
+<fieldset class="theme-choice" data-theme-choice hidden>
+  <legend>Тема</legend>
+  <div class="options">
+    {options.map((option) => (
+      <label>
+        <input type="radio" name="theme" value={option.value} />
+        <span class="option">
+          <Icon name={option.icon} size={18} />
+          {option.label}
+        </span>
+      </label>
+    ))}
+  </div>
+</fieldset>
+
+<script>
+  import { parseTheme } from '@/lib/theme';
+  import { onThemeChange, setThemeMode } from '@/lib/theme-controller';
+
+  const group = document.querySelector<HTMLFieldSetElement>('[data-theme-choice]');
+  if (group) {
+    const radios = [...group.querySelectorAll<HTMLInputElement>('input[type="radio"]')];
+    for (const radio of radios) {
+      radio.addEventListener('change', () => {
+        if (radio.checked) setThemeMode(parseTheme(radio.value));
+      });
+    }
+    group.hidden = false;
+    onThemeChange((mode) => {
+      for (const radio of radios) radio.checked = radio.value === mode;
+    });
+  }
+</script>
+
+<style>
+  .theme-choice {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-inline-size: 0;
+  }
+
+  .theme-choice[hidden] {
+    display: none;
+  }
+
+  legend {
+    padding: 0;
+    margin-bottom: var(--space-2);
+    color: var(--color-text-muted);
+    font-family: var(--font-ui);
+    font-size: var(--text-ui);
+  }
+
+  .options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-2);
+  }
+
+  label {
+    display: block;
+  }
+
+  input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+  }
+
+  .option {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    padding-inline: var(--space-2);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-raised);
+    font-family: var(--font-ui);
+    font-size: var(--text-ui);
+    cursor: pointer;
+  }
+
+  /* Выбор виден не только цветом: усиленная рамка и вес шрифта. */
+  input:checked + .option {
+    border: var(--border-width-strong) solid var(--color-accent);
+    background: var(--color-accent-soft);
+    font-weight: 600;
+  }
+
+  input:focus-visible + .option {
+    box-shadow: var(--focus-ring);
+  }
+</style>

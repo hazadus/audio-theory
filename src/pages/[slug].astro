@@ -4,7 +4,7 @@ import { assertValidArticles } from '@/lib/article-content';
 import { assertUniqueSlugs } from '@/lib/articles';
 import { assertUniqueAnchors, getToc } from '@/lib/headings';
 import { allowDraftEnv, getUpdatedDate } from '@/lib/git-date';
-import { themeInitScript } from '@/lib/theme';
+import BaseLayout from '@/layouts/BaseLayout.astro';
 import { resolveReadingMinutes } from '@/lib/reading-time';
 
 export async function getStaticPaths() {
@@ -35,37 +35,29 @@ const updated = getUpdatedDate(article.filePath!, {
 });
 ---
 
-<html lang="ru">
-  <head>
-    <meta charset="utf-8" />
-    <script is:inline set:html={themeInitScript} />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{article.data.title}</title>
-  </head>
-  <body>
-    <main>
-      <h1>{article.data.title}</h1>
-      <p>{article.data.question}</p>
-      <p>
-        {updated ? (
-          <time datetime={updated}>Обновлено {updated.slice(0, 10)}</time>
-        ) : (
-          <span>Черновик</span>
-        )}
-        · {readingMinutes} мин чтения
-      </p>
-      {toc.length > 0 && (
-        <nav aria-label="Содержание">
-          <ol>
-            {toc.map((item) => (
-              <li data-depth={item.depth}>
-                <a href={`#${item.slug}`}>{item.text}</a>
-              </li>
-            ))}
-          </ol>
-        </nav>
+<BaseLayout title={article.data.title}>
+  <main id="content">
+    <h1>{article.data.title}</h1>
+    <p>{article.data.question}</p>
+    <p>
+      {updated ? (
+        <time datetime={updated}>Обновлено {updated.slice(0, 10)}</time>
+      ) : (
+        <span>Черновик</span>
       )}
-      <Content />
-    </main>
-  </body>
-</html>
+      · {readingMinutes} мин чтения
+    </p>
+    {toc.length > 0 && (
+      <nav aria-label="Содержание">
+        <ol>
+          {toc.map((item) => (
+            <li data-depth={item.depth}>
+              <a href={`#${item.slug}`}>{item.text}</a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+    )}
+    <Content />
+  </main>
+</BaseLayout>

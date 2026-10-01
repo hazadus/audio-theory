@@ -30,6 +30,8 @@ src/
     remark-heading-anchors.mjs ✅    # Синтаксис {#anchor} в заголовках MDX
     reading-time.ts ✅               # Подсчёт слов и время чтения по MDX
     theme.ts ✅                      # Режимы темы, чтение и запись выбора, ранний скрипт
+    theme-controller.ts ✅           # Общее состояние темы в окне для всех контролов
+    navigation.ts ✅                 # Пункты основной навигации и активный пункт
     urls.ts ✅                       # Построитель URL с базовым путём
     rehype-site-urls.mjs ✅           # Преобразование адресов в Markdown/MDX
     rehype-math-errors.mjs ✅         # Ошибки формул блокируют сборку
@@ -37,7 +39,12 @@ src/
     index.astro ✅                   # Начальная страница
     [slug].astro ✅                  # Маршруты статей из slug
   assets/fonts/ ✅                   # Локальные WOFF2 Literata, Golos Text, JetBrains Mono
+  layouts/
+    BaseLayout.astro ✅              # Каркас страницы: тема, ссылка перехода, шапка, подвал
   components/
+    SiteHeader.astro ✅              # Шапка, навигация и компактное меню
+    SiteFooter.astro ✅              # Подвал с описанием и внешними ссылками
+    ThemeChoice.astro ✅             # Три варианта темы для мобильного меню
     Icon.astro ✅                    # Иконки Lucide с обводкой 1.5/1.75 px
     ThemeToggle.astro ✅             # Кнопка выбора светлой, тёмной и автоматической темы
   styles/                            # Токены, базовые стили и оформление статьи
@@ -69,6 +76,8 @@ tests/                               # Unit-тесты и браузерные �
   unit/article-content.test.ts ✅     # Правила содержимого статьи
   unit/heading-anchors.test.ts ✅     # Синтаксис {#anchor} и ошибки
   unit/reading-time.test.ts ✅        # Подсчёт слов и оценка времени чтения
+  unit/navigation.test.ts ✅          # Активный пункт навигации под префиксом
+  e2e/layout.spec.ts ✅               # Шапка, подвал, ссылка перехода, компактное меню
   unit/theme.test.ts ✅               # Режимы темы, отказ storage, ранний скрипт
   unit/tokens.test.ts ✅              # Пары тем и пороги контраста токенов
   fixtures/articles/ ✅              # Служебные статьи коллекции

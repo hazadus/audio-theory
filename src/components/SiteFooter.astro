@@ -1,0 +1,77 @@
+---
+// Подвал: название, описание и внешние ссылки. Внутренние страницы добавляются вместе с маршрутами.
+import Icon from '@/components/Icon.astro';
+import { siteConfig } from '@/site.config';
+---
+
+<footer class="site-footer" data-pagefind-ignore>
+  <div class="inner">
+    <div>
+      <p class="title">Теория аудио</p>
+      <p class="description">Личный учебник по теории аудио и цифровой обработке звука.</p>
+    </div>
+    <ul>
+      <li>
+        <a href={`${siteConfig.repository}/issues/new`}>Предложить тему</a>
+      </li>
+      <li>
+        <a href={siteConfig.repository}>
+          GitHub
+          <Icon name="external-link" size={16} />
+        </a>
+      </li>
+    </ul>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: var(--space-10);
+    border-top: var(--border-width) solid var(--color-border);
+    background: var(--color-surface);
+    font-family: var(--font-ui);
+    font-size: var(--text-ui);
+  }
+
+  .inner {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-6);
+    width: min(var(--container-max), 100% - 2 * var(--page-gutter));
+    margin-inline: auto;
+    padding-block: var(--space-7);
+  }
+
+  p {
+    margin: 0;
+  }
+
+  .title {
+    font-family: var(--font-text);
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .description {
+    margin-top: var(--space-1);
+    color: var(--color-text-muted);
+  }
+
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-6);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-height: 44px;
+    color: var(--color-link);
+  }
+</style>

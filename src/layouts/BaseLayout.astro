@@ -1,0 +1,68 @@
+---
+// Общий каркас страницы: тема до CSS, ссылка перехода к содержимому, шапка и подвал.
+// Страница выводит основное содержимое в <main id="content">.
+import '@/styles/base.css';
+import SiteFooter from '@/components/SiteFooter.astro';
+import SiteHeader from '@/components/SiteHeader.astro';
+import { themeInitScript } from '@/lib/theme';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <script is:inline set:html={themeInitScript} />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {description && <meta name="description" content={description} />}
+    <title>{title}</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#content" data-pagefind-ignore>
+      Перейти к содержимому
+    </a>
+    <SiteHeader />
+    <slot />
+    <SiteFooter />
+  </body>
+</html>
+
+<style is:global>
+  .skip-link {
+    position: absolute;
+    z-index: var(--z-modal);
+    inset-inline-start: var(--space-4);
+    top: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-ui);
+    font-size: var(--text-ui);
+    transform: translateY(-200%);
+  }
+
+  .skip-link:focus {
+    transform: none;
+  }
+
+  /* Подвал прижат к низу окна на коротких страницах; отступ перед ним задаёт его margin-top. */
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+  }
+
+  main {
+    flex: 1 0 auto;
+    box-sizing: border-box;
+    width: 100%;
+    scroll-margin-top: 72px;
+  }
+</style>

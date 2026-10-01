@@ -16,46 +16,21 @@ import Icon from '@/components/Icon.astro';
 </button>
 
 <script>
-  import {
-    applyTheme,
-    nextTheme,
-    parseTheme,
-    readStoredTheme,
-    themeButtonLabel,
-    themeStorageKey,
-    writeStoredTheme,
-    type ThemeMode,
-  } from '@/lib/theme';
+  import { nextTheme, themeButtonLabel } from '@/lib/theme';
+  import { getThemeMode, onThemeChange, setThemeMode } from '@/lib/theme-controller';
 
   const button = document.querySelector<HTMLButtonElement>('[data-theme-toggle]');
   if (button) {
-    // Режим в окне хранится здесь: при отказе storage переключение продолжает работать.
-    let mode: ThemeMode = readStoredTheme();
-
-    const render = () => {
-      applyTheme(document.documentElement, mode);
+    button.addEventListener('click', () => setThemeMode(nextTheme(getThemeMode())));
+    button.hidden = false;
+    onThemeChange((mode) => {
       const label = themeButtonLabel(mode);
       button.setAttribute('aria-label', label);
       button.title = label;
       for (const icon of button.querySelectorAll<HTMLElement>('[data-theme-icon]')) {
         icon.hidden = icon.dataset.themeIcon !== mode;
       }
-    };
-
-    button.addEventListener('click', () => {
-      mode = nextTheme(mode);
-      writeStoredTheme(mode);
-      render();
     });
-    // Выбор из другой вкладки.
-    window.addEventListener('storage', (event) => {
-      if (event.key === themeStorageKey || event.key === null) {
-        mode = parseTheme(event.newValue);
-        render();
-      }
-    });
-    button.hidden = false;
-    render();
   }
 </script>
 
