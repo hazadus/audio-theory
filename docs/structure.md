@@ -16,11 +16,13 @@ src/
   content/articles/                  # Пять статей в MDX и будущие материалы
   content.config.ts ✅               # Коллекция статей
   data/topics.ts ✅                  # Четыре тематические группы
-  data/glossary.json                  # Единый источник определений
+  data/glossary.json ✅               # Единый источник определений
   components/                        # Каркас, учебные блоки, поиск и визуализация
   layouts/                           # Общая страница и страница статьи
   lib/                               # Метаданные, ссылки, расчёты и Web Audio
     articles.ts ✅                   # Схема frontmatter и уникальность slug
+    links.ts ✅                      # Цели ссылок и их разрешение с базовым путём
+    glossary.ts ✅                   # Схема глоссария и проверка терминов и целей
     urls.ts ✅                       # Построитель URL с базовым путём
     rehype-site-urls.mjs ✅           # Преобразование адресов в Markdown/MDX
     rehype-math-errors.mjs ✅         # Ошибки формул блокируют сборку
@@ -49,6 +51,7 @@ tests/                               # Unit-тесты и браузерные �
   e2e/search.spec.ts ✅               # Настоящий API Pagefind в корне и под префиксом
   fixtures/artifact/ ✅              # Контрольная сборка с ошибочной внутренней ссылкой
   unit/articles.test.ts ✅            # Схема статьи, slug и группы
+  unit/glossary.test.ts ✅            # Схема глоссария и разрешение целей
   fixtures/articles/ ✅              # Служебные статьи коллекции
   fixtures/mdx/ ✅                   # Служебные материалы для проверки MDX
 astro.config.mjs ✅

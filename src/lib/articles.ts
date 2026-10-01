@@ -1,14 +1,7 @@
 // Схема frontmatter статьи по контракту docs/spec.md и проверка уникальности slug.
 import { z } from 'astro/zod';
 import { topicIds } from '@/data/topics';
-
-const text = z.string().trim().min(1);
-
-/** Цель ссылки: статья сайта (с необязательным якорем) или внешний адрес. */
-const target = z.union([
-  z.strictObject({ article: text, anchor: text.optional() }),
-  z.strictObject({ url: z.url() }),
-]);
+import { text, target } from '@/lib/links';
 
 const link = z.strictObject({ label: text, description: text, target });
 
