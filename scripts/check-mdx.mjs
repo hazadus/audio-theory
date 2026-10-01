@@ -88,7 +88,11 @@ try {
     assert.match(html, /Число отсчётов сигнала, снимаемых за одну секунду/);
     assert.match(html, /<button[^>]*popovertarget="term-sample-rate-\d+"/);
     assert.match(html, /частоты дискретизации<\/a>/);
-    assert.match(html, /href="https:\/\/ru\.wikipedia\.org\/wiki\/Частота_Найквиста"/);
+    // Цель термина — раздел статьи: адрес строится из `article` и `anchor` записи глоссария.
+    assert.ok(
+      html.includes(`href="${base}sampling/#how-fast"`),
+      `ссылка термина на раздел статьи под базой ${base}`,
+    );
     // Equation: якорь, номер, формула с MathML, прокручиваемая область с клавиатуры и <dl> обозначений.
     assert.match(
       html,
