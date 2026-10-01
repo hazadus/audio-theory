@@ -29,6 +29,7 @@ src/
     article-content.ts ✅            # Источники, ссылки, листинги и нумерация блоков
     remark-heading-anchors.mjs ✅    # Синтаксис {#anchor} в заголовках MDX
     reading-time.ts ✅               # Подсчёт слов и время чтения по MDX
+    theme.ts ✅                      # Режимы темы, чтение и запись выбора, ранний скрипт
     urls.ts ✅                       # Построитель URL с базовым путём
     rehype-site-urls.mjs ✅           # Преобразование адресов в Markdown/MDX
     rehype-math-errors.mjs ✅         # Ошибки формул блокируют сборку
@@ -38,6 +39,7 @@ src/
   assets/fonts/ ✅                   # Локальные WOFF2 Literata, Golos Text, JetBrains Mono
   components/
     Icon.astro ✅                    # Иконки Lucide с обводкой 1.5/1.75 px
+    ThemeToggle.astro ✅             # Кнопка выбора светлой, тёмной и автоматической темы
   styles/                            # Токены, базовые стили и оформление статьи
     tokens.css ✅                    # Токены дизайн-системы для светлой и тёмной тем
     fonts.css ✅                     # @font-face локальных шрифтов
@@ -67,6 +69,7 @@ tests/                               # Unit-тесты и браузерные �
   unit/article-content.test.ts ✅     # Правила содержимого статьи
   unit/heading-anchors.test.ts ✅     # Синтаксис {#anchor} и ошибки
   unit/reading-time.test.ts ✅        # Подсчёт слов и оценка времени чтения
+  unit/theme.test.ts ✅               # Режимы темы, отказ storage, ранний скрипт
   unit/tokens.test.ts ✅              # Пары тем и пороги контраста токенов
   fixtures/articles/ ✅              # Служебные статьи коллекции
   fixtures/mdx/ ✅                   # Служебные материалы для проверки MDX

@@ -1,6 +1,6 @@
 // Проверяет начальную страницу, навигацию, ресурсы и чтение без JavaScript в корне и под префиксом.
 import { expect, test } from '@playwright/test';
-import { siteConfig } from '../../src/site.config';
+import { siteConfig } from '@/site.config';
 
 test('начальная страница, навигация и локальные ресурсы', async ({ page }, testInfo) => {
   const base = testInfo.project.metadata.base as string;
@@ -121,6 +121,152 @@ test('страница читается без JavaScript на узком экр
     );
     await page.getByRole('link', { name: 'На главную' }).click();
     expect(new URL(page.url()).pathname).toBe(testInfo.project.metadata.base);
+  } finally {
+    await context.close();
+  }
+});
+
+const themeButton = '[data-theme-toggle]';
+const backgroundLightness = (page: import('@playwright/test').Page) =>
+  page.evaluate(() => {
+    const canvas = document.createElement('canvas').getContext('2d')!;
+    canvas.fillStyle = getComputedStyle(document.body).backgroundColor;
+    canvas.fillRect(0, 0, 1, 1);
+    return canvas.getImageData(0, 0, 1, 1).data[0];
+  });
+
+test('тема переключается по кругу и сохраняется после перезагрузки без вспышки', async ({
+  browser,
+}, testInfo) => {
+  const context = await browser.newContext({
+    baseURL: testInfo.project.use.baseURL,
+    colorScheme: 'light',
+  });
+  try {
+    const page = await context.newPage();
+    // Атрибут должен появиться до первой отрисовки: наблюдаем за ним с самого начала документа.
+    await page.addInitScript(() => {
+      (window as unknown as { themeLog: (string | null)[] }).themeLog = [];
+      new MutationObserver(() => {
+        (window as unknown as { themeLog: (string | null)[] }).themeLog.push(
+          document.documentElement.getAttribute('data-theme'),
+        );
+      }).observe(document, { subtree: true, attributes: true, attributeFilter: ['data-theme'] });
+    });
+    await page.goto('./');
+    const button = page.locator(themeButton);
+    await expect(button).toBeVisible();
+    await expect(page.locator('html')).not.toHaveAttribute('data-theme');
+    await expect(button).toHaveAttribute('aria-label', 'Тема: авто. Переключить на: светлая');
+
+    await button.click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    await expect(button).toHaveAttribute('aria-label', 'Тема: светлая. Переключить на: тёмная');
+    await button.click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    expect(await backgroundLightness(page)).toBeLessThan(128);
+
+    await page.reload();
+    // Явный выбор «тёмная» восстановлен раньше, чем отработали модули и отрисовалась страница.
+    const log = await page.evaluate(
+      () => (window as never as { themeLog: (string | null)[] }).themeLog,
+    );
+    expect(log.length).toBeGreaterThan(0);
+    expect(log.every((value) => value === 'dark')).toBe(true);
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    expect(await backgroundLightness(page)).toBeLessThan(128);
+    await expect(page.locator(themeButton)).toHaveAttribute(
+      'aria-label',
+      'Тема: тёмная. Переключить на: авто',
+    );
+
+    await page.locator(themeButton).click();
+    await expect(page.locator('html')).not.toHaveAttribute('data-theme');
+    await page.reload();
+    await expect(page.locator('html')).not.toHaveAttribute('data-theme');
+    expect(await page.evaluate(() => localStorage.getItem('theme'))).toBe('auto');
+  } finally {
+    await context.close();
+  }
+});
+
+test('в режиме авто тема следует за системой без перезагрузки', async ({ browser }, testInfo) => {
+  const context = await browser.newContext({
+    baseURL: testInfo.project.use.baseURL,
+    colorScheme: 'light',
+  });
+  try {
+    const page = await context.newPage();
+    await page.goto('./');
+    expect(await backgroundLightness(page)).toBeGreaterThan(128);
+    await page.emulateMedia({ colorScheme: 'dark' });
+    expect(await backgroundLightness(page)).toBeLessThan(128);
+    // Явный выбор системе не подчиняется.
+    await page.locator(themeButton).click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    expect(await backgroundLightness(page)).toBeGreaterThan(128);
+  } finally {
+    await context.close();
+  }
+});
+
+test('отказ localStorage не ломает управление темой', async ({ browser }, testInfo) => {
+  const context = await browser.newContext({ baseURL: testInfo.project.use.baseURL });
+  try {
+    const page = await context.newPage();
+    await page.addInitScript(() => {
+      const fail = () => {
+        throw new DOMException('denied', 'SecurityError');
+      };
+      Object.defineProperty(window, 'localStorage', { get: fail });
+    });
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto('./');
+    const button = page.locator(themeButton);
+    await expect(button).toBeVisible();
+    await button.click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    await button.click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    expect(errors).toEqual([]);
+  } finally {
+    await context.close();
+  }
+});
+
+test('отказ только записи в localStorage не ломает переключение', async ({ browser }, testInfo) => {
+  const context = await browser.newContext({ baseURL: testInfo.project.use.baseURL });
+  try {
+    const page = await context.newPage();
+    await page.addInitScript(() => {
+      Storage.prototype.setItem = () => {
+        throw new DOMException('quota', 'QuotaExceededError');
+      };
+    });
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto('./');
+    await page.locator(themeButton).click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    expect(errors).toEqual([]);
+  } finally {
+    await context.close();
+  }
+});
+
+test('без JavaScript действует системная тема, кнопки темы нет', async ({ browser }, testInfo) => {
+  const context = await browser.newContext({
+    baseURL: testInfo.project.use.baseURL,
+    javaScriptEnabled: false,
+    colorScheme: 'dark',
+  });
+  try {
+    const page = await context.newPage();
+    await page.goto('./');
+    await expect(page.locator(themeButton)).toBeHidden();
+    await expect(page.locator('html')).not.toHaveAttribute('data-theme');
+    expect(await backgroundLightness(page)).toBeLessThan(128);
   } finally {
     await context.close();
   }

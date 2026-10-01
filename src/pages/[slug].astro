@@ -4,6 +4,7 @@ import { assertValidArticles } from '@/lib/article-content';
 import { assertUniqueSlugs } from '@/lib/articles';
 import { assertUniqueAnchors, getToc } from '@/lib/headings';
 import { allowDraftEnv, getUpdatedDate } from '@/lib/git-date';
+import { themeInitScript } from '@/lib/theme';
 import { resolveReadingMinutes } from '@/lib/reading-time';
 
 export async function getStaticPaths() {
@@ -37,6 +38,7 @@ const updated = getUpdatedDate(article.filePath!, {
 <html lang="ru">
   <head>
     <meta charset="utf-8" />
+    <script is:inline set:html={themeInitScript} />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{article.data.title}</title>
   </head>

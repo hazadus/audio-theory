@@ -1,7 +1,9 @@
 ---
 import '@/styles/base.css';
 import Icon from '@/components/Icon.astro';
+import ThemeToggle from '@/components/ThemeToggle.astro';
 import { siteConfig } from '@/site.config';
+import { themeInitScript } from '@/lib/theme';
 import { withBase } from '@/lib/urls';
 ---
 
@@ -9,6 +11,7 @@ import { withBase } from '@/lib/urls';
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
+    <script is:inline set:html={themeInitScript} />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Личный учебник по теории аудио и цифровой обработке звука." />
     <title>Теория аудио</title>
@@ -24,6 +27,9 @@ import { withBase } from '@/lib/urls';
           GitHub
           <Icon name="external-link" size={16} />
         </a>
+      </p>
+      <p data-pagefind-ignore>
+        <ThemeToggle />
       </p>
     </main>
   </body>
