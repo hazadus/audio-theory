@@ -31,6 +31,7 @@ const links = (items: typeof data.related) =>
 ---
 
 <BaseLayout title={data.title}>
+  <div class="progress" data-reading-progress aria-hidden="true" hidden></div>
   <main id="content" data-pagefind-body>
     <div class="page">
       <nav class="breadcrumbs" aria-label="Хлебные крошки" data-pagefind-ignore>
@@ -89,7 +90,7 @@ const links = (items: typeof data.related) =>
         </div>
       )}
 
-      <article class="body">
+      <article class="body" data-article-body>
         {prerequisites.length > 0 && (
           <aside class="prerequisites" aria-label="Что нужно знать заранее">
             <div class="label">Что нужно знать заранее</div>
@@ -125,15 +126,21 @@ const links = (items: typeof data.related) =>
       </article>
     </div>
   </main>
+  <button type="button" class="to-top" data-back-to-top hidden>
+    <Icon name="arrow-up" size={18} />
+    <span class="to-top-label">Наверх</span>
+  </button>
   <div class="copy-status" role="status" data-copy-status hidden></div>
 </BaseLayout>
 
 <script>
   import { initHeadingLinks } from '@/lib/heading-links-controller';
+  import { initReadingProgress } from '@/lib/reading-progress-controller';
   import { initToc } from '@/lib/toc-controller';
 
   initToc();
   initHeadingLinks();
+  initReadingProgress();
 </script>
 
 <style>
@@ -546,6 +553,60 @@ const links = (items: typeof data.related) =>
   @media (hover: none) {
     .prose :global(.heading-link) {
       opacity: 0.6;
+    }
+  }
+
+  /* Полоса прогресса: под шапкой, не занимает место в потоке; `top` задаёт скрипт по высоте шапки. */
+  .progress {
+    position: fixed;
+    inset-inline: 0;
+    top: 57px;
+    z-index: var(--z-sticky);
+    height: 2px;
+    background: var(--color-accent);
+    transform: scaleX(var(--progress, 0));
+    transform-origin: left;
+    pointer-events: none;
+  }
+
+  .to-top {
+    position: fixed;
+    inset-block-end: var(--space-5);
+    inset-inline-end: var(--space-4);
+    z-index: var(--z-sticky);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 var(--space-3);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-raised);
+    color: var(--color-text);
+    font-family: var(--font-ui);
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .to-top[hidden] {
+    display: none;
+  }
+
+  .to-top:hover {
+    color: var(--color-accent-hover);
+  }
+
+  /* Смартфон: только стрелка, подпись остаётся для скринридера. */
+  @media (width < 600px) {
+    .to-top-label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
     }
   }
 
