@@ -80,7 +80,7 @@ Vitest запускает только `tests/unit/**/*.test.ts`. Playwright з�
 
 ## Визуальные ресурсы
 
-**Статус: выбраны в составе дизайна.** Literata, Golos Text и JetBrains Mono размещаются на сайте в WOFF2 с кириллицей и латиницей; иконки — Lucide. Шрифты формул поставляются с KaTeX. При подключении ресурсов сохраняются их лицензии.
+**Статус: подключены.** Literata (400, 600, 400 italic), Golos Text (400–600) и JetBrains Mono (400) лежат в `src/assets/fonts/` в WOFF2 с кириллицей и латиницей; `src/styles/fonts.css` подключает их с `font-display: swap`, сборка кладёт файлы в `_astro/` с учётом базового пути. Иконки — Lucide (`lucide-static` 1.49.0, компонент `Icon.astro`, подключаются только используемые). Шрифты формул поставляются с KaTeX. Лицензии шрифтов (SIL OFL 1.1) и Lucide (ISC) лежат в `public/licenses/`.
 
 ## Аудиопримеры
 

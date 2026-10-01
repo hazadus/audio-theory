@@ -35,13 +35,17 @@ src/
   pages/                             # Статические маршруты Astro
     index.astro ✅                   # Начальная страница
     [slug].astro ✅                  # Маршруты статей из slug
+  assets/fonts/ ✅                   # Локальные WOFF2 Literata, Golos Text, JetBrains Mono
+  components/
+    Icon.astro ✅                    # Иконки Lucide с обводкой 1.5/1.75 px
   styles/                            # Токены, базовые стили и оформление статьи
-    tokens.css ✅                    # Используемые токены дизайн-системы
+    tokens.css ✅                    # Токены дизайн-системы для светлой и тёмной тем
+    fonts.css ✅                     # @font-face локальных шрифтов
+    base.css ✅                      # Фон, шрифты, заголовки, выделение и фокус
     math.css ✅                      # Локальные стили и шрифты KaTeX
   site.config.ts ✅                  # Адрес сайта, репозитория и базовый путь
 public/
-  fonts/                             # Локальные WOFF2 и лицензии
-  licenses/katex.txt ✅              # Лицензия KaTeX
+  licenses/ ✅                       # Лицензии KaTeX, шрифтов и Lucide
 scripts/                             # Проверка контента и собранного сайта
   build-artifact.mjs ✅              # Интеграция сборки индекса Pagefind и проверки артефакта
   check-articles.mjs ✅              # Проверка коллекции статей
@@ -63,6 +67,7 @@ tests/                               # Unit-тесты и браузерные �
   unit/article-content.test.ts ✅     # Правила содержимого статьи
   unit/heading-anchors.test.ts ✅     # Синтаксис {#anchor} и ошибки
   unit/reading-time.test.ts ✅        # Подсчёт слов и оценка времени чтения
+  unit/tokens.test.ts ✅              # Пары тем и пороги контраста токенов
   fixtures/articles/ ✅              # Служебные статьи коллекции
   fixtures/mdx/ ✅                   # Служебные материалы для проверки MDX
 astro.config.mjs ✅

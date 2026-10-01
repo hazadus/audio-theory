@@ -40,6 +40,7 @@
     "eslint": "10.11.0",
     "eslint-plugin-astro": "3.2.1",
     "globals": "17.13.0",
+    "lucide-static": "1.49.0",
     "pagefind": "1.5.2",
     "parse5": "8.0.1",
     "postcss-value-parser": "4.2.0",

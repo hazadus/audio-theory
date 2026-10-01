@@ -1,5 +1,6 @@
 ---
-import '../styles/tokens.css';
+import '@/styles/base.css';
+import Icon from '@/components/Icon.astro';
 import { siteConfig } from '@/site.config';
 import { withBase } from '@/lib/urls';
 ---
@@ -18,24 +19,17 @@ import { withBase } from '@/lib/urls';
       <p>Личный учебник по теории аудио и цифровой обработке звука.</p>
       <p class="status">Сайт в разработке. Материалы появятся позже.</p>
       <p data-pagefind-ignore>
-        <a href={withBase('/')}>На главную</a> · <a href={siteConfig.repository}>GitHub</a>
+        <a href={withBase('/')}>На главную</a> ·{' '}
+        <a class="external" href={siteConfig.repository}>
+          GitHub
+          <Icon name="external-link" size={16} />
+        </a>
       </p>
     </main>
   </body>
 </html>
 
 <style>
-  body {
-    margin: 0;
-    background: var(--color-bg);
-    color: var(--color-text);
-    font-family: var(--font-text);
-    font-size: var(--text-base);
-    line-height: 1.65;
-    overflow-wrap: anywhere;
-    hyphens: auto;
-  }
-
   main {
     max-width: var(--content-width);
     margin: var(--space-9) auto;
@@ -44,12 +38,6 @@ import { withBase } from '@/lib/urls';
 
   h1 {
     margin: 0 0 var(--space-6);
-    font-size: var(--text-4xl);
-    font-weight: 600;
-    line-height: 1.12;
-    letter-spacing: -0.015em;
-    text-wrap: balance;
-    hyphens: none;
   }
 
   p {
@@ -59,7 +47,14 @@ import { withBase } from '@/lib/urls';
   .status {
     color: var(--color-text-muted);
     font-family: var(--font-ui);
-    font-size: 0.9375rem;
-    line-height: 1.45;
+    font-size: var(--text-ui);
+    line-height: var(--leading-normal);
+  }
+
+  .external {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    color: var(--color-link-external);
   }
 </style>

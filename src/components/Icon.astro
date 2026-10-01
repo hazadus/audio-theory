@@ -1,0 +1,92 @@
+---
+// Иконки Lucide (ISC): SVG 24 × 24, currentColor, обводка 1.5 px; при размере до 18 px — 1.75 px.
+import search from 'lucide-static/icons/search.svg?raw';
+import menu from 'lucide-static/icons/menu.svg?raw';
+import x from 'lucide-static/icons/x.svg?raw';
+import sun from 'lucide-static/icons/sun.svg?raw';
+import moon from 'lucide-static/icons/moon.svg?raw';
+import monitor from 'lucide-static/icons/monitor.svg?raw';
+import externalLink from 'lucide-static/icons/external-link.svg?raw';
+import link from 'lucide-static/icons/link.svg?raw';
+import play from 'lucide-static/icons/play.svg?raw';
+import pause from 'lucide-static/icons/pause.svg?raw';
+import square from 'lucide-static/icons/square.svg?raw';
+import volume2 from 'lucide-static/icons/volume-2.svg?raw';
+import volumeX from 'lucide-static/icons/volume-x.svg?raw';
+import copy from 'lucide-static/icons/copy.svg?raw';
+import check from 'lucide-static/icons/check.svg?raw';
+import rotateCcw from 'lucide-static/icons/rotate-ccw.svg?raw';
+import arrowLeft from 'lucide-static/icons/arrow-left.svg?raw';
+import arrowRight from 'lucide-static/icons/arrow-right.svg?raw';
+import arrowUp from 'lucide-static/icons/arrow-up.svg?raw';
+import chevronDown from 'lucide-static/icons/chevron-down.svg?raw';
+import info from 'lucide-static/icons/info.svg?raw';
+import triangleAlert from 'lucide-static/icons/triangle-alert.svg?raw';
+import circleAlert from 'lucide-static/icons/circle-alert.svg?raw';
+import lightbulb from 'lucide-static/icons/lightbulb.svg?raw';
+
+const icons = {
+  search: search,
+  menu: menu,
+  x: x,
+  sun: sun,
+  moon: moon,
+  monitor: monitor,
+  'external-link': externalLink,
+  link: link,
+  play: play,
+  pause: pause,
+  square: square,
+  'volume-2': volume2,
+  'volume-x': volumeX,
+  copy: copy,
+  check: check,
+  'rotate-ccw': rotateCcw,
+  'arrow-left': arrowLeft,
+  'arrow-right': arrowRight,
+  'arrow-up': arrowUp,
+  'chevron-down': chevronDown,
+  info: info,
+  'triangle-alert': triangleAlert,
+  'circle-alert': circleAlert,
+  lightbulb: lightbulb,
+};
+
+export type IconName = keyof typeof icons;
+
+interface Props {
+  name: IconName;
+  /** Визуальный размер в px. */
+  size?: number;
+  /** Подпись для иконки без текста рядом; без неё иконка скрыта от вспомогательных технологий. */
+  label?: string;
+}
+
+const { name, size = 20, label } = Astro.props;
+const body = icons[name].replace(/^[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
+const strokeWidth = size <= 18 ? 1.75 : 1.5;
+---
+
+<svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  width={size}
+  height={size}
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width={strokeWidth}
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  role={label ? 'img' : undefined}
+  aria-label={label}
+  aria-hidden={label ? undefined : 'true'}
+  focusable="false"
+  set:html={body}
+/>
+
+<style>
+  .icon {
+    flex: none;
+  }
+</style>

@@ -1,30 +1,161 @@
+/* Токены «Лабораторной тетради»; роли и значения — в docs/design-system.md.
+   Пары light-dark() следуют color-scheme: система в режиме «авто», data-theme — явный выбор. */
 :root {
   color-scheme: light dark;
-  --color-bg: oklch(97.5% 0.008 85);
-  --color-text: oklch(25% 0.015 265);
-  --color-text-muted: oklch(48% 0.014 265);
+
+  --color-bg: light-dark(oklch(97.5% 0.008 85), oklch(20.5% 0.012 255));
+  --color-surface: light-dark(oklch(95.2% 0.011 85), oklch(23.5% 0.013 255));
+  --color-surface-raised: light-dark(oklch(99% 0.004 85), oklch(26.5% 0.014 255));
+  --color-border: light-dark(oklch(87% 0.014 85), oklch(33% 0.014 255));
+  --color-border-strong: light-dark(oklch(62% 0.018 85), oklch(55% 0.015 255));
+  --color-selection-bg: light-dark(oklch(89% 0.06 90), oklch(38% 0.06 250));
+  --color-mark-bg: light-dark(oklch(90% 0.09 95), oklch(42% 0.08 85));
+
+  --color-text: light-dark(oklch(25% 0.015 265), oklch(91% 0.012 85));
+  --color-text-muted: light-dark(oklch(48% 0.014 265), oklch(73% 0.012 85));
+  --color-text-inverse: light-dark(oklch(97.5% 0.008 85), oklch(20.5% 0.012 255));
+
+  --color-accent: light-dark(oklch(48% 0.13 255), oklch(78% 0.11 245));
+  --color-accent-hover: light-dark(oklch(40% 0.13 255), oklch(86% 0.09 245));
+  --color-accent-soft: light-dark(oklch(93% 0.03 255), oklch(30% 0.05 250));
+  --color-on-accent: light-dark(oklch(98.5% 0.004 85), oklch(20% 0.02 255));
+  --color-link: light-dark(oklch(46% 0.13 255), oklch(79% 0.11 245));
+  --color-link-visited: light-dark(oklch(45% 0.13 310), oklch(78% 0.1 310));
+  --color-link-external: light-dark(oklch(45% 0.09 205), oklch(80% 0.08 200));
+  --color-focus: light-dark(oklch(55% 0.17 255), oklch(80% 0.14 245));
+
+  --color-info: light-dark(oklch(47% 0.11 245), oklch(80% 0.09 240));
+  --color-info-bg: light-dark(oklch(95% 0.025 245), oklch(27% 0.04 245));
+  --color-warning: light-dark(oklch(47% 0.1 70), oklch(84% 0.11 80));
+  --color-warning-bg: light-dark(oklch(95% 0.04 85), oklch(28% 0.04 75));
+  --color-success: light-dark(oklch(46% 0.1 155), oklch(80% 0.11 155));
+  --color-success-bg: light-dark(oklch(95% 0.03 155), oklch(27% 0.04 155));
+  --color-error: light-dark(oklch(49% 0.16 27), oklch(75% 0.13 25));
+  --color-error-bg: light-dark(oklch(95% 0.03 27), oklch(28% 0.05 25));
+
+  --color-code-bg: light-dark(oklch(94.5% 0.012 85), oklch(17.5% 0.012 255));
+  --color-code-text: light-dark(oklch(25% 0.015 265), oklch(91% 0.012 85));
+  --syntax-keyword: light-dark(oklch(45% 0.14 310), oklch(78% 0.11 310));
+  --syntax-string: light-dark(oklch(45% 0.11 150), oklch(80% 0.11 150));
+  --syntax-number: light-dark(oklch(50% 0.13 45), oklch(82% 0.11 60));
+  --syntax-function: light-dark(oklch(45% 0.12 255), oklch(80% 0.1 240));
+  --syntax-comment: light-dark(oklch(52% 0.015 265), oklch(66% 0.015 255));
+  --syntax-punctuation: light-dark(oklch(48% 0.014 265), oklch(73% 0.012 85));
+  --color-math: light-dark(oklch(25% 0.015 265), oklch(91% 0.012 85));
+
+  --chart-bg: light-dark(oklch(99% 0.004 85), oklch(23.5% 0.013 255));
+  --chart-grid: light-dark(oklch(90.5% 0.012 85), oklch(31% 0.013 255));
+  --chart-axis: light-dark(oklch(55% 0.014 265), oklch(62% 0.012 85));
+  --chart-label: light-dark(oklch(48% 0.014 265), oklch(73% 0.012 85));
+  --chart-series-1: light-dark(oklch(50% 0.13 245), oklch(75% 0.12 240));
+  --chart-series-2: light-dark(oklch(58% 0.17 40), oklch(72% 0.15 45));
+  --chart-series-3: light-dark(oklch(55% 0.12 165), oklch(75% 0.12 165));
+  --chart-series-4: light-dark(oklch(55% 0.13 340), oklch(75% 0.12 340));
+  --chart-series-5: light-dark(oklch(60% 0.13 70), oklch(83% 0.13 85));
+  --chart-series-6: light-dark(oklch(30% 0.015 265), oklch(92% 0.01 85));
+  --chart-signal: var(--chart-series-1);
+  --chart-sample: var(--chart-series-2);
+  --chart-result: var(--chart-series-3);
+  --chart-spectrum: var(--chart-series-1);
+
+  --shadow-sm: 0 1px 2px light-dark(oklch(25% 0.015 265 / 0.06), oklch(0% 0 0 / 0.3));
+  --shadow-md: 0 4px 16px light-dark(oklch(25% 0.015 265 / 0.08), oklch(0% 0 0 / 0.35));
+  --shadow-lg: 0 16px 48px light-dark(oklch(25% 0.015 265 / 0.16), oklch(0% 0 0 / 0.55));
+  --color-scrim: light-dark(oklch(25% 0.015 265 / 0.32), oklch(10% 0.01 255 / 0.6));
+
   --font-text: 'Literata', 'PT Serif', Georgia, 'Times New Roman', serif;
   --font-ui: 'Golos Text', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  --font-math: 'Latin Modern Math', 'STIX Two Math', 'Cambria Math', math, var(--font-text);
+
+  --text-xs: 0.8125rem;
+  --text-sm: 0.875rem;
+  --text-ui: 0.9375rem;
   --text-base: 1.125rem;
+  --text-lg: 1.3125rem;
+  --text-xl: 1.4375rem;
+  --text-2xl: 1.875rem;
+  --text-3xl: 2.375rem;
   --text-4xl: 3rem;
-  --page-gutter: 32px;
-  --content-width: 42.5rem;
+  --text-chart: 0.75rem;
+
+  --leading-tight: 1.12;
+  --leading-snug: 1.3;
+  --leading-normal: 1.45;
+  --leading-relaxed: 1.65;
+  --tracking-tight: -0.015em;
+  --tracking-snug: -0.01em;
+  --tracking-wide: 0.04em;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
   --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 48px;
   --space-9: 64px;
+  --space-10: 96px;
+
+  --container-max: 1200px;
+  --content-width: 42.5rem;
+  --wide-width: 55rem;
+  --toc-width: 15rem;
+  --page-gutter: 32px;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --radius-full: 999px;
+  --border-width: 1px;
+  --border-width-strong: 2px;
+  --focus-ring: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-focus);
+
+  --z-base: 0;
+  --z-sticky: 100;
+  --z-header: 200;
+  --z-dropdown: 300;
+  --z-tooltip: 400;
+  --z-scrim: 500;
+  --z-modal: 600;
+  --z-toast: 700;
+
+  --duration-instant: 80ms;
+  --duration-fast: 140ms;
+  --duration-base: 220ms;
+  --duration-slow: 320ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-bg: oklch(20.5% 0.012 255);
-    --color-text: oklch(91% 0.012 85);
-    --color-text-muted: oklch(73% 0.012 85);
-  }
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
 }
 
 @media (width < 600px) {
   :root {
     --text-base: 1.0625rem;
+    --text-lg: 1.1875rem;
+    --text-xl: 1.3125rem;
+    --text-2xl: 1.625rem;
+    --text-3xl: 1.875rem;
     --text-4xl: 2.125rem;
     --page-gutter: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-instant: 0.01ms;
+    --duration-fast: 0.01ms;
+    --duration-base: 0.01ms;
+    --duration-slow: 0.01ms;
   }
 }

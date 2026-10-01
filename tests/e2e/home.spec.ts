@@ -40,6 +40,71 @@ test('начальная страница, навигация и локальн�
   expect((await page.request.get(`${base}__test/mdx/`)).status()).toBe(404);
 });
 
+test('шрифты, токены тем и иконки загружаются локально под префиксом', async ({
+  browser,
+  request,
+}, testInfo) => {
+  const base = testInfo.project.metadata.base as string;
+  for (const colorScheme of ['light', 'dark'] as const) {
+    const context = await browser.newContext({
+      baseURL: testInfo.project.use.baseURL,
+      colorScheme,
+    });
+    try {
+      const page = await context.newPage();
+      const fontResponses: string[] = [];
+      page.on('response', (response) => {
+        if (response.url().endsWith('.woff2')) {
+          fontResponses.push(`${response.status()} ${new URL(response.url()).pathname}`);
+        }
+      });
+      await page.goto('./');
+      await page.evaluate(() => document.fonts.ready);
+      const state = await page.evaluate(() => {
+        const style = (selector: string) => getComputedStyle(document.querySelector(selector)!);
+        return {
+          loaded: [...document.fonts]
+            .filter((font) => font.status === 'loaded')
+            .map((font) => `${font.family} ${font.style} ${font.weight}`),
+          h1Font: style('h1').fontFamily,
+          statusFont: style('.status').fontFamily,
+          background: style('body').backgroundColor,
+          color: style('h1').color,
+          icon: document.querySelector('a.external svg')?.getAttribute('aria-hidden'),
+          stroke: document.querySelector('a.external svg')?.getAttribute('stroke-width'),
+        };
+      });
+      expect(state.h1Font).toContain('Literata');
+      expect(state.statusFont).toContain('Golos Text');
+      expect(state.loaded.some((font) => font.includes('Literata'))).toBe(true);
+      expect(state.loaded.some((font) => font.includes('Golos Text'))).toBe(true);
+      expect(fontResponses.length).toBeGreaterThan(0);
+      for (const response of fontResponses) {
+        expect(response.startsWith('200')).toBe(true);
+        expect(response).toContain(`${base}_astro/`);
+      }
+      expect(state.icon).toBe('true');
+      expect(state.stroke).toBe('1.75');
+      // Фон и текст берутся из токенов выбранной системной темы.
+      const dark = colorScheme === 'dark';
+      expect(state.background).not.toBe(state.color);
+      const lightness = await page.evaluate(() => {
+        const canvas = document.createElement('canvas').getContext('2d')!;
+        canvas.fillStyle = getComputedStyle(document.body).backgroundColor;
+        canvas.fillRect(0, 0, 1, 1);
+        const [red] = canvas.getImageData(0, 0, 1, 1).data;
+        return red;
+      });
+      expect(lightness < 128).toBe(dark);
+    } finally {
+      await context.close();
+    }
+  }
+  for (const name of ['literata', 'golos-text', 'jetbrains-mono', 'lucide']) {
+    expect((await request.get(`${base}licenses/${name}.txt`)).status()).toBe(200);
+  }
+});
+
 test('страница читается без JavaScript на узком экране', async ({ browser }, testInfo) => {
   const context = await browser.newContext({
     baseURL: testInfo.project.use.baseURL,
