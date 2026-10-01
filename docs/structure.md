@@ -7,7 +7,7 @@
 .claude/skills/write-article/SKILL.md   # Вход в скилл Claude Code
 .github/workflows/pages.yml           # Проверки, сборка и деплой
 docs/authoring/                       # Общие правила и шаблон статьи
-src/content/articles/                # Четыре статьи в MDX и будущие материалы
+src/content/articles/                # Пять статей в MDX и будущие материалы
 src/content.config.ts                # Схема коллекции статей
 src/data/topics.ts                   # Четыре тематические группы
 src/data/glossary.json                # Единый источник определений
