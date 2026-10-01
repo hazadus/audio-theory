@@ -2,6 +2,7 @@
 import remarkMdx from 'remark-mdx';
 import remarkMath from 'remark-math';
 import remarkParse from 'remark-parse';
+import remarkHeadingAnchors from './remark-heading-anchors.mjs';
 import { unified } from 'unified';
 
 /** Скорость чтения, слов в минуту. */
@@ -29,7 +30,7 @@ interface MdNode {
   children?: MdNode[];
 }
 
-const parser = unified().use(remarkParse).use(remarkMdx).use(remarkMath);
+const parser = unified().use(remarkParse).use(remarkMdx).use(remarkMath).use(remarkHeadingAnchors);
 
 /** Убирает frontmatter в начале файла (в содержимом коллекции его уже нет). */
 function stripFrontmatter(source: string): string {

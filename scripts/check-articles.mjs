@@ -11,7 +11,7 @@ const temporaryRoot = join(root, '.e2e');
 await mkdir(temporaryRoot, { recursive: true });
 const temporary = await mkdtemp(join(temporaryRoot, 'articles-'));
 
-function build(outDir, fixture, { draft = false, dir } = {}) {
+function build(outDir, fixture, { draft = false, dir, base = '/' } = {}) {
   const env = { ...process.env };
   delete env.ARTICLES_DIR;
   delete env.ALLOW_DRAFT_ARTICLES;
@@ -19,7 +19,7 @@ function build(outDir, fixture, { draft = false, dir } = {}) {
   if (draft) env.ALLOW_DRAFT_ARTICLES = '1';
   return spawnSync(
     process.execPath,
-    ['node_modules/astro/bin/astro.mjs', 'build', '--outDir', outDir, '--base', '/'],
+    ['node_modules/astro/bin/astro.mjs', 'build', '--outDir', outDir, '--base', base],
     { cwd: root, encoding: 'utf8', env },
   );
 }
@@ -35,6 +35,35 @@ try {
     // test-wave задаёт readingMinutes: 3 вручную, у test-sampling оценка по тексту — минимум 1 минута.
     assert.match(html, slug === 'test-wave' ? /3 мин чтения/ : /1 мин чтения/);
   }
+
+  // Оглавление: H2/H3 в порядке документа, H4 нет; якоря остались при любых русских названиях.
+  const sampling = await readFile(join(validDir, 'test-sampling', 'index.html'), 'utf8');
+  const tocHtml = sampling.match(/<nav aria-label="Содержание">([\s\S]*?)<\/nav>/)?.[1] ?? '';
+  const tocItems = [
+    ...tocHtml.matchAll(/<li data-depth="(\d)"[^>]*><a href="#([^"]+)">([^<]+)<\/a>/g),
+  ];
+  assert.deepEqual(
+    tocItems.map(([, depth, id, text]) => [depth, id, text]),
+    [
+      ['2', 'sampling-theorem', 'Теорема отсчётов'],
+      ['3', 'nyquist-frequency', 'Частота Найквиста'],
+      ['2', 'aliasing', 'Наложение спектров'],
+    ],
+  );
+  for (const [, , id] of tocItems) assert.match(sampling, new RegExp(`<h[23] id="${id}"`));
+  assert.match(sampling, /<h4 id="[^"]+">Подробности<\/h4>/);
+  assert.doesNotMatch(sampling, /\{#/);
+
+  // Ссылки на разделы: под префиксом базовый путь добавляется один раз, якорь сохраняется и существует.
+  const prefixedDir = join(temporary, 'prefixed');
+  const prefixed = build(prefixedDir, 'valid', { base: '/audio-theory/' });
+  assert.equal(prefixed.status, 0, prefixed.stdout + prefixed.stderr);
+  const wave = await readFile(join(prefixedDir, 'test-wave', 'index.html'), 'utf8');
+  assert.match(wave, /href="\/audio-theory\/test-sampling\/#aliasing"/);
+  assert.match(wave, /href="\/audio-theory\/test-sampling\/#nyquist-frequency"/);
+  assert.doesNotMatch(wave, /audio-theory\/audio-theory/);
+  const rootWave = await readFile(join(validDir, 'test-wave', 'index.html'), 'utf8');
+  assert.match(rootWave, /href="\/test-sampling\/#aliasing"/);
 
   // Игнорируемый .e2e/ не имеет Git-истории: копия служебной статьи — «новый файл без коммита».
   const draftArticles = join(temporary, 'uncommitted');
@@ -62,6 +91,9 @@ try {
     ['unknown-topic', /topic/],
     ['empty-field', /title/],
     ['bad-reading', /readingMinutes/],
+    ['duplicate-anchor', /Повторный якорь «same»/],
+    ['bad-anchor', /английского kebab-case/],
+    ['misplaced-anchor', /только в конце заголовка/],
   ];
   for (const [fixture, message] of failures) {
     const result = build(join(temporary, fixture), fixture);
@@ -78,6 +110,8 @@ try {
   console.log(
     'Повторный slug, неизвестная группа, пустые поля и readingMinutes блокируют сборку — OK',
   );
+  console.log('Якоря {#anchor}, оглавление H2/H3 и ссылки на разделы под префиксом — OK');
+  console.log('Повторный, неверный и неуместный якорь блокируют сборку — OK');
   console.log('Файл без коммита: «Черновик» локально, ошибка в публикуемой сборке — OK');
   console.log('Служебные статьи не попадают в публичную сборку — OK');
 } finally {

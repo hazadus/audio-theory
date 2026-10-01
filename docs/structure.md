@@ -25,6 +25,8 @@ src/
     links.ts ✅                      # Цели ссылок и их разрешение с базовым путём
     glossary.ts ✅                   # Схема глоссария и проверка терминов и целей
     git-date.ts ✅                   # Дата последнего коммита файла и «Черновик»
+    headings.ts ✅                   # Оглавление H2/H3 и уникальность якорей
+    remark-heading-anchors.mjs ✅    # Синтаксис {#anchor} в заголовках MDX
     reading-time.ts ✅               # Подсчёт слов и время чтения по MDX
     urls.ts ✅                       # Построитель URL с базовым путём
     rehype-site-urls.mjs ✅           # Преобразование адресов в Markdown/MDX
@@ -56,6 +58,8 @@ tests/                               # Unit-тесты и браузерные �
   unit/articles.test.ts ✅            # Схема статьи, slug и группы
   unit/glossary.test.ts ✅            # Схема глоссария и разрешение целей
   unit/git-date.test.ts ✅            # Git-дата во временном репозитории
+  unit/headings.test.ts ✅            # Оглавление и повтор якорей
+  unit/heading-anchors.test.ts ✅     # Синтаксис {#anchor} и ошибки
   unit/reading-time.test.ts ✅        # Подсчёт слов и оценка времени чтения
   fixtures/articles/ ✅              # Служебные статьи коллекции
   fixtures/mdx/ ✅                   # Служебные материалы для проверки MDX

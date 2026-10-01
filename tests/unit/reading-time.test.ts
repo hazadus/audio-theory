@@ -36,6 +36,10 @@ describe('countWords', () => {
     expect(countWords('Частота дискретизации (sample rate) — 44100 Гц, анти-алиасинг.')).toBe(7);
   });
 
+  it('не считает явный якорь заголовка', () => {
+    expect(countWords('## Частота Найквиста {#nyquist-frequency}\n\nТекст.')).toBe(3);
+  });
+
   it('исключает frontmatter', () => {
     const source = `---\nslug: a\ntitle: ${words(50)}\n---\n\nодин два три`;
     expect(countWords(source)).toBe(3);

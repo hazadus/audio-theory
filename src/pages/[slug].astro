@@ -1,6 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import { assertUniqueSlugs } from '@/lib/articles';
+import { assertUniqueAnchors, getToc } from '@/lib/headings';
 import { allowDraftEnv, getUpdatedDate } from '@/lib/git-date';
 import { resolveReadingMinutes } from '@/lib/reading-time';
 
@@ -11,7 +12,9 @@ export async function getStaticPaths() {
 }
 
 const { article } = Astro.props;
-const { Content } = await render(article);
+const { Content, headings } = await render(article);
+assertUniqueAnchors(headings, article.id);
+const toc = getToc(headings);
 const readingMinutes = resolveReadingMinutes(article.body ?? '', article.data.readingMinutes);
 // Dev-сервер и сборка с ALLOW_DRAFT_ARTICLES=1 показывают «Черновик» для файла без коммита; иначе это ошибка.
 const updated = getUpdatedDate(article.filePath!, {
@@ -37,6 +40,17 @@ const updated = getUpdatedDate(article.filePath!, {
         )}
         · {readingMinutes} мин чтения
       </p>
+      {toc.length > 0 && (
+        <nav aria-label="Содержание">
+          <ol>
+            {toc.map((item) => (
+              <li data-depth={item.depth}>
+                <a href={`#${item.slug}`}>{item.text}</a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+      )}
       <Content />
     </main>
   </body>
