@@ -48,6 +48,7 @@ try {
       ['2', 'sampling-theorem', 'Теорема отсчётов'],
       ['3', 'nyquist-frequency', 'Частота Найквиста'],
       ['2', 'aliasing', 'Наложение спектров'],
+      ['2', 'sources', 'Источники'],
     ],
   );
   for (const [, , id] of tocItems) assert.match(sampling, new RegExp(`<h[23] id="${id}"`));
@@ -86,6 +87,14 @@ try {
   assert.match(committedHtml, /Обновлено \d{4}-\d{2}-\d{2}/);
   assert.doesNotMatch(committedHtml, /Черновик/);
 
+  // Содержимое: положительный материал со всеми правилами и превышением рекомендательных лимитов.
+  // Файлы служебных статей не закоммичены, поэтому сборка идёт в режиме «Черновик».
+  const contentDir = join(temporary, 'content-valid');
+  const content = build(contentDir, 'content-valid', { draft: true });
+  assert.equal(content.status, 0, content.stdout + content.stderr);
+  const contentHtml = await readFile(join(contentDir, 'test-content', 'index.html'), 'utf8');
+  assert.match(contentHtml, /id="rules"/);
+
   const failures = [
     ['duplicate-slug', /Повторный slug «same»/],
     ['unknown-topic', /topic/],
@@ -94,6 +103,20 @@ try {
     ['duplicate-anchor', /Повторный якорь «same»/],
     ['bad-anchor', /английского kebab-case/],
     ['misplaced-anchor', /только в конце заголовка/],
+    ['no-sources', /нет раздела «Источники»/],
+    ['empty-sources', /в разделе «Источники» нет ссылок/],
+    ['unknown-link', /неизвестную статью «missing»/],
+    ['bad-link-anchor', /несуществующий раздел «test-bad-link-anchor#nope»/],
+    ['bad-same-page', /несуществующий раздел «test-bad-same-page#nope»/],
+    ['bad-related', /related «Сама статья» ведёт на неизвестную статью «missing»/],
+    ['untyped-code', /блок кода без указания языка/],
+    ['bad-id', /id «Fig_1» не в формате английского kebab-case/],
+    ['duplicate-id', /повторный идентификатор «same»/],
+    ['figure-gap', /последовательности рисунков ожидался номер 2, указан 3/],
+    ['shared-sequence', /последовательности рисунков ожидался номер 2, указан 1/],
+    ['table-gap', /последовательности таблиц ожидался номер 1, указан 2/],
+    ['equation-gap', /последовательности формул ожидался номер 2, указан 3/],
+    ['no-number', /без номера \(number\)/],
   ];
   for (const [fixture, message] of failures) {
     const result = build(join(temporary, fixture), fixture);
@@ -112,6 +135,8 @@ try {
   );
   console.log('Якоря {#anchor}, оглавление H2/H3 и ссылки на разделы под префиксом — OK');
   console.log('Повторный, неверный и неуместный якорь блокируют сборку — OK');
+  console.log('Источники, ссылки, язык листингов, идентификаторы и нумерация блоков — OK');
+  console.log('Лимиты тегов, врезок и длины кода сборку не блокируют — OK');
   console.log('Файл без коммита: «Черновик» локально, ошибка в публикуемой сборке — OK');
   console.log('Служебные статьи не попадают в публичную сборку — OK');
 } finally {

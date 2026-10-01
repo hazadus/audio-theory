@@ -1,0 +1,90 @@
+---
+slug: test-content
+title: Служебная статья
+question: Для чего нужна проверка?
+topic: basics
+tags: [а, б, в, г, д]
+related:
+  - label: Сама статья
+    description: Связанная тема.
+    target: { article: test-content-b, anchor: table-one }
+---
+
+import Figure from '../components/Block.astro';
+import SamplingDemo from '../components/Block.astro';
+import DataTable from '../components/Block.astro';
+import Equation from '../components/Block.astro';
+import Callout from '../components/Block.astro';
+
+Служебный материал. См. [раздел](#rules), [свой рисунок](#fig-one) и [другую статью](/test-content-b/#table-one).
+
+## Правила {#rules}
+
+<Figure id="fig-one" number={1} caption="Первый рисунок" />
+
+<SamplingDemo figure={2} />
+
+<DataTable id="table-one" number="1" caption="Первая таблица" />
+
+<Equation id="eq-one" number={1} />
+
+<Equation id="eq-two" number={2} />
+
+<Equation id="eq-plain" />
+
+<Figure id="fig-three" number={3} caption="Третий рисунок" />
+
+<DataTable id="table-two" number={2} caption="Вторая таблица" />
+
+<Callout type="note" title="Врезка">Текст.</Callout>
+
+<Callout type="note" title="Врезка">Текст.</Callout>
+
+<Callout type="note" title="Врезка">Текст.</Callout>
+
+<Callout type="note" title="Врезка">Текст.</Callout>
+
+<Callout type="note" title="Врезка">Текст.</Callout>
+
+<Callout type="note" title="Врезка">Текст.</Callout>
+
+```python
+x0 = 0
+x1 = 1
+x2 = 2
+x3 = 3
+x4 = 4
+x5 = 5
+x6 = 6
+x7 = 7
+x8 = 8
+x9 = 9
+x10 = 10
+x11 = 11
+x12 = 12
+x13 = 13
+x14 = 14
+x15 = 15
+x16 = 16
+x17 = 17
+x18 = 18
+x19 = 19
+x20 = 20
+x21 = 21
+x22 = 22
+x23 = 23
+x24 = 24
+x25 = 25
+x26 = 26
+x27 = 27
+x28 = 28
+x29 = 29
+```
+
+```text
+без подсветки
+```
+
+## Источники {#sources}
+
+- [Оппенгейм, Шафер. Цифровая обработка сигналов](https://example.com/dsp)

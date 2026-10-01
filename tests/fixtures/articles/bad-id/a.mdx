@@ -1,19 +1,18 @@
 ---
-slug: test-wave
+slug: test-bad-id
 title: Служебная статья
 question: Для чего нужна проверка?
 topic: basics
 tags: [проверка]
 related:
-  - label: Дискретизация
+  - label: Сама статья
     description: Связанная тема.
-    target: { article: test-sampling }
-readingMinutes: 3
+    target: { article: test-bad-id }
 ---
 
-Служебный материал для проверки коллекции.
+import Figure from '../components/Block.astro';
 
-См. [наложение спектров](/test-sampling/#aliasing) и [частоту Найквиста](/test-sampling/#nyquist-frequency).
+<Figure id="Fig_1" number={1} />
 
 ## Источники {#sources}
 

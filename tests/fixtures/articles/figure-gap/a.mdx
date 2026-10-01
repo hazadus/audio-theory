@@ -1,19 +1,20 @@
 ---
-slug: test-wave
+slug: test-figure-gap
 title: Служебная статья
 question: Для чего нужна проверка?
 topic: basics
 tags: [проверка]
 related:
-  - label: Дискретизация
+  - label: Сама статья
     description: Связанная тема.
-    target: { article: test-sampling }
-readingMinutes: 3
+    target: { article: test-figure-gap }
 ---
 
-Служебный материал для проверки коллекции.
+import Figure from '../components/Block.astro';
 
-См. [наложение спектров](/test-sampling/#aliasing) и [частоту Найквиста](/test-sampling/#nyquist-frequency).
+<Figure id="a" number={1} />
+
+<Figure id="b" number={3} />
 
 ## Источники {#sources}
 
