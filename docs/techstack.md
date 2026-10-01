@@ -88,3 +88,7 @@ Vitest запускает только `tests/unit/**/*.test.ts`. Playwright з�
 ## Команды разработки: just
 
 **Статус: подключён.** Работают `just` (список), `just dev`, `just fmt`, `just lint`, `just typecheck`, `just test`, `just test-e2e` и `just build`. `test-production` и `screenshots` добавляются вместе с соответствующей реализацией. В корне проекта используется `justfile` с привычными названиями команд по аналогии с `~/Projects/table/justfile`. Перечень и назначение команд собраны в [styleguide.md](styleguide.md#команды-разработки).
+
+## CI и публикация: GitHub Actions и Pages
+
+**Статус: workflow подготовлен; Pages включён, первый деплой ожидает коммита и пуша.** Настройка, проверки, права workflow и порядок публикации описаны в [deploy.md](deploy.md).

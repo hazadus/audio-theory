@@ -7,8 +7,9 @@
 .claude/skills/{commit,execute,issue}/SKILL.md ✅ # Скиллы разработки Claude Code
 .agents/skills/write-article/SKILL.md   # Вход в скилл Codex
 .claude/skills/write-article/SKILL.md   # Вход в скилл Claude Code
-.github/workflows/pages.yml           # Проверки, сборка и деплой
+.github/workflows/pages.yml ✅        # Проверки, сборка и деплой
 docs/ ✅                             # Документация проекта
+  deploy.md ✅                      # CI, GitHub Pages и проверка публикации
   design/ ✅                         # HTML-макеты
   authoring/                         # Общие правила и шаблон статьи
 src/
