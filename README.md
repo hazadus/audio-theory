@@ -68,6 +68,7 @@ just typecheck           # Astro Check и tsc --noEmit
 just test                # Vitest: unit-тесты
 just build               # Статическая сборка
 just test-e2e            # Полный прогон Playwright на двух сборках
+just test-production https://hazadus.github.io/audio-theory/ # Проверка опубликованного сайта
 ```
 
 Prettier форматирует `.astro`, CSS, JavaScript, TypeScript и JSON; документация, HTML-макеты, MDX и генерируемые файлы исключены. ESLint проверяет код, включая служебные Astro-компоненты, но не демонстрационный рантайм макетов. Unit-тесты находятся в `tests/unit/`, браузерные сценарии — в `tests/e2e/`; Vitest не запускает сценарии Playwright. TypeScript закреплён на версии 6.0.3, совместимой с Astro Check и typescript-eslint.
@@ -82,7 +83,9 @@ npx playwright install chromium firefox webkit
 
 Playwright запускает собственные preview-серверы на `127.0.0.1:4391` и `127.0.0.1:4392` и останавливает их после прогона. `--ignore-lock` оставляет процессы в foreground без общего lock-файла Astro; занятый порт вызывает ошибку, чужой сервер не используется. Локальный dev-сервер для авторской проверки работает независимо. Результаты и trace при ошибках сохраняются в `test-results/`; эти файлы и `.e2e/` не входят в Git.
 
-DOM можно исследовать через `page.locator()`, `page.getByRole()` и `page.evaluate()`, снимок сделать через `page.screenshot()`. Trace открывается командой `npx playwright show-trace <путь-к-trace.zip>`. При изменении критичного пользовательского пути, доступности элементов или обработки адресов нужен полный `just test-e2e`; отдельный файл его не заменяет. WebKit не заменяет ручную проверку настоящего Safari на Mac и iPhone. Общие команды `just screenshots` и `just test-production` появятся вместе с соответствующими задачами.
+DOM можно исследовать через `page.locator()`, `page.getByRole()` и `page.evaluate()`, снимок сделать через `page.screenshot()`. Trace открывается командой `npx playwright show-trace <путь-к-trace.zip>`. При изменении критичного пользовательского пути, доступности элементов или обработки адресов нужен полный `just test-e2e`; отдельный файл его не заменяет. WebKit не заменяет ручную проверку настоящего Safari на Mac и iPhone. Команда `just screenshots` появится вместе с соответствующей задачей.
+
+Параметры smoke-проверки опубликованного сайта описаны в [инструкции по деплою](./docs/deploy.md#проверка-опубликованного-сайта).
 
 ## Поисковый индекс и проверка артефакта
 

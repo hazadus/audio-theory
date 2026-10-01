@@ -36,9 +36,12 @@ scripts/                             # Проверка контента и со
   build-artifact.mjs ✅              # Интеграция сборки индекса Pagefind и проверки артефакта
   check-artifact.mjs ✅              # Локальные страницы, HTML-якоря и ресурсы HTML/CSS
   check-mdx.mjs ✅                   # Проверка MDX, формул и ресурсов
+  check-production.mjs ✅            # Сетевая проверка публичной страницы и ресурсов
+  test-production.mjs ✅             # CLI для production smoke-проверки
 tests/                               # Unit-тесты и браузерные сценарии
   unit/urls.test.ts ✅                # Контракт URL и базового пути
   unit/artifact.test.ts ✅            # Цели ссылок и блокировка неверной сборки
+  unit/production.test.ts ✅          # Smoke-команда, HTTP-ошибки и обязательные ресурсы
   e2e/home.spec.ts ✅                 # Начальная страница на статических сборках
   e2e/search.spec.ts ✅               # Настоящий API Pagefind в корне и под префиксом
   fixtures/artifact/ ✅              # Контрольная сборка с ошибочной внутренней ссылкой

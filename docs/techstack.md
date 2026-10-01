@@ -87,7 +87,7 @@ Vitest запускает только `tests/unit/**/*.test.ts`. Playwright з�
 
 ## Команды разработки: just
 
-**Статус: подключён.** Работают `just` (список), `just dev`, `just fmt`, `just lint`, `just typecheck`, `just test`, `just test-e2e` и `just build`. `test-production` и `screenshots` добавляются вместе с соответствующей реализацией. В корне проекта используется `justfile` с привычными названиями команд по аналогии с `~/Projects/table/justfile`. Перечень и назначение команд собраны в [styleguide.md](styleguide.md#команды-разработки).
+**Статус: подключён.** Работают `just` (список), `just dev`, `just fmt`, `just lint`, `just typecheck`, `just test`, `just test-e2e`, `just test-production <URL>` и `just build`. `screenshots` добавляется вместе с соответствующей реализацией. В корне проекта используется `justfile` с привычными названиями команд по аналогии с `~/Projects/table/justfile`. Перечень и назначение команд собраны в [styleguide.md](styleguide.md#команды-разработки); параметры production-проверки — в [инструкции по деплою](deploy.md#проверка-опубликованного-сайта).
 
 ## CI и публикация: GitHub Actions и Pages
 

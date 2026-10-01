@@ -17,6 +17,7 @@
     "lint": "eslint . --max-warnings 0",
     "typecheck": "astro check && tsc --noEmit",
     "test": "vitest run",
+    "test:production": "node scripts/test-production.mjs",
     "test:e2e": "npm run build -- --base / --outDir .e2e/root && npm run build -- --base /audio-theory/ --outDir .e2e/prefixed && playwright test"
   },
   "dependencies": {

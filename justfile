@@ -26,6 +26,10 @@ test:
 test-e2e:
     npm run test:e2e
 
+# Проверяет опубликованную главную и ресурсы; URL включает базовый путь.
+test-production url:
+    npm run test:production -- {{quote(url)}}
+
 # Собирает HTML и индекс Pagefind в dist/, проверяет локальные ссылки и ресурсы.
 build:
     npm run build
