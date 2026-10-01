@@ -99,7 +99,7 @@
 | Компонент | Параметры и содержимое |
 | --- | --- |
 | `Term` | `id` записи глоссария, `firstMention`, `define`; единый текст определения, ссылка и доступная подсказка; английское название при первом упоминании |
-| `Callout` | `type`: `definition`, `important`, `mistake`, `simplification`, `note`; `title` и содержимое; для ошибки — отдельные блоки «Неверно / Верно» |
+| `Callout` | `type`: `definition`, `important`, `mistake`, `simplification`, `note`; `title` и содержимое; для ошибки — отдельные блоки «Неверно / Верно» (`CalloutCase` с `kind`: `wrong`, `right`) |
 | `Prerequisites`, `RelatedTopics` | Списки из метаданных; обычные ссылки с пояснениями |
 | `SelfCheck` | `question` и ответ в содержимом; нативный `<details>` |
 | `Equation` | `id`, математическое выражение, необязательный номер и список новых обозначений с единицами |

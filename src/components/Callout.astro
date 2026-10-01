@@ -1,0 +1,171 @@
+---
+// Врезка статьи: пять типов с разным текстом метки, иконкой и формой рамки (цвет — дополнительный признак).
+// Для `mistake` внутрь кладутся блоки `CalloutCase` («Неверно» и «Верно»), затем пояснение.
+import Icon from '@/components/Icon.astro';
+import type { IconName } from '@/components/Icon.astro';
+
+const calloutTypes = {
+  definition: { label: 'Определение', icon: 'book-open' },
+  important: { label: 'Важно', icon: 'circle-alert' },
+  mistake: { label: 'Типичная ошибка', icon: 'circle-x' },
+  simplification: { label: 'Упрощение', icon: 'equal-approximately' },
+  note: { label: 'Примечание', icon: 'info' },
+} as const satisfies Record<string, { label: string; icon: IconName }>;
+
+type CalloutType = keyof typeof calloutTypes;
+
+interface Props {
+  type: CalloutType;
+  /** Необязательный заголовок после метки типа. */
+  title?: string;
+}
+
+const { type, title } = Astro.props;
+const meta = calloutTypes[type];
+if (!meta) {
+  throw new Error(`Callout: неизвестный тип «${type}»`);
+}
+const isNote = type === 'note';
+---
+
+<aside class="callout" data-type={type}>
+  {isNote ? (
+    <>
+      <Icon name={meta.icon} size={18} />
+      <div class="callout-body">
+        <span class="callout-label">{meta.label}</span>
+        {title && <strong class="callout-heading">{title}.</strong>}
+        <slot />
+      </div>
+    </>
+  ) : (
+    <>
+      <p class="callout-title">
+        <Icon name={meta.icon} size={18} />
+        <span class="callout-label">{meta.label}</span>
+        {title && <span class="callout-heading">{title}</span>}
+      </p>
+      <div class="callout-body">
+        <slot />
+      </div>
+    </>
+  )}
+</aside>
+
+<style is:global>
+  .callout {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-block: var(--space-6);
+    padding: var(--space-4) var(--space-5);
+    border-radius: 10px;
+    font-size: 17px;
+    line-height: 1.6;
+  }
+
+  .callout-title {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-2);
+    margin: 0;
+    color: var(--callout-color, var(--color-text));
+  }
+
+  .callout-label {
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--callout-color, var(--color-text));
+  }
+
+  .callout-heading {
+    font-family: var(--font-ui);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  .callout-body > :first-child {
+    margin-top: 0;
+  }
+
+  .callout-body > :last-child {
+    margin-bottom: 0;
+  }
+
+  .callout-body :where(p, ul, ol) {
+    margin-block: var(--space-2);
+  }
+
+  /* Определение: линии сверху (2 px) и снизу (1 px), как словарная статья. */
+  .callout[data-type='definition'] {
+    padding-inline: var(--space-1);
+    border-top: 2px solid var(--color-text);
+    border-bottom: 1px solid var(--color-border);
+    border-radius: 0;
+    font-size: 18px;
+  }
+
+  /* Важно: сплошная рамка 2 px. */
+  .callout[data-type='important'] {
+    --callout-color: var(--color-warning);
+    border: 2px solid var(--color-warning);
+  }
+
+  /* Типичная ошибка: рамка 1 px, подписи «Неверно / Верно» в сетке. */
+  .callout[data-type='mistake'] {
+    --callout-color: var(--color-error);
+    gap: 10px;
+    border: var(--border-width) solid var(--color-error);
+  }
+
+  .callout[data-type='mistake'] .callout-body {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 6px 12px;
+  }
+
+  .callout[data-type='mistake'] .callout-body > :not(.callout-case) {
+    grid-column: 1 / -1;
+  }
+
+  /* Упрощение: штриховая рамка. */
+  .callout[data-type='simplification'] {
+    --callout-color: var(--color-text-muted);
+    border: 1.5px dashed var(--color-border-strong);
+  }
+
+  /* Примечание: поверхность без рамки, значок слева, метка в строке с текстом, меньший кегль. */
+  .callout[data-type='note'] {
+    --callout-color: var(--color-info);
+    flex-direction: row;
+    gap: var(--space-3);
+    padding: 14px 18px;
+    background: var(--color-surface);
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  .callout[data-type='note'] > .icon {
+    margin-top: 3px;
+    color: var(--color-info);
+  }
+
+  .callout[data-type='note'] .callout-label {
+    margin-right: 6px;
+  }
+
+  .callout[data-type='note'] .callout-heading {
+    margin-right: 6px;
+    font-family: inherit;
+    font-size: inherit;
+  }
+
+  .callout[data-type='note'] .callout-body > p:first-of-type {
+    display: inline;
+  }
+</style>

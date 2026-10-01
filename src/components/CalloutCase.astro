@@ -1,0 +1,45 @@
+---
+// Блок «Неверно» или «Верно» внутри врезки `mistake`: подпись слева, текст справа (сетка задана в Callout).
+interface Props {
+  kind: 'wrong' | 'right';
+}
+
+const { kind } = Astro.props;
+const label = kind === 'wrong' ? 'Неверно' : 'Верно';
+---
+
+<div class="callout-case" data-kind={kind}>
+  <span class="callout-mark">{label}</span>
+  <div class="callout-case-text">
+    <slot />
+  </div>
+</div>
+
+<style is:global>
+  .callout-case {
+    display: contents;
+  }
+
+  .callout-mark {
+    padding-top: 3px;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .callout-case[data-kind='wrong'] .callout-mark {
+    color: var(--color-error);
+  }
+
+  .callout-case[data-kind='right'] .callout-mark {
+    color: var(--color-success);
+  }
+
+  .callout-case-text > :first-child {
+    margin-top: 0;
+  }
+
+  .callout-case-text > :last-child {
+    margin-bottom: 0;
+  }
+</style>

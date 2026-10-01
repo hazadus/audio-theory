@@ -1,0 +1,108 @@
+---
+// Самопроверка: вопрос и скрытый ответ на нативном <details>; работает без JS и с клавиатуры.
+// Подряд идущие вопросы нумеруются счётчиком CSS.
+interface Props {
+  question: string;
+}
+
+const { question } = Astro.props;
+---
+
+<details class="self-check">
+  <summary>
+    <span class="self-check-number" aria-hidden="true"></span>
+    <span class="self-check-question">{question}</span>
+    <span class="self-check-toggle"></span>
+  </summary>
+  <div class="self-check-answer">
+    <slot />
+  </div>
+</details>
+
+<style is:global>
+  .self-check {
+    counter-increment: self-check;
+    border-bottom: var(--border-width) solid var(--color-border);
+    font-size: 17px;
+    line-height: 1.5;
+  }
+
+  .self-check:not(.self-check + .self-check) {
+    counter-reset: self-check 1;
+    margin-top: var(--space-6);
+    border-top: var(--border-width) solid var(--color-border);
+  }
+
+  .self-check summary {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    min-height: 44px;
+    padding: 14px 0;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .self-check summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .self-check summary:focus-visible {
+    border-radius: var(--radius-sm);
+    box-shadow: var(--focus-ring);
+    outline: none;
+  }
+
+  .self-check[open] summary {
+    padding-bottom: 8px;
+  }
+
+  .self-check-number {
+    padding-top: 2px;
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+  }
+
+  .self-check-number::before {
+    content: counter(self-check);
+  }
+
+  .self-check-question {
+    flex: 1;
+  }
+
+  .self-check-toggle {
+    padding-top: 2px;
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--color-link);
+    white-space: nowrap;
+  }
+
+  .self-check-toggle::before {
+    content: 'Показать ответ';
+  }
+
+  .self-check[open] .self-check-toggle::before {
+    content: 'Скрыть';
+  }
+
+  .self-check-answer {
+    margin: 0 0 14px 22px;
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    font-size: 16px;
+    line-height: 1.55;
+  }
+
+  .self-check-answer > :first-child {
+    margin-top: 0;
+  }
+
+  .self-check-answer > :last-child {
+    margin-bottom: 0;
+  }
+</style>

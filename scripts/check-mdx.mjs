@@ -49,7 +49,29 @@ try {
     assert.match(html, /<mtext>Найквист<\/mtext>/);
     assert.match(html, /<annotation encoding="application\/x-tex">/);
     assert.match(html, /aria-hidden="true"/);
-    assert.match(html, /<details>\s*<summary>Как связаны период и частота\?<\/summary>/);
+    // SelfCheck: нативный <details>, ответ внутри.
+    assert.match(
+      html,
+      /<details class="self-check"><summary>[\s\S]*Как связаны период и частота\?/,
+    );
+    // Callout: пять типов, у каждого текстовая метка; у ошибки — «Неверно / Верно».
+    for (const [type, label] of [
+      ['definition', 'Определение'],
+      ['important', 'Важно'],
+      ['mistake', 'Типичная ошибка'],
+      ['simplification', 'Упрощение'],
+      ['note', 'Примечание'],
+    ]) {
+      assert.match(
+        html,
+        new RegExp(`<aside class="callout" data-type="${type}">[\\s\\S]*?callout-label">${label}<`),
+      );
+    }
+    assert.match(
+      html,
+      /callout-case" data-kind="wrong"><span class="callout-mark">Неверно<\/span>/,
+    );
+    assert.match(html, /callout-case" data-kind="right"><span class="callout-mark">Верно<\/span>/);
     assert.match(html, /Период равен единице/);
     // Term: определение из глоссария, английское название с lang="en", ссылка и подсказка.
     assert.match(html, /<dfn class="term-name first"/);
