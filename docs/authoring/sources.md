@@ -44,6 +44,14 @@
 - [Sampling Theorem](https://ccrma.stanford.edu/~jos/mdft/Sampling_Theorem.html) — формулировка теоремы со строгим условием, восстановление через sinc, почему исключена частота $f_s/2$.
 - [Aliasing of Sampled Signals](https://ccrma.stanford.edu/~jos/mdft/Aliasing_Sampled_Signals.html) — перенос частоты выше $f_s/2$, ограничения простого описания «зеркалом».
 
+Прочитанные при подготовке статьи об уровне сигнала страницы:
+
+- [Decibels](https://ccrma.stanford.edu/~jos/mdft/Decibels.html) — множители 20 для амплитуды и 10 для мощности, роль опорной величины.
+- [Properties of dB Scales](https://ccrma.stanford.edu/~jos/mdft/Properties_DB_Scales.html) — удвоение амплитуды ≈ 6 дБ, мощности ≈ 3 дБ.
+- [dB Full Scale (dBFS)](https://ccrma.stanford.edu/~jos/mdft/DB_Full_Scale_dBFS.html) — наибольшая амплитуда как опорный уровень 0 дБ.
+- [Signal Metrics](https://ccrma.stanford.edu/~jos/mdft/Signal_Metrics.html) — средняя мощность, уровень RMS, мощность $A^2/2$ вещественной синусоиды.
+- [Dynamic Range](https://ccrma.stanford.edu/~jos/mdft/Dynamic_Range.html) — динамический диапазон системы и сигнала.
+
 Прочитанные при подготовке раздела о фазе страницы:
 
 - [Sinusoids](https://ccrma.stanford.edu/~jos/mdft/Sinusoids.html) — $x(t) = A \sin(\omega t + \varphi)$, начальная фаза (phase offset) и мгновенная фаза $\omega t + \varphi$ в радианах, обычный диапазон $[-\pi, \pi)$ или $[0, 2\pi)$.
@@ -69,3 +77,20 @@
 ## Daniel A. Russell — Acoustics and Vibration Animations
 
 [Wave Motion in Mechanical Medium](https://www.acs.psu.edu/drussell/Demos/waves/wavemotion.html) (Penn State). Анимации продольных и поперечных волн: частицы колеблются около положения равновесия, сжатия и разрежения.
+
+## MathWorks — Audio Toolbox: динамическая обработка
+
+Документация MATLAB с алгоритмами в формулах; в разделах ссылки на Giannoulis, Massberg, Reiss, «Digital Dynamic Range Compressor Design — A Tutorial and Analysis», JAES 60(6), 2012 (сама статья при подготовке была недоступна: страница автора на сайте QMUL переехала, открытого PDF нет). Подходит для статической характеристики, колена, сглаживания и определений времени атаки и восстановления.
+
+- [compressor](https://www.mathworks.com/help/audio/ref/compressor-system-object.html) — характеристика с жёстким и мягким коленом шириной W вокруг порога, сглаживание подавления с $\alpha = e^{-\ln 9/(f_s t)}$, время атаки и восстановления как переход от 10 до 90 %, автоматическая компенсация.
+- [limiter](https://www.mathworks.com/help/audio/ref/limiter-system-object.html) — выход выше порога равен порогу.
+- [expander](https://www.mathworks.com/help/audio/ref/expander-system-object.html) — ниже порога $y = T + (x - T) R$.
+- [noiseGate](https://www.mathworks.com/help/audio/ref/noisegate-system-object.html) — нулевое усиление ниже порога, время удержания.
+
+## W3C — Web Audio API: DynamicsCompressorNode
+
+[Раздел спецификации](https://webaudio.github.io/web-audio-api/#DynamicsCompressorNode). Параметры компрессора браузера: колено выше порога (от T до T + knee), атака и восстановление как время изменения усиления на 10 дБ, фиксированная задержка 6 мс для взгляда вперёд, автоматическая компенсация. Полезно как пример того, что определения параметров различаются между реализациями.
+
+## Wikipedia — DBFS и «Компрессор аудиосигнала»
+
+[DBFS](https://en.wikipedia.org/wiki/DBFS) — 0 dBFS как наибольший цифровой уровень, соглашение AES17 (RMS синусоиды с полной амплитудой — 0 dBFS, прямоугольной волны — +3 dBFS), около 96 дБ у 16 бит; сам стандарт AES17 не читался. [Компрессор аудиосигнала](https://ru.wikipedia.org/wiki/Компрессор_аудиосигнала) — русские названия параметров (порог, степень сжатия, время атаки) и пример сжатия 2:1.
