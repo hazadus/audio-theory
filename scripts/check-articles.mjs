@@ -61,6 +61,62 @@ try {
   assert.match(manyHome, /Все 6</);
   assert.doesNotMatch(manyHome, /<h2[^>]*>Основы звука<\/h2>/);
 
+  // Список материалов: наборы из 3 и 30 статей, пустая коллекция, равные даты (все «Черновики»).
+  const materialsHtml = (html) => ({
+    rows: [...html.matchAll(/<li data-item[^>]*data-slug="([^"]+)"/g)].map(([, slug]) => slug),
+    count: html.match(/data-count[^>]*>([^<]+)</)?.[1],
+  });
+  const validMaterials = materialsHtml(
+    await readFile(join(validDir, 'materials', 'index.html'), 'utf8'),
+  );
+  assert.deepEqual(validMaterials.rows, ['test-sampling', 'test-wave']);
+  assert.equal(validMaterials.count, '2 статьи');
+  const manyMaterials = materialsHtml(
+    await readFile(join(manyOut, 'materials', 'index.html'), 'utf8'),
+  );
+  assert.deepEqual(manyMaterials.rows, [
+    'many-1',
+    'many-2',
+    'many-3',
+    'many-4',
+    'many-5',
+    'many-6',
+  ]);
+  assert.equal(manyMaterials.count, '6 статей');
+  const manyList = await readFile(join(manyOut, 'materials', 'index.html'), 'utf8');
+  assert.match(manyList, /data-topic-chip="conv"[^>]*>[\s\S]*?<span class="chip-count"[^>]*>6</);
+  assert.match(manyList, /data-topic-chip="basics"[^>]*aria-disabled="true"/);
+
+  const threeDir = join(temporary, 'three-src');
+  await mkdir(threeDir, { recursive: true });
+  const topicsOfThree = ['basics', 'digital', 'digital'];
+  for (let i = 1; i <= 3; i++) {
+    await writeFile(
+      join(threeDir, `t${i}.mdx`),
+      `---\nslug: three-${i}\ntitle: Статья\nquestion: Вопрос?\ntopic: ${topicsOfThree[i - 1]}\ntags: [проверка]\nrelated:\n  - label: Другая\n    description: Связь.\n    target: { article: three-${i === 1 ? 2 : 1} }\n---\n\nТекст.\n\n## Источники {#sources}\n\n- [Источник](https://example.com/${i})\n`,
+    );
+  }
+  const threeOut = join(temporary, 'three');
+  const three = build(threeOut, 'three', { draft: true, dir: threeDir });
+  assert.equal(three.status, 0, three.stdout + three.stderr);
+  const threeMaterials = materialsHtml(
+    await readFile(join(threeOut, 'materials', 'index.html'), 'utf8'),
+  );
+  // Названия и даты равны: порядок задаёт slug, а не порядок файлов.
+  assert.deepEqual(threeMaterials.rows, ['three-1', 'three-2', 'three-3']);
+  assert.equal(threeMaterials.count, '3 статьи');
+
+  const emptyDir = join(temporary, 'empty-src');
+  await mkdir(emptyDir, { recursive: true });
+  const emptyOut = join(temporary, 'empty');
+  const empty = build(emptyOut, 'empty', { draft: true, dir: emptyDir });
+  assert.equal(empty.status, 0, empty.stdout + empty.stderr);
+  const emptyList = await readFile(join(emptyOut, 'materials', 'index.html'), 'utf8');
+  assert.deepEqual(materialsHtml(emptyList).rows, []);
+  assert.equal(materialsHtml(emptyList).count, '0 статей');
+  assert.match(emptyList, /Материалов пока нет\./);
+  assert.doesNotMatch(await readFile(join(emptyOut, 'index.html'), 'utf8'), /class="all"/);
+
   // Оглавление: H2/H3 в порядке документа, H4 нет; якоря остались при любых русских названиях.
   const sampling = await readFile(join(validDir, 'test-sampling', 'index.html'), 'utf8');
   const tocHtml =
@@ -85,7 +141,8 @@ try {
   const crumbs =
     sampling.match(/<nav[^>]*aria-label="Хлебные крошки"[^>]*>([\s\S]*?)<\/nav>/)?.[1] ?? '';
   assert.match(crumbs, /<a href="\/"[^>]*>Главная<\/a>/);
-  assert.match(crumbs, /Цифровой сигнал/);
+  assert.match(crumbs, /<a href="\/materials\/\?topic=digital"[^>]*>[\s\S]*Цифровой сигнал<\/a>/);
+  assert.match(sampling, /<a href="\/materials\/"[^>]*aria-current="page"[^>]*>Материалы<\/a>/);
   assert.match(sampling, /<h1[^>]*>Служебная статья<\/h1>/);
   assert.match(sampling, /Обновлено <time datetime="[^"]+"[^>]*>\d{1,2} [а-я]+ \d{4}<\/time>/);
   assert.match(sampling, /проверка<\/li>\s*<li[^>]*>образец/);
@@ -182,16 +239,21 @@ try {
   const realArticles = (
     await readdir(join(root, 'src/content/articles'), { recursive: true })
   ).filter((file) => file.endsWith('.mdx')).length;
-  const pages = 1 + realArticles;
+  // HTML-страниц на одну больше: список материалов (`/materials/`) без `data-pagefind-body`.
+  const pages = 2 + realArticles;
   assert.match(
     published.stdout + published.stderr,
     new RegExp(`Артефакт проверен: ${pages} страниц; индекс Pagefind: ${pages} страниц`),
   );
+  // Фрагменты Pagefind есть только у главной и статей: список материалов дублировал бы выдачу.
+  const fragments = files.filter((file) => file.endsWith('.pf_fragment'));
+  assert.equal(fragments.length, 1 + realArticles);
   console.log('Коллекция статей: маршруты из slug — OK');
   console.log(
     'Повторный slug, неизвестная группа, пустые поля и readingMinutes блокируют сборку — OK',
   );
   console.log('Главная: пустые группы скрыты, лимит четырёх карточек и «Все N» — OK');
+  console.log('Список материалов: 0, 3 и 6 статей, равные даты, пустые темы — OK');
   console.log('Layout статьи: крошки, метаданные, предварительные знания и связанные темы — OK');
   console.log('Якоря {#anchor}, оглавление H2/H3 и ссылки на разделы под префиксом — OK');
   console.log('Повторный, неверный и неуместный якорь блокируют сборку — OK');

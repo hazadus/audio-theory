@@ -10,9 +10,11 @@ import { themeInitScript } from '@/lib/theme';
 interface Props {
   title: string;
   description?: string;
+  /** Раздел сайта для активного пункта навигации (например, `materials` на странице статьи). */
+  section?: string;
 }
 
-const { title, description } = Astro.props;
+const { title, description, section } = Astro.props;
 ---
 
 <!doctype html>
@@ -28,7 +30,7 @@ const { title, description } = Astro.props;
     <a class="skip-link" href="#content" data-pagefind-ignore>
       Перейти к содержимому
     </a>
-    <SiteHeader />
+    <SiteHeader {section} />
     <slot />
     <SiteFooter />
     <SearchDialog />

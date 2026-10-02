@@ -8,6 +8,7 @@ import type { TocItem } from '@/lib/headings';
 import { resolveTarget } from '@/lib/links';
 import { topics } from '@/data/topics';
 import { formatUpdatedDate } from '@/lib/format-date';
+import { materialsHref } from '@/lib/materials';
 import { withBase } from '@/lib/urls';
 import '@/styles/code.css';
 import '@/styles/math.css';
@@ -32,7 +33,7 @@ const links = (items: typeof data.related) =>
   }));
 ---
 
-<BaseLayout title={data.title}>
+<BaseLayout title={data.title} section="materials">
   <div class="progress" data-reading-progress aria-hidden="true" hidden></div>
   <main id="content" data-pagefind-body>
     <div class="page">
@@ -43,8 +44,10 @@ const links = (items: typeof data.related) =>
             <Icon name="chevron-right" size={14} />
           </li>
           <li class="group">
-            <Icon name="arrow-left" size={16} />
-            <span>{group.title}</span>
+            <a href={withBase(materialsHref(group.id))}>
+              <Icon name="arrow-left" size={16} />
+              {group.title}
+            </a>
           </li>
         </ol>
       </nav>
@@ -199,6 +202,12 @@ const links = (items: typeof data.related) =>
 
   .breadcrumbs a {
     color: var(--color-text-muted);
+  }
+
+  .breadcrumbs .group a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
   }
 
   /* Смартфон: только родительская группа со стрелкой «назад»; планшет и десктоп: Главная › группа. */

@@ -37,8 +37,8 @@ test('широкий экран: шапка, тема и внешние ссыл
         await page.locator(selector).evaluate((el) => getComputedStyle(el).fontFamily),
       ).toContain('Literata');
     }
-    // Нет ссылок на ещё не созданные внутренние страницы.
-    await expect(header.getByRole('navigation')).toHaveCount(0);
+    // В навигации только существующие страницы: пока это «Материалы».
+    await expect(header.getByRole('navigation').getByRole('link')).toHaveText(['Материалы']);
     const footer = page.locator('footer');
     await expect(footer.getByRole('link', { name: 'GitHub' })).toHaveAttribute(
       'href',

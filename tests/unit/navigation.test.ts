@@ -27,7 +27,14 @@ describe('активный пункт навигации', () => {
 
 describe('список пунктов', () => {
   it('содержит только существующие маршруты', () => {
-    // Пока нет страниц списка, глоссария и «О проекте», ссылок на них быть не должно.
-    expect(navItems).toEqual([]);
+    // Пока нет глоссария и «О проекте», ссылок на них быть не должно.
+    expect(navItems.map((item) => item.href)).toEqual(['/materials/']);
+  });
+
+  it('«Материалы» активны на страницах раздела, но не на других', () => {
+    const [item] = navItems;
+    expect(isActive(item, '/audio-theory/sampling/', '/audio-theory/', 'materials')).toBe(true);
+    expect(isActive(item, '/audio-theory/', '/audio-theory/')).toBe(false);
+    expect(isActive(item, '/audio-theory/sampling/', '/audio-theory/', 'other')).toBe(false);
   });
 });

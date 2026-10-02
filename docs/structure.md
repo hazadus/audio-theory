@@ -45,6 +45,9 @@ src/
     reading-time.ts ✅               # Подсчёт слов и время чтения по MDX
     theme.ts ✅                      # Режимы темы, чтение и запись выбора, ранний скрипт
     theme-controller.ts ✅           # Общее состояние темы в окне для всех контролов
+    materials.ts ✅                  # Состояние списка: query, фильтр, сортировка, группы
+    materials-controller.ts ✅       # Фильтр и сортировка в адресе и истории
+    article-list.ts ✅               # Записи статей с датой для главной и списка
     home.ts ✅                       # Группы главной: порядок по дате, лимит карточек, скрытие пустых
     navigation.ts ✅                 # Пункты основной навигации и активный пункт
     search-dialog.ts ✅              # Правила открытия поиска по «/»
@@ -58,6 +61,7 @@ src/
     code-block-controller.ts ✅      # Копирование кода и статус результата
   pages/                             # Статические маршруты Astro
     index.astro ✅                   # Главная: тематические группы и карточки
+    materials/index.astro ✅         # Все материалы: фильтр, сортировка
     [slug].astro ✅                  # Маршруты статей из slug
   assets/fonts/ ✅                   # Локальные WOFF2 Literata, Golos Text, JetBrains Mono
   layouts/

@@ -1,29 +1,14 @@
 ---
-import { getCollection } from 'astro:content';
 import Icon from '@/components/Icon.astro';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { topics } from '@/data/topics';
-import { assertUniqueSlugs } from '@/lib/articles';
+import { loadArticleList } from '@/lib/article-list';
 import { formatUpdatedDate } from '@/lib/format-date';
-import { allowDraftEnv, getUpdatedDate } from '@/lib/git-date';
 import { buildHomeGroups } from '@/lib/home';
-import { resolveReadingMinutes } from '@/lib/reading-time';
+import { materialsHref } from '@/lib/materials';
 import { withBase } from '@/lib/urls';
 
-const entries = await getCollection('articles');
-assertUniqueSlugs(entries);
-const allowDraft = import.meta.env.DEV || process.env[allowDraftEnv] === '1';
-const groups = buildHomeGroups(
-  entries.map(({ data, body, filePath }) => ({
-    slug: data.slug,
-    title: data.title,
-    question: data.question,
-    topic: data.topic,
-    updated: getUpdatedDate(filePath!, { allowDraft }),
-    readingMinutes: resolveReadingMinutes(body ?? '', data.readingMinutes),
-  })),
-  topics,
-);
+const groups = buildHomeGroups(await loadArticleList(), topics);
 ---
 
 <BaseLayout
@@ -51,8 +36,10 @@ const groups = buildHomeGroups(
             <h2 id={`group-${group.id}`}>{group.title}</h2>
             <p>{group.description}</p>
           </div>
-          {/* Ссылка на отфильтрованный список появится вместе со страницей /materials/. */}
-          <span class="all">Все {group.total}</span>
+          <a class="all" href={withBase(materialsHref(group.id))}>
+            Все {group.total}
+            <Icon name="chevron-right" size={14} />
+          </a>
         </div>
         <ul class="cards">
           {group.cards.map((card) => (
@@ -192,10 +179,13 @@ const groups = buildHomeGroups(
   }
 
   .all {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
     font-size: 0.875rem;
     font-weight: 500;
     white-space: nowrap;
-    color: var(--color-text-muted);
+    color: var(--color-link);
   }
 
   .cards {

@@ -8,10 +8,17 @@ import { isActive, navItems } from '@/lib/navigation';
 import { siteConfig } from '@/site.config';
 import { withBase } from '@/lib/urls';
 
+interface Props {
+  /** Раздел текущей страницы: отмечает пункт навигации активным и на страницах вне его адреса. */
+  section?: string;
+}
+
+const { section } = Astro.props;
+
 const items = navItems.map((item) => ({
   ...item,
   href: withBase(item.href),
-  active: isActive(item, Astro.url.pathname),
+  active: isActive(item, Astro.url.pathname, undefined, section),
 }));
 ---
 
@@ -219,6 +226,24 @@ const items = navItems.map((item) => ({
 
     .menu-panel {
       display: contents;
+    }
+
+    /* Пункты на всю высоту шапки: линия текущей страницы ложится на её нижнюю границу, как в макете. */
+    nav {
+      align-self: stretch;
+    }
+
+    nav ul {
+      height: 100%;
+      gap: 2px;
+    }
+
+    nav li {
+      display: flex;
+    }
+
+    nav a {
+      padding-inline: 10px;
     }
   }
 

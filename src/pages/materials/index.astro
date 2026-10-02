@@ -1,0 +1,379 @@
+---
+import Icon from '@/components/Icon.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { topics } from '@/data/topics';
+import { loadArticleList } from '@/lib/article-list';
+import { formatUpdatedDate } from '@/lib/format-date';
+import { compareByUpdated } from '@/lib/home';
+import { articlesLabel, countByTopic } from '@/lib/materials';
+import { withBase } from '@/lib/urls';
+
+// Без JS остаётся этот порядок: все статьи по дате обновления.
+const articles = (await loadArticleList()).sort(compareByUpdated);
+const counts = countByTopic(articles);
+const topicTitle = new Map<string, string>(topics.map((topic) => [topic.id, topic.title]));
+const chips = [
+  { id: 'all', label: 'Все' },
+  ...topics.map((topic) => ({ id: topic.id, label: topic.title })),
+];
+const sorts = [
+  { id: 'date', label: 'По дате' },
+  { id: 'alpha', label: 'А–Я' },
+  { id: 'topic', label: 'По темам' },
+];
+---
+
+<BaseLayout
+  title="Все материалы"
+  description="Все статьи учебника с фильтром по темам и сортировкой."
+  section="materials"
+>
+  <main id="content" data-materials>
+    <h1>Все материалы</h1>
+
+    <div class="controls" data-controls hidden>
+      <div class="chips" role="group" aria-label="Фильтр по темам">
+        {chips.map((chip) => (
+          <button
+            type="button"
+            class="chip"
+            data-topic-chip={chip.id}
+            aria-pressed={chip.id === 'all' ? 'true' : 'false'}
+            aria-disabled={counts[chip.id as keyof typeof counts] === 0 ? 'true' : undefined}
+          >
+            <span class="check">
+              <Icon name="check" size={14} />
+            </span>
+            {chip.label}
+            <span class="chip-count">{counts[chip.id as keyof typeof counts]}</span>
+          </button>
+        ))}
+      </div>
+      <div class="sort">
+        <span class="sort-label" id="sort-label">
+          Сортировка
+        </span>
+        <div class="segments" role="radiogroup" aria-labelledby="sort-label">
+          {sorts.map((sort) => (
+            <button
+              type="button"
+              role="radio"
+              class="segment"
+              data-sort-option={sort.id}
+              aria-checked={sort.id === 'date' ? 'true' : 'false'}
+              tabindex={sort.id === 'date' ? 0 : -1}
+            >
+              {sort.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <p class="count" data-count aria-live="polite">
+      {articlesLabel(articles.length)}
+    </p>
+
+    <div class="empty" data-empty hidden={articles.length > 0}>
+      {articles.length === 0 ? (
+        <p>Материалов пока нет.</p>
+      ) : (
+        <>
+          <p>В этой теме пока нет материалов.</p>
+          <a href={withBase('/materials/')}>Все материалы</a>
+        </>
+      )}
+    </div>
+
+    <div class="list" data-list data-sort="date">
+      <ul class="rows">
+        {articles.map((article) => (
+          <li
+            data-item
+            data-slug={article.slug}
+            data-topic={article.topic}
+            data-title={article.title}
+            data-updated={article.updated ?? ''}
+          >
+            <a class="row" href={withBase(`/${article.slug}/`)}>
+              <span class="row-text">
+                <span class="overline">{topicTitle.get(article.topic)}</span>
+                <span class="row-title">{article.title}</span>
+                <span class="row-question">{article.question}</span>
+              </span>
+              <span class="row-meta">
+                {article.updated ? formatUpdatedDate(article.updated) : 'Черновик'} ·{' '}
+                {article.readingMinutes} мин
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </main>
+</BaseLayout>
+
+<script>
+  import { initMaterials } from '@/lib/materials-controller';
+
+  initMaterials();
+</script>
+
+<style>
+  main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    width: min(var(--container-max), 100% - 2 * var(--page-gutter));
+    margin: 0 auto;
+    padding-top: var(--space-8);
+    padding-bottom: var(--space-10);
+    font-family: var(--font-ui);
+  }
+
+  h1 {
+    margin: 0;
+    font-size: var(--text-3xl);
+    line-height: 1.15;
+    letter-spacing: var(--tracking-tight);
+  }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4) var(--space-6);
+  }
+
+  .controls[hidden] {
+    display: none;
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: var(--space-2);
+    overflow-x: auto;
+    /* Горизонтальная прокрутка на смартфоне доходит до края экрана; запас под рамку фокуса. */
+    margin-inline: calc(-1 * var(--page-gutter));
+    padding: 4px var(--page-gutter);
+    max-width: calc(100% + 2 * var(--page-gutter));
+  }
+
+  .chip {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 14px;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-full);
+    background: transparent;
+    color: var(--color-text);
+    font: 500 0.875rem var(--font-ui);
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .chip:hover {
+    border-color: var(--color-border-strong);
+  }
+
+  .chip[aria-pressed='true'] {
+    border-color: var(--color-accent);
+    background: var(--color-accent-soft);
+  }
+
+  .chip[aria-disabled='true'] {
+    border-style: dashed;
+    color: var(--color-text-muted);
+    cursor: not-allowed;
+  }
+
+  .chip[aria-disabled='true']:hover {
+    border-color: var(--color-border);
+  }
+
+  .chip[aria-disabled='true'][aria-pressed='true'] {
+    border-color: var(--color-accent);
+  }
+
+  .check {
+    display: none;
+  }
+
+  .chip[aria-pressed='true'] .check {
+    display: inline-flex;
+  }
+
+  .chip-count {
+    color: var(--color-text-muted);
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sort {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .sort-label {
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+  }
+
+  .segments {
+    display: flex;
+    gap: 2px;
+    padding: 2px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: 8px;
+  }
+
+  .segment {
+    height: 32px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text-muted);
+    font: 400 0.875rem var(--font-ui);
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .segment[aria-checked='true'] {
+    background: var(--color-accent-soft);
+    color: var(--color-text);
+    font-weight: 600;
+  }
+
+  .count {
+    margin: 0 0 calc(-1 * var(--space-3));
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+  }
+
+  .empty {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+    padding: var(--space-5);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+  }
+
+  .empty[hidden] {
+    display: none;
+  }
+
+  .empty p {
+    margin: 0;
+  }
+
+  .list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .list :global(h2) {
+    margin: var(--space-6) 0 var(--space-1);
+    font-size: var(--text-xl);
+    line-height: 1.3;
+  }
+
+  .list :global(h2:first-child) {
+    margin-top: var(--space-3);
+  }
+
+  .list :global(.group-count) {
+    color: var(--color-text-muted);
+    font-family: var(--font-ui);
+    font-size: var(--text-ui);
+    font-weight: 400;
+  }
+
+  .list :global(.rows) {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px 32px;
+    align-items: baseline;
+    padding: 18px 0;
+    border-top: var(--border-width) solid var(--color-border);
+    color: var(--color-text);
+    text-decoration: none;
+  }
+
+  .row-text {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .overline {
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+  }
+
+  .list[data-sort='topic'] .overline {
+    display: none;
+  }
+
+  .row-title {
+    font-family: var(--font-text);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    line-height: 1.25;
+    text-wrap: balance;
+  }
+
+  .row:hover .row-title {
+    color: var(--color-link);
+  }
+
+  .row-question {
+    color: var(--color-text-muted);
+    font-family: var(--font-text);
+    line-height: 1.5;
+  }
+
+  .row-meta {
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+    white-space: nowrap;
+  }
+
+  @media (width >= 768px) {
+    .row {
+      grid-template-columns: minmax(0, 1fr) 176px;
+    }
+
+    .row-meta {
+      text-align: end;
+    }
+  }
+
+  @media (width >= 640px) {
+    .chips {
+      flex-wrap: wrap;
+      margin-inline: 0;
+      padding-inline: 0;
+      max-width: none;
+    }
+  }
+</style>

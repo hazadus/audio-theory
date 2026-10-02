@@ -127,7 +127,10 @@ test('ошибка индекса и повтор', async ({ page }, testInfo) =
   await page.locator(input).fill('fast');
   await expect(page.locator(status)).toHaveText('Не удалось загрузить поиск');
   await expect(page.getByRole('button', { name: 'Повторить' })).toBeVisible();
-  await expect(page.locator('[data-search-error]').getByRole('link')).toHaveAttribute('href', base);
+  await expect(page.locator('[data-search-error]').getByRole('link')).toHaveAttribute(
+    'href',
+    `${base}materials/`,
+  );
 
   fail = false;
   await page.getByRole('button', { name: 'Повторить' }).click();
