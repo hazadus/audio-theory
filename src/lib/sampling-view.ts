@@ -226,3 +226,70 @@ export function samplingChart(
     yTicks: valueTicks(),
   };
 }
+
+function escapeXml(text: string): string {
+  return text
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+}
+
+/** Радиус маркера: при частых отсчётах кружки меньше, чтобы не сливаться. */
+export function markerRadius(experiment: SamplingExperiment): number {
+  return experiment.samples.length > 36 ? 2.5 : 3.5;
+}
+
+/**
+ * Разметка SVG графика: одна и та же при сборке и в браузере.
+ * Внешний SVG без `viewBox`: сетка, стебли, маркеры и подписи в процентах области построения
+ * не масштабируются; линии сигнала — во вложенном SVG, растянутом по ширине.
+ */
+export function samplingChartSvg(
+  experiment: SamplingExperiment,
+  aliasEnabled: boolean,
+  id: string,
+): string {
+  const chart = samplingChart(experiment, aliasEnabled);
+  const pct = (value: number) => `${value}%`;
+  const minor = (tick: ChartTick) => (tick.minor ? ' class="minor"' : '');
+  const radius = markerRadius(experiment);
+  const zero = pct(chart.zero);
+  const gridY = chart.yTicks.map(
+    (tick) =>
+      `<line${minor(tick)} x1="0" x2="100%" y1="${pct(tick.position)}" y2="${pct(tick.position)}"/>`,
+  );
+  const gridX = chart.xTicks.map(
+    (tick) =>
+      `<line${minor(tick)} x1="${pct(tick.position)}" x2="${pct(tick.position)}" y1="0" y2="100%"/>`,
+  );
+  const samples = chart.samples.map(
+    (point) =>
+      `<g><line x1="${pct(point.x)}" x2="${pct(point.x)}" y1="${zero}" y2="${pct(point.y)}"/>` +
+      `<circle cx="${pct(point.x)}" cy="${pct(point.y)}" r="${radius}"/></g>`,
+  );
+  const labelsY = chart.yTicks.map(
+    (tick) =>
+      `<text${minor(tick)} x="0" dx="-8" y="${pct(tick.position)}" dy="0.32em" text-anchor="end">${tick.label}</text>`,
+  );
+  const last = chart.xTicks.length - 1;
+  const labelsX = chart.xTicks.map((tick, i) => {
+    const anchor = i === 0 ? 'start' : i === last ? 'end' : 'middle';
+    return `<text${minor(tick)} x="${pct(tick.position)}" y="100%" dy="20" text-anchor="${anchor}">${tick.label}</text>`;
+  });
+  const result = chart.resultPath
+    ? `<path class="sampling-demo-result" d="${chart.resultPath}"/>`
+    : '';
+  return (
+    `<svg class="sampling-demo-svg" role="img" aria-labelledby="${id}-title ${id}-desc" focusable="false" overflow="visible">` +
+    `<title id="${id}-title">${escapeXml(chartTitle(experiment))}</title>` +
+    `<desc id="${id}-desc">${escapeXml(chartDescription(experiment, aliasEnabled))}</desc>` +
+    `<g class="sampling-demo-grid">${gridY.join('')}${gridX.join('')}</g>` +
+    `<line class="sampling-demo-axis" x1="0" x2="100%" y1="${zero}" y2="${zero}"/>` +
+    `<svg viewBox="${chart.viewBox}" preserveAspectRatio="none" width="100%" height="100%">` +
+    `<path class="sampling-demo-signal" d="${chart.signalPath}"/>${result}</svg>` +
+    `<g class="sampling-demo-samples">${samples.join('')}</g>` +
+    `<g class="sampling-demo-ticks" aria-hidden="true">${labelsY.join('')}${labelsX.join('')}</g>` +
+    `</svg>`
+  );
+}

@@ -124,10 +124,20 @@ try {
     );
     assert.equal((demo.match(/<circle /g) ?? []).length, 25);
     assert.doesNotMatch(demo, /class="sampling-demo-result"/);
-    assert.match(demo, /<b>fₛ &gt; 2f\.<\/b> 8\sотсчётов на период/);
     assert.match(
       demo,
-      /<b>Рис\. 2\.<\/b>\s*Синусоида f = 1\sкГц на интервале 0–\u20603\sмс; fₛ = 8\s000\sГц, Tₛ = 125\sмкс, 25\sотсчётов\./,
+      /<b data-status-title>fₛ &gt; 2f\.<\/b> <span data-status-text>8\sотсчётов на период/,
+    );
+    // Без JS параметры неактивны и объяснены; скрипт включает их после запуска.
+    assert.match(demo, /<fieldset class="sampling-demo-controls" data-controls disabled>/);
+    assert.match(demo, /Параметры работают с включённым JavaScript/);
+    assert.match(
+      demo,
+      /<input[^>]*type="range"[^>]*min="1000"[^>]*max="16000"[^>]*step="100"[^>]*value="8000"/,
+    );
+    assert.match(
+      demo,
+      /<b>Рис\. 2\.<\/b> <span data-caption>Синусоида f = 1\sкГц на интервале 0–\u20603\sмс; fₛ = 8\s000\sГц, Tₛ = 125\sмкс, 25\sотсчётов\./,
     );
     assert.match(
       html,

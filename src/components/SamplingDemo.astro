@@ -1,17 +1,25 @@
 ---
-// Эксперимент дискретизации: статичный SVG начального состояния, легенда, статус и подпись «Рис. N.».
-// Линии растягиваются по ширине, подписи и маркеры сохраняют размер; деления зависят от ширины контейнера.
+// Эксперимент дискретизации: график, легенда, статус, параметры и подпись «Рис. N.».
+// При сборке рисуется начальное состояние 8 000 Гц; скрипт включает параметры и перерисовывает тот же SVG.
+// Без JS, во время загрузки и при ошибке параметры неактивны, а сообщение объясняет почему.
 import Icon from '@/components/Icon.astro';
-import type { IconName } from '@/components/Icon.astro';
-import { defaultSampleRate, samplingExperiment } from '@/lib/sampling';
+import { samplingExperiment } from '@/lib/sampling';
 import {
-  chartDescription,
-  chartTitle,
+  initialState,
+  maxSampleRate,
+  minSampleRate,
+  nyquistMark,
+  presets,
+  sampleRateStep,
+  sampleRateText,
+  sliderPosition,
+} from '@/lib/sampling-controls';
+import {
+  formatNumber,
   samplingCaption,
-  samplingChart,
+  samplingChartSvg,
   samplingStatus,
   showsAlias,
-  type StatusTone,
 } from '@/lib/sampling-view';
 
 interface Props {
@@ -23,139 +31,134 @@ interface Props {
 
 const { figure, id = 'sampling-demo' } = Astro.props;
 
-/** Видимая синусоида включена в начальном состоянии, как в макете. */
-const aliasEnabled = true;
-const experiment = samplingExperiment(defaultSampleRate);
-const chart = samplingChart(experiment, aliasEnabled);
+const { sampleRate, alias } = initialState;
+const experiment = samplingExperiment(sampleRate);
 const status = samplingStatus(experiment);
-const aliasShown = showsAlias(experiment, aliasEnabled);
-
-const statusIcons: Record<StatusTone, IconName> = {
-  success: 'check',
-  warning: 'triangle-alert',
-  error: 'triangle-alert',
-};
-const markerRadius = experiment.samples.length > 36 ? 2.5 : 3.5;
-const percent = (value: number) => `${value}%`;
+const valueText = sampleRateText(sampleRate);
 ---
 
-<figure class="sampling-demo" id={id} aria-labelledby={`${id}-name`} data-tone={status.tone}>
+<figure
+  class="sampling-demo"
+  id={id}
+  aria-labelledby={`${id}-name`}
+  data-sampling-demo
+  data-state="static"
+  data-tone={status.tone}
+>
   <div class="sampling-demo-head">
     <span class="sampling-demo-label">Визуализация {figure}</span>
     <span class="sampling-demo-name" id={`${id}-name`}>
       Отсчёты синусоиды при разной частоте дискретизации
     </span>
   </div>
-  <div class="sampling-demo-chart">
-    <svg
-      class="sampling-demo-svg"
-      role="img"
-      aria-labelledby={`${id}-title ${id}-desc`}
-      focusable="false"
-      overflow="visible"
-    >
-      <title id={`${id}-title`}>{chartTitle(experiment)}</title>
-      <desc id={`${id}-desc`}>{chartDescription(experiment, aliasEnabled)}</desc>
-      <g class="sampling-demo-grid">
-        {chart.yTicks.map((tick) => (
-          <line
-            class:list={[{ minor: tick.minor }]}
-            x1="0"
-            x2="100%"
-            y1={percent(tick.position)}
-            y2={percent(tick.position)}
-          />
-        ))}
-        {chart.xTicks.map((tick) => (
-          <line
-            class:list={[{ minor: tick.minor }]}
-            x1={percent(tick.position)}
-            x2={percent(tick.position)}
-            y1="0"
-            y2="100%"
-          />
-        ))}
-      </g>
-      <line
-        class="sampling-demo-axis"
-        x1="0"
-        x2="100%"
-        y1={percent(chart.zero)}
-        y2={percent(chart.zero)}
-      />
-      <svg viewBox={chart.viewBox} preserveAspectRatio="none" width="100%" height="100%">
-        <path class="sampling-demo-signal" d={chart.signalPath} />
-        {chart.resultPath && <path class="sampling-demo-result" d={chart.resultPath} />}
-      </svg>
-      <g class="sampling-demo-samples">
-        {experiment.samples.map((_, i) => {
-          const sample = chart.samples[i];
-          return (
-            <g>
-              <line
-                x1={percent(sample.x)}
-                x2={percent(sample.x)}
-                y1={percent(chart.zero)}
-                y2={percent(sample.y)}
-              />
-              <circle cx={percent(sample.x)} cy={percent(sample.y)} r={markerRadius} />
-            </g>
-          );
-        })}
-      </g>
-      <g class="sampling-demo-ticks" aria-hidden="true">
-        {chart.yTicks.map((tick) => (
-          <text
-            class:list={[{ minor: tick.minor }]}
-            x="0"
-            dx="-8"
-            y={percent(tick.position)}
-            dy="0.32em"
-            text-anchor="end"
-          >
-            {tick.label}
-          </text>
-        ))}
-        {chart.xTicks.map((tick, i) => (
-          <text
-            class:list={[{ minor: tick.minor }]}
-            x={percent(tick.position)}
-            y="100%"
-            dy="20"
-            text-anchor={i === 0 ? 'start' : i === chart.xTicks.length - 1 ? 'end' : 'middle'}
-          >
-            {tick.label}
-          </text>
-        ))}
-      </g>
-    </svg>
-  </div>
-  <div class="sampling-demo-body">
+  <div class="sampling-demo-chart" data-chart set:html={samplingChartSvg(experiment, alias, id)} />
+  <div class="sampling-demo-body" data-body>
     <ul class="sampling-demo-legend" aria-label="Легенда">
       <li>
-        <span class="sampling-demo-key signal" aria-hidden="true"></span>сигнал 1 кГц
+        <span class="sampling-demo-key signal" aria-hidden="true"></span>сигнал 1&nbsp;кГц
       </li>
       <li>
         <span class="sampling-demo-key sample" aria-hidden="true"></span>отсчёты
       </li>
-      {aliasShown && (
-        <li>
-          <span class="sampling-demo-key result" aria-hidden="true" />
-          синусоида, через которую проходят те же отсчёты
-        </li>
-      )}
+      <li data-legend-alias hidden={!showsAlias(experiment, alias)}>
+        <span class="sampling-demo-key result" aria-hidden="true"></span>синусоида, через которую
+        проходят те же отсчёты
+      </li>
     </ul>
-    <p class="sampling-demo-status" role="status">
-      <Icon name={statusIcons[status.tone]} size={18} />
+    <p class="sampling-demo-status">
+      <span class="sampling-demo-icon ok">
+        <Icon name="check" size={18} />
+      </span>
+      <span class="sampling-demo-icon alert">
+        <Icon name="triangle-alert" size={18} />
+      </span>
       <span>
-        <b>{status.title}</b> {status.text}
+        <b data-status-title>{status.title}</b> <span data-status-text>{status.text}</span>
       </span>
     </p>
   </div>
+  <p class="visually-hidden" aria-live="polite" data-announce></p>
+  <fieldset class="sampling-demo-controls" data-controls disabled>
+    <legend class="visually-hidden">Параметры эксперимента</legend>
+    <div class="sampling-demo-param">
+      <div class="sampling-demo-param-head">
+        <label for={`${id}-rate`}>
+          Частота дискретизации <i>f</i>
+          <sub>s</sub>
+        </label>
+        <output for={`${id}-rate`} data-rate-value>
+          {valueText}
+        </output>
+      </div>
+      <input
+        id={`${id}-rate`}
+        class="sampling-demo-range"
+        type="range"
+        min={minSampleRate}
+        max={maxSampleRate}
+        step={sampleRateStep}
+        value={sampleRate}
+        aria-valuetext={valueText}
+        style={`--fill: ${sliderPosition(sampleRate)}; --mark: ${sliderPosition(nyquistMark)}`}
+        data-rate
+      />
+      <div class="sampling-demo-scale" aria-hidden="true">
+        <span>{sampleRateText(minSampleRate)}</span>
+        <span class="sampling-demo-mark">
+          риска — 2<i>f</i> = {formatNumber(nyquistMark)}&nbsp;Гц
+        </span>
+        <span>{sampleRateText(maxSampleRate)}</span>
+      </div>
+    </div>
+    <div class="sampling-demo-actions">
+      <div class="sampling-demo-presets" role="group" aria-label="Примеры">
+        <span class="sampling-demo-presets-label" aria-hidden="true">
+          Примеры:
+        </span>
+        {presets.map((preset) => (
+          <button
+            type="button"
+            class="sampling-demo-preset"
+            aria-pressed={preset.value === sampleRate ? 'true' : 'false'}
+            data-preset={preset.value}
+          >
+            {preset.label}
+          </button>
+        ))}
+      </div>
+      <div class="sampling-demo-buttons">
+        <button
+          type="button"
+          class="sampling-demo-switch"
+          role="switch"
+          aria-checked={alias ? 'true' : 'false'}
+          data-alias
+        >
+          <span class="sampling-demo-track" aria-hidden="true">
+            <span></span>
+          </span>
+          Видимая синусоида
+        </button>
+        <button type="button" class="sampling-demo-reset" data-reset>
+          <Icon name="rotate-ccw" size={16} />
+          Сбросить
+        </button>
+      </div>
+    </div>
+    <p class="sampling-demo-note" data-controls-note>
+      Параметры работают с включённым JavaScript. Рисунок показывает начальное состояние.
+    </p>
+  </fieldset>
   <figcaption class="sampling-demo-caption">
-    <b>Рис. {figure}.</b> {samplingCaption(experiment)}
+    <b>Рис. {figure}.</b> <span data-caption>{samplingCaption(experiment)}</span>
   </figcaption>
 </figure>
+
+<script>
+  import { initSamplingDemos } from '@/lib/sampling-demo-controller';
+
+  initSamplingDemos();
+</script>
 
 <style is:global>
   .sampling-demo {
@@ -317,10 +320,283 @@ const percent = (value: number) => `${value}%`;
     --status-color: var(--color-error);
   }
 
-  .sampling-demo-status > svg {
+  .sampling-demo-icon {
+    display: flex;
     flex: none;
     margin-top: 1px;
     color: var(--status-color);
+  }
+
+  .sampling-demo[data-tone='success'] .sampling-demo-icon.alert,
+  .sampling-demo:not([data-tone='success']) .sampling-demo-icon.ok {
+    display: none;
+  }
+
+  .sampling-demo-legend li[hidden] {
+    display: none;
+  }
+
+  .sampling-demo .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .sampling-demo-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+    margin: 0;
+    padding: 14px 20px 16px;
+    border: 0;
+    border-top: var(--border-width) solid var(--color-border);
+  }
+
+  .sampling-demo-param {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .sampling-demo-param-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 14px;
+  }
+
+  .sampling-demo-param-head i,
+  .sampling-demo-mark i {
+    font-family: var(--font-text);
+  }
+
+  .sampling-demo-param-head output {
+    font-size: 15px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* Ползунок: дорожка 4 px с заливкой до значения, бегунок 20 px; отметка 2f — риской на дорожке.
+     `--fill` и `--mark` — положение в процентах без единицы: длину нельзя умножать на проценты. */
+  .sampling-demo-range {
+    --track:
+      linear-gradient(
+          to right,
+          transparent calc(10px + (100% - 20px) * var(--mark) / 100 - 1px),
+          var(--color-text-muted) 0 calc(10px + (100% - 20px) * var(--mark) / 100 + 1px),
+          transparent 0
+        )
+        center / 100% 12px no-repeat,
+      linear-gradient(
+          to right,
+          var(--color-accent) calc(10px + (100% - 20px) * var(--fill) / 100),
+          var(--color-border) 0
+        )
+        center / 100% 4px no-repeat;
+
+    width: 100%;
+    height: 28px;
+    margin: 0;
+    background: transparent;
+    appearance: none;
+    cursor: pointer;
+    touch-action: pan-y;
+  }
+
+  .sampling-demo-range::-webkit-slider-runnable-track {
+    height: 28px;
+    background: var(--track);
+  }
+
+  .sampling-demo-range::-moz-range-track {
+    height: 28px;
+    background: var(--track);
+  }
+
+  .sampling-demo-range::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+    margin-top: 4px;
+    border: 2px solid var(--color-accent);
+    border-radius: 50%;
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-sm);
+    appearance: none;
+  }
+
+  .sampling-demo-range::-moz-range-thumb {
+    box-sizing: border-box;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--color-accent);
+    border-radius: 50%;
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .sampling-demo-range:focus-visible {
+    box-shadow: none;
+    outline: none;
+  }
+
+  .sampling-demo-range:focus-visible::-webkit-slider-thumb {
+    box-shadow: var(--focus-ring);
+  }
+
+  .sampling-demo-range:focus-visible::-moz-range-thumb {
+    box-shadow: var(--focus-ring);
+  }
+
+  .sampling-demo-scale {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sampling-demo-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .sampling-demo-presets,
+  .sampling-demo-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .sampling-demo-buttons {
+    gap: 14px;
+  }
+
+  .sampling-demo-presets-label {
+    margin-right: 2px;
+    font-size: 13px;
+    color: var(--color-text-muted);
+  }
+
+  .sampling-demo-preset {
+    height: 32px;
+    padding: 0 12px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-full);
+    background: transparent;
+    color: var(--color-text);
+    font: 500 14px var(--font-ui);
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+  }
+
+  .sampling-demo-preset[aria-pressed='true'] {
+    border-color: var(--color-accent);
+    background: var(--color-accent-soft);
+    font-weight: 600;
+  }
+
+  .sampling-demo-switch {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 4px 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-text);
+    font: 400 14px var(--font-ui);
+    cursor: pointer;
+  }
+
+  .sampling-demo-track {
+    position: relative;
+    flex: none;
+    width: 34px;
+    height: 20px;
+    border-radius: var(--radius-full);
+    background: var(--color-border-strong);
+  }
+
+  .sampling-demo-track > span {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--color-bg);
+  }
+
+  .sampling-demo-switch[aria-checked='true'] .sampling-demo-track {
+    background: var(--color-accent);
+  }
+
+  .sampling-demo-switch[aria-checked='true'] .sampling-demo-track > span {
+    left: 17px;
+    background: var(--color-on-accent);
+  }
+
+  .sampling-demo-reset {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    height: 36px;
+    padding: 0 12px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text);
+    font: 500 14px var(--font-ui);
+    cursor: pointer;
+  }
+
+  @media (hover: hover) {
+    .sampling-demo-preset:hover,
+    .sampling-demo-reset:hover {
+      background: var(--color-bg);
+    }
+
+    .sampling-demo-preset[aria-pressed='true']:hover {
+      background: var(--color-accent-soft);
+    }
+  }
+
+  /* Неактивные параметры не выглядят рабочими: приглушены, без указателя; сообщение объясняет причину. */
+  .sampling-demo-controls:disabled .sampling-demo-param,
+  .sampling-demo-controls:disabled .sampling-demo-actions {
+    opacity: 0.5;
+  }
+
+  .sampling-demo-controls:disabled * {
+    cursor: not-allowed;
+  }
+
+  .sampling-demo-note {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+  }
+
+  .sampling-demo[data-state='ready'] .sampling-demo-note {
+    display: none;
+  }
+
+  .sampling-demo[data-state='error'] .sampling-demo-note {
+    color: var(--color-error);
   }
 
   .sampling-demo-caption {
@@ -339,8 +615,18 @@ const percent = (value: number) => `${value}%`;
   /* Узкий график: без второстепенных делений, ниже и с меньшими полями, как в мобильном макете. */
   @container (max-width: 559px) {
     .sampling-demo-head,
-    .sampling-demo-body {
+    .sampling-demo-body,
+    .sampling-demo-controls {
       padding-inline: 16px;
+    }
+
+    .sampling-demo-scale {
+      flex-wrap: wrap;
+    }
+
+    .sampling-demo-mark {
+      flex-basis: 100%;
+      order: 3;
     }
 
     .sampling-demo-caption {
