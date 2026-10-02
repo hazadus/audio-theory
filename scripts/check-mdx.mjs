@@ -114,6 +114,21 @@ try {
       html,
       /<figure class="figure" id="signal-path">[\s\S]*?<svg[^>]*role="img" aria-labelledby="signal-path-title signal-path-desc"[^>]*><title id="signal-path-title">Путь сигнала<\/title><desc id="signal-path-desc">Четыре блока[^<]*<\/desc>[\s\S]*?<figcaption class="figure-caption">\s*<b>Рис\. 1\.<\/b>/,
     );
+    // SamplingDemo: статичный SVG начального состояния 8 000 Гц без JS — 25 отсчётов, статус и подпись.
+    const demo = html.match(/<figure class="sampling-demo"[\s\S]*?<\/figure>/)?.[0] ?? '';
+    assert.match(demo, /id="sampling-demo"/);
+    assert.match(demo, /<span class="sampling-demo-label">Визуализация 2<\/span>/);
+    assert.match(
+      demo,
+      /<svg[^>]*role="img"[^>]*aria-labelledby="sampling-demo-title sampling-demo-desc"[^>]*>\s*<title id="sampling-demo-title">Отсчёты синусоиды 1\sкГц при частоте дискретизации 8\s000\sГц<\/title>/,
+    );
+    assert.equal((demo.match(/<circle /g) ?? []).length, 25);
+    assert.doesNotMatch(demo, /class="sampling-demo-result"/);
+    assert.match(demo, /<b>fₛ &gt; 2f\.<\/b> 8\sотсчётов на период/);
+    assert.match(
+      demo,
+      /<b>Рис\. 2\.<\/b>\s*Синусоида f = 1\sкГц на интервале 0–\u20603\sмс; fₛ = 8\s000\sГц, Tₛ = 125\sмкс, 25\sотсчётов\./,
+    );
     assert.match(
       html,
       /<caption id="sample-rates-caption"><span class="data-table-caption"><b>Таблица 1\.<\/b> Распространённые частоты дискретизации<\/span><\/caption>/,

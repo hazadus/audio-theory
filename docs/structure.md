@@ -59,6 +59,7 @@ src/
     search-view.ts ✅                # Плоский список переходов и безопасный разбор фрагментов
     urls.ts ✅                       # Построитель URL с базовым путём
     sampling.ts ✅                   # Модель эксперимента дискретизации: отсчёты, период, восстановление
+    sampling-view.ts ✅              # Статус, подпись, описание и геометрия графика эксперимента
     rehype-site-urls.mjs ✅           # Преобразование адресов в Markdown/MDX
     rehype-math-errors.mjs ✅         # Ошибки формул блокируют сборку
     rehype-pagefind.mjs ✅            # Исключает дубли формул KaTeX из индекса Pagefind
@@ -86,6 +87,7 @@ src/
     SelfCheck.astro ✅               # Самопроверка на <details><summary>
     Equation.astro ✅                # Блочная формула с номером, прокруткой и <dl> обозначений
     Figure.astro ✅                  # Статичный рисунок: SVG с названием и описанием, подпись «Рис. N.»
+    SamplingDemo.astro ✅            # Эксперимент дискретизации: статичный SVG, легенда, статус, подпись
     DataTable.astro ✅               # Таблица с caption, scope, закреплённым первым столбцом и прокруткой
     SearchButton.astro ✅            # Кнопка поиска в шапке
     SearchDialog.astro ✅            # Диалог поиска на <dialog>
@@ -109,6 +111,7 @@ scripts/                             # Проверка контента и со
 tests/                               # Unit-тесты и браузерные сценарии
   unit/urls.test.ts ✅                # Контракт URL и базового пути
   unit/sampling.test.ts ✅            # Отсчёты, граница Найквиста, наложение, фаза и знак
+  unit/sampling-view.test.ts ✅       # Тексты состояния и подписи, положение отсчётов и деления
   unit/artifact.test.ts ✅            # Цели ссылок и блокировка неверной сборки
   unit/production.test.ts ✅          # Smoke-команда, HTTP-ошибки и обязательные ресурсы
   e2e/home.spec.ts ✅                 # Начальная страница на статических сборках

@@ -3,6 +3,7 @@ import Callout from '@/components/Callout.astro';
 import CalloutCase from '@/components/CalloutCase.astro';
 import Equation from '@/components/Equation.astro';
 import Figure from '@/components/Figure.astro';
+import SamplingDemo from '@/components/SamplingDemo.astro';
 import DataTable from '@/components/DataTable.astro';
 import Term from '@/components/Term.astro';
 import { withBase } from '@/lib/urls';
@@ -112,7 +113,7 @@ $$
 
 ## Рисунки и таблицы
 
-Текст ссылается на [рисунок 1](#signal-path) и [таблицу 1](#sample-rates).
+Текст ссылается на [рисунок 1](#signal-path), [визуализацию 2](#sampling-demo) и [таблицу 1](#sample-rates).
 
 <Figure
   id="signal-path"
@@ -137,6 +138,8 @@ $$
     </g>
   </svg>
 </Figure>
+
+<SamplingDemo figure={2} />
 
 <DataTable
   id="sample-rates"

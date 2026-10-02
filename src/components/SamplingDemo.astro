@@ -1,0 +1,362 @@
+---
+// Эксперимент дискретизации: статичный SVG начального состояния, легенда, статус и подпись «Рис. N.».
+// Линии растягиваются по ширине, подписи и маркеры сохраняют размер; деления зависят от ширины контейнера.
+import Icon from '@/components/Icon.astro';
+import type { IconName } from '@/components/Icon.astro';
+import { defaultSampleRate, samplingExperiment } from '@/lib/sampling';
+import {
+  chartDescription,
+  chartTitle,
+  samplingCaption,
+  samplingChart,
+  samplingStatus,
+  showsAlias,
+  type StatusTone,
+} from '@/lib/sampling-view';
+
+interface Props {
+  /** Номер рисунка: визуализации и рисунки нумеруются одной последовательностью. */
+  figure: number;
+  /** Якорь для ссылок `#id`; английский kebab-case. */
+  id?: string;
+}
+
+const { figure, id = 'sampling-demo' } = Astro.props;
+
+/** Видимая синусоида включена в начальном состоянии, как в макете. */
+const aliasEnabled = true;
+const experiment = samplingExperiment(defaultSampleRate);
+const chart = samplingChart(experiment, aliasEnabled);
+const status = samplingStatus(experiment);
+const aliasShown = showsAlias(experiment, aliasEnabled);
+
+const statusIcons: Record<StatusTone, IconName> = {
+  success: 'check',
+  warning: 'triangle-alert',
+  error: 'triangle-alert',
+};
+const markerRadius = experiment.samples.length > 36 ? 2.5 : 3.5;
+const percent = (value: number) => `${value}%`;
+---
+
+<figure class="sampling-demo" id={id} aria-labelledby={`${id}-name`} data-tone={status.tone}>
+  <div class="sampling-demo-head">
+    <span class="sampling-demo-label">Визуализация {figure}</span>
+    <span class="sampling-demo-name" id={`${id}-name`}>
+      Отсчёты синусоиды при разной частоте дискретизации
+    </span>
+  </div>
+  <div class="sampling-demo-chart">
+    <svg
+      class="sampling-demo-svg"
+      role="img"
+      aria-labelledby={`${id}-title ${id}-desc`}
+      focusable="false"
+      overflow="visible"
+    >
+      <title id={`${id}-title`}>{chartTitle(experiment)}</title>
+      <desc id={`${id}-desc`}>{chartDescription(experiment, aliasEnabled)}</desc>
+      <g class="sampling-demo-grid">
+        {chart.yTicks.map((tick) => (
+          <line
+            class:list={[{ minor: tick.minor }]}
+            x1="0"
+            x2="100%"
+            y1={percent(tick.position)}
+            y2={percent(tick.position)}
+          />
+        ))}
+        {chart.xTicks.map((tick) => (
+          <line
+            class:list={[{ minor: tick.minor }]}
+            x1={percent(tick.position)}
+            x2={percent(tick.position)}
+            y1="0"
+            y2="100%"
+          />
+        ))}
+      </g>
+      <line
+        class="sampling-demo-axis"
+        x1="0"
+        x2="100%"
+        y1={percent(chart.zero)}
+        y2={percent(chart.zero)}
+      />
+      <svg viewBox={chart.viewBox} preserveAspectRatio="none" width="100%" height="100%">
+        <path class="sampling-demo-signal" d={chart.signalPath} />
+        {chart.resultPath && <path class="sampling-demo-result" d={chart.resultPath} />}
+      </svg>
+      <g class="sampling-demo-samples">
+        {experiment.samples.map((_, i) => {
+          const sample = chart.samples[i];
+          return (
+            <g>
+              <line
+                x1={percent(sample.x)}
+                x2={percent(sample.x)}
+                y1={percent(chart.zero)}
+                y2={percent(sample.y)}
+              />
+              <circle cx={percent(sample.x)} cy={percent(sample.y)} r={markerRadius} />
+            </g>
+          );
+        })}
+      </g>
+      <g class="sampling-demo-ticks" aria-hidden="true">
+        {chart.yTicks.map((tick) => (
+          <text
+            class:list={[{ minor: tick.minor }]}
+            x="0"
+            dx="-8"
+            y={percent(tick.position)}
+            dy="0.32em"
+            text-anchor="end"
+          >
+            {tick.label}
+          </text>
+        ))}
+        {chart.xTicks.map((tick, i) => (
+          <text
+            class:list={[{ minor: tick.minor }]}
+            x={percent(tick.position)}
+            y="100%"
+            dy="20"
+            text-anchor={i === 0 ? 'start' : i === chart.xTicks.length - 1 ? 'end' : 'middle'}
+          >
+            {tick.label}
+          </text>
+        ))}
+      </g>
+    </svg>
+  </div>
+  <div class="sampling-demo-body">
+    <ul class="sampling-demo-legend" aria-label="Легенда">
+      <li>
+        <span class="sampling-demo-key signal" aria-hidden="true"></span>сигнал 1 кГц
+      </li>
+      <li>
+        <span class="sampling-demo-key sample" aria-hidden="true"></span>отсчёты
+      </li>
+      {aliasShown && (
+        <li>
+          <span class="sampling-demo-key result" aria-hidden="true" />
+          синусоида, через которую проходят те же отсчёты
+        </li>
+      )}
+    </ul>
+    <p class="sampling-demo-status" role="status">
+      <Icon name={statusIcons[status.tone]} size={18} />
+      <span>
+        <b>{status.title}</b> {status.text}
+      </span>
+    </p>
+  </div>
+  <figcaption class="sampling-demo-caption">
+    <b>Рис. {figure}.</b> {samplingCaption(experiment)}
+  </figcaption>
+</figure>
+
+<style is:global>
+  .sampling-demo {
+    container-type: inline-size;
+    margin: var(--space-6) 0;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    overflow: hidden;
+    font-family: var(--font-ui);
+    scroll-margin-top: 88px;
+  }
+
+  .sampling-demo-head {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 14px 20px;
+  }
+
+  .sampling-demo-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  .sampling-demo-name {
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  /* Отступы — место для подписей делений: они выходят за область построения. */
+  .sampling-demo-chart {
+    padding: 14px 14px 30px 44px;
+    border-block: var(--border-width) solid var(--color-border);
+    background: var(--chart-bg);
+  }
+
+  .sampling-demo-svg {
+    display: block;
+    width: 100%;
+    height: 256px;
+    overflow: visible;
+    font-size: var(--text-chart);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sampling-demo-grid line {
+    stroke: var(--chart-grid);
+    stroke-width: 1;
+  }
+
+  .sampling-demo-axis {
+    stroke: var(--chart-axis);
+    stroke-width: 1;
+  }
+
+  .sampling-demo-signal,
+  .sampling-demo-result {
+    fill: none;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .sampling-demo-signal {
+    stroke: var(--chart-signal);
+    stroke-width: 2;
+  }
+
+  .sampling-demo-result {
+    stroke: var(--chart-result);
+    stroke-width: 2.25;
+    stroke-dasharray: 6 4;
+  }
+
+  .sampling-demo-samples line {
+    stroke: var(--chart-sample);
+    stroke-width: 1.5;
+  }
+
+  .sampling-demo-samples circle {
+    fill: var(--chart-bg);
+    stroke: var(--chart-sample);
+    stroke-width: 2;
+  }
+
+  .sampling-demo-ticks {
+    fill: var(--chart-label);
+  }
+
+  .sampling-demo-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 20px;
+  }
+
+  .sampling-demo-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 14px;
+  }
+
+  .sampling-demo-legend li {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .sampling-demo-key {
+    flex: none;
+  }
+
+  .sampling-demo-key.signal {
+    width: 18px;
+    height: 2px;
+    background: var(--chart-signal);
+  }
+
+  .sampling-demo-key.sample {
+    width: 10px;
+    height: 10px;
+    border: 2px solid var(--chart-sample);
+    border-radius: 50%;
+  }
+
+  .sampling-demo-key.result {
+    width: 18px;
+    border-top: 2px dashed var(--chart-result);
+  }
+
+  .sampling-demo-status {
+    --status-color: var(--color-success);
+
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin: 0;
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    box-shadow: inset 0 0 0 1px var(--status-color);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .sampling-demo[data-tone='warning'] .sampling-demo-status {
+    --status-color: var(--color-warning);
+  }
+
+  .sampling-demo[data-tone='error'] .sampling-demo-status {
+    --status-color: var(--color-error);
+  }
+
+  .sampling-demo-status > svg {
+    flex: none;
+    margin-top: 1px;
+    color: var(--status-color);
+  }
+
+  .sampling-demo-caption {
+    padding: 10px 20px 14px;
+    border-top: var(--border-width) solid var(--color-border);
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+  }
+
+  .sampling-demo-caption b {
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  /* Узкий график: без второстепенных делений, ниже и с меньшими полями, как в мобильном макете. */
+  @container (max-width: 559px) {
+    .sampling-demo-head,
+    .sampling-demo-body {
+      padding-inline: 16px;
+    }
+
+    .sampling-demo-caption {
+      padding-inline: 16px;
+    }
+
+    .sampling-demo-chart {
+      padding: 14px 10px 30px 34px;
+    }
+
+    .sampling-demo-svg {
+      height: 186px;
+    }
+
+    .sampling-demo-svg .minor {
+      display: none;
+    }
+  }
+</style>

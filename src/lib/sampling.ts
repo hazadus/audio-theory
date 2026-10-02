@@ -36,6 +36,8 @@ export type Reconstruction =
 export interface SamplingExperiment {
   signalFrequency: number;
   sampleRate: number;
+  /** Длительность показанного интервала, с. */
+  duration: number;
   /** Период дискретизации T_s = 1 / f_s, с. */
   samplingPeriod: number;
   /** Частота Найквиста f_s / 2, Гц. */
@@ -140,6 +142,7 @@ export function samplingExperiment(
   return {
     signalFrequency: frequency,
     sampleRate,
+    duration,
     samplingPeriod: samplingPeriod(sampleRate),
     nyquistFrequency: nyquistFrequency(sampleRate),
     relation: nyquistRelation(frequency, sampleRate),
