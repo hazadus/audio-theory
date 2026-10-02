@@ -10,6 +10,7 @@ test('начальная страница, навигация и локальн�
   await expect(page.locator('html')).toHaveAttribute('lang', 'ru');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Теория аудио');
   await expect(page.getByRole('main')).toContainText('Личный учебник по теории аудио');
+  await expect(page.locator('main section').first().locator('a.card').first()).toBeVisible();
   await expect(page.locator('footer').getByRole('link', { name: 'GitHub' })).toHaveAttribute(
     'href',
     siteConfig.repository,
@@ -68,7 +69,7 @@ test('шрифты, токены тем и иконки загружаются �
             .filter((font) => font.status === 'loaded')
             .map((font) => `${font.family} ${font.style} ${font.weight}`),
           h1Font: style('h1').fontFamily,
-          statusFont: style('.status').fontFamily,
+          statusFont: style('.card-meta').fontFamily,
           background: style('body').backgroundColor,
           color: style('h1').color,
           icon: document.querySelector('footer a svg')?.getAttribute('aria-hidden'),
@@ -116,7 +117,8 @@ test('страница читается без JavaScript на узком экр
     const page = await context.newPage();
     await page.goto('./');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-    await expect(page.getByRole('main')).toContainText('Сайт в разработке');
+    await expect(page.getByRole('main').getByRole('heading', { level: 2 }).first()).toBeVisible();
+    await expect(page.locator('[data-search-open]').first()).toBeHidden();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
       390,
     );
@@ -271,4 +273,50 @@ test('без JavaScript действует системная тема, кноп
   } finally {
     await context.close();
   }
+});
+
+for (const [name, viewport] of [
+  ['узкий', { width: 390, height: 844 }],
+  ['широкий', { width: 1440, height: 900 }],
+] as const) {
+  test(`главная: карточки доступны клавиатурой, ${name} экран`, async ({ browser }, testInfo) => {
+    const base = testInfo.project.metadata.base as string;
+    const context = await browser.newContext({ baseURL: testInfo.project.use.baseURL, viewport });
+    try {
+      const page = await context.newPage();
+      await page.goto('./');
+      const cards = page.locator('a.card');
+      expect(await cards.count()).toBeGreaterThan(0);
+      // Каждая карточка — одна ссылка без вложенных интерактивных элементов.
+      expect(await page.locator('a.card a, a.card button').count()).toBe(0);
+      expect(await page.locator('section ul.cards').count()).toBe(
+        await page.locator('main section').count(),
+      );
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+        viewport.width,
+      );
+      const first = cards.first();
+      // Safari не ставит ссылки в Tab-порядок по умолчанию: фокус даём программно после нажатия клавиши.
+      await page.keyboard.press('Tab');
+      await first.focus();
+      await expect(first).toBeFocused();
+      const shadow = await first.evaluate((el) => getComputedStyle(el).boxShadow);
+      expect(shadow).not.toBe('none');
+      const href = await first.getAttribute('href');
+      expect(href?.startsWith(base)).toBe(true);
+      await page.keyboard.press('Enter');
+      await expect(page).toHaveURL(new RegExp(`${href}$`));
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    } finally {
+      await context.close();
+    }
+  });
+}
+
+test('кнопка поиска на главной открывает диалог', async ({ page }) => {
+  await page.goto('./');
+  const button = page.locator('main [data-search-open]');
+  await expect(button).toBeVisible();
+  await button.click();
+  await expect(page.getByRole('dialog')).toBeVisible();
 });

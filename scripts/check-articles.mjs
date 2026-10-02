@@ -36,6 +36,31 @@ try {
     assert.match(html, slug === 'test-wave' ? /3 мин чтения/ : /1 мин чтения/);
   }
 
+  // Главная: пустые группы скрыты, группа с одной статьёй видна, у каждой «Все N».
+  const home = await readFile(join(validDir, 'index.html'), 'utf8');
+  assert.match(home, /<h2[^>]*>Основы звука<\/h2>/);
+  assert.match(home, /<h2[^>]*>Цифровой сигнал<\/h2>/);
+  assert.doesNotMatch(home, /АЦП и ЦАП|Аудиоданные в программах/);
+  assert.equal([...home.matchAll(/class="all[^"]*"[^>]*>Все 1</g)].length, 2);
+  assert.equal([...home.matchAll(/class="card[ "]/g)].length, 2);
+
+  // Лимит четырёх карточек в группе: «Все N» считает все статьи, карточки — четыре самых свежих.
+  const manyDir = join(temporary, 'many-src');
+  await mkdir(manyDir, { recursive: true });
+  for (let i = 1; i <= 6; i++) {
+    await writeFile(
+      join(manyDir, `a${i}.mdx`),
+      `---\nslug: many-${i}\ntitle: Статья ${i}\nquestion: Вопрос ${i}?\ntopic: conv\ntags: [проверка]\nrelated:\n  - label: Другая\n    description: Связь.\n    target: { article: many-${i === 1 ? 2 : 1} }\n---\n\nТекст.\n\n## Источники {#sources}\n\n- [Источник](https://example.com/${i})\n`,
+    );
+  }
+  const manyOut = join(temporary, 'many');
+  const many = build(manyOut, 'many', { draft: true, dir: manyDir });
+  assert.equal(many.status, 0, many.stdout + many.stderr);
+  const manyHome = await readFile(join(manyOut, 'index.html'), 'utf8');
+  assert.equal([...manyHome.matchAll(/class="card[ "]/g)].length, 4);
+  assert.match(manyHome, /Все 6</);
+  assert.doesNotMatch(manyHome, /<h2[^>]*>Основы звука<\/h2>/);
+
   // Оглавление: H2/H3 в порядке документа, H4 нет; якоря остались при любых русских названиях.
   const sampling = await readFile(join(validDir, 'test-sampling', 'index.html'), 'utf8');
   const tocHtml =
@@ -166,6 +191,7 @@ try {
   console.log(
     'Повторный slug, неизвестная группа, пустые поля и readingMinutes блокируют сборку — OK',
   );
+  console.log('Главная: пустые группы скрыты, лимит четырёх карточек и «Все N» — OK');
   console.log('Layout статьи: крошки, метаданные, предварительные знания и связанные темы — OK');
   console.log('Якоря {#anchor}, оглавление H2/H3 и ссылки на разделы под префиксом — OK');
   console.log('Повторный, неверный и неуместный якорь блокируют сборку — OK');

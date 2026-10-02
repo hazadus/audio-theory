@@ -3,7 +3,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 const dialog = '[data-search-dialog]';
 const input = '[data-search-input]';
-const opener = '[data-search-open]';
+const opener = 'header [data-search-open]';
 
 const focusedIs = (page: Page, selector: string) =>
   page.evaluate((s) => document.activeElement?.matches(s) ?? false, selector);
