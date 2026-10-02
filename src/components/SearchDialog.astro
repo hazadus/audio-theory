@@ -120,7 +120,11 @@ import { withBase } from '@/lib/urls';
 
     for (const trigger of document.querySelectorAll<HTMLElement>('[data-search-open]')) {
       trigger.hidden = false;
-      trigger.addEventListener('click', () => open(trigger));
+      trigger.addEventListener('click', (event) => {
+        // Ссылка-триггер без JS ведёт на список материалов; с JS открывает окно поиска.
+        event.preventDefault();
+        open(trigger);
+      });
     }
 
     document.addEventListener('keydown', (event) => {

@@ -13,6 +13,7 @@ export interface NavItem {
 
 export const navItems: NavItem[] = [
   { label: 'Материалы', href: '/materials/', section: 'materials' },
+  { label: 'Глоссарий', href: '/glossary/' },
 ];
 
 const trimSlash = (path: string) => path.replace(/\/+$/, '') || '/';

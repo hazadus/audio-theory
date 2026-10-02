@@ -28,7 +28,7 @@ describe('активный пункт навигации', () => {
 describe('список пунктов', () => {
   it('содержит только существующие маршруты', () => {
     // Пока нет глоссария и «О проекте», ссылок на них быть не должно.
-    expect(navItems.map((item) => item.href)).toEqual(['/materials/']);
+    expect(navItems.map((item) => item.href)).toEqual(['/materials/', '/glossary/']);
   });
 
   it('«Материалы» активны на страницах раздела, но не на других', () => {

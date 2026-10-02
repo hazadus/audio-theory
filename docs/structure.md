@@ -29,6 +29,8 @@ src/
     articles.ts ✅                   # Схема frontmatter и уникальность slug
     links.ts ✅                      # Цели ссылок и их разрешение с базовым путём
     glossary.ts ✅                   # Схема глоссария и проверка терминов и целей
+    glossary-list.ts ✅              # Порядок, буквенные группы, подписи ссылок, текущая буква
+    glossary-controller.ts ✅        # Текущая буква указателя при прокрутке
     git-date.ts ✅                   # Дата последнего коммита файла и «Черновик»
     headings.ts ✅                   # Оглавление H2/H3 и уникальность якорей
     toc.ts ✅                        # Текущий раздел и подпись оглавления
@@ -62,6 +64,7 @@ src/
   pages/                             # Статические маршруты Astro
     index.astro ✅                   # Главная: тематические группы и карточки
     materials/index.astro ✅         # Все материалы: фильтр, сортировка
+    glossary.astro ✅                # Глоссарий: список терминов и указатель букв
     [slug].astro ✅                  # Маршруты статей из slug
   assets/fonts/ ✅                   # Локальные WOFF2 Literata, Golos Text, JetBrains Mono
   layouts/
@@ -109,6 +112,8 @@ tests/                               # Unit-тесты и браузерные �
   fixtures/artifact/ ✅              # Контрольная сборка с ошибочной внутренней ссылкой
   unit/articles.test.ts ✅            # Схема статьи, slug и группы
   unit/glossary.test.ts ✅            # Схема глоссария и разрешение целей
+  unit/glossary-list.test.ts ✅       # Порядок, группы, указатель, подписи ссылок
+  e2e/glossary.spec.ts ✅             # Глоссарий: список, цели, подсказки, поиск, указатель
   unit/git-date.test.ts ✅            # Git-дата во временном репозитории
   unit/headings.test.ts ✅            # Оглавление и повтор якорей
   unit/toc.test.ts ✅                 # Текущий раздел и подпись оглавления

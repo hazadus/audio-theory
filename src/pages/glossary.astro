@@ -1,0 +1,449 @@
+---
+import { getCollection, render } from 'astro:content';
+import Icon from '@/components/Icon.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import glossary from '@/data/glossary.json';
+import { glossarySchema, parseGlossary } from '@/lib/glossary';
+import {
+  buildGlossaryView,
+  describeTarget,
+  displayName,
+  type ArticleInfo,
+} from '@/lib/glossary-list';
+import { resolveTarget } from '@/lib/links';
+import { withBase } from '@/lib/urls';
+
+// Тот же источник, что и у подсказок `Term`; внутренние цели проверяются по существующим статьям.
+const articles = await getCollection('articles');
+const entries = parseGlossary(
+  glossarySchema.parse(glossary),
+  articles.map((a) => a.data.slug),
+);
+const info = new Map<string, ArticleInfo>(
+  await Promise.all(
+    articles.map(async (article): Promise<[string, ArticleInfo]> => [
+      article.data.slug,
+      { title: article.data.title, headings: (await render(article)).headings },
+    ]),
+  ),
+);
+const view = buildGlossaryView(entries);
+const rows = view.groups.map((group) => ({
+  ...group,
+  items: group.items.map((item) => ({
+    ...item,
+    name: displayName(item.entry.ru),
+    href: resolveTarget(item.entry.target),
+    label: describeTarget(item.entry.target, info),
+  })),
+}));
+---
+
+<BaseLayout
+  title="Глоссарий"
+  description="Термины учебника с короткими определениями и ссылками на разделы, где они объясняются."
+>
+  <main id="content" data-pagefind-body>
+    <div class="head">
+      <h1>Глоссарий</h1>
+      <p class="lead">
+        Термины сайта с короткими определениями и ссылками на разделы, где они объясняются.
+      </p>
+    </div>
+
+    {rows.length === 0 ? (
+      <div class="empty">
+        <p class="empty-title">Термины появятся вместе с первыми статьями</p>
+        <div class="actions">
+          <a href={withBase('/materials/')}>Все материалы</a>
+        </div>
+      </div>
+    ) : (
+      <>
+        <nav
+          class="letterbar"
+          aria-label="Алфавитный указатель"
+          data-letterbar
+          data-pagefind-ignore
+        >
+          <div class="letterrow" data-letterrow>
+            {view.letters.map((item) =>
+              item.active ? (
+                <a href={item.href} data-letter-link={item.letter}>
+                  {item.letter}
+                </a>
+              ) : (
+                <span aria-hidden="true">{item.letter}</span>
+              ),
+            )}
+          </div>
+        </nav>
+
+        <div class="list">
+          {rows.map((group) => (
+            <div class="group">
+              {view.grouped && (
+                <h2 id={group.id} data-letter={group.letter}>
+                  {group.letter}
+                </h2>
+              )}
+              <dl>
+                {group.items.map((item) => (
+                  <div
+                    class="term"
+                    id={item.entry.id}
+                    data-letter={item.startsLetter}
+                    data-term-letter={group.letter}
+                  >
+                    <dt>
+                      <dfn>{item.name}</dfn>
+                      <span class="en" lang="en">
+                        ({item.entry.en})
+                      </span>
+                      <a
+                        class="anchor"
+                        href={`#${item.entry.id}`}
+                        aria-label={`Ссылка на термин «${item.name}»`}
+                        data-pagefind-ignore
+                      >
+                        #
+                      </a>
+                    </dt>
+                    <dd>
+                      <p>{item.entry.definition}</p>
+                      {item.label.external ? (
+                        <a
+                          class="more external"
+                          href={item.href}
+                          target="_blank"
+                          rel="noopener"
+                          aria-label={item.label.aria}
+                        >
+                          {item.label.text}
+                          <Icon name="external-link" size={14} />
+                        </a>
+                      ) : (
+                        <a class="more" href={item.href}>
+                          {item.label.text}
+                        </a>
+                      )}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          ))}
+          <div class="foot" data-pagefind-ignore>
+            <span>Не нашли термин?</span>
+            <a href={withBase('/materials/')} data-search-open hidden>
+              <Icon name="search" size={18} />
+              Найти статью или термин
+            </a>
+            <noscript>
+              <a href={withBase('/materials/')}>Все материалы</a>
+            </noscript>
+          </div>
+        </div>
+      </>
+    )}
+  </main>
+</BaseLayout>
+
+<script>
+  import { initGlossary } from '@/lib/glossary-controller';
+
+  initGlossary();
+</script>
+
+<style>
+  main {
+    --header-h: 57px;
+    --bar-h: 42px;
+    --letter-w: 36px;
+    --letter-h: 40px;
+    --link-h: 32px;
+    --anchor-size: 28px;
+    width: min(var(--container-max), 100% - 2 * var(--page-gutter));
+    margin: 0 auto;
+    padding-top: var(--space-8);
+    padding-bottom: var(--space-10);
+    font-family: var(--font-ui);
+  }
+
+  .head {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  h1 {
+    margin: 0;
+    font-family: var(--font-text);
+    font-size: var(--text-3xl);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: var(--tracking-tight);
+  }
+
+  .lead {
+    max-width: var(--content-width);
+    margin: 0;
+    color: var(--color-text-muted);
+    font-family: var(--font-text);
+    font-size: var(--text-lg);
+    line-height: 1.5;
+    text-wrap: pretty;
+  }
+
+  .letterbar {
+    margin: 28px calc(-1 * var(--page-gutter)) 0;
+    border-block: var(--border-width) solid var(--color-border);
+    background: var(--color-bg);
+    position: sticky;
+    top: var(--header-h);
+    z-index: 2;
+  }
+
+  .letterrow {
+    display: flex;
+    overflow-x: auto;
+    padding-inline: calc(var(--page-gutter) - 12px);
+    scrollbar-width: thin;
+  }
+
+  .letterrow a,
+  .letterrow span {
+    display: grid;
+    flex: none;
+    place-items: center;
+    box-sizing: border-box;
+    min-width: var(--letter-w);
+    height: var(--letter-h);
+    border-radius: 6px 6px 0 0;
+    font-size: 15px;
+  }
+
+  .letterrow a {
+    color: var(--color-text);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .letterrow a:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.25em;
+  }
+
+  .letterrow a[aria-current='location'] {
+    background: var(--color-accent-soft);
+    box-shadow: inset 0 -2px 0 var(--color-accent);
+    font-weight: 700;
+  }
+
+  .letterrow span {
+    color: var(--color-text-muted);
+  }
+
+  .list {
+    max-width: var(--content-width);
+    padding-top: 8px;
+  }
+
+  h2 {
+    margin: 16px 0 0;
+    padding-bottom: 8px;
+    font-family: var(--font-text);
+    font-size: var(--text-2xl);
+    font-weight: 600;
+    line-height: 1.2;
+    scroll-margin-top: calc(var(--header-h) + var(--bar-h) + 8px);
+  }
+
+  .group + .group h2 {
+    margin-top: 40px;
+  }
+
+  dl {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+  }
+
+  .term {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0 -16px;
+    padding: 20px 16px;
+    border-top: var(--border-width) solid var(--color-border);
+    scroll-margin-top: calc(var(--header-h) + var(--bar-h) + 16px);
+    transition: background-color var(--duration-slow) var(--ease-standard);
+  }
+
+  .term:target {
+    border-top-color: transparent;
+    border-radius: 6px;
+    background: var(--color-accent-soft);
+  }
+
+  dt {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 10px;
+    margin: 0;
+  }
+
+  dfn {
+    font-family: var(--font-text);
+    font-size: var(--text-xl);
+    font-style: normal;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .en {
+    color: var(--color-text-muted);
+    font-family: var(--font-text);
+    font-size: var(--text-base);
+    font-style: italic;
+  }
+
+  .anchor {
+    display: inline-grid;
+    place-items: center;
+    align-self: center;
+    width: var(--anchor-size);
+    height: var(--anchor-size);
+    margin: -8px 0;
+    border-radius: 6px;
+    color: var(--color-text-muted);
+    font-size: 17px;
+    text-decoration: none;
+    opacity: 0;
+  }
+
+  .term:hover .anchor,
+  .term:target .anchor,
+  .anchor:focus-visible {
+    opacity: 1;
+  }
+
+  .term:target .anchor {
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+
+  dd {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+  }
+
+  dd p {
+    margin: 0;
+    font-family: var(--font-text);
+    font-size: var(--text-base);
+    line-height: 1.65;
+    hyphens: auto;
+    text-wrap: pretty;
+  }
+
+  .more {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    gap: 4px;
+    min-height: var(--link-h);
+    font-size: 15px;
+    line-height: 1.4;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+
+  .more.external {
+    color: var(--color-link-external);
+    text-decoration-style: dashed;
+  }
+
+  .more :global(svg) {
+    flex: none;
+  }
+
+  .foot,
+  .empty .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 12px;
+    font-size: 16px;
+  }
+
+  .foot {
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: var(--border-width) solid var(--color-border);
+    color: var(--color-text-muted);
+  }
+
+  .foot a,
+  .empty a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: var(--link-h);
+    color: var(--color-link);
+  }
+
+  .foot a[hidden] {
+    display: none;
+  }
+
+  .empty {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: var(--content-width);
+    margin-top: 40px;
+    padding-top: 32px;
+    border-top: var(--border-width) solid var(--color-border);
+  }
+
+  .empty-title {
+    margin: 0;
+    font-family: var(--font-text);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  /* Высота закреплённой шапки: 56 px + рамка, на широком экране 64 px + рамка. */
+  @media (width >= 1024px) {
+    main {
+      --header-h: 65px;
+    }
+  }
+
+  @media (width < 768px), (hover: none) {
+    main {
+      --bar-h: 46px;
+      --letter-w: 44px;
+      --letter-h: 44px;
+      --link-h: 44px;
+      --anchor-size: 44px;
+      padding-top: var(--space-6);
+    }
+
+    .anchor {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    :global(html) {
+      scroll-behavior: smooth;
+    }
+  }
+</style>

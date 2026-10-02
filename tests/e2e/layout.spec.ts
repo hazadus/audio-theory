@@ -40,8 +40,11 @@ test(
           await page.locator(selector).evaluate((el) => getComputedStyle(el).fontFamily),
         ).toContain('Literata');
       }
-      // В навигации только существующие страницы: пока это «Материалы».
-      await expect(header.getByRole('navigation').getByRole('link')).toHaveText(['Материалы']);
+      // В навигации только существующие страницы: «Материалы» и «Глоссарий».
+      await expect(header.getByRole('navigation').getByRole('link')).toHaveText([
+        'Материалы',
+        'Глоссарий',
+      ]);
       const footer = page.locator('footer');
       await expect(footer.getByRole('link', { name: 'GitHub' })).toHaveAttribute(
         'href',
