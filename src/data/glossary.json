@@ -98,5 +98,145 @@
       "article": "sampling",
       "anchor": "aliasing"
     }
+  },
+  {
+    "id": "decibel",
+    "ru": "децибел",
+    "en": "decibel",
+    "definition": "Логарифмическая единица отношения двух величин: для амплитуд L = 20 lg(A/A₀), для мощностей — 10 lg(P/P₀). Смысл числа задаёт опорная величина.",
+    "target": {
+      "article": "signal-level",
+      "anchor": "decibels"
+    }
+  },
+  {
+    "id": "dbfs",
+    "ru": "dBFS",
+    "en": "decibels relative to full scale",
+    "definition": "Уровень цифрового сигнала в децибелах относительно наибольшего значения, которое можно записать. 0 dBFS — полная шкала, остальные уровни отрицательны.",
+    "target": {
+      "article": "signal-level",
+      "anchor": "dbfs"
+    }
+  },
+  {
+    "id": "rms-level",
+    "ru": "среднеквадратичный уровень",
+    "en": "RMS level",
+    "definition": "Корень из среднего квадрата отсчётов. У синусоиды он в √2 раза меньше амплитуды, то есть на 3 дБ ниже пика.",
+    "target": {
+      "article": "signal-level",
+      "anchor": "rms"
+    }
+  },
+  {
+    "id": "envelope",
+    "ru": "огибающая",
+    "en": "envelope",
+    "definition": "Плавная кривая, которая следует за размахом волны и показывает, как уровень сигнала меняется во времени.",
+    "target": {
+      "article": "signal-level",
+      "anchor": "envelope"
+    }
+  },
+  {
+    "id": "dynamic-range",
+    "ru": "динамический диапазон",
+    "en": "dynamic range",
+    "definition": "Разность самого высокого и самого низкого уровня сигнала или системы в децибелах; у системы нижняя граница — уровень собственного шума.",
+    "target": {
+      "article": "signal-level",
+      "anchor": "dynamic-range"
+    }
+  },
+  {
+    "id": "compressor",
+    "ru": "компрессор",
+    "en": "dynamic range compressor",
+    "definition": "Устройство или программа, которая ослабляет сигнал, когда его уровень выше порога, и тем сужает динамический диапазон.",
+    "target": {
+      "article": "compressor",
+      "anchor": "structure"
+    }
+  },
+  {
+    "id": "threshold",
+    "ru": "порог",
+    "en": "threshold",
+    "definition": "Уровень, начиная с которого компрессор или лимитер ослабляет сигнал, а экспандер или гейт — перестаёт ослаблять.",
+    "target": {
+      "article": "compressor",
+      "anchor": "threshold-ratio"
+    }
+  },
+  {
+    "id": "compression-ratio",
+    "ru": "степень сжатия",
+    "en": "ratio",
+    "definition": "Во сколько раз превышение порога на входе компрессора больше превышения на выходе; записывается как «4:1».",
+    "target": {
+      "article": "compressor",
+      "anchor": "threshold-ratio"
+    }
+  },
+  {
+    "id": "attack-time",
+    "ru": "время атаки",
+    "en": "attack time",
+    "definition": "Время, за которое компрессор наращивает подавление усиления после превышения порога. Точное определение зависит от устройства.",
+    "target": {
+      "article": "compressor",
+      "anchor": "attack-release"
+    }
+  },
+  {
+    "id": "release-time",
+    "ru": "время восстановления",
+    "en": "release time",
+    "definition": "Время, за которое компрессор возвращает усиление после того, как уровень опустился. Точное определение зависит от устройства.",
+    "target": {
+      "article": "compressor",
+      "anchor": "attack-release"
+    }
+  },
+  {
+    "id": "makeup-gain",
+    "ru": "компенсация усиления",
+    "en": "makeup gain",
+    "definition": "Постоянное усиление после компрессора, которое возвращает общий уровень, сниженный сжатием.",
+    "target": {
+      "article": "compressor",
+      "anchor": "makeup"
+    }
+  },
+  {
+    "id": "limiter",
+    "ru": "лимитер",
+    "en": "limiter",
+    "definition": "Компрессор с бесконечной степенью сжатия: уровень выхода не поднимается выше порога.",
+    "target": {
+      "article": "compressor",
+      "anchor": "limiter"
+    }
+  },
+  {
+    "id": "expander",
+    "ru": "экспандер",
+    "en": "expander",
+    "definition": "Устройство, которое ослабляет сигнал ниже порога сильнее, чем он был ослаблен на входе, и тем расширяет динамический диапазон.",
+    "target": {
+      "article": "compressor",
+      "anchor": "expander-gate"
+    }
+  },
+  {
+    "id": "noise-gate",
+    "ru": "шумовой гейт",
+    "en": "noise gate",
+    "definition": "Устройство, которое отключает сигнал, пока его уровень ниже порога; предельный случай экспандера.",
+    "target": {
+      "article": "compressor",
+      "anchor": "expander-gate"
+    }
   }
 ]

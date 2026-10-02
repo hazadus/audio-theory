@@ -19,7 +19,7 @@ docs/ ✅                             # Документация проекта
     article-template.mdx ✅          # Собираемый служебный образец
     template-review.md ✅            # Результат прохождения чеклиста на образце
 src/
-  content/articles/                  # Пять статей в MDX и будущие материалы
+  content/articles/                  # Статьи в MDX: пять статей первого выпуска и материалы по issue
   content.config.ts ✅               # Коллекция статей
   data/topics.ts ✅                  # Четыре тематические группы
   data/glossary.json ✅               # Единый источник определений

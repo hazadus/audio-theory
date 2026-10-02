@@ -11,10 +11,16 @@ const search = (page: Page) => new URL(page.url()).search;
 test('по умолчанию все статьи по дате, счётчики и состояние элементов', async ({ page }) => {
   await page.goto('materials/');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Все материалы');
-  expect((await slugs(page)).sort()).toEqual(['sampling', 'sound-wave']);
-  await expect(page.locator('[data-count]')).toHaveText('2 статьи');
+  expect((await slugs(page)).sort()).toEqual([
+    'compressor',
+    'sampling',
+    'signal-level',
+    'sound-wave',
+  ]);
+  await expect(page.locator('[data-count]')).toHaveText('4 статьи');
   await expect(chip(page, 'all')).toHaveAttribute('aria-pressed', 'true');
-  await expect(chip(page, 'all')).toContainText('2');
+  await expect(chip(page, 'all')).toContainText('4');
+  await expect(chip(page, 'processing')).toContainText('1');
   await expect(chip(page, 'conv')).toHaveAttribute('aria-disabled', 'true');
   await expect(chip(page, 'conv')).toContainText('0');
   await expect(sortOption(page, 'date')).toHaveAttribute('aria-checked', 'true');
@@ -30,8 +36,8 @@ test(
 
     await chip(page, 'digital').click();
     expect(search(page)).toBe('?topic=digital');
-    expect(await slugs(page)).toEqual(['sampling']);
-    await expect(page.locator('[data-count]')).toHaveText('1 статья');
+    expect((await slugs(page)).sort()).toEqual(['sampling', 'signal-level']);
+    await expect(page.locator('[data-count]')).toHaveText('2 статьи');
     await expect(chip(page, 'digital')).toHaveAttribute('aria-pressed', 'true');
 
     await sortOption(page, 'alpha').click();
@@ -39,7 +45,7 @@ test(
 
     await sortOption(page, 'topic').click();
     expect(search(page)).toBe('?topic=digital&sort=topic');
-    await expect(page.locator('[data-list] h2')).toHaveText(/Цифровой сигнал\s*1/);
+    await expect(page.locator('[data-list] h2')).toHaveText(/Цифровой сигнал\s*2/);
 
     await page.goBack();
     expect(search(page)).toBe('?topic=digital&sort=alpha');
@@ -51,11 +57,11 @@ test(
     expect(await slugs(page)).toEqual(initial);
     await expect(chip(page, 'all')).toHaveAttribute('aria-pressed', 'true');
     await page.goForward();
-    expect(await slugs(page)).toEqual(['sampling']);
+    expect((await slugs(page)).sort()).toEqual(['sampling', 'signal-level']);
 
     await page.reload();
     expect(search(page)).toBe('?topic=digital');
-    expect(await slugs(page)).toEqual(['sampling']);
+    expect((await slugs(page)).sort()).toEqual(['sampling', 'signal-level']);
     await expect(chip(page, 'digital')).toHaveAttribute('aria-pressed', 'true');
 
     // Возврат к «Все» и сортировке по умолчанию убирает query из адреса.
@@ -67,15 +73,19 @@ test(
 test('сортировки «А–Я» и «По темам» дают ожидаемый порядок и группы', async ({ page }) => {
   await page.goto('materials/?sort=alpha');
   await expect(sortOption(page, 'alpha')).toHaveAttribute('aria-checked', 'true');
-  // «Дискретизация…» раньше «Звуковая волна…».
-  expect(await slugs(page)).toEqual(['sampling', 'sound-wave']);
+  // «Дискретизация…», «Звуковая волна…», «Как работает компрессор», «Уровень сигнала…».
+  expect(await slugs(page)).toEqual(['sampling', 'sound-wave', 'compressor', 'signal-level']);
 
   await page.goto('materials/?sort=topic');
   const headings = page.locator('[data-list] h2');
-  await expect(headings).toHaveCount(2);
+  await expect(headings).toHaveCount(3);
   await expect(headings.nth(0)).toContainText('Основы звука');
   await expect(headings.nth(1)).toContainText('Цифровой сигнал');
-  expect(await slugs(page)).toEqual(['sound-wave', 'sampling']);
+  await expect(headings.nth(2)).toContainText('Обработка звука');
+  const order = await slugs(page);
+  expect(order[0]).toBe('sound-wave');
+  expect(order.slice(1, 3).sort()).toEqual(['sampling', 'signal-level']);
+  expect(order[3]).toBe('compressor');
   // Название группы стоит в заголовке, поэтому метка в строке скрыта.
   await expect(rows(page).first().locator('.overline')).toBeHidden();
 });
@@ -88,7 +98,7 @@ test('неверные значения query заменяются умолча�
   await expect(chip(page, 'all')).toHaveAttribute('aria-pressed', 'true');
   await expect(sortOption(page, 'date')).toHaveAttribute('aria-checked', 'true');
   expect(search(page)).toBe('');
-  expect((await slugs(page)).length).toBe(2);
+  expect((await slugs(page)).length).toBe(4);
 
   await page.goto('materials/?topic=basics&sort=random');
   expect(search(page)).toBe('?topic=basics');
@@ -141,7 +151,10 @@ test(
     const base = testInfo.project.metadata.base as string;
     await page.goto('./');
     const all = page.locator('a.all');
-    await expect(all.first()).toHaveAttribute('href', /\/materials\/\?topic=(basics|digital)$/);
+    await expect(all.first()).toHaveAttribute(
+      'href',
+      /\/materials\/\?topic=(basics|digital|processing)$/,
+    );
     expect((await all.first().getAttribute('href'))!.startsWith(`${base}materials/`)).toBe(true);
     await all.first().click();
     await expect(page).toHaveURL(new RegExp(`${base}materials/\\?topic=`));
@@ -162,9 +175,9 @@ test(
     ).toHaveAttribute('aria-current', 'page');
     await crumb.click();
     await expect(chip(page, 'digital')).toHaveAttribute('aria-pressed', 'true');
-    expect(await slugs(page)).toEqual(['sampling']);
+    expect((await slugs(page)).sort()).toEqual(['sampling', 'signal-level']);
     // Строка списка ведёт на статью с базовым путём.
-    await rows(page).first().getByRole('link').click();
+    await rows(page).filter({ hasText: 'Дискретизация' }).getByRole('link').click();
     expect(new URL(page.url()).pathname).toBe(`${base}sampling/`);
   },
 );
@@ -182,8 +195,8 @@ test(
       const page = await context.newPage();
       await page.goto('materials/?topic=digital&sort=alpha');
       await expect(page.locator('[data-controls]')).toBeHidden();
-      expect((await slugs(page)).length).toBe(2);
-      await expect(page.locator('[data-count]')).toHaveText('2 статьи');
+      expect((await slugs(page)).length).toBe(4);
+      await expect(page.locator('[data-count]')).toHaveText('4 статьи');
       await expect(rows(page).first().getByRole('link')).toBeVisible();
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
         390,
