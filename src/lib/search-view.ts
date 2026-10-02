@@ -76,3 +76,13 @@ export function toHits(results: SearchResult[]): SearchHit[] {
     }));
   });
 }
+
+/**
+ * Новый индекс выбранного результата. Из состояния «ничего не выбрано» (-1) `↓` выбирает первый,
+ * `↑` выбора не создаёт; на границах списка выделение останавливается.
+ */
+export function moveSelection(current: number, count: number, step: 1 | -1): number {
+  if (count <= 0) return -1;
+  if (current < 0) return step === 1 ? 0 : -1;
+  return Math.min(count - 1, Math.max(0, current + step));
+}

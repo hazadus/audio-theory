@@ -1,6 +1,6 @@
 ---
 // Диалог поиска на нативном <dialog>: showModal даёт ограничение фокуса и недоступный фон.
-// Выдача и состояния поиска — в `search-controller.ts`; выбор результатов клавишами добавляется отдельной задачей.
+// Выдача и состояния поиска — в `search-controller.ts`; выбор результатов клавишами — там же.
 import Icon from '@/components/Icon.astro';
 import { withBase } from '@/lib/urls';
 ---
@@ -23,6 +23,11 @@ import { withBase } from '@/lib/urls';
         type="text"
         name="q"
         data-search-input
+        role="combobox"
+        aria-autocomplete="list"
+        aria-haspopup="listbox"
+        aria-expanded="false"
+        aria-controls="search-results"
         aria-label="Поиск по материалам"
         placeholder="Статья или термин"
         autocomplete="off"
@@ -58,7 +63,14 @@ import { withBase } from '@/lib/urls';
           <a href={withBase('/')}>На главную</a>
         </p>
       </div>
-      <ul class="results" data-search-results hidden></ul>
+      <ul
+        class="results"
+        id="search-results"
+        role="listbox"
+        aria-label="Результаты поиска"
+        data-search-results
+        hidden
+      ></ul>
     </div>
     <ul class="keys" aria-label="Горячие клавиши">
       <li>
@@ -120,7 +132,9 @@ import { withBase } from '@/lib/urls';
     dialog.addEventListener('keydown', (event) => {
       if (event.key !== 'Tab') return;
       const items = [
-        ...dialog.querySelectorAll<HTMLElement>('input, button:not([disabled]), a[href]'),
+        ...dialog.querySelectorAll<HTMLElement>(
+          'input, button:not([disabled]), a[href]:not([tabindex="-1"])',
+        ),
       ].filter((el) => el.getClientRects().length > 0);
       if (items.length === 0) return;
       // Переход делаем сами: Safari по умолчанию пропускает кнопки, и Tab выводил бы фокус из окна.
@@ -385,8 +399,31 @@ import { withBase } from '@/lib/urls';
     text-decoration: none;
   }
 
+  .search-dialog .hit {
+    position: relative;
+  }
+
   .search-dialog .hit:hover {
+    background: var(--color-surface);
+  }
+
+  /* Выбор клавишами: плашка, полоса слева и значок ↵ — не только цвет. */
+  .search-dialog .hit[aria-selected='true'] {
     background: var(--color-accent-soft);
+    box-shadow: inset 3px 0 0 var(--color-accent);
+  }
+
+  .search-dialog .hit[aria-selected='true']::after {
+    content: '↵';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+  }
+
+  .search-dialog .hit[aria-selected='true'] .hit-path {
+    padding-right: 24px;
   }
 
   .search-dialog .hit-path {

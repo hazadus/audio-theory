@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseExcerpt, toHits } from '@/lib/search-view';
+import { moveSelection, parseExcerpt, toHits } from '@/lib/search-view';
 
 describe('parseExcerpt', () => {
   it('выделяет совпадения в mark', () => {
@@ -46,5 +46,23 @@ describe('toHits', () => {
     expect(toHits([{ url: '/b/', title: 'Б', sections: [] }])).toEqual([
       { article: 'Б', section: '', url: '/b/', excerpt: '' },
     ]);
+  });
+});
+
+describe('moveSelection', () => {
+  it('из состояния без выбора ↓ выбирает первый, ↑ выбор не создаёт', () => {
+    expect(moveSelection(-1, 3, 1)).toBe(0);
+    expect(moveSelection(-1, 3, -1)).toBe(-1);
+  });
+
+  it('останавливается на границах списка', () => {
+    expect(moveSelection(0, 3, -1)).toBe(0);
+    expect(moveSelection(2, 3, 1)).toBe(2);
+    expect(moveSelection(1, 3, 1)).toBe(2);
+    expect(moveSelection(1, 3, -1)).toBe(0);
+  });
+
+  it('без результатов выбора нет', () => {
+    expect(moveSelection(-1, 0, 1)).toBe(-1);
   });
 });

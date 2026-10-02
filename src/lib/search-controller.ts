@@ -1,8 +1,10 @@
 // Выдача поиска в диалоге: состояния, запросы к Pagefind и показ результатов.
 // Ответ устаревшего запроса отбрасывается; фрагменты вставляются только как текст.
 import { searchIndex, type PagefindApi } from '@/lib/search';
-import { parseExcerpt, toHits, type SearchHit } from '@/lib/search-view';
+import { moveSelection, parseExcerpt, toHits, type SearchHit } from '@/lib/search-view';
 import { withBase } from '@/lib/urls';
+
+const OPTION_ID_PREFIX = 'search-option-';
 
 /** Задержка, после которой показывается «Ищем…». */
 const LOADING_DELAY_MS = 150;
@@ -22,11 +24,17 @@ const statusText: Record<SearchState, (count: number) => string> = {
   error: () => 'Не удалось загрузить поиск',
 };
 
-function renderHit(hit: SearchHit): HTMLLIElement {
+function renderHit(hit: SearchHit, index: number): HTMLLIElement {
   const item = document.createElement('li');
+  item.setAttribute('role', 'none');
   const link = document.createElement('a');
   link.href = hit.url;
   link.className = 'hit';
+  // Фокус остаётся в поле: переход к варианту выполняет aria-activedescendant, а не Tab.
+  link.id = `${OPTION_ID_PREFIX}${index}`;
+  link.setAttribute('role', 'option');
+  link.setAttribute('aria-selected', 'false');
+  link.tabIndex = -1;
 
   const path = document.createElement('span');
   path.className = 'hit-path';
@@ -91,6 +99,24 @@ export function initSearchResults(
     return pagefind;
   };
 
+  // Индекс выбранного результата; -1 — выбора нет.
+  let active = -1;
+
+  const options = () => [...list.querySelectorAll<HTMLElement>('[role="option"]')];
+
+  const select = (index: number) => {
+    active = index;
+    options().forEach((option, i) => {
+      option.setAttribute('aria-selected', String(i === index));
+    });
+    if (index >= 0) {
+      input.setAttribute('aria-activedescendant', `${OPTION_ID_PREFIX}${index}`);
+      options()[index]?.scrollIntoView({ block: 'nearest' });
+    } else {
+      input.removeAttribute('aria-activedescendant');
+    }
+  };
+
   const show = (state: SearchState, hits: SearchHit[] = []) => {
     body.dataset.state = state;
     body.setAttribute('aria-busy', String(state === 'loading'));
@@ -100,12 +126,16 @@ export function initSearchResults(
     failure.hidden = state !== 'error';
     list.hidden = state !== 'results';
     list.replaceChildren(...(state === 'results' ? hits.map(renderHit) : []));
+    input.setAttribute('aria-expanded', String(state === 'results'));
+    select(-1);
     if (state !== 'loading') body.scrollTop = 0;
   };
 
   const run = async () => {
     const query = input.value.trim();
     const id = ++latest;
+    // Выбор относился к прежнему запросу: Enter не должен открыть устаревший результат.
+    select(-1);
     if (!query) {
       show('empty');
       return;
@@ -131,6 +161,20 @@ export function initSearchResults(
   };
 
   input.addEventListener('input', () => void run());
+  input.addEventListener('keydown', (event) => {
+    if (event.isComposing || event.ctrlKey || event.metaKey || event.altKey) return;
+    const count = options().length;
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      // Без результатов стрелки остаются обычными клавишами поля.
+      if (count === 0 || body.dataset.state !== 'results') return;
+      event.preventDefault();
+      select(moveSelection(active, count, event.key === 'ArrowDown' ? 1 : -1));
+    } else if (event.key === 'Enter') {
+      event.preventDefault();
+      // Без выбора и без результатов Enter ничего не открывает.
+      if (active >= 0) options()[active]?.click();
+    }
+  });
   retry.addEventListener('click', () => {
     void run();
     input.focus();
