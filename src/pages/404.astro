@@ -1,0 +1,186 @@
+---
+import Icon from '@/components/Icon.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { withBase } from '@/lib/urls';
+---
+
+<BaseLayout title="Страница не найдена" description="Такой страницы на сайте нет.">
+  <main id="content">
+    <div class="column">
+      <span class="code">Ошибка 404</span>
+      <h1>Такой страницы нет</h1>
+      <p class="lead">
+        Возможно, статью переименовали или в адресе опечатка.{' '}
+        <span data-not-found-address hidden>
+          Адрес: <code data-not-found-path></code>
+        </span>
+      </p>
+      <section class="suggestions" data-suggestions hidden aria-labelledby="suggestions-title">
+        <h2 id="suggestions-title">Похоже на то, что вы искали</h2>
+        <div class="list" data-suggestions-list></div>
+      </section>
+      <div class="actions">
+        <a class="button primary" href={withBase('/')}>
+          На главную
+        </a>
+        <button type="button" class="button" data-search-open hidden>
+          <Icon name="search" size={18} />
+          Открыть поиск
+        </button>
+        <noscript>
+          <a class="button" href={withBase('/materials/')}>
+            Все материалы
+          </a>
+        </noscript>
+      </div>
+    </div>
+  </main>
+</BaseLayout>
+
+<script>
+  import { initNotFound } from '@/lib/not-found-controller';
+
+  initNotFound();
+</script>
+
+<style>
+  main {
+    width: min(var(--container-max), 100% - 2 * var(--page-gutter));
+    margin: 0 auto;
+    padding-top: var(--space-9);
+    font-family: var(--font-ui);
+  }
+
+  .column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 640px;
+  }
+
+  .code {
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  h1 {
+    margin: 0;
+    font-family: var(--font-text);
+    font-size: var(--text-4xl);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: var(--tracking-tight);
+  }
+
+  .lead {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-family: var(--font-text);
+    font-size: var(--text-base);
+    line-height: 1.65;
+  }
+
+  code {
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: var(--color-code-bg);
+    color: var(--color-text);
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    overflow-wrap: anywhere;
+  }
+
+  .suggestions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px 20px;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: 10px;
+  }
+
+  .suggestions[hidden] {
+    display: none;
+  }
+
+  h2 {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .list :global(a) {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-height: 44px;
+    justify-content: center;
+    color: var(--color-text);
+    text-decoration: none;
+  }
+
+  .list :global(.suggestion-title) {
+    color: var(--color-link);
+    font-family: var(--font-text);
+    font-size: 18px;
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+
+  .list :global(.suggestion-section) {
+    color: var(--color-text-muted);
+    font-size: 14px;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-sizing: border-box;
+    height: 44px;
+    padding: 0 16px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--color-text);
+    font: 500 15px var(--font-ui);
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .button[hidden] {
+    display: none;
+  }
+
+  .button.primary {
+    padding-inline: 18px;
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+  }
+
+  @media (width < 768px) {
+    main {
+      padding-top: var(--space-7);
+    }
+  }
+</style>
