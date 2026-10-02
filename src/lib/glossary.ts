@@ -16,22 +16,38 @@ export const glossarySchema = z.array(glossaryEntrySchema);
 
 export type GlossaryEntry = z.infer<typeof glossaryEntrySchema>;
 
+export interface ParseGlossaryOptions {
+  /**
+   * Пропускать записи со ссылкой на отсутствующую статью вместо ошибки. Нужно только проверкам
+   * с подменённой коллекцией (`ARTICLES_DIR`): служебные статьи не содержат настоящих целей.
+   */
+  skipUnknownArticles?: boolean;
+}
+
 /**
  * Разбирает глоссарий и проверяет его: записи полны, `id` уникальны,
  * внутренние цели ведут на существующие статьи. Иначе бросает ошибку.
  */
-export function parseGlossary(data: unknown, articleSlugs: Iterable<string>): GlossaryEntry[] {
+export function parseGlossary(
+  data: unknown,
+  articleSlugs: Iterable<string>,
+  { skipUnknownArticles = false }: ParseGlossaryOptions = {},
+): GlossaryEntry[] {
   const entries = glossarySchema.parse(data);
   const slugs = new Set(articleSlugs);
   const seen = new Set<string>();
-  for (const { id, target: link } of entries) {
+  const kept: GlossaryEntry[] = [];
+  for (const entry of entries) {
+    const { id, target: link } = entry;
     if (seen.has(id)) throw new Error(`Повторный термин глоссария «${id}»`);
     seen.add(id);
     if ('article' in link && !slugs.has(link.article)) {
+      if (skipUnknownArticles) continue;
       throw new Error(`Термин «${id}» ссылается на неизвестную статью «${link.article}»`);
     }
+    kept.push(entry);
   }
-  return entries;
+  return kept;
 }
 
 /** Запись по `id` для `Term`; неизвестный термин останавливает сборку. */

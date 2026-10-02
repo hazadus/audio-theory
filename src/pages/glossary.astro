@@ -18,6 +18,8 @@ const articles = await getCollection('articles');
 const entries = parseGlossary(
   glossarySchema.parse(glossary),
   articles.map((a) => a.data.slug),
+  // Подменённая коллекция (проверки) не содержит настоящих статей; публичная сборка проверяет строго.
+  { skipUnknownArticles: process.env.ARTICLES_DIR !== undefined },
 );
 const info = new Map<string, ArticleInfo>(
   await Promise.all(

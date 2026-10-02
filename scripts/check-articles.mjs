@@ -235,19 +235,20 @@ try {
   assert.equal(published.status, 0, published.stdout + published.stderr);
   const files = await readdir(publishedDir, { recursive: true });
   assert.ok(!files.some((file) => file.includes('test-')), 'Служебные статьи опубликованы');
-  // В индекс Pagefind попадают начальная страница и настоящие статьи, служебных в нём нет.
+  // В индекс Pagefind попадают начальная страница, глоссарий, «О проекте» и настоящие статьи, служебных нет.
   const realArticles = (
     await readdir(join(root, 'src/content/articles'), { recursive: true })
   ).filter((file) => file.endsWith('.mdx')).length;
-  // HTML-страниц на одну больше: список материалов (`/materials/`) без `data-pagefind-body`.
-  const pages = 2 + realArticles;
+  // HTML-страниц: главная, материалы, глоссарий, «О проекте», 404 и статьи; Pagefind считает их все,
+  // а фрагменты строит только для страниц с `data-pagefind-body` (проверяется ниже).
+  const pages = 5 + realArticles;
   assert.match(
     published.stdout + published.stderr,
     new RegExp(`Артефакт проверен: ${pages} страниц; индекс Pagefind: ${pages} страниц`),
   );
-  // Фрагменты Pagefind есть только у главной и статей: список материалов дублировал бы выдачу.
+  // Фрагменты Pagefind есть у главной, глоссария, «О проекте» и статей: список материалов дублировал бы выдачу, 404 не ищется.
   const fragments = files.filter((file) => file.endsWith('.pf_fragment'));
-  assert.equal(fragments.length, 1 + realArticles);
+  assert.equal(fragments.length, 3 + realArticles);
   console.log('Коллекция статей: маршруты из slug — OK');
   console.log(
     'Повторный slug, неизвестная группа, пустые поля и readingMinutes блокируют сборку — OK',

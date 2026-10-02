@@ -56,6 +56,17 @@ describe('parseGlossary', () => {
     );
   });
 
+  it('в режиме проверок пропускает запись с неизвестной статьёй, остальные оставляет', () => {
+    const missing = { ...entry, id: 'missing-one', target: { article: 'missing' } };
+    expect(parseGlossary([missing, entry], slugs, { skipUnknownArticles: true })).toEqual([entry]);
+  });
+
+  it('и в режиме проверок отвергает повторный термин', () => {
+    expect(() =>
+      parseGlossary([entry, { ...entry, ru: 'другой' }], slugs, { skipUnknownArticles: true }),
+    ).toThrow(/Повторный термин/);
+  });
+
   it.each(['id', 'ru', 'en', 'definition', 'target'])('отвергает запись без поля %s', (field) => {
     const rest: Record<string, unknown> = { ...entry };
     delete rest[field];
