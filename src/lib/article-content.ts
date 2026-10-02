@@ -15,7 +15,7 @@ type Sequence = 'figure' | 'table' | 'equation';
 
 interface BlockRule {
   sequence: Sequence;
-  /** Атрибут с номером: у `SamplingDemo`, `PhaseDemo` и `ToneDemo` это номер рисунка. */
+  /** Атрибут с номером: у `SamplingDemo`, `PhaseDemo`, `ToneDemo` и `CompressorDemo` это номер рисунка. */
   numberAttribute: string;
   idRequired: boolean;
   numberRequired: boolean;
@@ -37,6 +37,12 @@ const blockRules: Record<string, BlockRule> = {
     numberRequired: true,
   },
   ToneDemo: {
+    sequence: 'figure',
+    numberAttribute: 'figure',
+    idRequired: false,
+    numberRequired: true,
+  },
+  CompressorDemo: {
     sequence: 'figure',
     numberAttribute: 'figure',
     idRequired: false,

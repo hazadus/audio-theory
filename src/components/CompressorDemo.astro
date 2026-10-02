@@ -1,0 +1,896 @@
+---
+// Визуализация компрессора: передаточная характеристика, уровни во времени с подавлением усиления,
+// легенда, статус, шесть параметров, примеры, плеер «до / после» и подпись «Рис. N.».
+// При сборке рисуется начальное состояние; скрипт включает параметры и звук и перерисовывает те же SVG.
+// Без JS, во время загрузки и при ошибке параметры неактивны, а сообщение объясняет почему.
+import Icon from '@/components/Icon.astro';
+import { defaultSettings, presets, sameSettings } from '@/lib/compressor';
+import {
+  compressorCaption,
+  compressorView,
+  compressorWarning,
+  curveSvg,
+  parameterSpecs,
+  sliderFill,
+  timeSvg,
+} from '@/lib/compressor-view';
+import { initialVolume } from '@/lib/sampling-audio';
+import { volumeStep, volumeText } from '@/lib/sampling-player';
+
+interface Props {
+  /** Номер рисунка: визуализации и рисунки нумеруются одной последовательностью. */
+  figure: number;
+  /** Якорь для ссылок `#id`; английский kebab-case. */
+  id?: string;
+}
+
+const { figure, id = 'compressor-demo' } = Astro.props;
+
+const settings = defaultSettings;
+const view = compressorView(settings);
+---
+
+<figure
+  class="compressor-demo"
+  id={id}
+  aria-labelledby={`${id}-name`}
+  data-compressor-demo
+  data-state="static"
+>
+  <div class="compressor-demo-head">
+    <span class="compressor-demo-label">Визуализация {figure}</span>
+    <span class="compressor-demo-name" id={`${id}-name`}>
+      Компрессор: характеристика и уровни во времени
+    </span>
+  </div>
+  <div class="compressor-demo-plot">
+    <div class="compressor-demo-curve" data-curve set:html={curveSvg(settings, view.summary, id)} />
+    <div
+      class="compressor-demo-time"
+      data-time
+      set:html={timeSvg(settings, view.track, view.summary, id)}
+    />
+  </div>
+  <div class="compressor-demo-body">
+    <ul class="compressor-demo-legend" aria-label="Легенда">
+      <li>
+        <span class="compressor-demo-key input" aria-hidden="true"></span>вход
+      </li>
+      <li>
+        <span class="compressor-demo-key output" aria-hidden="true"></span>выход
+      </li>
+      <li>
+        <span class="compressor-demo-key threshold" aria-hidden="true"></span>порог T
+      </li>
+      <li>
+        <span class="compressor-demo-key knee" aria-hidden="true"></span>колено
+      </li>
+      <li>
+        <span class="compressor-demo-key dot" aria-hidden="true"></span>пики ударов
+      </li>
+      <li>
+        <span class="compressor-demo-key gain" aria-hidden="true"></span>подавление усиления
+      </li>
+    </ul>
+    <p
+      class="compressor-demo-status"
+      data-status
+      data-warning={view.status.warning ? '' : undefined}
+    >
+      <span class="compressor-demo-icon">
+        <Icon name="info" size={18} />
+      </span>
+      <span>
+        <b data-status-title>{view.status.title}</b>{' '}
+        <span data-status-text>{view.status.text}</span>
+      </span>
+    </p>
+  </div>
+  <p class="visually-hidden" aria-live="polite" data-announce></p>
+  <fieldset class="compressor-demo-controls" data-controls disabled>
+    <legend class="visually-hidden">Параметры компрессора</legend>
+    <div class="compressor-demo-params">
+      {parameterSpecs.map((spec) => {
+        const value = settings[spec.key];
+        const text = spec.text(value);
+        return (
+          <div class="compressor-demo-param">
+            <div class="compressor-demo-param-head">
+              <label for={`${id}-${spec.key}`}>{spec.label}</label>
+              <output for={`${id}-${spec.key}`} data-param-value={spec.key}>
+                {text}
+              </output>
+            </div>
+            <input
+              id={`${id}-${spec.key}`}
+              class="compressor-demo-range"
+              type="range"
+              min={spec.min}
+              max={spec.max}
+              step={spec.step}
+              value={spec.position(value)}
+              aria-valuetext={text}
+              style={`--fill: ${sliderFill(spec, value)}`}
+              data-param={spec.key}
+            />
+            <div class="compressor-demo-scale" aria-hidden="true">
+              <span>{spec.scale[0]}</span>
+              <span>{spec.scale[1]}</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+    <div class="compressor-demo-actions">
+      <div class="compressor-demo-presets" role="group" aria-label="Примеры">
+        <span class="compressor-demo-presets-label" aria-hidden="true">
+          Примеры:
+        </span>
+        {presets.map((preset) => (
+          <button
+            type="button"
+            class="compressor-demo-preset"
+            aria-pressed={sameSettings(preset.settings, settings) ? 'true' : 'false'}
+            data-preset={preset.id}
+          >
+            {preset.label}
+          </button>
+        ))}
+      </div>
+      <button type="button" class="compressor-demo-reset" data-reset>
+        <Icon name="rotate-ccw" size={16} />
+        Сбросить
+      </button>
+    </div>
+    <div class="compressor-demo-audio">
+      <p class="compressor-demo-warning" role="note">
+        <Icon name="volume-2" size={18} />
+        <span>
+          <b>Громкость.</b> <span>{compressorWarning}</span>
+        </span>
+      </p>
+      <div
+        class="compressor-demo-player"
+        role="group"
+        aria-label="Аудиопример: удары до и после компрессора"
+        data-player-group
+        data-mode="ready"
+      >
+        <button type="button" class="compressor-demo-play" aria-label="Воспроизвести" data-play>
+          <span class="compressor-demo-play-icon start">
+            <Icon name="play" size={18} />
+          </span>
+          <span class="compressor-demo-play-icon stop">
+            <Icon name="square" size={16} />
+          </span>
+        </button>
+        <div class="compressor-demo-listen" role="radiogroup" aria-label="Что слушать">
+          <label>
+            <input type="radio" name={`${id}-listen`} value="dry" data-listen />
+            Исходный
+          </label>
+          <label>
+            <input type="radio" name={`${id}-listen`} value="wet" checked data-listen />
+            После компрессора
+          </label>
+        </div>
+        <div class="compressor-demo-volume">
+          <button type="button" class="compressor-demo-mute" aria-label="Выключить звук" data-mute>
+            <span class="compressor-demo-mute-icon on">
+              <Icon name="volume-2" size={18} />
+            </span>
+            <span class="compressor-demo-mute-icon off">
+              <Icon name="volume-x" size={18} />
+            </span>
+          </button>
+          <input
+            class="compressor-demo-range compact"
+            type="range"
+            min="0"
+            max="100"
+            step={volumeStep}
+            value={initialVolume * 100}
+            aria-label="Громкость"
+            aria-valuetext={volumeText(initialVolume * 100)}
+            style={`--fill: ${initialVolume * 100}`}
+            data-volume
+          />
+          <span class="compressor-demo-volume-text" data-volume-text>
+            {volumeText(initialVolume * 100)}
+          </span>
+        </div>
+      </div>
+      <p class="compressor-demo-player-state" role="status" data-player-state>
+        Остановлен
+      </p>
+    </div>
+    <p class="compressor-demo-note" data-controls-note>
+      Параметры и звук работают с включённым JavaScript. Графики показывают начальное состояние.
+    </p>
+  </fieldset>
+  <figcaption class="compressor-demo-caption">
+    <b>Рис. {figure}.</b> <span data-caption>{compressorCaption(settings)}</span>
+  </figcaption>
+</figure>
+
+<script>
+  import { initCompressorDemos } from '@/lib/compressor-demo-controller';
+
+  initCompressorDemos();
+</script>
+
+<style is:global>
+  .compressor-demo {
+    container-type: inline-size;
+    margin: var(--space-6) 0;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    overflow: hidden;
+    font-family: var(--font-ui);
+    scroll-margin-top: 88px;
+  }
+
+  .compressor-demo-head {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 14px 20px;
+  }
+
+  .compressor-demo-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  .compressor-demo-name {
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  /* Характеристика и график во времени рядом; уровни −60…0 dBFS у них одной высоты. */
+  .compressor-demo-plot {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    border-block: var(--border-width) solid var(--color-border);
+    background: var(--chart-bg);
+  }
+
+  /* Отступы — место для подписей делений: они выходят за область построения. */
+  .compressor-demo-curve {
+    padding: 14px 8px 30px 44px;
+  }
+
+  .compressor-demo-curve-svg {
+    display: block;
+    width: 220px;
+    height: 220px;
+    overflow: visible;
+    font-size: var(--text-chart);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .compressor-demo-time {
+    padding: 14px 14px 30px 52px;
+  }
+
+  .compressor-demo-time-svg {
+    display: block;
+    width: 100%;
+    height: 220px;
+    overflow: visible;
+    font-size: var(--text-chart);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .compressor-demo-reduction {
+    margin-top: 10px;
+  }
+
+  .compressor-demo-reduction-svg {
+    display: block;
+    width: 100%;
+    height: 56px;
+    overflow: visible;
+    font-size: var(--text-chart);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .compressor-demo-grid line {
+    stroke: var(--chart-grid);
+    stroke-width: 1;
+  }
+
+  .compressor-demo-knee {
+    fill: var(--chart-grid);
+    opacity: 0.6;
+  }
+
+  .compressor-demo-threshold {
+    stroke: var(--chart-label);
+    stroke-width: 1.5;
+    stroke-dasharray: 1.5 3;
+  }
+
+  .compressor-demo-identity,
+  .compressor-demo-input,
+  .compressor-demo-output {
+    fill: none;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .compressor-demo-identity {
+    stroke: var(--chart-axis);
+    stroke-width: 1;
+    stroke-dasharray: 3 3;
+  }
+
+  .compressor-demo-input {
+    stroke: var(--chart-signal);
+    stroke-width: 2;
+  }
+
+  .compressor-demo-output {
+    stroke: var(--chart-result);
+    stroke-width: 2.25;
+    stroke-dasharray: 6 4;
+  }
+
+  /* На характеристике выход — единственная линия, поэтому сплошная. */
+  .compressor-demo-curve .compressor-demo-output {
+    stroke-dasharray: none;
+  }
+
+  .compressor-demo-gain {
+    fill: color-mix(in oklab, var(--chart-sample) 30%, transparent);
+    stroke: var(--chart-sample);
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .compressor-demo-dot {
+    fill: var(--chart-bg);
+    stroke: var(--chart-sample);
+    stroke-width: 2;
+  }
+
+  .compressor-demo-marker {
+    fill: var(--chart-label);
+    font-family: var(--font-text);
+    font-style: italic;
+  }
+
+  .compressor-demo-ticks {
+    fill: var(--chart-label);
+  }
+
+  .compressor-demo-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 20px;
+  }
+
+  .compressor-demo-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 14px;
+  }
+
+  .compressor-demo-legend li {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .compressor-demo-key {
+    flex: none;
+    width: 18px;
+  }
+
+  .compressor-demo-key.input {
+    height: 2px;
+    background: var(--chart-signal);
+  }
+
+  .compressor-demo-key.output {
+    border-top: 2px dashed var(--chart-result);
+  }
+
+  .compressor-demo-key.threshold {
+    border-top: 2px dotted var(--chart-label);
+  }
+
+  .compressor-demo-key.knee {
+    height: 12px;
+    background: var(--chart-grid);
+  }
+
+  .compressor-demo-key.dot {
+    width: 10px;
+    height: 10px;
+    margin-inline: 4px;
+    border: 2px solid var(--chart-sample);
+    border-radius: 50%;
+  }
+
+  .compressor-demo-key.gain {
+    height: 10px;
+    border-top: 1.5px solid var(--chart-sample);
+    background: color-mix(in oklab, var(--chart-sample) 30%, transparent);
+  }
+
+  .compressor-demo-status {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin: 0;
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    box-shadow: inset 0 0 0 1px var(--color-border-strong);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .compressor-demo-status[data-warning] {
+    background: var(--color-warning-bg);
+    box-shadow: none;
+  }
+
+  .compressor-demo-icon {
+    display: flex;
+    flex: none;
+    margin-top: 1px;
+    color: var(--color-text-muted);
+  }
+
+  .compressor-demo-status[data-warning] .compressor-demo-icon {
+    color: var(--color-warning);
+  }
+
+  .compressor-demo .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .compressor-demo-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+    margin: 0;
+    padding: 14px 20px 16px;
+    border: 0;
+    border-top: var(--border-width) solid var(--color-border);
+  }
+
+  .compressor-demo-params {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 28px;
+  }
+
+  .compressor-demo-param {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .compressor-demo-param-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 14px;
+  }
+
+  .compressor-demo-param-head output {
+    font-size: 15px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* Ползунок: дорожка 4 px с заливкой до значения, бегунок 20 px, как у других визуализаций.
+     `--fill` — положение в процентах без единицы: длину нельзя умножать на проценты. */
+  .compressor-demo-range {
+    --half-thumb: 10px;
+    --track: linear-gradient(
+        to right,
+        var(--color-accent)
+          calc(var(--half-thumb) + (100% - 2 * var(--half-thumb)) * var(--fill) / 100),
+        var(--color-border) 0
+      )
+      center / 100% 4px no-repeat;
+
+    width: 100%;
+    height: 28px;
+    margin: 0;
+    background: transparent;
+    appearance: none;
+    cursor: pointer;
+    touch-action: pan-y;
+  }
+
+  .compressor-demo-range::-webkit-slider-runnable-track {
+    height: 28px;
+    background: var(--track);
+  }
+
+  .compressor-demo-range::-moz-range-track {
+    height: 28px;
+    background: var(--track);
+  }
+
+  .compressor-demo-range::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+    margin-top: 4px;
+    border: 2px solid var(--color-accent);
+    border-radius: 50%;
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-sm);
+    appearance: none;
+  }
+
+  .compressor-demo-range::-moz-range-thumb {
+    box-sizing: border-box;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--color-accent);
+    border-radius: 50%;
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .compressor-demo-range:focus-visible {
+    box-shadow: none;
+    outline: none;
+  }
+
+  .compressor-demo-range:focus-visible::-webkit-slider-thumb {
+    box-shadow: var(--focus-ring);
+  }
+
+  .compressor-demo-range:focus-visible::-moz-range-thumb {
+    box-shadow: var(--focus-ring);
+  }
+
+  .compressor-demo-scale {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .compressor-demo-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .compressor-demo-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .compressor-demo-presets-label {
+    margin-right: 2px;
+    font-size: 13px;
+    color: var(--color-text-muted);
+  }
+
+  .compressor-demo-preset {
+    height: 32px;
+    padding: 0 12px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-full);
+    background: transparent;
+    color: var(--color-text);
+    font: 500 14px var(--font-ui);
+    cursor: pointer;
+  }
+
+  .compressor-demo-preset[aria-pressed='true'] {
+    border-color: var(--color-accent);
+    background: var(--color-accent-soft);
+    font-weight: 600;
+  }
+
+  .compressor-demo-reset {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    height: 36px;
+    padding: 0 12px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text);
+    font: 500 14px var(--font-ui);
+    cursor: pointer;
+  }
+
+  .compressor-demo-audio {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .compressor-demo-warning {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin: 0 0 4px;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    background: var(--color-warning-bg);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .compressor-demo-warning > svg {
+    flex: none;
+    margin-top: 1px;
+    color: var(--color-warning);
+  }
+
+  .compressor-demo-warning b {
+    color: var(--color-warning);
+  }
+
+  .compressor-demo-player {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    align-items: center;
+    padding: 8px 14px 8px 8px;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+  }
+
+  .compressor-demo-play {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+    cursor: pointer;
+  }
+
+  .compressor-demo-listen {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    font-size: 14px;
+  }
+
+  .compressor-demo-listen label {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    min-height: 32px;
+    cursor: pointer;
+  }
+
+  .compressor-demo-listen input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: var(--color-accent);
+  }
+
+  .compressor-demo-mute {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+  }
+
+  .compressor-demo-play-icon,
+  .compressor-demo-mute-icon {
+    display: flex;
+  }
+
+  .compressor-demo-play:not([data-playing]) .compressor-demo-play-icon.stop,
+  .compressor-demo-play[data-playing] .compressor-demo-play-icon.start,
+  .compressor-demo-mute:not([data-muted]) .compressor-demo-mute-icon.off,
+  .compressor-demo-mute[data-muted] .compressor-demo-mute-icon.on {
+    display: none;
+  }
+
+  .compressor-demo-volume {
+    display: flex;
+    flex: 1 1 140px;
+    gap: 6px;
+    align-items: center;
+    max-width: 280px;
+  }
+
+  .compressor-demo-volume-text {
+    width: 36px;
+    font-size: 13px;
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Компактный ползунок громкости: та же дорожка, бегунок 14 px. */
+  .compressor-demo-range.compact {
+    --half-thumb: 7px;
+
+    flex: 1;
+    min-width: 0;
+    height: 24px;
+  }
+
+  .compressor-demo-range.compact::-webkit-slider-runnable-track {
+    height: 24px;
+  }
+
+  .compressor-demo-range.compact::-moz-range-track {
+    height: 24px;
+  }
+
+  .compressor-demo-range.compact::-webkit-slider-thumb {
+    width: 14px;
+    height: 14px;
+    margin-top: 5px;
+    border: 0;
+    background: var(--color-accent);
+  }
+
+  .compressor-demo-range.compact::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border: 0;
+    background: var(--color-accent);
+  }
+
+  .compressor-demo-player-state {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+  }
+
+  .compressor-demo-player[data-mode='error'] + .compressor-demo-player-state,
+  .compressor-demo-player[data-mode='unavailable'] + .compressor-demo-player-state {
+    color: var(--color-error);
+  }
+
+  .compressor-demo-player :disabled {
+    opacity: 0.45;
+  }
+
+  @media (hover: hover) {
+    .compressor-demo-preset:hover,
+    .compressor-demo-reset:hover,
+    .compressor-demo-mute:not(:disabled):hover {
+      background: var(--color-bg);
+    }
+
+    .compressor-demo-preset[aria-pressed='true']:hover {
+      background: var(--color-accent-soft);
+    }
+  }
+
+  /* Неактивные параметры не выглядят рабочими: приглушены, без указателя; сообщение объясняет причину. */
+  .compressor-demo-controls:disabled .compressor-demo-params,
+  .compressor-demo-controls:disabled .compressor-demo-actions,
+  .compressor-demo-controls:disabled .compressor-demo-player {
+    opacity: 0.5;
+  }
+
+  .compressor-demo-controls:disabled * {
+    cursor: not-allowed;
+  }
+
+  .compressor-demo-note {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+  }
+
+  .compressor-demo[data-state='ready'] .compressor-demo-note {
+    display: none;
+  }
+
+  .compressor-demo[data-state='error'] .compressor-demo-note {
+    color: var(--color-error);
+  }
+
+  .compressor-demo-caption {
+    padding: 10px 20px 14px;
+    border-top: var(--border-width) solid var(--color-border);
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+  }
+
+  .compressor-demo-caption b {
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  /* Характеристика над графиком во времени: рядом они не помещаются. */
+  @container (max-width: 719px) {
+    .compressor-demo-plot {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .compressor-demo-curve {
+      display: flex;
+      justify-content: center;
+      padding-right: 44px;
+    }
+
+    .compressor-demo-time {
+      padding-top: 0;
+    }
+
+    .compressor-demo-time-svg {
+      height: 180px;
+    }
+  }
+
+  @container (max-width: 559px) {
+    .compressor-demo-head,
+    .compressor-demo-body,
+    .compressor-demo-controls,
+    .compressor-demo-caption {
+      padding-inline: 16px;
+    }
+
+    .compressor-demo-time {
+      padding: 0 10px 30px 52px;
+    }
+
+    .compressor-demo-curve-svg {
+      width: 200px;
+      height: 200px;
+    }
+
+    .compressor-demo-params {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .compressor-demo-plot .minor {
+      display: none;
+    }
+  }
+</style>

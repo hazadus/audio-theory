@@ -197,7 +197,7 @@ function valueTicks(): ChartTick[] {
   }));
 }
 
-function escapeXml(text: string): string {
+export function escapeXml(text: string): string {
   return text
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
