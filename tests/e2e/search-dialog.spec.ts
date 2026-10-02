@@ -115,7 +115,7 @@ test('фокус ограничен окном, фон недоступен и �
   );
 
   await page.keyboard.press('Escape');
-  await expect(page.locator('html')).not.toHaveAttribute('data-search-open');
+  await expect(page.locator('html')).not.toHaveAttribute('data-search-active');
   await expect
     .poll(() => page.evaluate(() => getComputedStyle(document.documentElement).overflow))
     .not.toBe('hidden');
@@ -149,4 +149,32 @@ test('без JavaScript кнопки нет, есть пояснение', async
   await expect(page.locator('.no-js')).toBeVisible();
   await expect(page.locator('.no-js')).toHaveText('Поиск работает только с JavaScript.');
   await context.close();
+});
+
+test('смартфон: при уменьшенной высоте окна (клавиатура) поле, «Отмена» и список доступны', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 780 });
+  await page.locator(opener).click();
+  await page.locator(input).fill('частота');
+  await expect(page.locator('[data-search-results] [role="option"]').first()).toBeVisible();
+
+  // Клавиатура оставляет примерно 300 px: высоту слоя задаёт visualViewport, имитируем его переменной.
+  await page.evaluate(() =>
+    document.documentElement.style.setProperty('--search-viewport-height', '300px'),
+  );
+  const box = await page.locator(dialog).boundingBox();
+  expect(box!.height).toBeCloseTo(300, 0);
+  await expect(page.locator(input)).toBeInViewport();
+  await expect(page.getByRole('button', { name: 'Отмена' })).toBeInViewport();
+
+  // Список прокручивается внутри слоя, а не страницей под ним.
+  const body = page.locator('[data-search-body]');
+  const { client, scroll } = await body.evaluate((el) => ({
+    client: el.clientHeight,
+    scroll: el.scrollHeight,
+  }));
+  expect(client).toBeLessThan(300);
+  expect(scroll).toBeGreaterThanOrEqual(client);
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
 });

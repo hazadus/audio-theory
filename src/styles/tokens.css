@@ -102,7 +102,7 @@
   --content-width: 42.5rem;
   --wide-width: 55rem;
   --toc-width: 15rem;
-  --page-gutter: 32px;
+  --page-gutter: max(32px, env(safe-area-inset-left), env(safe-area-inset-right));
 
   --radius-sm: 4px;
   --radius-md: 6px;
@@ -147,7 +147,7 @@
     --text-2xl: 1.625rem;
     --text-3xl: 1.875rem;
     --text-4xl: 2.125rem;
-    --page-gutter: 20px;
+    --page-gutter: max(20px, env(safe-area-inset-left), env(safe-area-inset-right));
   }
 }
 

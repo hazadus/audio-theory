@@ -103,8 +103,9 @@ import { withBase } from '@/lib/urls';
       if (dialog.open) return;
       const active = document.activeElement;
       opener = from ?? (active instanceof HTMLElement && active !== document.body ? active : null);
-      document.documentElement.setAttribute('data-search-open', '');
+      document.documentElement.setAttribute('data-search-active', '');
       dialog.showModal();
+      syncViewport();
       input.focus();
       input.select();
     };
@@ -157,9 +158,26 @@ import { withBase } from '@/lib/urls';
       event.preventDefault();
     });
 
+    // Экранная клавиатура: в iOS она не меняет dvh, зато уменьшает visualViewport. Высота и сдвиг окна
+    // берутся оттуда, чтобы поле, «Отмена» и выбранный результат оставались над клавиатурой.
+    const viewport = window.visualViewport;
+    const syncViewport = () => {
+      if (!viewport) return;
+      const root = document.documentElement.style;
+      root.setProperty('--search-viewport-height', `${viewport.height}px`);
+      root.setProperty('--search-viewport-top', `${viewport.offsetTop}px`);
+    };
+    const clearViewport = () => {
+      document.documentElement.style.removeProperty('--search-viewport-height');
+      document.documentElement.style.removeProperty('--search-viewport-top');
+    };
+    viewport?.addEventListener('resize', syncViewport);
+    viewport?.addEventListener('scroll', syncViewport);
+
     // close срабатывает и для Esc, и для кнопки, и для затемнения: общий возврат состояния.
     dialog.addEventListener('close', () => {
-      document.documentElement.removeAttribute('data-search-open');
+      document.documentElement.removeAttribute('data-search-active');
+      clearViewport();
       if (opener?.isConnected) opener.focus();
       opener = null;
     });
@@ -168,7 +186,7 @@ import { withBase } from '@/lib/urls';
 
 <style is:global>
   /* Прокрутка страницы под открытым диалогом заблокирована. */
-  html[data-search-open] {
+  html[data-search-active] {
     overflow: hidden;
   }
 
@@ -479,9 +497,11 @@ import { withBase } from '@/lib/urls';
   @media (width < 600px) {
     .search-dialog {
       width: 100%;
-      height: 100dvh;
+      /* Доступная высота: с клавиатурой — visualViewport, иначе динамическая высота окна. */
+      height: var(--search-viewport-height, 100dvh);
       max-height: none;
       margin: 0;
+      inset: var(--search-viewport-top, 0) 0 auto 0;
       border: 0;
       border-radius: 0;
       box-shadow: none;
@@ -492,9 +512,22 @@ import { withBase } from '@/lib/urls';
       max-height: none;
     }
 
+    /* Вырез и жестовая полоса: отступы safe-area у верхней строки, списка и нижнего края. */
     .search-dialog .field {
       height: auto;
-      padding: 8px 8px 8px 14px;
+      padding: calc(8px + env(safe-area-inset-top)) calc(8px + env(safe-area-inset-right)) 8px
+        calc(14px + env(safe-area-inset-left));
+    }
+
+    .search-dialog .body {
+      overscroll-behavior: contain;
+      padding-right: calc(18px + env(safe-area-inset-right));
+      padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
+      padding-left: calc(18px + env(safe-area-inset-left));
+    }
+
+    .search-dialog .results {
+      margin-inline: -8px;
     }
 
     .search-dialog input {

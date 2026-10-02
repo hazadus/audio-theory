@@ -20,7 +20,7 @@ const { title, description } = Astro.props;
   <head>
     <meta charset="utf-8" />
     <script is:inline set:html={themeInitScript} />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     {description && <meta name="description" content={description} />}
     <title>{title}</title>
   </head>
