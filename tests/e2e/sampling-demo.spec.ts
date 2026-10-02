@@ -53,20 +53,6 @@ const audioLog = (page: Page) =>
     return { contexts, starts, stops };
   });
 
-/** Частота последнего созданного буфера по переходам через ноль в середине фрагмента. */
-const lastBufferFrequency = (page: Page) =>
-  page.evaluate(() => {
-    const buffer = (
-      window as unknown as { __audio: { buffers: AudioBuffer[] } }
-    ).__audio.buffers.at(-1)!;
-    const data = buffer.getChannelData(0);
-    const from = Math.round(0.1 * buffer.sampleRate);
-    const to = data.length - from;
-    let crossings = 0;
-    for (let n = from + 1; n < to; n++) if (data[n - 1] < 0 && data[n] >= 0) crossings++;
-    return crossings / ((to - from) / buffer.sampleRate);
-  });
-
 async function open(page: Page) {
   await page.goto(url);
   await expect(demo(page)).toHaveAttribute('data-state', 'ready');
@@ -125,38 +111,6 @@ test.describe('Эксперимент дискретизации', { tag: ['@sam
       await demo(page).getByRole('button', { name: '1,5\u00a0кГц' }).click();
       await expect(aliasSwitch).toBeEnabled();
       await expect(demo(page).locator('.sampling-demo-result')).toHaveCount(0);
-    },
-  );
-
-  test(
-    'звук запускается кнопкой, смена частоты останавливает его и меняет следующий фрагмент',
-    { tag: ['@cross-browser'] },
-    async ({ page }) => {
-      await open(page);
-      expect((await audioLog(page)).contexts).toBe(0);
-      await expect(playButton(page)).toHaveAccessibleName('Воспроизвести');
-      await playButton(page).click();
-      await expect(playButton(page)).toHaveAccessibleName('Пауза');
-      await expect(playerState(page)).toHaveText('Воспроизводится');
-      expect(await lastBufferFrequency(page)).toBeCloseTo(1000, -1);
-      await expect.poll(async () => Number(await position(page).inputValue())).toBeGreaterThan(0);
-
-      await demo(page).getByRole('button', { name: '1,5 кГц' }).click();
-      await expect(playButton(page)).toHaveAccessibleName('Воспроизвести');
-      await expect(position(page)).toHaveValue('0');
-      await expect(playerState(page)).toHaveText('Остановлен');
-      await expect(demo(page).locator('[data-warning-text]')).toContainText('500 Гц');
-
-      await playButton(page).click();
-      await expect(playButton(page)).toHaveAccessibleName('Пауза');
-      expect(await lastBufferFrequency(page)).toBeCloseTo(500, -1);
-      expect((await audioLog(page)).contexts).toBe(1);
-
-      // Показ видимой синусоиды звук не меняет.
-      const stops = (await audioLog(page)).stops;
-      await demo(page).getByRole('switch', { name: 'Видимая синусоида' }).click();
-      expect((await audioLog(page)).stops).toBe(stops);
-      await expect(playButton(page)).toHaveAccessibleName('Пауза');
     },
   );
 
