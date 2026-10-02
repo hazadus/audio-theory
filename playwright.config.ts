@@ -1,3 +1,4 @@
+// Полное покрытие в WebKit, браузерные сценарии в Chromium/Firefox и проверка корневого размещения.
 import { defineConfig, devices } from '@playwright/test';
 
 const placements = [
@@ -11,22 +12,27 @@ export default defineConfig({
   forbidOnly: true,
   reporter: 'list',
   use: { trace: 'retain-on-failure' },
-  projects: placements.flatMap(({ name, base, port }) =>
-    ['chromium', 'firefox', 'webkit'].map((browserName) => ({
-      name: `${name}-${browserName}`,
-      metadata: { base },
-      use: {
-        ...devices[
-          browserName === 'chromium'
-            ? 'Desktop Chrome'
-            : browserName === 'firefox'
-              ? 'Desktop Firefox'
-              : 'Desktop Safari'
-        ],
-        baseURL: `http://127.0.0.1:${port}${base}`,
-      },
-    })),
-  ),
+  projects: placements
+    .flatMap(({ name, base, port }) =>
+      ['chromium', 'firefox', 'webkit'].map((browserName) => ({
+        name: `${name}-${browserName}`,
+        // Базовый путь не требует повторять все сценарии во всех браузерах.
+        grep:
+          name === 'root' ? /@placement/ : browserName === 'webkit' ? undefined : /@cross-browser/,
+        metadata: { base },
+        use: {
+          ...devices[
+            browserName === 'chromium'
+              ? 'Desktop Chrome'
+              : browserName === 'firefox'
+                ? 'Desktop Firefox'
+                : 'Desktop Safari'
+          ],
+          baseURL: `http://127.0.0.1:${port}${base}`,
+        },
+      })),
+    )
+    .filter((project) => project.name !== 'root-firefox' && project.name !== 'root-webkit'),
   // Сборки выполняются последовательно до старта серверов: Astro использует общий кеш.
   webServer: placements.map(({ name, base, port }) => ({
     command: `npm run preview -- --ignore-lock --host 127.0.0.1 --port ${port} --base ${base} --outDir .e2e/${name}`,

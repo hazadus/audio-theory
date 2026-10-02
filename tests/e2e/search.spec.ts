@@ -205,23 +205,25 @@ test('поиск по запросу без слов в статьях ниче�
   }
 });
 
-test('адреса разделов из выдачи открываются под префиксом на нужном якоре', async ({
-  page,
-}, testInfo) => {
-  const base = testInfo.project.metadata.base as string;
-  await page.goto('./');
-  const results = await guardedSearch(page, base, 'частотой');
-  const urls = results.flatMap((item) => item.sections.map((section) => section.url));
-  expect(urls.length).toBeGreaterThan(0);
-  for (const url of urls.filter((item) => item.includes('#'))) {
-    expect(url.startsWith(base), url).toBe(true);
-    expect(url.startsWith(`${base}${base.slice(1)}`) && base !== '/', url).toBe(false);
-    const [path, anchor] = url.split('#');
-    // Переход в пределах той же страницы не даёт ответа сети, поэтому статус проверяем у адреса без якоря.
-    const response = await page.goto(path);
-    expect([200, 304], url).toContain(response?.status());
-    await page.goto(url);
-    await expect(page.locator(`#${anchor}`), url).toBeVisible();
-    expect(await page.evaluate(() => location.hash), url).toBe(`#${anchor}`);
-  }
-});
+test(
+  'адреса разделов из выдачи открываются под префиксом на нужном якоре',
+  { tag: ['@placement'] },
+  async ({ page }, testInfo) => {
+    const base = testInfo.project.metadata.base as string;
+    await page.goto('./');
+    const results = await guardedSearch(page, base, 'частотой');
+    const urls = results.flatMap((item) => item.sections.map((section) => section.url));
+    expect(urls.length).toBeGreaterThan(0);
+    for (const url of urls.filter((item) => item.includes('#'))) {
+      expect(url.startsWith(base), url).toBe(true);
+      expect(url.startsWith(`${base}${base.slice(1)}`) && base !== '/', url).toBe(false);
+      const [path, anchor] = url.split('#');
+      // Переход в пределах той же страницы не даёт ответа сети, поэтому статус проверяем у адреса без якоря.
+      const response = await page.goto(path);
+      expect([200, 304], url).toContain(response?.status());
+      await page.goto(url);
+      await expect(page.locator(`#${anchor}`), url).toBeVisible();
+      expect(await page.evaluate(() => location.hash), url).toBe(`#${anchor}`);
+    }
+  },
+);

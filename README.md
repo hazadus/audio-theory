@@ -69,7 +69,8 @@ just lint                # ESLint: JavaScript, TypeScript и Astro
 just typecheck           # Astro Check и tsc --noEmit
 just test                # Vitest: unit-тесты
 just build               # Статическая сборка
-just test-e2e            # Полный прогон Playwright на двух сборках
+just test-e2e            # Обязательный сокращённый набор, как в CI
+just test-e2e-full       # Полная матрица Playwright для диагностики
 just test-production https://hazadus.github.io/audio-theory/ # Проверка опубликованного сайта
 ```
 
@@ -81,11 +82,11 @@ Prettier форматирует `.astro`, CSS, JavaScript, TypeScript и JSON; �
 npx playwright install chromium firefox webkit
 ```
 
-В Linux CI используйте `npx playwright install --with-deps chromium firefox webkit`. `just test-e2e` последовательно создаёт сборки в `.e2e/root/` и `.e2e/prefixed/`, затем проверяет сайт в корне и под `/audio-theory/` в Chromium, Firefox и WebKit. Начальные сценарии проверяют текст, навигацию, стили, локальный ресурс и отсутствие служебного маршрута, чтение без JavaScript на ширине 390 px и поиск по настоящему индексу Pagefind через API.
+В Linux CI используйте `npx playwright install --with-deps chromium firefox webkit`. `just test-e2e` проверяет обе сборки сокращённым набором, используемым также в CI; `just test-e2e-full` запускает полную матрицу для диагностики. Распределение сценариев между браузерами и базовыми путями описано в [обзоре](docs/overview.md#браузерные-проверки). Начальные сценарии проверяют текст, навигацию, стили, локальный ресурс и отсутствие служебного маршрута, чтение без JavaScript на ширине 390 px и поиск по настоящему индексу Pagefind через API.
 
 Playwright запускает собственные preview-серверы на `127.0.0.1:4391` и `127.0.0.1:4392` и останавливает их после прогона. `--ignore-lock` оставляет процессы в foreground без общего lock-файла Astro; занятый порт вызывает ошибку, чужой сервер не используется. Локальный dev-сервер для авторской проверки работает независимо. Результаты и trace при ошибках сохраняются в `test-results/`; эти файлы и `.e2e/` не входят в Git.
 
-DOM можно исследовать через `page.locator()`, `page.getByRole()` и `page.evaluate()`, снимок сделать через `page.screenshot()`. Trace открывается командой `npx playwright show-trace <путь-к-trace.zip>`. При изменении критичного пользовательского пути, доступности элементов или обработки адресов нужен полный `just test-e2e`; отдельный файл его не заменяет. WebKit не заменяет ручную проверку настоящего Safari на Mac и iPhone. Команда `just screenshots` появится вместе с соответствующей задачей.
+DOM можно исследовать через `page.locator()`, `page.getByRole()` и `page.evaluate()`, снимок сделать через `page.screenshot()`. Trace открывается командой `npx playwright show-trace <путь-к-trace.zip>`. При изменении критичного пользовательского пути, доступности элементов или обработки адресов нужен весь обязательный набор `just test-e2e`; отдельный файл его не заменяет. WebKit не заменяет ручную проверку настоящего Safari на Mac и iPhone. Команда `just screenshots` появится вместе с соответствующей задачей.
 
 Параметры smoke-проверки опубликованного сайта описаны в [инструкции по деплою](./docs/deploy.md#проверка-опубликованного-сайта).
 

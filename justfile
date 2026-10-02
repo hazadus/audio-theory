@@ -22,9 +22,13 @@ typecheck:
 test:
     npm run test
 
-# Собирает сайт в корне и под префиксом, запускает полный прогон Playwright.
+# Собирает сайт в корне и под префиксом, запускает обязательный прогон Playwright.
 test-e2e:
     npm run test:e2e
+
+# Запускает все сценарии во всех шести комбинациях браузера и базового пути.
+test-e2e-full:
+    npm run test:e2e -- --config playwright.full.config.ts
 
 # Проверяет опубликованную главную и ресурсы; URL включает базовый путь.
 test-production url:

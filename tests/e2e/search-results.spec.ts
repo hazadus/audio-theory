@@ -117,7 +117,7 @@ test('фрагменты не исполняют HTML', async ({ page }, testInf
   expect(await page.evaluate(() => (window as { __xss?: number }).__xss)).toBeUndefined();
 });
 
-test('ошибка индекса и повтор', async ({ page }, testInfo) => {
+test('ошибка индекса и повтор', { tag: ['@cross-browser'] }, async ({ page }, testInfo) => {
   const base = testInfo.project.metadata.base as string;
   let fail = true;
   await page.route(`**${base}pagefind/pagefind.js*`, (route) =>
@@ -148,20 +148,22 @@ test('результат открывает раздел и закрывает �
   await expect(page).toHaveURL(/#r$/);
 });
 
-test('настоящий индекс: запрос находит раздел статьи, переход закрывает диалог', async ({
-  page,
-}) => {
-  await open(page);
-  await page.locator(input).fill('дискретизации');
-  await expect(page.locator(status)).toHaveText(/Найдено: \d+/);
-  const link = page.locator(`${results} a`).first();
-  const href = await link.getAttribute('href');
-  expect(href).toBeTruthy();
-  await link.click();
-  await expect(page.locator(dialog)).toBeHidden();
-  await expect(page).toHaveURL(new RegExp(href!.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
-  await expect(page.locator('h1')).toBeVisible();
-});
+test(
+  'настоящий индекс: запрос находит раздел статьи, переход закрывает диалог',
+  { tag: ['@cross-browser', '@placement'] },
+  async ({ page }) => {
+    await open(page);
+    await page.locator(input).fill('дискретизации');
+    await expect(page.locator(status)).toHaveText(/Найдено: \d+/);
+    const link = page.locator(`${results} a`).first();
+    const href = await link.getAttribute('href');
+    expect(href).toBeTruthy();
+    await link.click();
+    await expect(page.locator(dialog)).toBeHidden();
+    await expect(page).toHaveURL(new RegExp(href!.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    await expect(page.locator('h1')).toBeVisible();
+  },
+);
 
 const options = `${results} [role="option"]`;
 
@@ -190,62 +192,68 @@ test('роли combobox, listbox и option согласованы', async ({ pag
   await expect(field).toHaveAttribute('aria-expanded', 'false');
 });
 
-test('стрелки двигают выбор, фокус остаётся в поле, на границах выбор останавливается', async ({
-  page,
-}, testInfo) => {
-  await searchMany(page, testInfo.project.metadata.base as string);
-  const field = page.locator(input);
+test(
+  'стрелки двигают выбор, фокус остаётся в поле, на границах выбор останавливается',
+  { tag: ['@cross-browser'] },
+  async ({ page }, testInfo) => {
+    await searchMany(page, testInfo.project.metadata.base as string);
+    const field = page.locator(input);
 
-  await page.keyboard.press('ArrowUp');
-  await expect(page.locator(`${options}[aria-selected="true"]`)).toHaveCount(0);
+    await page.keyboard.press('ArrowUp');
+    await expect(page.locator(`${options}[aria-selected="true"]`)).toHaveCount(0);
 
-  await page.keyboard.press('ArrowDown');
-  await expect(field).toHaveAttribute('aria-activedescendant', 'search-option-0');
-  await expect(page.locator('#search-option-0')).toHaveAttribute('aria-selected', 'true');
-  await page.keyboard.press('ArrowDown');
-  await expect(field).toHaveAttribute('aria-activedescendant', 'search-option-1');
-  await expect(page.locator(`${options}[aria-selected="true"]`)).toHaveCount(1);
-  await page.keyboard.press('ArrowUp');
-  await page.keyboard.press('ArrowUp');
-  await expect(field).toHaveAttribute('aria-activedescendant', 'search-option-0');
+    await page.keyboard.press('ArrowDown');
+    await expect(field).toHaveAttribute('aria-activedescendant', 'search-option-0');
+    await expect(page.locator('#search-option-0')).toHaveAttribute('aria-selected', 'true');
+    await page.keyboard.press('ArrowDown');
+    await expect(field).toHaveAttribute('aria-activedescendant', 'search-option-1');
+    await expect(page.locator(`${options}[aria-selected="true"]`)).toHaveCount(1);
+    await page.keyboard.press('ArrowUp');
+    await page.keyboard.press('ArrowUp');
+    await expect(field).toHaveAttribute('aria-activedescendant', 'search-option-0');
 
-  for (let i = 0; i < 15; i += 1) await page.keyboard.press('ArrowDown');
-  await expect(field).toHaveAttribute('aria-activedescendant', 'search-option-11');
-  await expect(field).toBeFocused();
+    for (let i = 0; i < 15; i += 1) await page.keyboard.press('ArrowDown');
+    await expect(field).toHaveAttribute('aria-activedescendant', 'search-option-11');
+    await expect(field).toBeFocused();
 
-  // Выбранный пункт полностью виден в прокручиваемой области.
-  const visible = await page.evaluate(() => {
-    const option = document.querySelector('#search-option-11')!.getBoundingClientRect();
-    const body = document.querySelector('[data-search-body]')!.getBoundingClientRect();
-    return option.top >= body.top - 1 && option.bottom <= body.bottom + 1;
-  });
-  expect(visible).toBe(true);
+    // Выбранный пункт полностью виден в прокручиваемой области.
+    const visible = await page.evaluate(() => {
+      const option = document.querySelector('#search-option-11')!.getBoundingClientRect();
+      const body = document.querySelector('[data-search-body]')!.getBoundingClientRect();
+      return option.top >= body.top - 1 && option.bottom <= body.bottom + 1;
+    });
+    expect(visible).toBe(true);
 
-  // Выбор виден не только цветом: у выбранного пункта есть значок ↵.
-  const mark = await page
-    .locator('#search-option-11')
-    .evaluate((el) => getComputedStyle(el, '::after').content);
-  expect(mark).toContain('↵');
-  const other = await page
-    .locator('#search-option-10')
-    .evaluate((el) => getComputedStyle(el, '::after').content);
-  expect(other).not.toContain('↵');
+    // Выбор виден не только цветом: у выбранного пункта есть значок ↵.
+    const mark = await page
+      .locator('#search-option-11')
+      .evaluate((el) => getComputedStyle(el, '::after').content);
+    expect(mark).toContain('↵');
+    const other = await page
+      .locator('#search-option-10')
+      .evaluate((el) => getComputedStyle(el, '::after').content);
+    expect(other).not.toContain('↵');
 
-  // Tab не уводит фокус в результаты.
-  await page.keyboard.press('Tab');
-  expect(await page.evaluate(() => document.activeElement?.getAttribute('role'))).not.toBe(
-    'option',
-  );
-});
+    // Tab не уводит фокус в результаты.
+    await page.keyboard.press('Tab');
+    expect(await page.evaluate(() => document.activeElement?.getAttribute('role'))).not.toBe(
+      'option',
+    );
+  },
+);
 
-test('Enter открывает выбранный результат и закрывает диалог', async ({ page }, testInfo) => {
-  await searchMany(page, testInfo.project.metadata.base as string);
-  await page.keyboard.press('ArrowDown');
-  await page.keyboard.press('ArrowDown');
-  await page.keyboard.press('Enter');
-  await expect(page.locator(dialog)).toBeHidden();
-  await expect(page).toHaveURL(/#s1$/);
-});
+test(
+  'Enter открывает выбранный результат и закрывает диалог',
+  { tag: ['@cross-browser'] },
+  async ({ page }, testInfo) => {
+    await searchMany(page, testInfo.project.metadata.base as string);
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Enter');
+    await expect(page.locator(dialog)).toBeHidden();
+    await expect(page).toHaveURL(/#s1$/);
+  },
+);
 
 test('Enter без выбора и без результатов ничего не открывает', async ({ page }, testInfo) => {
   await searchMany(page, testInfo.project.metadata.base as string);
