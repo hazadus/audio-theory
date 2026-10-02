@@ -1,0 +1,613 @@
+---
+// Визуализация фазы: окружность с векторами и две синусоиды, легенда, статус, параметр φ и подпись «Рис. N.».
+// При сборке рисуется начальное состояние 90°; скрипт включает параметры и перерисовывает те же SVG.
+// Без JS, во время загрузки и при ошибке параметры неактивны, а сообщение объясняет почему.
+import Icon from '@/components/Icon.astro';
+import { defaultPhase, maxPhase, minPhase, phaseStep, presetPhases } from '@/lib/phase';
+import {
+  phaseCaption,
+  phaseChartSvg,
+  phaseCircleSvg,
+  phaseStatus,
+  phaseText,
+} from '@/lib/phase-view';
+
+interface Props {
+  /** Номер рисунка: визуализации и рисунки нумеруются одной последовательностью. */
+  figure: number;
+  /** Якорь для ссылок `#id`; английский kebab-case. */
+  id?: string;
+}
+
+const { figure, id = 'phase-demo' } = Astro.props;
+
+const phase = defaultPhase;
+const status = phaseStatus(phase);
+const valueText = phaseText(phase);
+const fill = ((phase - minPhase) / (maxPhase - minPhase)) * 100;
+---
+
+<figure
+  class="phase-demo"
+  id={id}
+  aria-labelledby={`${id}-name`}
+  data-phase-demo
+  data-state="static"
+>
+  <div class="phase-demo-head">
+    <span class="phase-demo-label">Визуализация {figure}</span>
+    <span class="phase-demo-name" id={`${id}-name`}>
+      Начальная фаза и сдвиг во времени
+    </span>
+  </div>
+  <div class="phase-demo-plot">
+    <div class="phase-demo-circle" data-circle set:html={phaseCircleSvg(phase, id)} />
+    <div class="phase-demo-chart" data-chart set:html={phaseChartSvg(phase, id)} />
+  </div>
+  <div class="phase-demo-body">
+    <ul class="phase-demo-legend" aria-label="Легенда">
+      <li>
+        <span class="phase-demo-key reference" aria-hidden="true"></span>опорная, φ&nbsp;=&nbsp;0°
+      </li>
+      <li>
+        <span class="phase-demo-key shifted" aria-hidden="true"></span>сдвинутая на φ
+      </li>
+      <li>
+        <span class="phase-demo-key span" aria-hidden="true"></span>Δt — сдвиг во времени
+      </li>
+    </ul>
+    <p class="phase-demo-status">
+      <span class="phase-demo-icon">
+        <Icon name="info" size={18} />
+      </span>
+      <span>
+        <b data-status-title>{status.title}</b> <span data-status-text>{status.text}</span>
+      </span>
+    </p>
+  </div>
+  <p class="visually-hidden" aria-live="polite" data-announce></p>
+  <fieldset class="phase-demo-controls" data-controls disabled>
+    <legend class="visually-hidden">Параметры визуализации</legend>
+    <div class="phase-demo-param">
+      <div class="phase-demo-param-head">
+        <label for={`${id}-phase`}>
+          Начальная фаза <i>φ</i> сдвинутой синусоиды
+        </label>
+        <output for={`${id}-phase`} data-phase-value>
+          {valueText}
+        </output>
+      </div>
+      <input
+        id={`${id}-phase`}
+        class="phase-demo-range"
+        type="range"
+        min={minPhase}
+        max={maxPhase}
+        step={phaseStep}
+        value={phase}
+        aria-valuetext={valueText}
+        style={`--fill: ${fill}`}
+        data-phase
+      />
+      <div class="phase-demo-scale" aria-hidden="true">
+        <span>{minPhase}°</span>
+        <span>шаг {phaseStep}°</span>
+        <span>{maxPhase}°</span>
+      </div>
+    </div>
+    <div class="phase-demo-actions">
+      <div class="phase-demo-presets" role="group" aria-label="Примеры">
+        <span class="phase-demo-presets-label" aria-hidden="true">
+          Примеры:
+        </span>
+        {presetPhases.map((value) => (
+          <button
+            type="button"
+            class="phase-demo-preset"
+            aria-pressed={value === phase ? 'true' : 'false'}
+            data-preset={value}
+          >
+            {value}°
+          </button>
+        ))}
+      </div>
+      <button type="button" class="phase-demo-reset" data-reset>
+        <Icon name="rotate-ccw" size={16} />
+        Сбросить
+      </button>
+    </div>
+    <p class="phase-demo-note" data-controls-note>
+      Параметры работают с включённым JavaScript. Рисунок показывает начальное состояние.
+    </p>
+  </fieldset>
+  <figcaption class="phase-demo-caption">
+    <b>Рис. {figure}.</b> <span data-caption>{phaseCaption(phase)}</span>
+  </figcaption>
+</figure>
+
+<script>
+  import { initPhaseDemos } from '@/lib/phase-demo-controller';
+
+  initPhaseDemos();
+</script>
+
+<style is:global>
+  .phase-demo {
+    container-type: inline-size;
+    margin: var(--space-6) 0;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    overflow: hidden;
+    font-family: var(--font-ui);
+    scroll-margin-top: 88px;
+  }
+
+  .phase-demo-head {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 14px 20px;
+  }
+
+  .phase-demo-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  .phase-demo-name {
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  /* Окружность и график стоят рядом с одинаковыми отступами сверху и снизу: высота 1 совпадает. */
+  .phase-demo-plot {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    border-block: var(--border-width) solid var(--color-border);
+    background: var(--chart-bg);
+  }
+
+  .phase-demo-circle {
+    padding: 14px 0 30px 14px;
+  }
+
+  .phase-demo-circle-svg {
+    display: block;
+    width: 256px;
+    height: 256px;
+    overflow: visible;
+  }
+
+  /* Отступы — место для подписей делений: они выходят за область построения. */
+  .phase-demo-chart {
+    padding: 14px 14px 30px 44px;
+  }
+
+  .phase-demo-svg {
+    display: block;
+    width: 100%;
+    height: 256px;
+    overflow: visible;
+    font-size: var(--text-chart);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .phase-demo-grid line {
+    stroke: var(--chart-grid);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .phase-demo-axis {
+    stroke: var(--chart-axis);
+    stroke-width: 1;
+  }
+
+  .phase-demo-ring {
+    fill: none;
+    stroke: var(--chart-axis);
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .phase-demo-reference,
+  .phase-demo-shifted,
+  .phase-demo-arc,
+  .phase-demo-projection {
+    fill: none;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .phase-demo-reference {
+    stroke: var(--chart-signal);
+    stroke-width: 2;
+  }
+
+  .phase-demo-shifted {
+    stroke: var(--chart-result);
+    stroke-width: 2.25;
+    stroke-dasharray: 6 4;
+  }
+
+  .phase-demo-arc {
+    stroke: var(--chart-label);
+    stroke-width: 1.5;
+  }
+
+  .phase-demo-projection {
+    stroke: var(--chart-result);
+    stroke-width: 1;
+    stroke-dasharray: 1.5 3;
+  }
+
+  .phase-demo-dot {
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .phase-demo-dot.reference {
+    fill: var(--chart-signal);
+    stroke: var(--chart-signal);
+  }
+
+  .phase-demo-dot.shifted {
+    fill: var(--chart-bg);
+    stroke: var(--chart-result);
+  }
+
+  .phase-demo-span line {
+    stroke: var(--chart-label);
+    stroke-width: 1.5;
+  }
+
+  .phase-demo-span .guide {
+    stroke-width: 1;
+    stroke-dasharray: 3 3;
+  }
+
+  .phase-demo-span text,
+  .phase-demo-angle {
+    fill: var(--chart-label);
+    font-family: var(--font-text);
+    font-style: italic;
+  }
+
+  .phase-demo-ticks {
+    fill: var(--chart-label);
+  }
+
+  .phase-demo-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 20px;
+  }
+
+  .phase-demo-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 14px;
+  }
+
+  .phase-demo-legend li {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .phase-demo-key {
+    flex: none;
+    width: 18px;
+  }
+
+  .phase-demo-key.reference {
+    height: 2px;
+    background: var(--chart-signal);
+  }
+
+  .phase-demo-key.shifted {
+    border-top: 2px dashed var(--chart-result);
+  }
+
+  .phase-demo-key.span {
+    height: 8px;
+    border-inline: 1.5px solid var(--chart-label);
+    background: linear-gradient(var(--chart-label), var(--chart-label)) center / 100% 1.5px
+      no-repeat;
+  }
+
+  .phase-demo-status {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin: 0;
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    box-shadow: inset 0 0 0 1px var(--color-border-strong);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .phase-demo-icon {
+    display: flex;
+    flex: none;
+    margin-top: 1px;
+    color: var(--color-text-muted);
+  }
+
+  .phase-demo .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .phase-demo-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+    margin: 0;
+    padding: 14px 20px 16px;
+    border: 0;
+    border-top: var(--border-width) solid var(--color-border);
+  }
+
+  .phase-demo-param {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .phase-demo-param-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 14px;
+  }
+
+  .phase-demo-param-head i {
+    font-family: var(--font-text);
+  }
+
+  .phase-demo-param-head output {
+    font-size: 15px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* Ползунок: дорожка 4 px с заливкой до значения, бегунок 20 px, как у эксперимента дискретизации.
+     `--fill` — положение в процентах без единицы: длину нельзя умножать на проценты. */
+  .phase-demo-range {
+    --half-thumb: 10px;
+    --track: linear-gradient(
+        to right,
+        var(--color-accent)
+          calc(var(--half-thumb) + (100% - 2 * var(--half-thumb)) * var(--fill) / 100),
+        var(--color-border) 0
+      )
+      center / 100% 4px no-repeat;
+
+    width: 100%;
+    height: 28px;
+    margin: 0;
+    background: transparent;
+    appearance: none;
+    cursor: pointer;
+    touch-action: pan-y;
+  }
+
+  .phase-demo-range::-webkit-slider-runnable-track {
+    height: 28px;
+    background: var(--track);
+  }
+
+  .phase-demo-range::-moz-range-track {
+    height: 28px;
+    background: var(--track);
+  }
+
+  .phase-demo-range::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+    margin-top: 4px;
+    border: 2px solid var(--color-accent);
+    border-radius: 50%;
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-sm);
+    appearance: none;
+  }
+
+  .phase-demo-range::-moz-range-thumb {
+    box-sizing: border-box;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--color-accent);
+    border-radius: 50%;
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .phase-demo-range:focus-visible {
+    box-shadow: none;
+    outline: none;
+  }
+
+  .phase-demo-range:focus-visible::-webkit-slider-thumb {
+    box-shadow: var(--focus-ring);
+  }
+
+  .phase-demo-range:focus-visible::-moz-range-thumb {
+    box-shadow: var(--focus-ring);
+  }
+
+  .phase-demo-scale {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .phase-demo-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .phase-demo-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .phase-demo-presets-label {
+    margin-right: 2px;
+    font-size: 13px;
+    color: var(--color-text-muted);
+  }
+
+  .phase-demo-preset {
+    height: 32px;
+    padding: 0 12px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-full);
+    background: transparent;
+    color: var(--color-text);
+    font: 500 14px var(--font-ui);
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+  }
+
+  .phase-demo-preset[aria-pressed='true'] {
+    border-color: var(--color-accent);
+    background: var(--color-accent-soft);
+    font-weight: 600;
+  }
+
+  .phase-demo-reset {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    height: 36px;
+    padding: 0 12px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text);
+    font: 500 14px var(--font-ui);
+    cursor: pointer;
+  }
+
+  @media (hover: hover) {
+    .phase-demo-preset:hover,
+    .phase-demo-reset:hover {
+      background: var(--color-bg);
+    }
+
+    .phase-demo-preset[aria-pressed='true']:hover {
+      background: var(--color-accent-soft);
+    }
+  }
+
+  /* Неактивные параметры не выглядят рабочими: приглушены, без указателя; сообщение объясняет причину. */
+  .phase-demo-controls:disabled .phase-demo-param,
+  .phase-demo-controls:disabled .phase-demo-actions {
+    opacity: 0.5;
+  }
+
+  .phase-demo-controls:disabled * {
+    cursor: not-allowed;
+  }
+
+  .phase-demo-note {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+  }
+
+  .phase-demo[data-state='ready'] .phase-demo-note {
+    display: none;
+  }
+
+  .phase-demo[data-state='error'] .phase-demo-note {
+    color: var(--color-error);
+  }
+
+  .phase-demo-caption {
+    padding: 10px 20px 14px;
+    border-top: var(--border-width) solid var(--color-border);
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+  }
+
+  .phase-demo-caption b {
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  /* Окружность меньше графика: на среднем экране она тоньше, на узком — над графиком. */
+  @container (max-width: 719px) {
+    .phase-demo-circle-svg {
+      width: 186px;
+      height: 186px;
+    }
+
+    .phase-demo-svg {
+      height: 186px;
+    }
+  }
+
+  @container (max-width: 559px) {
+    .phase-demo-head,
+    .phase-demo-body,
+    .phase-demo-controls,
+    .phase-demo-caption {
+      padding-inline: 16px;
+    }
+
+    .phase-demo-plot {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .phase-demo-circle {
+      display: flex;
+      justify-content: center;
+      padding: 14px 0 0;
+    }
+
+    .phase-demo-chart {
+      padding: 14px 10px 30px 34px;
+    }
+
+    /* Окружность над графиком: линия проекции на его высоту больше никуда не ведёт. */
+    .phase-demo-svg .minor,
+    .phase-demo-projection {
+      display: none;
+    }
+  }
+</style>

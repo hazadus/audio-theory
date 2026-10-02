@@ -21,6 +21,7 @@ import CalloutCase from '@/components/CalloutCase.astro';
 import DataTable from '@/components/DataTable.astro';
 import Equation from '@/components/Equation.astro';
 import Figure from '@/components/Figure.astro';
+import PhaseDemo from '@/components/PhaseDemo.astro';
 import SelfCheck from '@/components/SelfCheck.astro';
 import Term from '@/components/Term.astro';
 
@@ -92,7 +93,7 @@ import Term from '@/components/Term.astro';
   </svg>
 </Figure>
 
-## Частота, период и длина волны {#frequency}
+## Частота, период, длина волны и фаза {#frequency}
 
 Время одного полного колебания называется периодом $T$ и измеряется в секундах. Число колебаний за секунду — частота $f$, её единица — герц (Гц): 1 Гц означает одно колебание в секунду. Период и частота обратны друг другу ([формула 1](#eq-frequency)).
 
@@ -154,6 +155,56 @@ $$
 
 </SelfCheck>
 
+### Фаза {#phase}
+
+Частота и период задают, как часто повторяется колебание. В какой точке цикла оно находится в данный момент, показывает <Term id="phase" firstMention define />. Её измеряют углом: полный период соответствует 360°, или $2\pi$ радиан, половина периода — 180°, четверть — 90°. Угол появляется потому, что синусоида — проекция точки, которая равномерно движется по окружности: за период точка делает один оборот, а её высота над центром меняется по синусоиде ([J. O. Smith, Projection of Circular Motion](https://ccrma.stanford.edu/~jos/mdft/Projection_Circular_Motion.html)).
+
+С учётом фазы чистый тон записывается [формулой 3](#eq-tone) ([J. O. Smith, Sinusoids](https://ccrma.stanford.edu/~jos/mdft/Sinusoids.html)).
+
+<Equation id="eq-tone" number={3}>
+
+$$
+p(t) = A \sin(2\pi f t + \varphi)
+$$
+
+<Fragment slot="symbols">
+  <dt>$p(t)$</dt><dd>отклонение давления от атмосферного в момент $t$, Па;</dd>
+  <dt>$A$</dt><dd>амплитуда, Па;</dd>
+  <dt>$t$</dt><dd>время, с;</dd>
+  <dt>$\varphi$</dt><dd>начальная фаза, рад.</dd>
+</Fragment>
+
+</Equation>
+
+Выражение в скобках, $2\pi f t + \varphi$, — фаза в момент $t$: за каждый период она растёт на $2\pi$. Начальная фаза $\varphi$ — её значение при $t = 0$. При $\varphi = 0$ давление в момент $t = 0$ равно нулю и растёт, как на [рисунке 1](#pressure-sine). Начальная фаза зависит от того, какой момент принят за ноль времени, поэтому для одного тона она произвольна. Смысл имеет разность фаз двух колебаний одной частоты: она показывает, насколько одно опережает другое.
+
+Сдвиг фазы равнозначен сдвигу во времени. Синусоида, сдвинутая раньше на $\Delta t$, имеет вид $\sin\bigl(2\pi f (t + \Delta t)\bigr) = \sin(2\pi f t + 2\pi f \Delta t)$, то есть её фаза больше на $\Delta\varphi = 2\pi f \Delta t$ ([J. O. Smith, Sinusoids at the Same Frequency](https://ccrma.stanford.edu/~jos/mdft/Sinusoids_Same_Frequency.html)). С учётом формулы 1 отсюда следует [формула 4](#eq-phase-shift).
+
+<Equation id="eq-phase-shift" number={4}>
+
+$$
+\Delta t = \frac{\Delta\varphi}{2\pi} \cdot T = \frac{\Delta\varphi}{360^\circ} \cdot T
+$$
+
+<Fragment slot="symbols">
+  <dt>$\Delta\varphi$</dt><dd>разность фаз, рад или градусы;</dd>
+  <dt>$\Delta t$</dt><dd>сдвиг во времени, с.</dd>
+</Fragment>
+
+</Equation>
+
+Для тона 1 кГц с периодом 1 мс разность фаз 90° — четверть периода, 0,25 мс. Синусоида с большей начальной фазой проходит те же значения раньше. [Визуализация 2](#phase-demo) показывает две такие синусоиды: ползунок меняет начальную фазу пунктирной от 0 до 360°, отрезок $\Delta t$ над графиком показывает, на сколько она опережает сплошную. На окружности рядом с графиком угол между векторами равен разности фаз, а высота конца каждого вектора — значению его синусоиды в момент $t = 0$.
+
+<PhaseDemo id="phase-demo" figure={2} />
+
+При сдвиге на 180°, половину периода, $\sin(a + \pi) = -\sin a$: в каждый момент значения равны по модулю и противоположны по знаку, сжатие одной волны приходится на разрежение другой. Такие колебания называют противофазными, поэтому смену знака синусоиды описывают и как сдвиг фазы на 180°. Сдвиг на 360° возвращает синусоиду к исходной: фазы, которые отличаются на целое число оборотов, описывают одно и то же колебание.
+
+<SelfCheck question="Два тона 440 Гц различаются по фазе на 90°. На сколько один опережает другой во времени?">
+
+По формуле 4: $\Delta t = \frac{90^\circ}{360^\circ} \cdot T = T / 4$. Период тона $T = 1/440 \approx 2{,}27$ мс, поэтому $\Delta t \approx 0{,}57$ мс.
+
+</SelfCheck>
+
 ## Амплитуда и звуковое давление {#amplitude}
 
 Отклонение давления от атмосферного, вызванное звуковой волной, называется <Term id="sound-pressure" firstMention define />. Его измеряют в паскалях (Па). Наибольшее отклонение за период — амплитуда $A$ на [рисунке 1](#pressure-sine). При одной и той же частоте звук с большей амплитудой воспринимается громче; восприятие громкости зависит и от частоты.
@@ -172,11 +223,11 @@ $$
 
 Микрофон преобразует звуковое давление в электрическую величину. В динамическом микрофоне звук двигает мембрану со связанной катушкой в поле магнита, и в катушке наводится напряжение. В конденсаторном микрофоне давление меняет расстояние между тонкой мембраной и неподвижной пластиной, а значит, ёмкость и ток в цепи. В обоих случаях выходное напряжение или ток повторяет изменения звукового давления ([HyperPhysics, Microphones](https://hyperphysics.gsu.edu/hbase/Audio/mic.html)).
 
-Получившееся напряжение называется <Term id="analog-audio-signal" firstMention define />. Слово «аналоговый» означает, что электрическая величина ведёт себя аналогично давлению: где давление выросло, выросло и напряжение ([рисунок 2](#mic-chain)).
+Получившееся напряжение называется <Term id="analog-audio-signal" firstMention define />. Слово «аналоговый» означает, что электрическая величина ведёт себя аналогично давлению: где давление выросло, выросло и напряжение ([рисунок 3](#mic-chain)).
 
 <Figure
   id="mic-chain"
-  number={2}
+  number={3}
   caption="Микрофон преобразует звуковое давление p(t), Па, в напряжение u(t), В. В идеальном случае форма сигнала сохраняется, меняются только физическая величина и масштаб."
   name="Преобразование давления в напряжение"
   alt="Слева сложная кривая звукового давления во времени, стрелка ведёт к блоку «Микрофон», от него стрелка ведёт к кривой напряжения той же формы."
@@ -217,6 +268,9 @@ $$
 - [Daniel A. Russell. Wave Motion in Mechanical Medium](https://www.acs.psu.edu/drussell/Demos/waves/wavemotion.html) — продольная волна, колебания частиц около положения равновесия, сжатия и разрежения.
 - [HyperPhysics. Speed of Sound](https://hyperphysics.gsu.edu/hbase/Sound/souspe.html) — скорость звука в сухом воздухе и её зависимость от температуры.
 - [HyperPhysics. Wave Relationship](https://hyperphysics.gsu.edu/hbase/wavrel.html) — связь скорости, частоты, периода и длины волны.
+- [Julius O. Smith III. Mathematics of the DFT: Sinusoids](https://ccrma.stanford.edu/~jos/mdft/Sinusoids.html) — запись синусоиды $A \sin(\omega t + \varphi)$, начальная и мгновенная фаза в радианах.
+- [Julius O. Smith III. Mathematics of the DFT: Sinusoids at the Same Frequency](https://ccrma.stanford.edu/~jos/mdft/Sinusoids_Same_Frequency.html) — задержка синусоиды во времени как сдвиг её фазы.
+- [Julius O. Smith III. Mathematics of the DFT: Projection of Circular Motion](https://ccrma.stanford.edu/~jos/mdft/Projection_Circular_Motion.html) — синусоида как проекция равномерного движения по окружности.
 - [HyperPhysics. Sound Intensity](https://hyperphysics.gsu.edu/hbase/Sound/intens.html) — порог слышимости 20 мкПа и условный болевой порог.
 - [HyperPhysics. Microphones](https://hyperphysics.gsu.edu/hbase/Audio/mic.html) — принцип работы динамического и конденсаторного микрофонов.
 - [Steven W. Smith. The Scientist and Engineer's Guide to Digital Signal Processing, глава 22: Human Hearing](https://www.dspguide.com/ch22/1.htm) — диапазон слышимых частот и область наибольшей чувствительности.

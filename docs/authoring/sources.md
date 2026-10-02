@@ -44,6 +44,12 @@
 - [Sampling Theorem](https://ccrma.stanford.edu/~jos/mdft/Sampling_Theorem.html) — формулировка теоремы со строгим условием, восстановление через sinc, почему исключена частота $f_s/2$.
 - [Aliasing of Sampled Signals](https://ccrma.stanford.edu/~jos/mdft/Aliasing_Sampled_Signals.html) — перенос частоты выше $f_s/2$, ограничения простого описания «зеркалом».
 
+Прочитанные при подготовке раздела о фазе страницы:
+
+- [Sinusoids](https://ccrma.stanford.edu/~jos/mdft/Sinusoids.html) — $x(t) = A \sin(\omega t + \varphi)$, начальная фаза (phase offset) и мгновенная фаза $\omega t + \varphi$ в радианах, обычный диапазон $[-\pi, \pi)$ или $[0, 2\pi)$.
+- [Sinusoids at the Same Frequency](https://ccrma.stanford.edu/~jos/mdft/Sinusoids_Same_Frequency.html) — задержка на $t_1$ меняет фазу на $\omega t_1$; сумма сдвинутых копий синусоиды — синусоида той же частоты.
+- [Projection of Circular Motion](https://ccrma.stanford.edu/~jos/mdft/Projection_Circular_Motion.html) — косинус и синус как проекции равномерного движения по окружности на оси.
+
 ## Александр Радзишевский — «Звук: немного теории» (WebSound.ru)
 
 [Статья для журнала Upgrade, февраль 2005](https://web.archive.org/web/20240416203925/http://websound.ru/articles/theory/sound-theory.htm) (веб-архив). Обзор от физики и психофизики звука до цифровых сигналов и кодеков на русском языке. Подходит как карта тем и источник русской терминологии: звуковая волна и её свойства (интерференция, дифракция, резонанс, эффект Доплера, реверберация), спектр, психоакустика, дискретизация, линейное квантование, кодирование. Статья 2005 года, числа вроде «около 330 м/с» приближённые, воспроизведение без разрешения авторов запрещено — пересказывать своими словами, конкретные значения проверять по первичным источникам выше.
