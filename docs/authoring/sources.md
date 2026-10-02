@@ -34,6 +34,18 @@
 - [AudioBuffer](https://docs.juce.com/master/classjuce_1_1AudioBuffer.html) и [заголовок версии 9.0.3](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_basics/buffers/juce_AudioSampleBuffer.h) — конструктор, неопределённое начальное содержимое, `clear`, `getNumChannels`, число отсчётов на канал в `getNumSamples`, указатели на отдельные каналы, `setSample`.
 - [AudioProcessor, processBlock](https://docs.juce.com/master/classjuce_1_1AudioProcessor.html) — входные и выходные каналы, ограничения записи, переменная длина и нулевые блоки. Подходит для объяснения обратного вызова и границ обработки.
 
+## JUCE и Ableton — LFO и генерация волн
+
+Прочитаны при подготовке статьи по [issue #5](https://github.com/hazadus/audio-theory/issues/5):
+
+- [Рабочий текст стандарта C++. Mathematical constants](https://eel.is/c++draft/numbers) и [WG21 P0631R8. Math Constants](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0631r8.pdf) — заголовок `<numbers>` и стандартная константа `std::numbers::pi`, добавленные в C++20.
+- [JUCE. Oscillator](https://docs.juce.com/master/classjuce_1_1dsp_1_1Oscillator.html) и [исходник 9.0.3](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_dsp/widgets/juce_Oscillator.h) — функция формы, диапазон передаваемой фазы, прибавление генератора к входу, таблица значений, подготовка, сброс и сглаживание частоты за 50 мс.
+- [JUCE. Phase](https://docs.juce.com/master/structjuce_1_1dsp_1_1Phase.html) и [исходник 9.0.3](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_dsp/maths/juce_Phase.h) — фазовый аккумулятор, перенос с сохранением избытка, возврат фазы до её увеличения.
+- [JUCE. ProcessSpec](https://docs.juce.com/master/structjuce_1_1dsp_1_1ProcessSpec.html) — частота дискретизации, размер блока и число каналов.
+- [JUCE. Introduction to DSP](https://juce.com/tutorials/tutorial_dsp_introduction/) — прочитаны The signal processing lifecycle, Creating an oscillator и Changing the oscillator waveform: подготовка, синусоида, пила и интерполяция таблицы.
+- [JUCE. Chorus](https://docs.juce.com/master/classjuce_1_1dsp_1_1Chorus.html) — модуляция времени задержки синусоидальным LFO; применение к хорусу и фленжеру.
+- [Ableton. Live 12 Manual, Live Instrument Reference](https://www.ableton.com/en/live-manual/12/live-instrument-reference/) — прочитаны Analog: Architecture, Oscillators, Filters, Amplifiers, LFOs, Global Parameters и Operator: LFO Section, LFO Range. Маршруты модуляции, формы, заполнение импульса, фазовый сдвиг, свободное движение и перезапуск; частотные режимы LFO вплоть до звукового диапазона.
+
 ## ALSA Project и PortAudio — кадры, раскладки и аудиопотоки
 
 - [ALSA Project. PCM (digital audio) interface](https://www.alsa-project.org/alsa-doc/alsa-lib/pcm.html) — прочитаны описание отсчёта и кадра, General overview, Access modes и Error codes: кадр объединяет каналы одного момента, раздельное и чередующееся хранение, underrun и overrun.

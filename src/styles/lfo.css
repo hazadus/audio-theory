@@ -1,0 +1,10 @@
+/* Подписи рисунков LFO: компенсируют масштабирование SVG шириной 480 единиц. */
+:is(#phase-and-frequency, #lfo-waveforms) .figure-frame {
+  container-type: inline-size;
+}
+
+:is(#phase-and-frequency, #lfo-waveforms) .figure-frame > svg {
+  /* На экране получается 12–16 px: узкий рисунок получает больший исходный
+     кегль, широкий — меньший. Геометрия графиков масштабируется как прежде. */
+  font-size: clamp(10px, calc(30px - 3cqw), 22px);
+}

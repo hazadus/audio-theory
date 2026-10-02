@@ -12,6 +12,7 @@ const slugs = [
   'equal-loudness',
   'adc-dac',
   'audio-data',
+  'lfo',
 ];
 
 const entry = {
