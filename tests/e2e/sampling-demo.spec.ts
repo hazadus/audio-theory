@@ -110,6 +110,21 @@ test.describe('Эксперимент дискретизации', { tag: ['@sam
       await demo(page).getByRole('switch', { name: 'Видимая синусоида' }).click();
       await expect(demo(page).locator('.sampling-demo-result')).toHaveCount(0);
       await expect(demo(page).locator('[data-legend-alias]')).toBeHidden();
+
+      // Без наложения переключатель неактивен и объяснён; его состояние сохраняется.
+      const aliasSwitch = demo(page).getByRole('switch', { name: 'Видимая синусоида' });
+      const hint = demo(page).locator('[data-alias-hint]');
+      await expect(aliasSwitch).toBeEnabled();
+      await expect(hint).toBeHidden();
+      for (const preset of ['2\u00a0кГц', '8\u00a0кГц']) {
+        await demo(page).getByRole('button', { name: preset }).click();
+        await expect(aliasSwitch).toBeDisabled();
+        await expect(hint).toBeVisible();
+      }
+      await expect(aliasSwitch).toHaveAttribute('aria-checked', 'false');
+      await demo(page).getByRole('button', { name: '1,5\u00a0кГц' }).click();
+      await expect(aliasSwitch).toBeEnabled();
+      await expect(demo(page).locator('.sampling-demo-result')).toHaveCount(0);
     },
   );
 

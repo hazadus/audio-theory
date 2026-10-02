@@ -235,6 +235,7 @@ function initDemo(root: HTMLElement): void {
   const slider = required<HTMLInputElement>(root, '[data-rate]');
   const output = required<HTMLOutputElement>(root, '[data-rate-value]');
   const aliasSwitch = required<HTMLButtonElement>(root, '[data-alias]');
+  const aliasHint = required<HTMLElement>(root, '[data-alias-hint]');
   const reset = required<HTMLButtonElement>(root, '[data-reset]');
   const announcer = required<HTMLElement>(root, '[data-announce]');
   const presetButtons = [...root.querySelectorAll<HTMLButtonElement>('[data-preset]')];
@@ -272,6 +273,10 @@ function initDemo(root: HTMLElement): void {
       );
     }
     aliasSwitch.setAttribute('aria-checked', String(state.alias));
+    // Без наложения видимой синусоиды нет: переключатель неактивен, его состояние сохраняется.
+    const aliasAvailable = showsAlias(experiment, true);
+    aliasSwitch.disabled = !aliasAvailable;
+    aliasHint.hidden = aliasAvailable;
     listening.set(experiment);
 
     clearTimeout(timer);

@@ -37,6 +37,8 @@ const { sampleRate, alias } = initialState;
 const experiment = samplingExperiment(sampleRate);
 const status = samplingStatus(experiment);
 const valueText = sampleRateText(sampleRate);
+/** Видимая синусоида есть только при наложении: без него переключатель неактивен и объяснён. */
+const aliasAvailable = showsAlias(experiment, true);
 const warning = `Результат — чистый тон ${formatNumber(signalFrequency)}\u00a0Гц. Перед запуском убавьте громкость, особенно в наушниках.`;
 ---
 
@@ -130,18 +132,30 @@ const warning = `Результат — чистый тон ${formatNumber(signa
         ))}
       </div>
       <div class="sampling-demo-buttons">
-        <button
-          type="button"
-          class="sampling-demo-switch"
-          role="switch"
-          aria-checked={alias ? 'true' : 'false'}
-          data-alias
-        >
-          <span class="sampling-demo-track" aria-hidden="true">
-            <span></span>
+        <span class="sampling-demo-alias">
+          <button
+            type="button"
+            class="sampling-demo-switch"
+            role="switch"
+            aria-checked={alias ? 'true' : 'false'}
+            aria-describedby={`${id}-alias-hint`}
+            disabled={!aliasAvailable}
+            data-alias
+          >
+            <span class="sampling-demo-track" aria-hidden="true">
+              <span></span>
+            </span>
+            Видимая синусоида
+          </button>
+          <span
+            class="sampling-demo-alias-hint"
+            id={`${id}-alias-hint`}
+            hidden={aliasAvailable}
+            data-alias-hint
+          >
+            появляется при f<sub>s</sub>&nbsp;&lt;&nbsp;2f
           </span>
-          Видимая синусоида
-        </button>
+        </span>
         <button type="button" class="sampling-demo-reset" data-reset>
           <Icon name="rotate-ccw" size={16} />
           Сбросить
@@ -587,6 +601,27 @@ const warning = `Результат — чистый тон ${formatNumber(signa
     border-color: var(--color-accent);
     background: var(--color-accent-soft);
     font-weight: 600;
+  }
+
+  .sampling-demo-alias {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .sampling-demo-alias-hint {
+    font-size: 12px;
+    line-height: 1.3;
+    color: var(--color-text-muted);
+  }
+
+  .sampling-demo-alias-hint[hidden] {
+    display: none;
+  }
+
+  .sampling-demo-switch:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
   .sampling-demo-switch {
