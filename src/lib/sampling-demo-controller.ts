@@ -1,8 +1,21 @@
 // Взаимодействие эксперимента дискретизации: ползунок, кнопки примеров, видимая синусоида, сброс и звук.
 // До запуска скрипта и при ошибке параметры остаются неактивными, а рисунок показывает начальное состояние.
 import { samplingExperiment, type SamplingExperiment } from '@/lib/sampling';
-import { initialVolume, listenDuration, resultSound } from '@/lib/sampling-audio';
+import { listenDuration, resultSound } from '@/lib/sampling-audio';
 import { audioSupported, ResultPlayer } from '@/lib/sampling-audio-player';
+import {
+  formatTime,
+  muteButtonLabel,
+  playButtonLabel,
+  playerKeyAction,
+  positionText,
+  seekStep,
+  seekTo,
+  stateText,
+  volumeText,
+  type PlayerState,
+  type PlayerTarget,
+} from '@/lib/sampling-player';
 import {
   initialState,
   normalizeSampleRate,
@@ -32,8 +45,6 @@ function fail(root: HTMLElement, error: unknown): void {
   console.error(error);
 }
 
-const listenText = `${formatNumber(listenDuration)}\u00a0с, громкость ${formatNumber(initialVolume * 100)}\u00a0%`;
-
 /** Почему звук для этого состояния не создаётся; `null` — можно слушать. */
 function silentReason(experiment: SamplingExperiment): string | null {
   const sound = resultSound(experiment);
@@ -44,65 +55,149 @@ function silentReason(experiment: SamplingExperiment): string | null {
   return null;
 }
 
-/**
- * Кнопка прослушивания: запускает фрагмент только по нажатию, останавливает при смене параметров
- * и уходе со страницы. Без Web Audio кнопка неактивна, а текст объясняет причину.
- */
-function initListening(root: HTMLElement) {
-  const box = required<HTMLElement>(root, '[data-listen]');
-  const button = required<HTMLButtonElement>(root, '[data-play]');
-  const label = required<HTMLElement>(root, '[data-play-label]');
-  const text = required<HTMLElement>(root, '[data-listen-text]');
-  const supported = audioSupported();
-  const player = supported ? new ResultPlayer() : undefined;
-  let experiment: SamplingExperiment | undefined;
+/** Текст предупреждения о громкости для текущего результата. */
+function warningText(experiment: SamplingExperiment): string {
+  const sound = resultSound(experiment);
+  const tone =
+    sound.kind === 'tone' ? `чистый тон ${formatNumber(sound.frequency)}\u00a0Гц` : 'чистый тон';
+  return `Результат — ${tone}. Перед запуском убавьте громкость, особенно в наушниках.`;
+}
 
-  const show = (problem: string | null) => {
-    const playing = player?.playing ?? false;
-    button.toggleAttribute('data-playing', playing);
-    label.textContent = playing ? 'Остановить' : 'Прослушать результат';
-    text.textContent = problem ?? listenText;
-    box.toggleAttribute('data-problem', problem !== null);
+function targetKind(target: EventTarget | null, position: Element, volume: Element): PlayerTarget {
+  if (target === position) return 'position';
+  if (target === volume) return 'volume';
+  if (target instanceof HTMLButtonElement) return 'button';
+  return 'other';
+}
+
+/**
+ * Плеер результата: запуск только по нажатию, пауза, стоп, позиция, громкость и mute.
+ * Смена частоты дискретизации останавливает фрагмент и сбрасывает позицию; уход со страницы
+ * останавливает звук. Без Web Audio или при ошибке плеер объясняет причину, график работает.
+ */
+function initPlayer(root: HTMLElement) {
+  const group = required<HTMLElement>(root, '[data-player-group]');
+  const playButton = required<HTMLButtonElement>(root, '[data-play]');
+  const stopButton = required<HTMLButtonElement>(root, '[data-stop]');
+  const position = required<HTMLInputElement>(root, '[data-position]');
+  const time = required<HTMLElement>(root, '[data-position-time]');
+  const muteButton = required<HTMLButtonElement>(root, '[data-mute]');
+  const volume = required<HTMLInputElement>(root, '[data-volume]');
+  const volumeLabel = required<HTMLElement>(root, '[data-volume-text]');
+  const warning = required<HTMLElement>(root, '[data-warning-text]');
+  const stateLine = required<HTMLElement>(root, '[data-player-state]');
+  const player = audioSupported() ? new ResultPlayer() : undefined;
+
+  let experiment: SamplingExperiment | undefined;
+  let loading = false;
+  let failure: string | null = player
+    ? null
+    : 'Звук недоступен: браузер не поддерживает Web Audio.';
+  let muted = false;
+  let frame = 0;
+
+  const uiState = (): PlayerState => {
+    if (!player) return 'unavailable';
+    if (failure) return 'error';
+    if (loading) return 'loading';
+    if (player.state === 'playing') return 'playing';
+    if (player.state === 'paused') return 'paused';
+    return 'ready';
   };
 
-  const refresh = () => {
-    if (!supported) {
-      button.disabled = true;
-      show('Звук недоступен: браузер не поддерживает Web Audio.');
-      return;
-    }
+  const showPosition = () => {
+    const duration = player?.duration ?? listenDuration;
+    const current = player?.position ?? 0;
+    position.value = String(current);
+    position.style.setProperty('--fill', String((current / duration) * 100));
+    position.setAttribute('aria-valuetext', positionText(current, duration));
+    time.textContent = formatTime(current);
+  };
+
+  const tick = () => {
+    showPosition();
+    frame = player?.state === 'playing' ? requestAnimationFrame(tick) : 0;
+  };
+
+  const render = () => {
+    const state = uiState();
     const reason = experiment ? silentReason(experiment) : null;
-    button.disabled = reason !== null;
-    show(reason);
+    const blocked = state === 'unavailable' || reason !== null;
+    playButton.disabled = blocked || state === 'loading';
+    stopButton.disabled = blocked || state === 'ready' || state === 'loading';
+    position.disabled = blocked;
+    muteButton.disabled = state === 'unavailable';
+    volume.disabled = state === 'unavailable';
+    playButton.setAttribute('aria-label', playButtonLabel(state));
+    playButton.toggleAttribute('data-playing', state === 'playing');
+    muteButton.setAttribute('aria-label', muteButtonLabel(muted));
+    muteButton.toggleAttribute('data-muted', muted);
+    stateLine.textContent = failure ?? reason ?? stateText(state);
+    group.dataset.mode = state;
+    if (experiment) warning.textContent = warningText(experiment);
+    showPosition();
+    if (state === 'playing' && !frame) frame = requestAnimationFrame(tick);
   };
 
   if (player) {
-    player.onEnded = refresh;
-    button.addEventListener('click', async () => {
-      if (!experiment) return;
-      if (player.playing) {
-        player.stop();
+    player.onChange = render;
+    playButton.addEventListener('click', async () => {
+      if (player.state === 'playing') {
+        player.pause();
         return;
       }
+      failure = null;
+      loading = true;
+      render();
       try {
-        await player.play(experiment);
-        refresh();
+        await player.play();
       } catch (error) {
         console.error(error);
-        show('Не удалось воспроизвести звук.');
+        failure = 'Не удалось воспроизвести звук: браузер не запустил Web Audio. График работает.';
+      } finally {
+        loading = false;
+        render();
       }
+    });
+    stopButton.addEventListener('click', () => player.stop());
+    position.addEventListener('input', () =>
+      player.seek(seekTo(position.valueAsNumber, player.duration)),
+    );
+    volume.addEventListener('input', () => {
+      player.setVolume(volume.valueAsNumber / 100);
+      volume.setAttribute('aria-valuetext', volumeText(volume.valueAsNumber));
+      volume.style.setProperty('--fill', volume.value);
+      volumeLabel.textContent = volumeText(volume.valueAsNumber);
+    });
+    muteButton.addEventListener('click', () => {
+      muted = !muted;
+      player.setMuted(muted);
+      render();
+    });
+    group.addEventListener('keydown', (event) => {
+      const action = playerKeyAction(event, targetKind(event.target, position, volume));
+      if (!action || position.disabled) return;
+      event.preventDefault();
+      if (action === 'toggle') playButton.click();
+      else
+        player.seek(
+          seekTo(player.position + (action === 'forward' ? seekStep : -seekStep), player.duration),
+        );
     });
     window.addEventListener('pagehide', () => player.stop());
   }
 
   return {
-    /** Новое состояние эксперимента: текущий фрагмент останавливается, следующий запуск использует его. */
+    /** Новое состояние эксперимента: при смене частоты фрагмент останавливается и позиция сбрасывается. */
     set(next: SamplingExperiment) {
       const changed = experiment?.sampleRate !== next.sampleRate;
       experiment = next;
       // Показ видимой синусоиды звук не меняет, поэтому фрагмент продолжает играть.
-      if (changed) player?.stop();
-      refresh();
+      if (changed) {
+        failure = player ? null : failure;
+        player?.load(next);
+      }
+      render();
     },
   };
 }
@@ -127,7 +222,7 @@ function initDemo(root: HTMLElement): void {
   const reset = required<HTMLButtonElement>(root, '[data-reset]');
   const announcer = required<HTMLElement>(root, '[data-announce]');
   const presetButtons = [...root.querySelectorAll<HTMLButtonElement>('[data-preset]')];
-  const listening = initListening(root);
+  const listening = initPlayer(root);
 
   let state: DemoState = { ...initialState };
   let timer = 0;

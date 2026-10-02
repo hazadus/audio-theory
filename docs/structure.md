@@ -63,7 +63,8 @@ src/
     sampling-controls.ts ✅          # Диапазон, шаг и примеры частоты дискретизации, начальное состояние
     sampling-demo-controller.ts ✅   # Параметры эксперимента: перерисовка, объявления, сброс, звук, ошибка
     sampling-audio.ts ✅             # Звуковой фрагмент результата: отсчёты, огибающая, уровень
-    sampling-audio-player.ts ✅      # Воспроизведение фрагмента через Web Audio
+    sampling-audio-player.ts ✅      # Web Audio: запуск, пауза, стоп, позиция, громкость, mute
+    sampling-player.ts ✅            # Состояния плеера, имена кнопок, время, перемотка, клавиши
     rehype-site-urls.mjs ✅           # Преобразование адресов в Markdown/MDX
     rehype-math-errors.mjs ✅         # Ошибки формул блокируют сборку
     rehype-pagefind.mjs ✅            # Исключает дубли формул KaTeX из индекса Pagefind
@@ -118,6 +119,7 @@ tests/                               # Unit-тесты и браузерные �
   unit/sampling-view.test.ts ✅       # Тексты состояния и подписи, положение отсчётов и деления
   unit/sampling-controls.test.ts ✅   # Границы и шаг ползунка, примеры, сброс, разметка SVG состояния
   unit/sampling-audio.test.ts ✅      # Буфер звука по модели, огибающая, края, частота результата
+  unit/sampling-player.test.ts ✅     # Имена кнопок по состоянию, время, перемотка, клавиши в фокусе
   unit/artifact.test.ts ✅            # Цели ссылок и блокировка неверной сборки
   unit/production.test.ts ✅          # Smoke-команда, HTTP-ошибки и обязательные ресурсы
   e2e/home.spec.ts ✅                 # Начальная страница на статических сборках

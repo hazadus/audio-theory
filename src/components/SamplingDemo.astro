@@ -3,8 +3,9 @@
 // При сборке рисуется начальное состояние 8 000 Гц; скрипт включает параметры и перерисовывает тот же SVG.
 // Без JS, во время загрузки и при ошибке параметры неактивны, а сообщение объясняет почему.
 import Icon from '@/components/Icon.astro';
-import { samplingExperiment } from '@/lib/sampling';
+import { samplingExperiment, signalFrequency } from '@/lib/sampling';
 import { initialVolume, listenDuration } from '@/lib/sampling-audio';
+import { formatTime, positionText, seekStep, volumeStep, volumeText } from '@/lib/sampling-player';
 import {
   initialState,
   maxSampleRate,
@@ -36,6 +37,7 @@ const { sampleRate, alias } = initialState;
 const experiment = samplingExperiment(sampleRate);
 const status = samplingStatus(experiment);
 const valueText = sampleRateText(sampleRate);
+const warning = `Результат — чистый тон ${formatNumber(signalFrequency)}\u00a0Гц. Перед запуском убавьте громкость, особенно в наушниках.`;
 ---
 
 <figure
@@ -146,19 +148,78 @@ const valueText = sampleRateText(sampleRate);
         </button>
       </div>
     </div>
-    <div class="sampling-demo-listen" data-listen>
-      <button type="button" class="sampling-demo-play" data-play>
-        <span class="sampling-demo-play-icon start">
-          <Icon name="play" size={16} />
+    <div class="sampling-demo-audio">
+      <p class="sampling-demo-warning" role="note">
+        <Icon name="volume-2" size={18} />
+        <span>
+          <b>Громкость.</b> <span data-warning-text>{warning}</span>
         </span>
-        <span class="sampling-demo-play-icon stop">
+      </p>
+      <div
+        class="sampling-demo-player"
+        role="group"
+        aria-label="Аудиопример: восстановленный сигнал"
+        data-player-group
+        data-mode="ready"
+      >
+        <button type="button" class="sampling-demo-play" aria-label="Воспроизвести" data-play>
+          <span class="sampling-demo-play-icon start">
+            <Icon name="play" size={18} />
+          </span>
+          <span class="sampling-demo-play-icon pause">
+            <Icon name="pause" size={18} />
+          </span>
+        </button>
+        <button type="button" class="sampling-demo-stop" aria-label="Стоп" data-stop>
           <Icon name="square" size={16} />
-        </span>
-        <span data-play-label>Прослушать результат</span>
-      </button>
-      <span class="sampling-demo-listen-text" data-listen-text>
-        {formatNumber(listenDuration)}&nbsp;с, громкость {formatNumber(initialVolume * 100)}&nbsp;%
-      </span>
+        </button>
+        <div class="sampling-demo-position">
+          <span class="sampling-demo-time" data-position-time>
+            {formatTime(0)}
+          </span>
+          <input
+            class="sampling-demo-range compact"
+            type="range"
+            min="0"
+            max={listenDuration}
+            step={seekStep}
+            value="0"
+            aria-label="Позиция"
+            aria-valuetext={positionText(0, listenDuration)}
+            style="--fill: 0"
+            data-position
+          />
+          <span class="sampling-demo-time">{formatTime(listenDuration)}</span>
+        </div>
+        <div class="sampling-demo-volume">
+          <button type="button" class="sampling-demo-mute" aria-label="Выключить звук" data-mute>
+            <span class="sampling-demo-mute-icon on">
+              <Icon name="volume-2" size={18} />
+            </span>
+            <span class="sampling-demo-mute-icon off">
+              <Icon name="volume-x" size={18} />
+            </span>
+          </button>
+          <input
+            class="sampling-demo-range compact"
+            type="range"
+            min="0"
+            max="100"
+            step={volumeStep}
+            value={initialVolume * 100}
+            aria-label="Громкость"
+            aria-valuetext={volumeText(initialVolume * 100)}
+            style={`--fill: ${initialVolume * 100}`}
+            data-volume
+          />
+          <span class="sampling-demo-volume-text" data-volume-text>
+            {volumeText(initialVolume * 100)}
+          </span>
+        </div>
+      </div>
+      <p class="sampling-demo-player-state" role="status" data-player-state>
+        Остановлен
+      </p>
     </div>
     <p class="sampling-demo-note" data-controls-note>
       Параметры работают с включённым JavaScript. Рисунок показывает начальное состояние.
@@ -403,17 +464,21 @@ const valueText = sampleRateText(sampleRate);
   /* Ползунок: дорожка 4 px с заливкой до значения, бегунок 20 px; отметка 2f — риской на дорожке.
      `--fill` и `--mark` — положение в процентах без единицы: длину нельзя умножать на проценты. */
   .sampling-demo-range {
+    --half-thumb: 10px;
     --track:
       linear-gradient(
           to right,
-          transparent calc(10px + (100% - 20px) * var(--mark) / 100 - 1px),
-          var(--color-text-muted) 0 calc(10px + (100% - 20px) * var(--mark) / 100 + 1px),
+          transparent
+            calc(var(--half-thumb) + (100% - 2 * var(--half-thumb)) * var(--mark) / 100 - 1px),
+          var(--color-text-muted) 0
+            calc(var(--half-thumb) + (100% - 2 * var(--half-thumb)) * var(--mark) / 100 + 1px),
           transparent 0
         )
         center / 100% 12px no-repeat,
       linear-gradient(
           to right,
-          var(--color-accent) calc(10px + (100% - 20px) * var(--fill) / 100),
+          var(--color-accent)
+            calc(var(--half-thumb) + (100% - 2 * var(--half-thumb)) * var(--fill) / 100),
           var(--color-border) 0
         )
         center / 100% 4px no-repeat;
@@ -599,47 +664,178 @@ const valueText = sampleRateText(sampleRate);
     cursor: not-allowed;
   }
 
-  .sampling-demo-listen {
+  .sampling-demo-audio {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .sampling-demo-warning {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin: 0 0 4px;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    background: var(--color-warning-bg);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .sampling-demo-warning > svg {
+    margin-top: 1px;
+    color: var(--color-warning);
+  }
+
+  .sampling-demo-warning b {
+    color: var(--color-warning);
+  }
+
+  .sampling-demo-player {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px 12px;
+    gap: 10px;
     align-items: center;
+    padding: 8px 14px 8px 8px;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
   }
 
   .sampling-demo-play {
-    display: inline-flex;
-    gap: 6px;
-    align-items: center;
-    height: 36px;
-    padding: 0 14px;
-    border: var(--border-width) solid var(--color-accent);
-    border-radius: var(--radius-md);
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 50%;
     background: var(--color-accent);
     color: var(--color-on-accent);
-    font: 500 14px var(--font-ui);
     cursor: pointer;
   }
 
-  .sampling-demo-play-icon {
+  .sampling-demo-stop,
+  .sampling-demo-mute {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text);
+    cursor: pointer;
+  }
+
+  .sampling-demo-mute {
+    color: var(--color-text-muted);
+  }
+
+  .sampling-demo-play-icon,
+  .sampling-demo-mute-icon {
     display: flex;
   }
 
-  .sampling-demo-play:not([data-playing]) .sampling-demo-play-icon.stop,
-  .sampling-demo-play[data-playing] .sampling-demo-play-icon.start {
+  .sampling-demo-play:not([data-playing]) .sampling-demo-play-icon.pause,
+  .sampling-demo-play[data-playing] .sampling-demo-play-icon.start,
+  .sampling-demo-mute:not([data-muted]) .sampling-demo-mute-icon.off,
+  .sampling-demo-mute[data-muted] .sampling-demo-mute-icon.on {
     display: none;
   }
 
-  .sampling-demo-listen-text {
+  .sampling-demo-position {
+    display: flex;
+    flex: 1 1 160px;
+    gap: 10px;
+    align-items: center;
+    min-width: 160px;
+  }
+
+  .sampling-demo-volume {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .sampling-demo-volume .sampling-demo-range {
+    width: 72px;
+  }
+
+  .sampling-demo-time,
+  .sampling-demo-volume-text {
     font-size: 13px;
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sampling-demo-volume-text {
+    width: 36px;
+  }
+
+  /* Компактный ползунок позиции и громкости: та же дорожка без риски, бегунок 14 px. */
+  .sampling-demo-range.compact {
+    --half-thumb: 7px;
+    --track: linear-gradient(
+        to right,
+        var(--color-accent)
+          calc(var(--half-thumb) + (100% - 2 * var(--half-thumb)) * var(--fill) / 100),
+        var(--color-border) 0
+      )
+      center / 100% 4px no-repeat;
+
+    flex: 1;
+    min-width: 0;
+    height: 24px;
+  }
+
+  .sampling-demo-range.compact::-webkit-slider-runnable-track {
+    height: 24px;
+  }
+
+  .sampling-demo-range.compact::-moz-range-track {
+    height: 24px;
+  }
+
+  .sampling-demo-range.compact::-webkit-slider-thumb {
+    width: 14px;
+    height: 14px;
+    margin-top: 5px;
+    border: 0;
+    background: var(--color-accent);
+  }
+
+  .sampling-demo-range.compact::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border: 0;
+    background: var(--color-accent);
+  }
+
+  .sampling-demo-player-state {
+    margin: 0;
+    font-size: 12px;
     line-height: 1.45;
     color: var(--color-text-muted);
   }
 
-  .sampling-demo-listen[data-problem] .sampling-demo-listen-text {
-    color: var(--color-text);
+  .sampling-demo-player[data-mode='error'] + .sampling-demo-player-state {
+    color: var(--color-error);
   }
 
-  .sampling-demo-controls:disabled .sampling-demo-listen {
+  .sampling-demo-player :disabled {
+    opacity: 0.45;
+  }
+
+  @media (hover: hover) {
+    .sampling-demo-stop:not(:disabled):hover,
+    .sampling-demo-mute:not(:disabled):hover {
+      background: var(--color-bg);
+    }
+  }
+
+  .sampling-demo-controls:disabled .sampling-demo-player {
     opacity: 0.5;
   }
 
