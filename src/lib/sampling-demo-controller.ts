@@ -1,7 +1,7 @@
 // Взаимодействие эксперимента дискретизации: ползунок, кнопки примеров, видимая синусоида, сброс и звук.
 // До запуска скрипта и при ошибке параметры остаются неактивными, а рисунок показывает начальное состояние.
 import { samplingExperiment, type SamplingExperiment } from '@/lib/sampling';
-import { listenDuration, resultSound } from '@/lib/sampling-audio';
+import { initialVolume, listenDuration, resultSound } from '@/lib/sampling-audio';
 import { audioSupported, ResultPlayer } from '@/lib/sampling-audio-player';
 import {
   formatTime,
@@ -96,6 +96,14 @@ function initPlayer(root: HTMLElement) {
   let muted = false;
   let frame = 0;
 
+  const setVolume = (percent: number) => {
+    volume.value = String(percent);
+    player?.setVolume(percent / 100);
+    volume.setAttribute('aria-valuetext', volumeText(percent));
+    volume.style.setProperty('--fill', String(percent));
+    volumeLabel.textContent = volumeText(percent);
+  };
+
   const uiState = (): PlayerState => {
     if (!player) return 'unavailable';
     if (failure) return 'error';
@@ -163,12 +171,7 @@ function initPlayer(root: HTMLElement) {
     position.addEventListener('input', () =>
       player.seek(seekTo(position.valueAsNumber, player.duration)),
     );
-    volume.addEventListener('input', () => {
-      player.setVolume(volume.valueAsNumber / 100);
-      volume.setAttribute('aria-valuetext', volumeText(volume.valueAsNumber));
-      volume.style.setProperty('--fill', volume.value);
-      volumeLabel.textContent = volumeText(volume.valueAsNumber);
-    });
+    volume.addEventListener('input', () => setVolume(volume.valueAsNumber));
     muteButton.addEventListener('click', () => {
       muted = !muted;
       player.setMuted(muted);
@@ -184,7 +187,11 @@ function initPlayer(root: HTMLElement) {
           seekTo(player.position + (action === 'forward' ? seekStep : -seekStep), player.duration),
         );
     });
+    // Уход со страницы и скрытая вкладка останавливают звук; при возврате плеер стоит в начале.
     window.addEventListener('pagehide', () => player.stop());
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') player.stop();
+    });
   }
 
   return {
@@ -197,6 +204,15 @@ function initPlayer(root: HTMLElement) {
         failure = player ? null : failure;
         player?.load(next);
       }
+      render();
+    },
+    /** Полный сброс: остановка, позиция 0, громкость 30 %, звук включён, ошибка забыта. */
+    reset() {
+      if (experiment) player?.load(experiment);
+      setVolume(initialVolume * 100);
+      muted = false;
+      player?.setMuted(false);
+      failure = player ? null : failure;
       render();
     },
   };
@@ -292,7 +308,10 @@ function initDemo(root: HTMLElement): void {
     });
   }
   aliasSwitch.addEventListener('click', () => update({ alias: !state.alias }));
-  reset.addEventListener('click', () => update({ ...initialState }));
+  reset.addEventListener('click', () => {
+    update({ ...initialState });
+    listening.reset();
+  });
 
   render(false);
   controls.disabled = false;

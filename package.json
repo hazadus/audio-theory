@@ -19,7 +19,7 @@
     "typecheck": "astro check && tsc --noEmit",
     "test": "vitest run",
     "test:production": "node scripts/test-production.mjs",
-    "test:e2e": "npm run build -- --base / --outDir .e2e/root && npm run build -- --base /audio-theory/ --outDir .e2e/prefixed && playwright test"
+    "test:e2e": "npm run build -- --base / --outDir .e2e/root && npm run build -- --base /audio-theory/ --outDir .e2e/prefixed && npm run build -- --config tests/fixtures/mdx/astro.config.mjs --base /audio-theory/ --outDir .e2e/fixture && playwright test"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "7.3.0",

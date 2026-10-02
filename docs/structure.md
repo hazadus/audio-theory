@@ -126,6 +126,7 @@ tests/                               # Unit-тесты и браузерные �
   e2e/search-dialog.spec.ts ✅        # Диалог поиска: фокус, закрытие, «/»
   e2e/search-results.spec.ts ✅       # Состояния выдачи, задержка, ошибка, устаревшие ответы
   e2e/search.spec.ts ✅               # Настоящий API Pagefind в корне и под префиксом
+  e2e/sampling-demo.spec.ts ✅        # Эксперимент: параметры, звук, сброс, уход со страницы, без Web Audio и JS
   fixtures/artifact/ ✅              # Контрольная сборка с ошибочной внутренней ссылкой
   unit/articles.test.ts ✅            # Схема статьи, slug и группы
   unit/glossary.test.ts ✅            # Схема глоссария и разрешение целей
@@ -158,7 +159,7 @@ eslint.config.mjs ✅                 # ESLint для JavaScript, TypeScript и 
 .prettierignore ✅                    # Исключение макетов и генерируемых файлов
 .env.example ✅                       # ARTICLES_DIR и ALLOW_DRAFT_ARTICLES
 vitest.config.ts ✅                   # Unit-тесты в Node.js
-playwright.config.ts ✅               # Три браузера, корень и префикс
+playwright.config.ts ✅               # Три браузера, корень, префикс и служебная сборка эксперимента
 justfile ✅                          # dev, fmt, lint, typecheck, test, test-e2e, build
 ```
 
