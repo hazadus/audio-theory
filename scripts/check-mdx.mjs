@@ -131,6 +131,7 @@ try {
     // Без JS параметры неактивны и объяснены; скрипт включает их после запуска.
     assert.match(demo, /<fieldset class="sampling-demo-controls" data-controls disabled>/);
     assert.match(demo, /Параметры работают с включённым JavaScript/);
+    assert.match(demo, /<button type="button" class="sampling-demo-play" data-play>/);
     assert.match(
       demo,
       /<input[^>]*type="range"[^>]*min="1000"[^>]*max="16000"[^>]*step="100"[^>]*value="8000"/,

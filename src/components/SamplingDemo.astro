@@ -4,6 +4,7 @@
 // Без JS, во время загрузки и при ошибке параметры неактивны, а сообщение объясняет почему.
 import Icon from '@/components/Icon.astro';
 import { samplingExperiment } from '@/lib/sampling';
+import { initialVolume, listenDuration } from '@/lib/sampling-audio';
 import {
   initialState,
   maxSampleRate,
@@ -144,6 +145,20 @@ const valueText = sampleRateText(sampleRate);
           Сбросить
         </button>
       </div>
+    </div>
+    <div class="sampling-demo-listen" data-listen>
+      <button type="button" class="sampling-demo-play" data-play>
+        <span class="sampling-demo-play-icon start">
+          <Icon name="play" size={16} />
+        </span>
+        <span class="sampling-demo-play-icon stop">
+          <Icon name="square" size={16} />
+        </span>
+        <span data-play-label>Прослушать результат</span>
+      </button>
+      <span class="sampling-demo-listen-text" data-listen-text>
+        {formatNumber(listenDuration)}&nbsp;с, громкость {formatNumber(initialVolume * 100)}&nbsp;%
+      </span>
     </div>
     <p class="sampling-demo-note" data-controls-note>
       Параметры работают с включённым JavaScript. Рисунок показывает начальное состояние.
@@ -582,6 +597,50 @@ const valueText = sampleRateText(sampleRate);
 
   .sampling-demo-controls:disabled * {
     cursor: not-allowed;
+  }
+
+  .sampling-demo-listen {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    align-items: center;
+  }
+
+  .sampling-demo-play {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    height: 36px;
+    padding: 0 14px;
+    border: var(--border-width) solid var(--color-accent);
+    border-radius: var(--radius-md);
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+    font: 500 14px var(--font-ui);
+    cursor: pointer;
+  }
+
+  .sampling-demo-play-icon {
+    display: flex;
+  }
+
+  .sampling-demo-play:not([data-playing]) .sampling-demo-play-icon.stop,
+  .sampling-demo-play[data-playing] .sampling-demo-play-icon.start {
+    display: none;
+  }
+
+  .sampling-demo-listen-text {
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+  }
+
+  .sampling-demo-listen[data-problem] .sampling-demo-listen-text {
+    color: var(--color-text);
+  }
+
+  .sampling-demo-controls:disabled .sampling-demo-listen {
+    opacity: 0.5;
   }
 
   .sampling-demo-note {

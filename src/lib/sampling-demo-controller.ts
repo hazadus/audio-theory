@@ -1,6 +1,8 @@
-// Взаимодействие эксперимента дискретизации: ползунок, кнопки примеров, видимая синусоида и сброс.
+// Взаимодействие эксперимента дискретизации: ползунок, кнопки примеров, видимая синусоида, сброс и звук.
 // До запуска скрипта и при ошибке параметры остаются неактивными, а рисунок показывает начальное состояние.
-import { samplingExperiment } from '@/lib/sampling';
+import { samplingExperiment, type SamplingExperiment } from '@/lib/sampling';
+import { initialVolume, listenDuration, resultSound } from '@/lib/sampling-audio';
+import { audioSupported, ResultPlayer } from '@/lib/sampling-audio-player';
 import {
   initialState,
   normalizeSampleRate,
@@ -8,7 +10,13 @@ import {
   sliderPosition,
   type DemoState,
 } from '@/lib/sampling-controls';
-import { samplingCaption, samplingChartSvg, samplingStatus, showsAlias } from '@/lib/sampling-view';
+import {
+  formatNumber,
+  samplingCaption,
+  samplingChartSvg,
+  samplingStatus,
+  showsAlias,
+} from '@/lib/sampling-view';
 
 /** Пауза перед объявлением нового состояния: без потока сообщений на каждый шаг ползунка. */
 const announceDelay = 700;
@@ -22,6 +30,81 @@ function fail(root: HTMLElement, error: unknown): void {
   const note = root.querySelector<HTMLElement>('[data-controls-note]');
   if (note) note.textContent = errorNote;
   console.error(error);
+}
+
+const listenText = `${formatNumber(listenDuration)}\u00a0с, громкость ${formatNumber(initialVolume * 100)}\u00a0%`;
+
+/** Почему звук для этого состояния не создаётся; `null` — можно слушать. */
+function silentReason(experiment: SamplingExperiment): string | null {
+  const sound = resultSound(experiment);
+  if (sound.kind === 'ambiguous') {
+    return 'На частоте Найквиста результат неоднозначен, поэтому звук не создаётся.';
+  }
+  if (sound.kind === 'silence') return 'Результат — постоянный ноль (0\u00a0Гц): звука нет.';
+  return null;
+}
+
+/**
+ * Кнопка прослушивания: запускает фрагмент только по нажатию, останавливает при смене параметров
+ * и уходе со страницы. Без Web Audio кнопка неактивна, а текст объясняет причину.
+ */
+function initListening(root: HTMLElement) {
+  const box = required<HTMLElement>(root, '[data-listen]');
+  const button = required<HTMLButtonElement>(root, '[data-play]');
+  const label = required<HTMLElement>(root, '[data-play-label]');
+  const text = required<HTMLElement>(root, '[data-listen-text]');
+  const supported = audioSupported();
+  const player = supported ? new ResultPlayer() : undefined;
+  let experiment: SamplingExperiment | undefined;
+
+  const show = (problem: string | null) => {
+    const playing = player?.playing ?? false;
+    button.toggleAttribute('data-playing', playing);
+    label.textContent = playing ? 'Остановить' : 'Прослушать результат';
+    text.textContent = problem ?? listenText;
+    box.toggleAttribute('data-problem', problem !== null);
+  };
+
+  const refresh = () => {
+    if (!supported) {
+      button.disabled = true;
+      show('Звук недоступен: браузер не поддерживает Web Audio.');
+      return;
+    }
+    const reason = experiment ? silentReason(experiment) : null;
+    button.disabled = reason !== null;
+    show(reason);
+  };
+
+  if (player) {
+    player.onEnded = refresh;
+    button.addEventListener('click', async () => {
+      if (!experiment) return;
+      if (player.playing) {
+        player.stop();
+        return;
+      }
+      try {
+        await player.play(experiment);
+        refresh();
+      } catch (error) {
+        console.error(error);
+        show('Не удалось воспроизвести звук.');
+      }
+    });
+    window.addEventListener('pagehide', () => player.stop());
+  }
+
+  return {
+    /** Новое состояние эксперимента: текущий фрагмент останавливается, следующий запуск использует его. */
+    set(next: SamplingExperiment) {
+      const changed = experiment?.sampleRate !== next.sampleRate;
+      experiment = next;
+      // Показ видимой синусоиды звук не меняет, поэтому фрагмент продолжает играть.
+      if (changed) player?.stop();
+      refresh();
+    },
+  };
 }
 
 function required<T extends Element>(root: Element, selector: string): T {
@@ -44,6 +127,7 @@ function initDemo(root: HTMLElement): void {
   const reset = required<HTMLButtonElement>(root, '[data-reset]');
   const announcer = required<HTMLElement>(root, '[data-announce]');
   const presetButtons = [...root.querySelectorAll<HTMLButtonElement>('[data-preset]')];
+  const listening = initListening(root);
 
   let state: DemoState = { ...initialState };
   let timer = 0;
@@ -77,6 +161,7 @@ function initDemo(root: HTMLElement): void {
       );
     }
     aliasSwitch.setAttribute('aria-checked', String(state.alias));
+    listening.set(experiment);
 
     clearTimeout(timer);
     if (announce) {
