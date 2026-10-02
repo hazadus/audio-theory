@@ -15,7 +15,8 @@ import {
 
 type AudioContextClass = typeof AudioContext;
 
-function audioContextClass(): AudioContextClass | undefined {
+/** Конструктор AudioContext; старый Safari даёт только webkitAudioContext. */
+export function audioContextClass(): AudioContextClass | undefined {
   return (
     window.AudioContext ??
     (window as unknown as { webkitAudioContext?: AudioContextClass }).webkitAudioContext

@@ -1,0 +1,692 @@
+---
+// Генератор чистого тона: частота, период и длина волны, статус, параметр f, плеер и подпись «Рис. N.».
+// При сборке показывается начальное состояние 1 кГц; скрипт включает параметры и звук.
+// Без JS, во время загрузки и при ошибке параметры неактивны, а сообщение объясняет почему.
+import Icon from '@/components/Icon.astro';
+import { initialVolume } from '@/lib/sampling-audio';
+import { volumeStep, volumeText } from '@/lib/sampling-player';
+import { formatNumber } from '@/lib/sampling-view';
+import {
+  defaultFrequency,
+  frequencyText,
+  maxPosition,
+  periodText,
+  positionOf,
+  presets,
+  scaleMarks,
+  sliderPosition,
+  toneCaption,
+  toneStatus,
+  toneWarning,
+  wavelengthText,
+} from '@/lib/tone';
+
+interface Props {
+  /** Номер рисунка: визуализации и рисунки нумеруются одной последовательностью. */
+  figure: number;
+  /** Якорь для ссылок `#id`; английский kebab-case. */
+  id?: string;
+}
+
+const { figure, id = 'tone-demo' } = Astro.props;
+
+const frequency = defaultFrequency;
+const status = toneStatus(frequency);
+const valueText = frequencyText(frequency);
+const markText = (value: number) =>
+  value >= 1000 ? `${formatNumber(value / 1000)}\u00a0кГц` : `${value}\u00a0Гц`;
+---
+
+<figure class="tone-demo" id={id} aria-labelledby={`${id}-name`} data-tone-demo data-state="static">
+  <div class="tone-demo-head">
+    <span class="tone-demo-label">Визуализация {figure}</span>
+    <span class="tone-demo-name" id={`${id}-name`}>
+      Генератор чистого тона
+    </span>
+  </div>
+  <dl class="tone-demo-values">
+    <div>
+      <dt>
+        Частота <i>f</i>
+      </dt>
+      <dd data-frequency-text>{valueText}</dd>
+    </div>
+    <div>
+      <dt>
+        Период <i>T</i>
+      </dt>
+      <dd data-period-text>{periodText(frequency)}</dd>
+    </div>
+    <div>
+      <dt>
+        Длина волны <i>λ</i>
+      </dt>
+      <dd data-wavelength-text>{wavelengthText(frequency)}</dd>
+    </div>
+  </dl>
+  <div class="tone-demo-body">
+    <p class="tone-demo-status">
+      <span class="tone-demo-icon">
+        <Icon name="info" size={18} />
+      </span>
+      <span>
+        <b data-status-title>{status.title}</b> <span data-status-text>{status.text}</span>
+      </span>
+    </p>
+  </div>
+  <p class="visually-hidden" aria-live="polite" data-announce></p>
+  <fieldset class="tone-demo-controls" data-controls disabled>
+    <legend class="visually-hidden">Параметры генератора</legend>
+    <div class="tone-demo-param">
+      <div class="tone-demo-param-head">
+        <label for={`${id}-frequency`}>
+          Частота <i>f</i>
+        </label>
+        <output for={`${id}-frequency`} data-frequency-value>
+          {valueText}
+        </output>
+      </div>
+      <input
+        id={`${id}-frequency`}
+        class="tone-demo-range"
+        type="range"
+        min="0"
+        max={maxPosition}
+        step="1"
+        value={positionOf(frequency)}
+        aria-valuetext={valueText}
+        style={`--fill: ${sliderPosition(frequency)}`}
+        data-frequency
+      />
+      <div class="tone-demo-scale" aria-hidden="true">
+        {scaleMarks.map((value) => (
+          <span style={`--at: ${sliderPosition(value)}`}>{markText(value)}</span>
+        ))}
+      </div>
+    </div>
+    <div class="tone-demo-actions">
+      <div class="tone-demo-presets" role="group" aria-label="Примеры">
+        <span class="tone-demo-presets-label" aria-hidden="true">
+          Примеры:
+        </span>
+        {presets.map((preset) => (
+          <button
+            type="button"
+            class="tone-demo-preset"
+            aria-pressed={preset.value === frequency ? 'true' : 'false'}
+            data-preset={preset.value}
+          >
+            {preset.label}
+          </button>
+        ))}
+      </div>
+      <button type="button" class="tone-demo-reset" data-reset>
+        <Icon name="rotate-ccw" size={16} />
+        Сбросить
+      </button>
+    </div>
+    <div class="tone-demo-audio">
+      <p class="tone-demo-warning" role="note">
+        <Icon name="volume-2" size={18} />
+        <span>
+          <b>Громкость.</b> <span>{toneWarning}</span>
+        </span>
+      </p>
+      <div
+        class="tone-demo-player"
+        role="group"
+        aria-label="Аудиопример: чистый тон"
+        data-player-group
+        data-mode="ready"
+      >
+        <button type="button" class="tone-demo-play" aria-label="Воспроизвести" data-play>
+          <span class="tone-demo-play-icon start">
+            <Icon name="play" size={18} />
+          </span>
+          <span class="tone-demo-play-icon stop">
+            <Icon name="square" size={16} />
+          </span>
+        </button>
+        <div class="tone-demo-volume">
+          <button type="button" class="tone-demo-mute" aria-label="Выключить звук" data-mute>
+            <span class="tone-demo-mute-icon on">
+              <Icon name="volume-2" size={18} />
+            </span>
+            <span class="tone-demo-mute-icon off">
+              <Icon name="volume-x" size={18} />
+            </span>
+          </button>
+          <input
+            class="tone-demo-range compact"
+            type="range"
+            min="0"
+            max="100"
+            step={volumeStep}
+            value={initialVolume * 100}
+            aria-label="Громкость"
+            aria-valuetext={volumeText(initialVolume * 100)}
+            style={`--fill: ${initialVolume * 100}`}
+            data-volume
+          />
+          <span class="tone-demo-volume-text" data-volume-text>
+            {volumeText(initialVolume * 100)}
+          </span>
+        </div>
+      </div>
+      <p class="tone-demo-player-state" role="status" data-player-state>
+        Остановлен
+      </p>
+    </div>
+    <p class="tone-demo-note" data-controls-note>
+      Параметры и звук работают с включённым JavaScript. Значения показывают начальное состояние.
+    </p>
+  </fieldset>
+  <figcaption class="tone-demo-caption">
+    <b>Рис. {figure}.</b> <span data-caption>{toneCaption(frequency)}</span>
+  </figcaption>
+</figure>
+
+<script>
+  import { initToneDemos } from '@/lib/tone-demo-controller';
+
+  initToneDemos();
+</script>
+
+<style is:global>
+  .tone-demo {
+    container-type: inline-size;
+    margin: var(--space-6) 0;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    overflow: hidden;
+    font-family: var(--font-ui);
+    scroll-margin-top: 88px;
+  }
+
+  .tone-demo-head {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 14px 20px;
+  }
+
+  .tone-demo-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  .tone-demo-name {
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  /* Вместо графика — три значения текущего тона на фоне области графика. */
+  .tone-demo-values {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin: 0;
+    padding: 18px 20px;
+    border-block: var(--border-width) solid var(--color-border);
+    background: var(--chart-bg);
+  }
+
+  .tone-demo-values dt {
+    font-size: 13px;
+    color: var(--color-text-muted);
+  }
+
+  .tone-demo-values dt i {
+    font-family: var(--font-text);
+  }
+
+  .tone-demo-values dd {
+    margin: 2px 0 0;
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1.25;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .tone-demo-body {
+    padding: 12px 20px;
+  }
+
+  .tone-demo-status {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin: 0;
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    box-shadow: inset 0 0 0 1px var(--color-border-strong);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .tone-demo-icon {
+    display: flex;
+    flex: none;
+    margin-top: 1px;
+    color: var(--color-text-muted);
+  }
+
+  .tone-demo .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .tone-demo-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+    margin: 0;
+    padding: 14px 20px 16px;
+    border: 0;
+    border-top: var(--border-width) solid var(--color-border);
+  }
+
+  .tone-demo-param {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .tone-demo-param-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 14px;
+  }
+
+  .tone-demo-param-head i {
+    font-family: var(--font-text);
+  }
+
+  .tone-demo-param-head output {
+    font-size: 15px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* Ползунок: дорожка 4 px с заливкой до значения, бегунок 20 px, как у других визуализаций.
+     `--fill` — положение в процентах без единицы: длину нельзя умножать на проценты. */
+  .tone-demo-range {
+    --half-thumb: 10px;
+    --track: linear-gradient(
+        to right,
+        var(--color-accent)
+          calc(var(--half-thumb) + (100% - 2 * var(--half-thumb)) * var(--fill) / 100),
+        var(--color-border) 0
+      )
+      center / 100% 4px no-repeat;
+
+    width: 100%;
+    height: 28px;
+    margin: 0;
+    background: transparent;
+    appearance: none;
+    cursor: pointer;
+    touch-action: pan-y;
+  }
+
+  .tone-demo-range::-webkit-slider-runnable-track {
+    height: 28px;
+    background: var(--track);
+  }
+
+  .tone-demo-range::-moz-range-track {
+    height: 28px;
+    background: var(--track);
+  }
+
+  .tone-demo-range::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+    margin-top: 4px;
+    border: 2px solid var(--color-accent);
+    border-radius: 50%;
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-sm);
+    appearance: none;
+  }
+
+  .tone-demo-range::-moz-range-thumb {
+    box-sizing: border-box;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--color-accent);
+    border-radius: 50%;
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .tone-demo-range:focus-visible {
+    box-shadow: none;
+    outline: none;
+  }
+
+  .tone-demo-range:focus-visible::-webkit-slider-thumb {
+    box-shadow: var(--focus-ring);
+  }
+
+  .tone-demo-range:focus-visible::-moz-range-thumb {
+    box-shadow: var(--focus-ring);
+  }
+
+  /* Деления стоят под центром бегунка в своём положении; крайние выровнены по краям дорожки. */
+  .tone-demo-scale {
+    position: relative;
+    height: 18px;
+    font-size: 12px;
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tone-demo-scale span {
+    position: absolute;
+    left: calc(10px + (100% - 20px) * var(--at) / 100);
+    white-space: nowrap;
+    transform: translateX(-50%);
+  }
+
+  .tone-demo-scale span:first-child {
+    left: 0;
+    transform: none;
+  }
+
+  .tone-demo-scale span:last-child {
+    right: 0;
+    left: auto;
+    transform: none;
+  }
+
+  .tone-demo-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .tone-demo-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .tone-demo-presets-label {
+    margin-right: 2px;
+    font-size: 13px;
+    color: var(--color-text-muted);
+  }
+
+  .tone-demo-preset {
+    height: 32px;
+    padding: 0 12px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-full);
+    background: transparent;
+    color: var(--color-text);
+    font: 500 14px var(--font-ui);
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+  }
+
+  .tone-demo-preset[aria-pressed='true'] {
+    border-color: var(--color-accent);
+    background: var(--color-accent-soft);
+    font-weight: 600;
+  }
+
+  .tone-demo-reset {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    height: 36px;
+    padding: 0 12px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text);
+    font: 500 14px var(--font-ui);
+    cursor: pointer;
+  }
+
+  .tone-demo-audio {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .tone-demo-warning {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin: 0 0 4px;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    background: var(--color-warning-bg);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .tone-demo-warning > svg {
+    flex: none;
+    margin-top: 1px;
+    color: var(--color-warning);
+  }
+
+  .tone-demo-warning b {
+    color: var(--color-warning);
+  }
+
+  .tone-demo-player {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 14px 8px 8px;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+  }
+
+  .tone-demo-play {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+    cursor: pointer;
+  }
+
+  .tone-demo-mute {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+  }
+
+  .tone-demo-play-icon,
+  .tone-demo-mute-icon {
+    display: flex;
+  }
+
+  .tone-demo-play:not([data-playing]) .tone-demo-play-icon.stop,
+  .tone-demo-play[data-playing] .tone-demo-play-icon.start,
+  .tone-demo-mute:not([data-muted]) .tone-demo-mute-icon.off,
+  .tone-demo-mute[data-muted] .tone-demo-mute-icon.on {
+    display: none;
+  }
+
+  .tone-demo-volume {
+    display: flex;
+    flex: 1 1 140px;
+    gap: 6px;
+    align-items: center;
+    max-width: 280px;
+  }
+
+  .tone-demo-volume-text {
+    width: 36px;
+    font-size: 13px;
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Компактный ползунок громкости: та же дорожка, бегунок 14 px. */
+  .tone-demo-range.compact {
+    --half-thumb: 7px;
+
+    flex: 1;
+    min-width: 0;
+    height: 24px;
+  }
+
+  .tone-demo-range.compact::-webkit-slider-runnable-track {
+    height: 24px;
+  }
+
+  .tone-demo-range.compact::-moz-range-track {
+    height: 24px;
+  }
+
+  .tone-demo-range.compact::-webkit-slider-thumb {
+    width: 14px;
+    height: 14px;
+    margin-top: 5px;
+    border: 0;
+    background: var(--color-accent);
+  }
+
+  .tone-demo-range.compact::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border: 0;
+    background: var(--color-accent);
+  }
+
+  .tone-demo-player-state {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+  }
+
+  .tone-demo-player[data-mode='error'] + .tone-demo-player-state,
+  .tone-demo-player[data-mode='unavailable'] + .tone-demo-player-state {
+    color: var(--color-error);
+  }
+
+  .tone-demo-player :disabled {
+    opacity: 0.45;
+  }
+
+  @media (hover: hover) {
+    .tone-demo-preset:hover,
+    .tone-demo-reset:hover,
+    .tone-demo-mute:not(:disabled):hover {
+      background: var(--color-bg);
+    }
+
+    .tone-demo-preset[aria-pressed='true']:hover {
+      background: var(--color-accent-soft);
+    }
+  }
+
+  /* Неактивные параметры не выглядят рабочими: приглушены, без указателя; сообщение объясняет причину. */
+  .tone-demo-controls:disabled .tone-demo-param,
+  .tone-demo-controls:disabled .tone-demo-actions,
+  .tone-demo-controls:disabled .tone-demo-player {
+    opacity: 0.5;
+  }
+
+  .tone-demo-controls:disabled * {
+    cursor: not-allowed;
+  }
+
+  .tone-demo-note {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+  }
+
+  .tone-demo[data-state='ready'] .tone-demo-note {
+    display: none;
+  }
+
+  .tone-demo[data-state='error'] .tone-demo-note {
+    color: var(--color-error);
+  }
+
+  .tone-demo-caption {
+    padding: 10px 20px 14px;
+    border-top: var(--border-width) solid var(--color-border);
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+  }
+
+  .tone-demo-caption b {
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  @container (max-width: 559px) {
+    .tone-demo-head,
+    .tone-demo-values,
+    .tone-demo-body,
+    .tone-demo-controls,
+    .tone-demo-caption {
+      padding-inline: 16px;
+    }
+
+    /* Три числа в ряд не помещаются: каждое значение — строка «название — число». */
+    .tone-demo-values {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 6px;
+      padding-block: 12px;
+    }
+
+    .tone-demo-values div {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+    }
+
+    .tone-demo-values dd {
+      font-size: 18px;
+    }
+  }
+</style>
