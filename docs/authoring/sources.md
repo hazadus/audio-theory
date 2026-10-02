@@ -22,6 +22,23 @@
 
 - [Глава 3.3: Digital-to-Analog Conversion](https://www.dspguide.com/ch3/3.htm) — удержание уровня, спектральные копии, восстановительный фильтр и компенсация частотной характеристики удержания.
 
+Прочитанные разделы о представлении отсчётов в программах:
+
+- [Глава 4.3: Floating Point (Real Numbers)](https://www.dspguide.com/ch4/3.htm) — знак, значащая часть и степень, форматы 32 и 64 бита. Для статьи используется описание устройства формата; крайние значения и специальные числа здесь не разбираются.
+- [Глава 4.4: Number Precision](https://www.dspguide.com/ch4/4.htm) — неравномерный шаг представимых чисел, округление десятичных дробей и результатов арифметики.
+
+## JUCE — аудиобуферы и обработка блоками
+
+Официальная документация C++-фреймворка; API сверено с исходниками стабильного релиза [9.0.3](https://github.com/juce-framework/JUCE/releases/tag/9.0.3).
+
+- [AudioBuffer](https://docs.juce.com/master/classjuce_1_1AudioBuffer.html) и [заголовок версии 9.0.3](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_basics/buffers/juce_AudioSampleBuffer.h) — конструктор, неопределённое начальное содержимое, `clear`, `getNumChannels`, число отсчётов на канал в `getNumSamples`, указатели на отдельные каналы, `setSample`.
+- [AudioProcessor, processBlock](https://docs.juce.com/master/classjuce_1_1AudioProcessor.html) — входные и выходные каналы, ограничения записи, переменная длина и нулевые блоки. Подходит для объяснения обратного вызова и границ обработки.
+
+## ALSA Project и PortAudio — кадры, раскладки и аудиопотоки
+
+- [ALSA Project. PCM (digital audio) interface](https://www.alsa-project.org/alsa-doc/alsa-lib/pcm.html) — прочитаны описание отсчёта и кадра, General overview, Access modes и Error codes: кадр объединяет каналы одного момента, раздельное и чередующееся хранение, underrun и overrun.
+- [PortAudio. API Overview](https://portaudio.com/docs/v19-doxydocs/api_overview.html) — прочитаны общий обзор, Callback I/O Method и Retrieving Stream Information: форматы и раскладки данных, передача буферов, ограничения обработчика реального времени и фактические задержки потока.
+
 ## Walt Kester — руководства Analog Devices по преобразователям
 
 - [MT-001: Taking the Mystery out of the Infamous Formula, “SNR = 6.02N + 1.76dB,” and Why You Should Care](https://www.analog.com/media/en/training-seminars/tutorials/MT-001.pdf) — прочитаны с. 1–3: ошибка идеального равномерного квантования в половину шага, модель некоррелированного шума, расчёт SNR для синусоиды полной шкалы во всей полосе Найквиста.
