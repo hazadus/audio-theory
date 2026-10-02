@@ -288,5 +288,75 @@
       "article": "equal-loudness",
       "anchor": "reading-contours"
     }
+  },
+  {
+    "id": "ad-conversion",
+    "ru": "аналого-цифровое преобразование",
+    "en": "analog-to-digital conversion, A/D conversion",
+    "definition": "Перевод аналогового сигнала в последовательность цифровых отсчётов: выбор моментов измерений и квантование их значений.",
+    "target": {
+      "article": "adc-dac",
+      "anchor": "converters"
+    }
+  },
+  {
+    "id": "adc",
+    "ru": "АЦП",
+    "en": "analog-to-digital converter, ADC",
+    "definition": "Аналого-цифровой преобразователь: устройство, которое измеряет аналоговый электрический сигнал и выдаёт цифровые коды отсчётов.",
+    "target": {
+      "article": "adc-dac",
+      "anchor": "converters"
+    }
+  },
+  {
+    "id": "da-conversion",
+    "ru": "цифро-аналоговое преобразование",
+    "en": "digital-to-analog conversion, D/A conversion",
+    "definition": "Преобразование последовательности цифровых отсчётов в аналоговый электрический сигнал; восстановительный фильтр подавляет высокочастотные спектральные копии.",
+    "target": {
+      "article": "adc-dac",
+      "anchor": "converters"
+    }
+  },
+  {
+    "id": "dac",
+    "ru": "ЦАП",
+    "en": "digital-to-analog converter, DAC",
+    "definition": "Цифро-аналоговый преобразователь: устройство, которое получает цифровые отсчёты и формирует соответствующий им аналоговый электрический сигнал.",
+    "target": {
+      "article": "adc-dac",
+      "anchor": "converters"
+    }
+  },
+  {
+    "id": "quantization",
+    "ru": "квантование",
+    "en": "quantization",
+    "definition": "Замена значения отсчёта одним из конечного набора представимых уровней. При округлении к ближайшему уровню появляется ошибка квантования.",
+    "target": {
+      "article": "adc-dac",
+      "anchor": "quantization"
+    }
+  },
+  {
+    "id": "bit-depth",
+    "ru": "разрядность",
+    "en": "bit depth",
+    "definition": "Число бит для представления одного квантованного отсчёта. B бит дают 2ᴮ кодов; при равномерном квантовании шаг зависит также от полного диапазона сигнала.",
+    "target": {
+      "article": "adc-dac",
+      "anchor": "sampling-and-quantization"
+    }
+  },
+  {
+    "id": "reconstruction-filter",
+    "ru": "восстановительный фильтр",
+    "en": "reconstruction filter",
+    "definition": "Фильтр в тракте цифро-аналогового преобразования, который пропускает полезную полосу сигнала и подавляет высокочастотные спектральные копии.",
+    "target": {
+      "article": "adc-dac",
+      "anchor": "reconstruction"
+    }
   }
 ]

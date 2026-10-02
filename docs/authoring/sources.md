@@ -18,6 +18,15 @@
 - [Глава 3.4: Analog Filters for Data Conversion](https://www.dspguide.com/ch3/4.htm) — антиалиасинговый фильтр нижних частот перед АЦП.
 - [Глава 22.3: Audio Processing](https://www.dspguide.com/ch22/3.htm) — частоты дискретизации компакт-диска (44,1 кГц) и телефонной связи (8 кГц), полоса речи и музыки.
 
+Прочитанный при подготовке статьи об АЦП и ЦАП раздел:
+
+- [Глава 3.3: Digital-to-Analog Conversion](https://www.dspguide.com/ch3/3.htm) — удержание уровня, спектральные копии, восстановительный фильтр и компенсация частотной характеристики удержания.
+
+## Walt Kester — руководства Analog Devices по преобразователям
+
+- [MT-001: Taking the Mystery out of the Infamous Formula, “SNR = 6.02N + 1.76dB,” and Why You Should Care](https://www.analog.com/media/en/training-seminars/tutorials/MT-001.pdf) — прочитаны с. 1–3: ошибка идеального равномерного квантования в половину шага, модель некоррелированного шума, расчёт SNR для синусоиды полной шкалы во всей полосе Найквиста.
+- [MT-017: Oversampling Interpolating DACs](https://www.analog.com/media/en/training-seminars/tutorials/mt-017.pdf) — прочитаны с. 1–2: спектральные копии и спад частотной характеристики при удержании, передискретизация и цифровая интерполяция для упрощения аналогового восстановительного фильтра.
+
 ## Carl R. Nave — HyperPhysics
 
 [Раздел о звуке](https://hyperphysics.gsu.edu/hbase/Sound/soucon.html). Справочник по физике (Georgia State University) с короткими страницами и формулами. Подходит для основ акустики: скорость звука, волновые соотношения, интенсивность и порог слышимости, микрофоны.

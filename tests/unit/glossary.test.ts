@@ -4,7 +4,7 @@ import { parseGlossary } from '@/lib/glossary';
 import { resolveTarget } from '@/lib/links';
 import glossary from '@/data/glossary.json';
 
-const slugs = ['sampling', 'sound-wave', 'signal-level', 'compressor', 'equal-loudness'];
+const slugs = ['sampling', 'sound-wave', 'signal-level', 'compressor', 'equal-loudness', 'adc-dac'];
 
 const entry = {
   id: 'sample-rate',
