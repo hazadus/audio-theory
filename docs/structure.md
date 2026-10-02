@@ -47,6 +47,8 @@ src/
     theme-controller.ts ✅           # Общее состояние темы в окне для всех контролов
     navigation.ts ✅                 # Пункты основной навигации и активный пункт
     search-dialog.ts ✅              # Правила открытия поиска по «/»
+    search-controller.ts ✅          # Состояния и выдача поиска в диалоге
+    search-view.ts ✅                # Плоский список переходов и безопасный разбор фрагментов
     urls.ts ✅                       # Построитель URL с базовым путём
     rehype-site-urls.mjs ✅           # Преобразование адресов в Markdown/MDX
     rehype-math-errors.mjs ✅         # Ошибки формул блокируют сборку
@@ -97,6 +99,7 @@ tests/                               # Unit-тесты и браузерные �
   unit/production.test.ts ✅          # Smoke-команда, HTTP-ошибки и обязательные ресурсы
   e2e/home.spec.ts ✅                 # Начальная страница на статических сборках
   e2e/search-dialog.spec.ts ✅        # Диалог поиска: фокус, закрытие, «/»
+  e2e/search-results.spec.ts ✅       # Состояния выдачи, задержка, ошибка, устаревшие ответы
   e2e/search.spec.ts ✅               # Настоящий API Pagefind в корне и под префиксом
   fixtures/artifact/ ✅              # Контрольная сборка с ошибочной внутренней ссылкой
   unit/articles.test.ts ✅            # Схема статьи, slug и группы
