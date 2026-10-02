@@ -165,6 +165,8 @@ test('узкий экран: выбор темы в меню и закрытие
     await page.setViewportSize({ width: 1280, height: 800 });
     await expect(page.locator(menuButton)).toBeHidden();
     await expect(page.locator('[data-theme-toggle]')).toBeVisible();
+    // Меню закрывается по событию matchMedia: дожидаемся его до возврата к узкому окну.
+    await expect(page.locator(menuButton)).toHaveAttribute('aria-expanded', 'false');
     await page.setViewportSize({ width: 390, height: 844 });
     await expect(menu).toBeHidden();
     await expect(page.locator(menuButton)).toHaveAttribute('aria-expanded', 'false');
