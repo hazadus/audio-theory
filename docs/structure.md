@@ -58,6 +58,7 @@ src/
     search-controller.ts ✅          # Состояния и выдача поиска в диалоге
     search-view.ts ✅                # Плоский список переходов и безопасный разбор фрагментов
     urls.ts ✅                       # Построитель URL с базовым путём
+    sampling.ts ✅                   # Модель эксперимента дискретизации: отсчёты, период, восстановление
     rehype-site-urls.mjs ✅           # Преобразование адресов в Markdown/MDX
     rehype-math-errors.mjs ✅         # Ошибки формул блокируют сборку
     rehype-pagefind.mjs ✅            # Исключает дубли формул KaTeX из индекса Pagefind
@@ -107,6 +108,7 @@ scripts/                             # Проверка контента и со
   test-production.mjs ✅             # CLI для production smoke-проверки
 tests/                               # Unit-тесты и браузерные сценарии
   unit/urls.test.ts ✅                # Контракт URL и базового пути
+  unit/sampling.test.ts ✅            # Отсчёты, граница Найквиста, наложение, фаза и знак
   unit/artifact.test.ts ✅            # Цели ссылок и блокировка неверной сборки
   unit/production.test.ts ✅          # Smoke-команда, HTTP-ошибки и обязательные ресурсы
   e2e/home.spec.ts ✅                 # Начальная страница на статических сборках
