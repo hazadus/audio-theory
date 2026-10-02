@@ -94,3 +94,13 @@
 ## Wikipedia — DBFS и «Компрессор аудиосигнала»
 
 [DBFS](https://en.wikipedia.org/wiki/DBFS) — 0 dBFS как наибольший цифровой уровень, соглашение AES17 (RMS синусоиды с полной амплитудой — 0 dBFS, прямоугольной волны — +3 dBFS), около 96 дБ у 16 бит; сам стандарт AES17 не читался. [Компрессор аудиосигнала](https://ru.wikipedia.org/wiki/Компрессор_аудиосигнала) — русские названия параметров (порог, степень сжатия, время атаки) и пример сжатия 2:1.
+
+## Кривые равной громкости и слух
+
+- [NERC Vocabulary Server. Sound pressure level in air](https://vocab.nerc.ac.uk/collection/P07/current/CFSN0309/) — прочитано определение SPL: 20 lg(p/p₀), среднеквадратичное давление, опора 2 × 10⁻⁵ Па в воздухе.
+
+- [ISO 226:2023. Acoustics — Normal equal-loudness-level contours](https://www.iso.org/standard/83117.html) — условия сравнения чистых тонов: свободное поле, фронтальный источник, два уха, нормальный слух в возрасте 18–25 лет. Прочитан [открытый фрагмент](https://cdn.standards.iteh.ai/samples/83117/6afa5bd94e0e4f32812c28c3b0a7b8ac/ISO-226-2023.pdf): введение, разделы 1, 3 и 4, формула (1), таблица 1 и приложение A. По формуле и числовым коэффициентам построен собственный SVG; сканы и рисунки стандарта не воспроизводятся.
+- [Yôiti Suzuki, Hisashi Takeshima, Kenji Kurakata. Revision of ISO 226 “Normal Equal-Loudness-Level Contours” from 2003 to 2023 edition: The background and results, 2024](https://www.jstage.jst.go.jp/article/ast/45/1/45_e23.66/_article/-char/en) — прочитаны введение и разделы 2–3: фоны, измерения Флетчера — Мансона в наушниках с пересчётом в свободное поле, история стандартизации, формула 2023 года. Лицензия статьи — CC BY-ND 4.0; её иллюстрации не изменять и не использовать для производного рисунка.
+- [Audio Engineering Society. Learn More: Equal loudness contours](https://aes.org/resources/audio-topics/loudness-project/learn-more/) — прочитан одноимённый раздел: частотная чувствительность слуха, изменение формы кривых с уровнем и воспринимаемого баланса музыки.
+- [Steven W. Smith. Human Hearing, глава 22](https://www.dspguide.com/ch22/1.htm) — прочитан раздел об устройстве наружного, среднего и внутреннего уха, преобразовании колебаний в нервные сигналы и частотной избирательности.
+- [Roland Sottek, Thiago Lobato, Moritz Bender, Julian Becker. Modeling the ISO 226:2023 equal-loudness-level contours by standardized loudness methods, Forum Acusticum 2023](https://dael.euracoustics.org/confs/fa2023/data/articles/000585.pdf) — прочитаны разделы 2–5: пересмотр ISO 226, частотные фильтры и нелинейность слуха, сравнение моделей для чистых тонов.

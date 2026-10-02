@@ -238,5 +238,55 @@
       "article": "compressor",
       "anchor": "expander-gate"
     }
+  },
+  {
+    "id": "sound-pressure-level",
+    "ru": "уровень звукового давления",
+    "en": "sound pressure level, SPL",
+    "definition": "Логарифмическая мера среднеквадратичного звукового давления относительно опорного. В воздухе опора — 20 мкПа; уровень записывают в дБ SPL.",
+    "target": {
+      "article": "equal-loudness",
+      "anchor": "spl"
+    }
+  },
+  {
+    "id": "loudness",
+    "ru": "громкость",
+    "en": "loudness",
+    "definition": "Ощущение того, насколько сильным кажется звук. Зависит от звукового давления, частотного состава и условий восприятия.",
+    "target": {
+      "article": "equal-loudness",
+      "anchor": "loudness-level"
+    }
+  },
+  {
+    "id": "loudness-level",
+    "ru": "уровень громкости",
+    "en": "loudness level",
+    "definition": "Величина в фонах: численно равна уровню в дБ SPL опорного чистого тона 1 кГц в свободном поле перед слушателем, воспринимаемого столь же громким.",
+    "target": {
+      "article": "equal-loudness",
+      "anchor": "loudness-level"
+    }
+  },
+  {
+    "id": "phon",
+    "ru": "фон",
+    "en": "phon",
+    "definition": "Единица уровня громкости. 40 фон означает равную громкость с опорным чистым тоном 1 кГц при 40 дБ SPL в свободном поле перед слушателем.",
+    "target": {
+      "article": "equal-loudness",
+      "anchor": "loudness-level"
+    }
+  },
+  {
+    "id": "equal-loudness-contour",
+    "ru": "кривая равной громкости",
+    "en": "equal-loudness contour",
+    "definition": "Линия на графике частоты и уровня звукового давления, соединяющая чистые тоны, воспринимаемые одинаково громкими в заданных условиях.",
+    "target": {
+      "article": "equal-loudness",
+      "anchor": "reading-contours"
+    }
   }
 ]
