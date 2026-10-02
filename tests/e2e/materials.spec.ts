@@ -8,28 +8,32 @@ const chip = (page: Page, id: string) => page.locator(`[data-topic-chip="${id}"]
 const sortOption = (page: Page, id: string) => page.locator(`[data-sort-option="${id}"]`);
 const search = (page: Page) => new URL(page.url()).search;
 
-test('по умолчанию все статьи по дате, счётчики и состояние элементов', async ({ page }) => {
-  await page.goto('materials/');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Все материалы');
-  expect((await slugs(page)).sort()).toEqual([
-    'compressor',
-    'sampling',
-    'signal-level',
-    'sound-wave',
-  ]);
-  await expect(page.locator('[data-count]')).toHaveText('4 статьи');
-  await expect(chip(page, 'all')).toHaveAttribute('aria-pressed', 'true');
-  await expect(chip(page, 'all')).toContainText('4');
-  await expect(chip(page, 'processing')).toContainText('1');
-  await expect(chip(page, 'conv')).toHaveAttribute('aria-disabled', 'true');
-  await expect(chip(page, 'conv')).toContainText('0');
-  await expect(sortOption(page, 'date')).toHaveAttribute('aria-checked', 'true');
-  expect(search(page)).toBe('');
-});
+test(
+  'по умолчанию все статьи по дате, счётчики и состояние элементов',
+  { tag: ['@ci'] },
+  async ({ page }) => {
+    await page.goto('materials/');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Все материалы');
+    expect((await slugs(page)).sort()).toEqual([
+      'compressor',
+      'sampling',
+      'signal-level',
+      'sound-wave',
+    ]);
+    await expect(page.locator('[data-count]')).toHaveText('4 статьи');
+    await expect(chip(page, 'all')).toHaveAttribute('aria-pressed', 'true');
+    await expect(chip(page, 'all')).toContainText('4');
+    await expect(chip(page, 'processing')).toContainText('1');
+    await expect(chip(page, 'conv')).toHaveAttribute('aria-disabled', 'true');
+    await expect(chip(page, 'conv')).toContainText('0');
+    await expect(sortOption(page, 'date')).toHaveAttribute('aria-checked', 'true');
+    expect(search(page)).toBe('');
+  },
+);
 
 test(
   'фильтр и сортировка пишутся в адрес, назад и вперёд восстанавливают состояние',
-  { tag: ['@cross-browser', '@placement'] },
+  { tag: ['@ci', '@cross-browser', '@placement'] },
   async ({ page }) => {
     await page.goto('materials/');
     const initial = await slugs(page);
@@ -70,25 +74,29 @@ test(
   },
 );
 
-test('сортировки «А–Я» и «По темам» дают ожидаемый порядок и группы', async ({ page }) => {
-  await page.goto('materials/?sort=alpha');
-  await expect(sortOption(page, 'alpha')).toHaveAttribute('aria-checked', 'true');
-  // «Дискретизация…», «Звуковая волна…», «Как работает компрессор», «Уровень сигнала…».
-  expect(await slugs(page)).toEqual(['sampling', 'sound-wave', 'compressor', 'signal-level']);
+test(
+  'сортировки «А–Я» и «По темам» дают ожидаемый порядок и группы',
+  { tag: ['@ci'] },
+  async ({ page }) => {
+    await page.goto('materials/?sort=alpha');
+    await expect(sortOption(page, 'alpha')).toHaveAttribute('aria-checked', 'true');
+    // «Дискретизация…», «Звуковая волна…», «Как работает компрессор», «Уровень сигнала…».
+    expect(await slugs(page)).toEqual(['sampling', 'sound-wave', 'compressor', 'signal-level']);
 
-  await page.goto('materials/?sort=topic');
-  const headings = page.locator('[data-list] h2');
-  await expect(headings).toHaveCount(3);
-  await expect(headings.nth(0)).toContainText('Основы звука');
-  await expect(headings.nth(1)).toContainText('Цифровой сигнал');
-  await expect(headings.nth(2)).toContainText('Обработка звука');
-  const order = await slugs(page);
-  expect(order[0]).toBe('sound-wave');
-  expect(order.slice(1, 3).sort()).toEqual(['sampling', 'signal-level']);
-  expect(order[3]).toBe('compressor');
-  // Название группы стоит в заголовке, поэтому метка в строке скрыта.
-  await expect(rows(page).first().locator('.overline')).toBeHidden();
-});
+    await page.goto('materials/?sort=topic');
+    const headings = page.locator('[data-list] h2');
+    await expect(headings).toHaveCount(3);
+    await expect(headings.nth(0)).toContainText('Основы звука');
+    await expect(headings.nth(1)).toContainText('Цифровой сигнал');
+    await expect(headings.nth(2)).toContainText('Обработка звука');
+    const order = await slugs(page);
+    expect(order[0]).toBe('sound-wave');
+    expect(order.slice(1, 3).sort()).toEqual(['sampling', 'signal-level']);
+    expect(order[3]).toBe('compressor');
+    // Название группы стоит в заголовке, поэтому метка в строке скрыта.
+    await expect(rows(page).first().locator('.overline')).toBeHidden();
+  },
+);
 
 test('неверные значения query заменяются умолчанием в адресе без новой записи истории', async ({
   page,
@@ -146,7 +154,7 @@ test(
 
 test(
   'главная, шапка, крошки статьи и поиск ведут на список под префиксом',
-  { tag: ['@placement'] },
+  { tag: ['@ci', '@placement'] },
   async ({ page }, testInfo) => {
     const base = testInfo.project.metadata.base as string;
     await page.goto('./');

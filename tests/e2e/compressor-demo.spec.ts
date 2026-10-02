@@ -66,7 +66,7 @@ test.describe('Визуализация компрессора', () => {
 
   test(
     'параметры, графики, статус и подпись меняются согласованно',
-    { tag: ['@cross-browser'] },
+    { tag: ['@ci', '@ci-cross-browser', '@cross-browser'] },
     async ({ page }) => {
       await open(page);
       await expect(statusTitle(page)).toHaveText(
@@ -107,61 +107,65 @@ test.describe('Визуализация компрессора', () => {
     },
   );
 
-  test('звук запускается кнопкой, переключается «до / после» и следует за параметрами', async ({
-    page,
-  }) => {
-    await open(page);
-    expect((await audioLog(page)).contexts).toBe(0);
-    await expect(playButton(page)).toHaveAccessibleName('Воспроизвести');
-    await playButton(page).click();
-    await expect(playButton(page)).toHaveAccessibleName('Остановить');
-    await expect(playerState(page)).toHaveText('Звучит результат компрессора');
-    // Исходный и обработанный варианты звучат одновременно.
-    expect(await audioLog(page)).toMatchObject({ contexts: 1, starts: 2 });
+  test(
+    'звук запускается кнопкой, переключается «до / после» и следует за параметрами',
+    { tag: ['@ci'] },
+    async ({ page }) => {
+      await open(page);
+      expect((await audioLog(page)).contexts).toBe(0);
+      await expect(playButton(page)).toHaveAccessibleName('Воспроизвести');
+      await playButton(page).click();
+      await expect(playButton(page)).toHaveAccessibleName('Остановить');
+      await expect(playerState(page)).toHaveText('Звучит результат компрессора');
+      // Исходный и обработанный варианты звучат одновременно.
+      expect(await audioLog(page)).toMatchObject({ contexts: 1, starts: 2 });
 
-    await demo(page).getByRole('radio', { name: 'Исходный' }).check();
-    await expect(playerState(page)).toHaveText('Звучит исходный сигнал');
-    await expect(playButton(page)).toHaveAccessibleName('Остановить');
+      await demo(page).getByRole('radio', { name: 'Исходный' }).check();
+      await expect(playerState(page)).toHaveText('Звучит исходный сигнал');
+      await expect(playButton(page)).toHaveAccessibleName('Остановить');
 
-    // Новые параметры пересчитывают обработанный вариант без остановки: новый источник, старый затухает.
-    await preset(page, 'Лимитер').click();
-    await expect.poll(async () => (await audioLog(page)).starts).toBe(3);
-    expect((await audioLog(page)).stops).toBe(1);
-    await expect(playButton(page)).toHaveAccessibleName('Остановить');
+      // Новые параметры пересчитывают обработанный вариант без остановки: новый источник, старый затухает.
+      await preset(page, 'Лимитер').click();
+      await expect.poll(async () => (await audioLog(page)).starts).toBe(3);
+      expect((await audioLog(page)).stops).toBe(1);
+      await expect(playButton(page)).toHaveAccessibleName('Остановить');
 
-    await playButton(page).click();
-    await expect(playButton(page)).toHaveAccessibleName('Воспроизвести');
-    await expect(playerState(page)).toHaveText('Остановлен');
-    expect(await audioLog(page)).toMatchObject({ contexts: 1, starts: 3, stops: 3 });
-  });
+      await playButton(page).click();
+      await expect(playButton(page)).toHaveAccessibleName('Воспроизвести');
+      await expect(playerState(page)).toHaveText('Остановлен');
+      expect(await audioLog(page)).toMatchObject({ contexts: 1, starts: 3, stops: 3 });
+    },
+  );
 
-  test('«Сбросить» возвращает параметры, графики и плеер в начальное состояние', async ({
-    page,
-  }) => {
-    await open(page);
-    const initialCaption = await demo(page).locator('[data-caption]').textContent();
-    const initialTitle = await statusTitle(page).textContent();
-    await preset(page, 'Лимитер').click();
-    await demo(page).getByRole('radio', { name: 'Исходный' }).check();
-    await demo(page).getByRole('slider', { name: 'Громкость' }).fill('60');
-    await demo(page).getByRole('button', { name: 'Выключить звук' }).click();
-    await playButton(page).click();
-    await expect(playButton(page)).toHaveAccessibleName('Остановить');
+  test(
+    '«Сбросить» возвращает параметры, графики и плеер в начальное состояние',
+    { tag: ['@ci'] },
+    async ({ page }) => {
+      await open(page);
+      const initialCaption = await demo(page).locator('[data-caption]').textContent();
+      const initialTitle = await statusTitle(page).textContent();
+      await preset(page, 'Лимитер').click();
+      await demo(page).getByRole('radio', { name: 'Исходный' }).check();
+      await demo(page).getByRole('slider', { name: 'Громкость' }).fill('60');
+      await demo(page).getByRole('button', { name: 'Выключить звук' }).click();
+      await playButton(page).click();
+      await expect(playButton(page)).toHaveAccessibleName('Остановить');
 
-    await demo(page).getByRole('button', { name: 'Сбросить' }).click();
-    await expect(demo(page).locator('[data-caption]')).toHaveText(initialCaption ?? '');
-    await expect(statusTitle(page)).toHaveText(initialTitle ?? '');
-    await expect(slider(page, 'Порог')).toHaveAttribute('aria-valuetext', '−24 dBFS');
-    await expect(slider(page, 'Атака')).toHaveAttribute('aria-valuetext', '1 мс');
-    await expect(preset(page, 'Лимитер')).toHaveAttribute('aria-pressed', 'false');
-    await expect(demo(page).getByRole('radio', { name: 'После компрессора' })).toBeChecked();
-    await expect(playButton(page)).toHaveAccessibleName('Воспроизвести');
-    await expect(playerState(page)).toHaveText('Остановлен');
-    await expect(demo(page).getByRole('slider', { name: 'Громкость' })).toHaveValue('30');
-    await expect(demo(page).getByRole('button', { name: 'Выключить звук' })).toBeVisible();
-  });
+      await demo(page).getByRole('button', { name: 'Сбросить' }).click();
+      await expect(demo(page).locator('[data-caption]')).toHaveText(initialCaption ?? '');
+      await expect(statusTitle(page)).toHaveText(initialTitle ?? '');
+      await expect(slider(page, 'Порог')).toHaveAttribute('aria-valuetext', '−24 dBFS');
+      await expect(slider(page, 'Атака')).toHaveAttribute('aria-valuetext', '1 мс');
+      await expect(preset(page, 'Лимитер')).toHaveAttribute('aria-pressed', 'false');
+      await expect(demo(page).getByRole('radio', { name: 'После компрессора' })).toBeChecked();
+      await expect(playButton(page)).toHaveAccessibleName('Воспроизвести');
+      await expect(playerState(page)).toHaveText('Остановлен');
+      await expect(demo(page).getByRole('slider', { name: 'Громкость' })).toHaveValue('30');
+      await expect(demo(page).getByRole('button', { name: 'Выключить звук' })).toBeVisible();
+    },
+  );
 
-  test('переход на другую страницу останавливает звук', async ({ page }) => {
+  test('переход на другую страницу останавливает звук', { tag: ['@ci'] }, async ({ page }) => {
     await open(page);
     await page.evaluate(() => localStorage.removeItem('compressor-demo-stops'));
     await playButton(page).click();
@@ -170,25 +174,29 @@ test.describe('Визуализация компрессора', () => {
     expect(await page.evaluate(() => localStorage.getItem('compressor-demo-stops'))).toBe('2');
   });
 
-  test('без Web Audio плеер объясняет причину, графики работают', async ({ page }) => {
-    await page.addInitScript(() => {
-      const target = window as unknown as Record<string, unknown>;
-      delete target.AudioContext;
-      delete target.webkitAudioContext;
-    });
-    await open(page);
-    await expect(playButton(page)).toBeDisabled();
-    await expect(playerState(page)).toContainText('Звук недоступен');
-    await preset(page, 'Без сжатия').click();
-    await expect(demo(page).locator('[data-status-text]')).toContainText('не меняет уровень');
-  });
+  test(
+    'без Web Audio плеер объясняет причину, графики работают',
+    { tag: ['@ci'] },
+    async ({ page }) => {
+      await page.addInitScript(() => {
+        const target = window as unknown as Record<string, unknown>;
+        delete target.AudioContext;
+        delete target.webkitAudioContext;
+      });
+      await open(page);
+      await expect(playButton(page)).toBeDisabled();
+      await expect(playerState(page)).toContainText('Звук недоступен');
+      await preset(page, 'Без сжатия').click();
+      await expect(demo(page).locator('[data-status-text]')).toContainText('не меняет уровень');
+    },
+  );
 
   test.describe('без JavaScript', () => {
     test.use({ javaScriptEnabled: false });
 
     test(
       'графики начального состояния, параметры и звук неактивны и объяснены',
-      { tag: ['@cross-browser'] },
+      { tag: ['@ci', '@cross-browser'] },
       async ({ page }) => {
         await page.goto(url);
         await expect(statusTitle(page)).toHaveText(

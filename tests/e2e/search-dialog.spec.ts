@@ -15,7 +15,7 @@ test.beforeEach(async ({ page }) => {
 
 test(
   'кнопка открывает диалог с фокусом в поле, Esc закрывает и возвращает фокус',
-  { tag: ['@cross-browser'] },
+  { tag: ['@ci', '@ci-cross-browser', '@cross-browser'] },
   async ({ page }) => {
     const button = page.locator(opener);
     await button.focus();
@@ -63,7 +63,7 @@ test('клик внутри панели диалог не закрывает', 
 
 test(
   '«/» не перехватывается в полях, редактируемой области, с модификаторами и при композиции',
-  { tag: ['@cross-browser'] },
+  { tag: ['@ci', '@cross-browser'] },
   async ({ page }) => {
     await page.evaluate(() => {
       document.body.insertAdjacentHTML(
@@ -100,7 +100,7 @@ test(
 
 test(
   'фокус ограничен окном, фон недоступен и не прокручивается',
-  { tag: ['@cross-browser'] },
+  { tag: ['@ci', '@ci-cross-browser', '@cross-browser'] },
   async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 500 });
     await page.evaluate(() => {
@@ -169,7 +169,7 @@ test('без JavaScript кнопки нет, есть пояснение', async
 
 test(
   'смартфон: при уменьшенной высоте окна (клавиатура) поле, «Отмена» и список доступны',
-  { tag: ['@cross-browser'] },
+  { tag: ['@ci', '@cross-browser'] },
   async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 780 });
     await page.locator(opener).click();

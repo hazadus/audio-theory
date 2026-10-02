@@ -76,7 +76,7 @@ test.describe('Генератор тона', () => {
 
   test(
     'частота, период, длина волны, статус и подпись меняются согласованно',
-    { tag: ['@cross-browser'] },
+    { tag: ['@ci', '@ci-cross-browser', '@cross-browser'] },
     async ({ page }) => {
       await open(page);
       await expect(frequency(page)).toHaveAttribute('aria-valuetext', '1\u00a0000\u00a0Гц');
@@ -118,69 +118,73 @@ test.describe('Генератор тона', () => {
     },
   );
 
-  test('звук запускается кнопкой, частота меняется на ходу, стоп останавливает', async ({
-    page,
-  }) => {
-    await open(page);
-    expect((await audioLog(page)).contexts).toBe(0);
-    await expect(playButton(page)).toHaveAccessibleName('Воспроизвести');
-    await playButton(page).click();
-    await expect(playButton(page)).toHaveAccessibleName('Остановить');
-    await expect(playerState(page)).toHaveText('Звучит 1\u00a0000\u00a0Гц');
+  test(
+    'звук запускается кнопкой, частота меняется на ходу, стоп останавливает',
+    { tag: ['@ci'] },
+    async ({ page }) => {
+      await open(page);
+      expect((await audioLog(page)).contexts).toBe(0);
+      await expect(playButton(page)).toHaveAccessibleName('Воспроизвести');
+      await playButton(page).click();
+      await expect(playButton(page)).toHaveAccessibleName('Остановить');
+      await expect(playerState(page)).toHaveText('Звучит 1\u00a0000\u00a0Гц');
 
-    await demo(page).getByRole('button', { name: '440\u00a0Гц' }).click();
-    await expect(playerState(page)).toHaveText('Звучит 440\u00a0Гц');
-    await expect(playButton(page)).toHaveAccessibleName('Остановить');
-    let log = await audioLog(page);
-    expect(log.starts).toBe(1);
-    expect(log.targets.at(-1)).toBe(440);
+      await demo(page).getByRole('button', { name: '440\u00a0Гц' }).click();
+      await expect(playerState(page)).toHaveText('Звучит 440\u00a0Гц');
+      await expect(playButton(page)).toHaveAccessibleName('Остановить');
+      let log = await audioLog(page);
+      expect(log.starts).toBe(1);
+      expect(log.targets.at(-1)).toBe(440);
 
-    // Ползунок громкости и частоты звук не прерывают.
-    await volume(page).focus();
-    await page.keyboard.press('ArrowRight');
-    await expect(volume(page)).toHaveValue('35');
-    await frequency(page).focus();
-    await page.keyboard.press('ArrowRight');
-    await expect(playButton(page)).toHaveAccessibleName('Остановить');
+      // Ползунок громкости и частоты звук не прерывают.
+      await volume(page).focus();
+      await page.keyboard.press('ArrowRight');
+      await expect(volume(page)).toHaveValue('35');
+      await frequency(page).focus();
+      await page.keyboard.press('ArrowRight');
+      await expect(playButton(page)).toHaveAccessibleName('Остановить');
 
-    await playButton(page).click();
-    await expect(playButton(page)).toHaveAccessibleName('Воспроизвести');
-    await expect(playerState(page)).toHaveText('Остановлен');
-    log = await audioLog(page);
-    expect(log).toMatchObject({ contexts: 1, starts: 1, stops: 1 });
+      await playButton(page).click();
+      await expect(playButton(page)).toHaveAccessibleName('Воспроизвести');
+      await expect(playerState(page)).toHaveText('Остановлен');
+      log = await audioLog(page);
+      expect(log).toMatchObject({ contexts: 1, starts: 1, stops: 1 });
 
-    await playButton(page).click();
-    await expect(playButton(page)).toHaveAccessibleName('Остановить');
-    expect(await audioLog(page)).toMatchObject({ contexts: 1, starts: 2 });
-  });
+      await playButton(page).click();
+      await expect(playButton(page)).toHaveAccessibleName('Остановить');
+      expect(await audioLog(page)).toMatchObject({ contexts: 1, starts: 2 });
+    },
+  );
 
-  test('«Сбросить» возвращает частоту, значения и плеер в начальное состояние', async ({
-    page,
-  }) => {
-    await open(page);
-    const initialCaption = await demo(page).locator('[data-caption]').textContent();
-    await demo(page).getByRole('button', { name: '20\u00a0кГц' }).click();
-    await volume(page).fill('60');
-    await demo(page).getByRole('button', { name: 'Выключить звук' }).click();
-    await playButton(page).click();
-    await expect(playButton(page)).toHaveAccessibleName('Остановить');
+  test(
+    '«Сбросить» возвращает частоту, значения и плеер в начальное состояние',
+    { tag: ['@ci'] },
+    async ({ page }) => {
+      await open(page);
+      const initialCaption = await demo(page).locator('[data-caption]').textContent();
+      await demo(page).getByRole('button', { name: '20\u00a0кГц' }).click();
+      await volume(page).fill('60');
+      await demo(page).getByRole('button', { name: 'Выключить звук' }).click();
+      await playButton(page).click();
+      await expect(playButton(page)).toHaveAccessibleName('Остановить');
 
-    await demo(page).getByRole('button', { name: 'Сбросить' }).click();
-    await expect(frequency(page)).toHaveValue('340');
-    await expect(value(page, 'frequency')).toHaveText('1\u00a0000\u00a0Гц');
-    await expect(demo(page).locator('[data-caption]')).toHaveText(initialCaption ?? '');
-    await expect(demo(page).getByRole('button', { name: '1\u00a0кГц' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
-    await expect(playButton(page)).toHaveAccessibleName('Воспроизвести');
-    await expect(playerState(page)).toHaveText('Остановлен');
-    await expect(volume(page)).toHaveValue('30');
-    await expect(demo(page).locator('[data-volume-text]')).toHaveText('30\u00a0%');
-    await expect(demo(page).getByRole('button', { name: 'Выключить звук' })).toBeVisible();
-  });
+      await demo(page).getByRole('button', { name: 'Сбросить' }).click();
+      await expect(frequency(page)).toHaveValue('340');
+      await expect(value(page, 'frequency')).toHaveText('1\u00a0000\u00a0Гц');
+      await expect(demo(page).locator('[data-caption]')).toHaveText(initialCaption ?? '');
+      await expect(demo(page).getByRole('button', { name: '1\u00a0кГц' })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+      await expect(playButton(page)).toHaveAccessibleName('Воспроизвести');
+      await expect(playerState(page)).toHaveText('Остановлен');
+      await expect(volume(page)).toHaveValue('30');
+      await expect(demo(page).locator('[data-volume-text]')).toHaveText('30\u00a0%');
+      await expect(demo(page).getByRole('button', { name: 'Выключить звук' })).toBeVisible();
+    },
+  );
 
-  test('переход на другую страницу останавливает звук', async ({ page }) => {
+  test('переход на другую страницу останавливает звук', { tag: ['@ci'] }, async ({ page }) => {
     await open(page);
     await page.evaluate(() => localStorage.removeItem('tone-demo-stops'));
     await playButton(page).click();
@@ -189,25 +193,29 @@ test.describe('Генератор тона', () => {
     expect(await page.evaluate(() => localStorage.getItem('tone-demo-stops'))).toBe('1');
   });
 
-  test('без Web Audio плеер объясняет причину, частота работает', async ({ page }) => {
-    await page.addInitScript(() => {
-      const target = window as unknown as Record<string, unknown>;
-      delete target.AudioContext;
-      delete target.webkitAudioContext;
-    });
-    await open(page);
-    await expect(playButton(page)).toBeDisabled();
-    await expect(playerState(page)).toContainText('Звук недоступен');
-    await demo(page).getByRole('button', { name: '100\u00a0Гц' }).click();
-    await expect(value(page, 'wavelength')).toHaveText('3,43\u00a0м');
-  });
+  test(
+    'без Web Audio плеер объясняет причину, частота работает',
+    { tag: ['@ci'] },
+    async ({ page }) => {
+      await page.addInitScript(() => {
+        const target = window as unknown as Record<string, unknown>;
+        delete target.AudioContext;
+        delete target.webkitAudioContext;
+      });
+      await open(page);
+      await expect(playButton(page)).toBeDisabled();
+      await expect(playerState(page)).toContainText('Звук недоступен');
+      await demo(page).getByRole('button', { name: '100\u00a0Гц' }).click();
+      await expect(value(page, 'wavelength')).toHaveText('3,43\u00a0м');
+    },
+  );
 
   test.describe('без JavaScript', () => {
     test.use({ javaScriptEnabled: false });
 
     test(
       'значения начального состояния, параметры и звук неактивны и объяснены',
-      { tag: ['@cross-browser'] },
+      { tag: ['@ci', '@cross-browser'] },
       async ({ page }) => {
         await page.goto(url);
         await expect(value(page, 'frequency')).toHaveText('1\u00a0000\u00a0Гц');

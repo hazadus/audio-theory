@@ -4,7 +4,7 @@ import { siteConfig } from '../../src/site.config';
 
 test(
   'страница показывает разделы, кнопка ведёт в репозиторий, пункт навигации активен',
-  { tag: ['@cross-browser'] },
+  { tag: ['@ci', '@cross-browser'] },
   async ({ page }) => {
     await page.goto('about/');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('О проекте');

@@ -98,40 +98,42 @@ const searchIndex = (page: import('@playwright/test').Page, base: string, query:
     [base, query],
   );
 
-test('Pagefind находит текст обеих статей с названиями и адресами разделов', async ({
-  page,
-}, testInfo) => {
-  const base = testInfo.project.metadata.base as string;
-  await page.goto('./');
-  const cases = [
-    {
-      query: 'микрофон превращает',
-      slug: 'sound-wave',
-      title: 'Звуковая волна и аналоговый аудиосигнал',
-    },
-    {
-      query: 'период дискретизации',
-      slug: 'sampling',
-      title: 'Дискретизация: отсчёты, период и частота дискретизации',
-    },
-  ];
-  for (const { query, slug, title } of cases) {
-    const results = await searchIndex(page, base, query);
-    const article = results.find((item) => item.url === `${base}${slug}/`);
-    expect(article, `${query}: статья ${slug}`).toBeDefined();
-    expect(article!.title).toBe(title);
-    for (const section of article!.sections) {
-      expect(section.url.startsWith(`${base}${slug}/`)).toBe(true);
+test(
+  'Pagefind находит текст обеих статей с названиями и адресами разделов',
+  { tag: ['@ci'] },
+  async ({ page }, testInfo) => {
+    const base = testInfo.project.metadata.base as string;
+    await page.goto('./');
+    const cases = [
+      {
+        query: 'микрофон превращает',
+        slug: 'sound-wave',
+        title: 'Звуковая волна и аналоговый аудиосигнал',
+      },
+      {
+        query: 'период дискретизации',
+        slug: 'sampling',
+        title: 'Дискретизация: отсчёты, период и частота дискретизации',
+      },
+    ];
+    for (const { query, slug, title } of cases) {
+      const results = await searchIndex(page, base, query);
+      const article = results.find((item) => item.url === `${base}${slug}/`);
+      expect(article, `${query}: статья ${slug}`).toBeDefined();
+      expect(article!.title).toBe(title);
+      for (const section of article!.sections) {
+        expect(section.url.startsWith(`${base}${slug}/`)).toBe(true);
+      }
     }
-  }
-  const sections = (await searchIndex(page, base, 'Период и частота дискретизации')).flatMap(
-    (item) => item.sections,
-  );
-  const section = sections.find((item) => item.url === `${base}sampling/#sampling-period`);
-  expect(section?.title).toBe('Период и частота дискретизации');
-  await page.goto(`${base}sampling/#sampling-period`);
-  await expect(page.locator('#sampling-period')).toBeVisible();
-});
+    const sections = (await searchIndex(page, base, 'Период и частота дискретизации')).flatMap(
+      (item) => item.sections,
+    );
+    const section = sections.find((item) => item.url === `${base}sampling/#sampling-period`);
+    expect(section?.title).toBe('Период и частота дискретизации');
+    await page.goto(`${base}sampling/#sampling-period`);
+    await expect(page.locator('#sampling-period')).toBeVisible();
+  },
+);
 
 test('Pagefind не индексирует каркас, элементы управления и служебные блоки статьи', async ({
   page,
@@ -189,22 +191,24 @@ const expectations = [
   { query: 'Nyquist frequency', slug: 'sampling', title: sampling, anchor: 'how-fast' },
 ];
 
-test('поиск находит русские словоформы и английские термины в нужных разделах', async ({
-  page,
-}, testInfo) => {
-  const base = testInfo.project.metadata.base as string;
-  await page.goto('./');
-  for (const { query, slug, title, anchor } of expectations) {
-    const results = await guardedSearch(page, base, query);
-    const article = results.find((item) => item.url === `${base}${slug}/`);
-    expect(article, `${query}: статья ${slug}`).toBeDefined();
-    expect(article!.title).toBe(title);
-    expect(
-      article!.sections.map((section) => section.url),
-      `${query}: раздел ${anchor}`,
-    ).toContain(`${base}${slug}/#${anchor}`);
-  }
-});
+test(
+  'поиск находит русские словоформы и английские термины в нужных разделах',
+  { tag: ['@ci'] },
+  async ({ page }, testInfo) => {
+    const base = testInfo.project.metadata.base as string;
+    await page.goto('./');
+    for (const { query, slug, title, anchor } of expectations) {
+      const results = await guardedSearch(page, base, query);
+      const article = results.find((item) => item.url === `${base}${slug}/`);
+      expect(article, `${query}: статья ${slug}`).toBeDefined();
+      expect(article!.title).toBe(title);
+      expect(
+        article!.sections.map((section) => section.url),
+        `${query}: раздел ${anchor}`,
+      ).toContain(`${base}${slug}/#${anchor}`);
+    }
+  },
+);
 
 test('поиск по запросу без слов в статьях ничего не возвращает', async ({ page }, testInfo) => {
   const base = testInfo.project.metadata.base as string;
@@ -217,7 +221,7 @@ test('поиск по запросу без слов в статьях ниче�
 
 test(
   'адреса разделов из выдачи открываются под префиксом на нужном якоре',
-  { tag: ['@placement'] },
+  { tag: ['@ci', '@placement'] },
   async ({ page }, testInfo) => {
     const base = testInfo.project.metadata.base as string;
     await page.goto('./');

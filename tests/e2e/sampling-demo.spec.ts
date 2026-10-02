@@ -72,7 +72,7 @@ test.describe('Эксперимент дискретизации', { tag: ['@sam
 
   test(
     'параметры, график, подпись и статус меняются согласованно',
-    { tag: ['@cross-browser'] },
+    { tag: ['@ci', '@ci-cross-browser', '@cross-browser'] },
     async ({ page }) => {
       await open(page);
       const caption = demo(page).locator('[data-caption]');
@@ -114,7 +114,7 @@ test.describe('Эксперимент дискретизации', { tag: ['@sam
     },
   );
 
-  test('пауза, продолжение с позиции, перемотка и стоп', async ({ page }) => {
+  test('пауза, продолжение с позиции, перемотка и стоп', { tag: ['@ci'] }, async ({ page }) => {
     await open(page);
     await playButton(page).click();
     await expect.poll(async () => Number(await position(page).inputValue())).toBeGreaterThan(0.2);
@@ -146,37 +146,39 @@ test.describe('Эксперимент дискретизации', { tag: ['@sam
     await expect(position(page)).toHaveValue('0');
   });
 
-  test('«Сбросить» возвращает параметры, график и плеер в начальное состояние', async ({
-    page,
-  }) => {
-    await open(page);
-    await demo(page).getByRole('button', { name: '1,5 кГц' }).click();
-    await demo(page).getByRole('switch', { name: 'Видимая синусоида' }).click();
-    await volume(page).fill('60');
-    await demo(page).getByRole('button', { name: 'Выключить звук' }).click();
-    await playButton(page).click();
-    await expect(playButton(page)).toHaveAccessibleName('Пауза');
+  test(
+    '«Сбросить» возвращает параметры, график и плеер в начальное состояние',
+    { tag: ['@ci'] },
+    async ({ page }) => {
+      await open(page);
+      await demo(page).getByRole('button', { name: '1,5 кГц' }).click();
+      await demo(page).getByRole('switch', { name: 'Видимая синусоида' }).click();
+      await volume(page).fill('60');
+      await demo(page).getByRole('button', { name: 'Выключить звук' }).click();
+      await playButton(page).click();
+      await expect(playButton(page)).toHaveAccessibleName('Пауза');
 
-    await demo(page).getByRole('button', { name: 'Сбросить' }).click();
-    await expect(rate(page)).toHaveValue('8000');
-    await expect(demo(page).getByRole('switch', { name: 'Видимая синусоида' })).toHaveAttribute(
-      'aria-checked',
-      'true',
-    );
-    await expect(demo(page).getByRole('button', { name: '8 кГц' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
-    await expect(demo(page).locator('circle')).toHaveCount(25);
-    await expect(playButton(page)).toHaveAccessibleName('Воспроизвести');
-    await expect(position(page)).toHaveValue('0');
-    await expect(volume(page)).toHaveValue('30');
-    await expect(demo(page).locator('[data-volume-text]')).toHaveText('30 %');
-    await expect(demo(page).getByRole('button', { name: 'Выключить звук' })).toBeVisible();
-    await expect(playerState(page)).toHaveText('Остановлен');
-  });
+      await demo(page).getByRole('button', { name: 'Сбросить' }).click();
+      await expect(rate(page)).toHaveValue('8000');
+      await expect(demo(page).getByRole('switch', { name: 'Видимая синусоида' })).toHaveAttribute(
+        'aria-checked',
+        'true',
+      );
+      await expect(demo(page).getByRole('button', { name: '8 кГц' })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+      await expect(demo(page).locator('circle')).toHaveCount(25);
+      await expect(playButton(page)).toHaveAccessibleName('Воспроизвести');
+      await expect(position(page)).toHaveValue('0');
+      await expect(volume(page)).toHaveValue('30');
+      await expect(demo(page).locator('[data-volume-text]')).toHaveText('30 %');
+      await expect(demo(page).getByRole('button', { name: 'Выключить звук' })).toBeVisible();
+      await expect(playerState(page)).toHaveText('Остановлен');
+    },
+  );
 
-  test('переход на другую страницу останавливает звук', async ({ page }) => {
+  test('переход на другую страницу останавливает звук', { tag: ['@ci'] }, async ({ page }) => {
     await open(page);
     await page.evaluate(() => localStorage.removeItem('sampling-demo-stops'));
     await playButton(page).click();
@@ -185,25 +187,29 @@ test.describe('Эксперимент дискретизации', { tag: ['@sam
     expect(await page.evaluate(() => localStorage.getItem('sampling-demo-stops'))).toBe('1');
   });
 
-  test('без Web Audio плеер объясняет причину, график работает', async ({ page }) => {
-    await page.addInitScript(() => {
-      const target = window as unknown as Record<string, unknown>;
-      delete target.AudioContext;
-      delete target.webkitAudioContext;
-    });
-    await open(page);
-    await expect(playButton(page)).toBeDisabled();
-    await expect(playerState(page)).toContainText('Звук недоступен');
-    await demo(page).getByRole('button', { name: '1,5 кГц' }).click();
-    await expect(demo(page).locator('circle')).toHaveCount(5);
-  });
+  test(
+    'без Web Audio плеер объясняет причину, график работает',
+    { tag: ['@ci'] },
+    async ({ page }) => {
+      await page.addInitScript(() => {
+        const target = window as unknown as Record<string, unknown>;
+        delete target.AudioContext;
+        delete target.webkitAudioContext;
+      });
+      await open(page);
+      await expect(playButton(page)).toBeDisabled();
+      await expect(playerState(page)).toContainText('Звук недоступен');
+      await demo(page).getByRole('button', { name: '1,5 кГц' }).click();
+      await expect(demo(page).locator('circle')).toHaveCount(5);
+    },
+  );
 
   test.describe('без JavaScript', () => {
     test.use({ javaScriptEnabled: false });
 
     test(
       'рисунок начального состояния, параметры неактивны и объяснены',
-      { tag: ['@cross-browser'] },
+      { tag: ['@ci', '@cross-browser'] },
       async ({ page }) => {
         await page.goto(url);
         await expect(demo(page).locator('circle')).toHaveCount(25);

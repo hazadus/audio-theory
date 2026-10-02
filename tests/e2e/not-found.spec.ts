@@ -9,7 +9,7 @@ declare global {
 
 test(
   'неверный адрес выводится текстом, главная и поиск доступны',
-  { tag: ['@cross-browser', '@placement'] },
+  { tag: ['@ci', '@cross-browser', '@placement'] },
   async ({ page }, testInfo) => {
     const base = testInfo.project.metadata.base as string;
     const response = await page.goto('missing-page/');
@@ -38,14 +38,18 @@ test('слова адреса находят статью по настояще�
   await expect(page.getByRole('link', { name: 'На главную' })).toBeVisible();
 });
 
-test('адрес с разметкой показывается текстом и не исполняется', async ({ page }) => {
-  await page.goto('%3Cimg%20src=x%20onerror=window.__xss=1%3E');
-  await expect(page.locator('[data-not-found-path]')).toHaveText(
-    '/<img src=x onerror=window.__xss=1>',
-  );
-  await expect(page.locator('main img')).toHaveCount(0);
-  expect(await page.evaluate(() => window.__xss)).toBeUndefined();
-});
+test(
+  'адрес с разметкой показывается текстом и не исполняется',
+  { tag: ['@ci'] },
+  async ({ page }) => {
+    await page.goto('%3Cimg%20src=x%20onerror=window.__xss=1%3E');
+    await expect(page.locator('[data-not-found-path]')).toHaveText(
+      '/<img src=x onerror=window.__xss=1>',
+    );
+    await expect(page.locator('main img')).toHaveCount(0);
+    expect(await page.evaluate(() => window.__xss)).toBeUndefined();
+  },
+);
 
 test('без результатов и при ошибке индекса остаются основные действия', async ({
   page,
@@ -83,7 +87,7 @@ test('без JS страница читается на узком экране',
   }
 });
 
-test('страница 404 не попадает в индекс поиска', async ({ page }, testInfo) => {
+test('страница 404 не попадает в индекс поиска', { tag: ['@ci'] }, async ({ page }, testInfo) => {
   const base = testInfo.project.metadata.base as string;
   await page.goto('./');
   const urls = await page.evaluate(async (base) => {

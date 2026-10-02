@@ -42,6 +42,9 @@ jobs:
       - name: Установить зафиксированные зависимости
         run: npm ci
 
+      - name: Проверить лимит обязательного набора E2E
+        run: node scripts/check-e2e-budget.mjs
+
       - name: Проверить форматирование
         run: npm run fmt:check
 
@@ -60,7 +63,7 @@ jobs:
       - name: Проверить материалы, ссылки, якоря, нумерацию и изоляцию служебных статей
         run: npm run test:articles
 
-      # Проверяет обе сборки и Pagefind; Playwright запускает сокращённый обязательный набор.
+      # Проверяет обе сборки и Pagefind; Playwright запускает явно выбранные сценарии CI.
       - name: Собрать и проверить сайт в корне и под префиксом
         run: npm run test:e2e
 

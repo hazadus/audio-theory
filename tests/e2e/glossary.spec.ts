@@ -6,7 +6,7 @@ const sorted = [...glossary].sort((a, b) => a.ru.localeCompare(b.ru, 'ru'));
 
 test(
   'страница выводит все записи по русскому названию, пункт навигации активен',
-  { tag: ['@cross-browser'] },
+  { tag: ['@ci', '@cross-browser'] },
   async ({ page }) => {
     await page.goto('glossary/');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Глоссарий');
@@ -20,7 +20,7 @@ test(
   },
 );
 
-test('определения совпадают с подсказками в статье', async ({ page }) => {
+test('определения совпадают с подсказками в статье', { tag: ['@ci'] }, async ({ page }) => {
   await page.goto('glossary/');
   const onPage = await page
     .locator('dl > .term')
@@ -82,7 +82,7 @@ test('«Найти статью или термин» открывает пои�
   await expect(page.getByRole('dialog', { name: 'Поиск' })).toBeVisible();
 });
 
-test('термин находится глобальным поиском', async ({ page }, testInfo) => {
+test('термин находится глобальным поиском', { tag: ['@ci'] }, async ({ page }, testInfo) => {
   const base = testInfo.project.metadata.base as string;
   await page.goto('./');
   const result = await page.evaluate(async (base) => {

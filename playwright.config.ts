@@ -1,4 +1,4 @@
-// Полное покрытие в WebKit, браузерные сценарии в Chromium/Firefox и проверка корневого размещения.
+// Явный набор CI в WebKit, ключевые браузерные сценарии и проверка корневого размещения.
 // Сценарии `@sampling` идут на отдельной сборке служебной страницы MDX с `SamplingDemo`:
 // эксперимент ещё не встроен в статьи, а публичные сборки не должны содержать служебных страниц.
 import { defineConfig, devices } from '@playwright/test';
@@ -24,14 +24,15 @@ const browserDevice = (browserName: string) =>
         : 'Desktop Safari'
   ];
 
-/** Проекты служебной сборки: все сценарии `@sampling` в WebKit, `@cross-browser` из них — везде. */
-export const fixtureProjects = (crossBrowserOnly: boolean) =>
+/** Служебная сборка: выбранные сценарии CI либо все сценарии для диагностики. */
+export const fixtureProjects = (ciOnly: boolean) =>
   ['chromium', 'firefox', 'webkit'].map((browserName) => ({
     name: `${fixture.name}-${browserName}`,
-    grep:
-      crossBrowserOnly && browserName !== 'webkit'
-        ? [/@sampling.*@cross-browser|@cross-browser.*@sampling/]
-        : [/@sampling/],
+    grep: ciOnly
+      ? browserName === 'webkit'
+        ? /(?=.*@sampling)(?=.*@ci(?:\s|$))/
+        : /(?=.*@sampling)(?=.*@ci-cross-browser)/
+      : /@sampling/,
     metadata: { base: fixture.base },
     use: {
       ...browserDevice(browserName),
@@ -55,8 +56,8 @@ export default defineConfig({
             name === 'root'
               ? /@placement/
               : browserName === 'webkit'
-                ? undefined
-                : /@cross-browser/,
+                ? /@ci(?:\s|$)/
+                : /@ci-cross-browser/,
           grepInvert: /@sampling/,
           metadata: { base },
           use: {

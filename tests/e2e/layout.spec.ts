@@ -98,7 +98,7 @@ test(
 
 test(
   'узкий экран: меню сообщает состояние, управляется клавиатурой и возвращает фокус',
-  { tag: ['@cross-browser'] },
+  { tag: ['@ci', '@ci-cross-browser', '@cross-browser'] },
   async ({ browser }, testInfo) => {
     const { context, page } = await open(browser, testInfo.project.use.baseURL!, {
       width: 390,
