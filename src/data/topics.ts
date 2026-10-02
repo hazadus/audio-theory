@@ -12,6 +12,11 @@ export const topics = [
     description: 'Преобразование аналогового и цифрового сигналов',
   },
   { id: 'data', title: 'Аудиоданные в программах', description: 'Каналы, кадры, блоки и буферы' },
+  {
+    id: 'processing',
+    title: 'Обработка звука',
+    description: 'Динамика, эффекты и их параметры',
+  },
 ] as const;
 
 export type TopicId = (typeof topics)[number]['id'];

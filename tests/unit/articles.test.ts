@@ -20,7 +20,13 @@ const valid = {
 
 describe('topics', () => {
   it('содержит четыре группы в порядке вывода', () => {
-    expect(topics.map((topic) => topic.id)).toEqual(['basics', 'digital', 'conv', 'data']);
+    expect(topics.map((topic) => topic.id)).toEqual([
+      'basics',
+      'digital',
+      'conv',
+      'data',
+      'processing',
+    ]);
   });
 });
 

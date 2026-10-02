@@ -119,7 +119,14 @@ describe('arrange', () => {
 
 describe('countByTopic и articlesLabel', () => {
   it('считает по темам и всего', () => {
-    expect(countByTopic(set)).toEqual({ all: 4, basics: 2, digital: 2, conv: 0, data: 0 });
+    expect(countByTopic(set)).toEqual({
+      all: 4,
+      basics: 2,
+      digital: 2,
+      conv: 0,
+      data: 0,
+      processing: 0,
+    });
     expect(countByTopic([]).all).toBe(0);
   });
 
