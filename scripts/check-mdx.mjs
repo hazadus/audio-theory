@@ -85,12 +85,12 @@ try {
     assert.match(html, /частота дискретизации<\/a>/);
     assert.match(html, /aria-describedby="term-sample-rate-\d+"/);
     assert.match(html, /popover="manual"[^>]*>\s*<strong>частота дискретизации<\/strong>/);
-    assert.match(html, /Число отсчётов сигнала, снимаемых за одну секунду/);
+    assert.match(html, /Число отсчётов в каждом канале за одну секунду/);
     assert.match(html, /<button[^>]*popovertarget="term-sample-rate-\d+"/);
     assert.match(html, /частоты дискретизации<\/a>/);
     // Цель термина — раздел статьи: адрес строится из `article` и `anchor` записи глоссария.
     assert.ok(
-      html.includes(`href="${base}sampling/#how-fast"`),
+      html.includes(`href="${base}sampling/#sampling-period"`),
       `ссылка термина на раздел статьи под базой ${base}`,
     );
     // Equation: якорь, номер, формула с MathML, прокручиваемая область с клавиатуры и <dl> обозначений.
