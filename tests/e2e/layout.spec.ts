@@ -40,19 +40,24 @@ test(
           await page.locator(selector).evaluate((el) => getComputedStyle(el).fontFamily),
         ).toContain('Literata');
       }
-      // В навигации только существующие страницы: «Материалы» и «Глоссарий».
+      // В навигации только существующие страницы: «Материалы», «Глоссарий» и «О проекте».
       await expect(header.getByRole('navigation').getByRole('link')).toHaveText([
         'Материалы',
         'Глоссарий',
+        'О проекте',
       ]);
       const footer = page.locator('footer');
       await expect(footer.getByRole('link', { name: 'GitHub' })).toHaveAttribute(
         'href',
         siteConfig.repository,
       );
+      await expect(footer.getByRole('link', { name: 'О проекте' })).toHaveAttribute(
+        'href',
+        /\/about\/$/,
+      );
       await expect(footer.getByRole('link', { name: 'Предложить тему' })).toHaveAttribute(
         'href',
-        `${siteConfig.repository}/issues/new`,
+        /\/about\/#propose$/,
       );
       for (const landmark of ['banner', 'main', 'contentinfo']) {
         await expect(page.getByRole(landmark as 'banner')).toHaveCount(1);

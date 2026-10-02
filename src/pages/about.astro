@@ -1,0 +1,137 @@
+---
+import Icon from '@/components/Icon.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { siteConfig } from '@/site.config';
+---
+
+<BaseLayout
+  title="О проекте"
+  description="Назначение учебника «Теория аудио», устройство материалов, авторская проверка и способы предложить тему."
+>
+  <main id="content" data-pagefind-body>
+    <article>
+      <h1>О проекте</h1>
+      <p class="lead">
+        «Теория аудио» — личный учебник и конспект по теории звука и цифровой обработке сигналов.
+        Автор делает его, чтобы самому разобраться в теме. Материалы доступны для всех!
+      </p>
+
+      <h2 id="structure">Как устроены материалы</h2>
+      <p>
+        Каждая статья отвечает на один вопрос и читается самостоятельно. В начале перечислено, что
+        полезно знать заранее, в конце — источники и связанные темы. В статьях активно используются
+        интерактивные визуализации там, где они помогают глубже понять теорию. Упрощения отмечены
+        явно, визуализации можно менять и слушать.
+      </p>
+
+      <h2 id="authors">Кто пишет</h2>
+      <p>
+        Черновики статей и визуализаций готовят агенты по установленным правилам. Каждый материал
+        перед публикацией читает и проверяет автор. Сайт статический и размещён на GitHub Pages.
+      </p>
+
+      <h2 id="propose">Как предложить тему или исправление</h2>
+      <ol>
+        <li>Откройте issue в репозитории: опишите вопрос или ошибку и укажите статью и раздел.</li>
+        <li>Опечатку или битую ссылку можно сразу исправить через pull request.</li>
+      </ol>
+      <div class="actions" data-pagefind-ignore>
+        <a class="button primary" href={`${siteConfig.repository}/issues/new`}>
+          Создать issue
+          <Icon name="external-link" size={16} />
+        </a>
+        <a class="button" href={siteConfig.repository}>
+          GitHub
+          <Icon name="external-link" size={16} />
+        </a>
+      </div>
+    </article>
+  </main>
+</BaseLayout>
+
+<style>
+  main {
+    width: min(var(--container-max), 100% - 2 * var(--page-gutter));
+    margin: 0 auto;
+    padding-top: var(--space-8);
+    font-family: var(--font-ui);
+  }
+
+  article {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    max-width: var(--content-width);
+    font-family: var(--font-text);
+  }
+
+  h1 {
+    margin: 0;
+    font-size: var(--text-4xl);
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: var(--tracking-tight);
+  }
+
+  h2 {
+    margin: 16px 0 0;
+    font-size: var(--text-2xl);
+    font-weight: 600;
+    line-height: 1.2;
+    scroll-margin-top: 88px;
+  }
+
+  p {
+    margin: 0;
+    font-size: var(--text-base);
+    line-height: 1.65;
+    hyphens: auto;
+    text-wrap: pretty;
+  }
+
+  .lead {
+    color: var(--color-text-muted);
+    font-size: var(--text-lg);
+    line-height: 1.5;
+    hyphens: manual;
+  }
+
+  ol {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding-left: 1.4em;
+    font-size: var(--text-base);
+    line-height: 1.6;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-family: var(--font-ui);
+  }
+
+  .button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-sizing: border-box;
+    height: 44px;
+    padding: 0 16px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: 6px;
+    color: var(--color-text);
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .button.primary {
+    padding-inline: 18px;
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+  }
+</style>

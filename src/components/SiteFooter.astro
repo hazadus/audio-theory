@@ -1,7 +1,8 @@
 ---
-// Подвал: название, описание и внешние ссылки. Внутренние страницы добавляются вместе с маршрутами.
+// Подвал: название, описание, «О проекте», «Предложить тему» и ссылка на GitHub.
 import Icon from '@/components/Icon.astro';
 import { siteConfig } from '@/site.config';
+import { withBase } from '@/lib/urls';
 ---
 
 <footer class="site-footer" data-pagefind-ignore>
@@ -12,7 +13,10 @@ import { siteConfig } from '@/site.config';
     </div>
     <ul>
       <li>
-        <a href={`${siteConfig.repository}/issues/new`}>Предложить тему</a>
+        <a href={withBase('/about/')}>О проекте</a>
+      </li>
+      <li>
+        <a href={withBase('/about/#propose')}>Предложить тему</a>
       </li>
       <li>
         <a href={siteConfig.repository}>

@@ -65,6 +65,7 @@ src/
     index.astro ✅                   # Главная: тематические группы и карточки
     materials/index.astro ✅         # Все материалы: фильтр, сортировка
     glossary.astro ✅                # Глоссарий: список терминов и указатель букв
+    about.astro ✅                   # О проекте: назначение, проверка, предложения
     [slug].astro ✅                  # Маршруты статей из slug
   assets/fonts/ ✅                   # Локальные WOFF2 Literata, Golos Text, JetBrains Mono
   layouts/
@@ -113,6 +114,7 @@ tests/                               # Unit-тесты и браузерные �
   unit/articles.test.ts ✅            # Схема статьи, slug и группы
   unit/glossary.test.ts ✅            # Схема глоссария и разрешение целей
   unit/glossary-list.test.ts ✅       # Порядок, группы, указатель, подписи ссылок
+  e2e/about.spec.ts ✅                # О проекте: текст, кнопка issue, переход из подвала
   e2e/glossary.spec.ts ✅             # Глоссарий: список, цели, подсказки, поиск, указатель
   unit/git-date.test.ts ✅            # Git-дата во временном репозитории
   unit/headings.test.ts ✅            # Оглавление и повтор якорей

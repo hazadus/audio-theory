@@ -24,7 +24,7 @@ test('Pagefind находит текст начальной страницы и 
   const result = await page.evaluate(async (base) => {
     // Динамический URL импортирует модуль из артефакта, а не из npm или тестовой заглушки.
     const pagefind = await import(`${base}pagefind/pagefind.js`);
-    const found = await pagefind.search('цифровой обработке');
+    const found = await pagefind.search('цифровой обработке звука');
     const data = await Promise.all(
       found.results.map(
         (result: {
@@ -37,13 +37,23 @@ test('Pagefind находит текст начальной страницы и 
       ),
     );
     const navigation = await pagefind.search('GitHub');
-    return { data, navigationCount: navigation.results.length };
+    const navigationData = await Promise.all(
+      navigation.results.map((result: { data: () => Promise<{ meta: { title: string } }> }) =>
+        result.data(),
+      ),
+    );
+    return {
+      data,
+      // «GitHub» есть в подвале всех страниц и в тексте «О проекте»; главная в выдаче быть не должна.
+      navigationOnHome: navigationData.filter((item) => item.meta.title === 'Теория аудио').length,
+    };
   }, base);
-  expect(result.data).toHaveLength(1);
-  expect(result.data[0].meta.title).toBe('Теория аудио');
-  expect(result.data[0].content).toContain('цифровой обработке звука');
-  expect(result.navigationCount).toBe(0);
-  const target = new URL(result.data[0].url, page.url());
+  // Pagefind ищет по основам слов, поэтому рядом может оказаться «О проекте»: берём главную по заголовку.
+  const home = result.data.filter((item) => item.meta.title === 'Теория аудио');
+  expect(home).toHaveLength(1);
+  expect(home[0].content).toContain('цифровой обработке звука');
+  expect(result.navigationOnHome).toBe(0);
+  const target = new URL(home[0].url, page.url());
   expect(target.pathname).toBe(base);
   const response = await page.goto(target.href);
   expect([200, 304]).toContain(response?.status());
