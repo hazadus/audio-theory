@@ -1,9 +1,10 @@
-// Проверяет читаемый размер подписей статичных графиков LFO на узком и широком экранах.
+// Проверяет читаемый размер подписей графиков LFO на узком и широком экранах: статичного рисунка
+// и начального состояния визуализации форм. Размер не зависит от базового пути, поэтому без `@placement`.
 import { expect, test } from '@playwright/test';
 
 test(
   'подписи графиков сохраняют размер 12–16 px без JavaScript',
-  { tag: ['@ci', '@placement'] },
+  { tag: ['@ci'] },
   async ({ browser }, testInfo) => {
     for (const colorScheme of ['light', 'dark'] as const) {
       const context = await browser.newContext({

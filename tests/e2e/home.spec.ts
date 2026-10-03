@@ -350,7 +350,7 @@ test('кнопка поиска на главной открывает диал�
 });
 
 test(
-  'главная: карточки визуализаций ведут на якоря, звуковая метка и раскладка',
+  'главная: карточки визуализаций ведут на якоря, звуковая метка, раскладка и «Все N»',
   { tag: ['@ci', '@placement'] },
   async ({ browser }, testInfo) => {
     const base = testInfo.project.metadata.base as string;
@@ -394,6 +394,9 @@ test(
           expect(style.overflowX).toBe('visible');
         }
         if (viewport.width === 1440) {
+          // Визуализаций больше четырёх: «Все N» ведёт на страницу со всеми карточками.
+          const all = page.getByRole('link', { name: /^Все 5/ });
+          await expect(all).toHaveAttribute('href', `${base}visualizations/`);
           const tops = await cards.evaluateAll((els) =>
             els.map((el) => el.getBoundingClientRect().top),
           );
@@ -401,6 +404,13 @@ test(
           await cards.nth(2).click();
           await expect(page).toHaveURL(`${base}sampling/#sampling-demo`);
           await expect(page.locator('#sampling-demo')).toBeVisible();
+          await page.goto('visualizations/');
+          const allCards = page.locator('a.viz-card');
+          await expect(allCards).toHaveCount(5);
+          await expect(allCards.nth(4)).toHaveAttribute('href', `${base}lfo/#lfo-waveforms`);
+          await expect(allCards.nth(4).getByText('Со звуком')).toHaveCount(0);
+          await allCards.nth(4).click();
+          await expect(page.locator('#lfo-waveforms')).toBeVisible();
         }
       } finally {
         await context.close();

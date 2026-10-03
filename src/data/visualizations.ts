@@ -49,4 +49,12 @@ export const visualizations: readonly Visualization[] = [
     sound: true,
     preview: 'compressor',
   },
+  {
+    id: 'lfo-waveforms',
+    slug: 'lfo',
+    name: 'Четыре формы LFO из одной фазы',
+    what: 'Фаза на окружности: вращение рукой или анимацией, значения четырёх форм и их расчёт.',
+    sound: false,
+    preview: 'lfo',
+  },
 ];

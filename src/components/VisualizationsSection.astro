@@ -2,7 +2,7 @@
 // Раздел главной «Интерактивные визуализации»: карточки из реестра `src/data/visualizations.ts`.
 // Без JS работает как обычный список ссылок; на смартфоне — лента с привязкой к карточкам.
 import Icon from '@/components/Icon.astro';
-import VisualizationPreview from '@/components/VisualizationPreview.astro';
+import VisualizationCard from '@/components/VisualizationCard.astro';
 import { withBase } from '@/lib/urls';
 import type { VisualizationSection } from '@/lib/visualizations';
 
@@ -30,22 +30,7 @@ const { cards, total } = Astro.props.section;
     <ul class="viz-list">
       {cards.map((card) => (
         <li>
-          <a class="viz-card" href={withBase(card.href)}>
-            <VisualizationPreview kind={card.preview} />
-            <span class="viz-body">
-              <span class="viz-title">{card.name}</span>
-              <span class="viz-what">{card.what}</span>
-              <span class="viz-meta">
-                <span class="viz-source">Из статьи «{card.articleTitle}»</span>
-                {card.sound && (
-                  <span class="viz-sound">
-                    <Icon name="volume-2" size={15} />
-                    Со звуком
-                  </span>
-                )}
-              </span>
-            </span>
-          </a>
+          <VisualizationCard card={card} />
         </li>
       ))}
     </ul>
@@ -107,75 +92,6 @@ const { cards, total } = Astro.props.section;
     margin: 0;
     padding: 0;
     list-style: none;
-  }
-
-  .viz-card {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    box-sizing: border-box;
-    overflow: hidden;
-    border: var(--border-width) solid var(--color-border);
-    border-radius: var(--radius-lg);
-    background: var(--color-bg);
-    color: var(--color-text);
-    text-decoration: none;
-  }
-
-  .viz-card:hover {
-    border-color: var(--color-border-strong);
-    background: var(--color-surface);
-  }
-
-  .viz-card:focus-visible {
-    border-radius: var(--radius-lg);
-  }
-
-  .viz-body {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    gap: var(--space-2);
-    padding: 14px var(--space-4) var(--space-4);
-  }
-
-  .viz-title {
-    font-family: var(--font-text);
-    font-weight: 600;
-    font-size: 1.125rem;
-    line-height: 1.25;
-    text-wrap: balance;
-  }
-
-  .viz-what {
-    font-family: var(--font-text);
-    font-size: 0.9375rem;
-    line-height: 1.45;
-    color: var(--color-text-muted);
-    text-wrap: pretty;
-  }
-
-  .viz-meta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 4px 12px;
-    margin-top: auto;
-    padding-top: 6px;
-    font-size: var(--text-xs);
-    line-height: 1.35;
-    color: var(--color-text-muted);
-  }
-
-  .viz-source {
-    flex: 1 1 140px;
-  }
-
-  .viz-sound {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
-    white-space: nowrap;
   }
 
   @media (width >= 1024px) {

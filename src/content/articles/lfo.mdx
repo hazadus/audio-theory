@@ -33,6 +33,7 @@ import Callout from '@/components/Callout.astro';
 import DataTable from '@/components/DataTable.astro';
 import Equation from '@/components/Equation.astro';
 import Figure from '@/components/Figure.astro';
+import LfoDemo from '@/components/LfoDemo.astro';
 import MarginNote from '@/components/MarginNote.astro';
 import SelfCheck from '@/components/SelfCheck.astro';
 import Term from '@/components/Term.astro';
@@ -228,55 +229,7 @@ $$
 
 Пилообразная волна (sawtooth wave) задаётся $w(\varphi) = \varphi/\pi$. Это линейный подъём от −1 к +1 и резкое возвращение к −1 при переносе фазы. Значение +1 — предел перед концом цикла; при диапазоне $[-\pi,\pi)$ оно не достигается. Для нисходящей пилы достаточно поменять знак: $-\varphi/\pi$.
 
-<Figure
-  id="lfo-waveforms"
-  number={2}
-  name="Четыре формы LFO из одной фазы"
-  caption="Один цикл в диапазоне от −π до π. В правой точке показан предел перед переносом фазы. Пунктир у прямоугольника и пилы обозначает скачок к началу следующего цикла."
-  alt="Четыре графика с горизонтальной осью фазы в радианах и вертикальной осью нормированного значения от минус одного до одного. Синус сначала уходит вниз, затем вверх. Треугольник поднимается от минус одного до одного и опускается. Прямоугольник переключается с минус одного на один в нуле. Пила линейно растёт весь цикл и скачком возвращается к минус одному."
->
-  <svg viewBox="0 0 480 644" xmlns="http://www.w3.org/2000/svg">
-<text x="24" y="30" text-anchor="start" fill="currentColor">Синусоида</text>
-<path d="M80,48 V112 M80,80 H440" fill="none" stroke="var(--chart-axis)" />
-<text x="68" y="55" text-anchor="end" fill="currentColor">1</text>
-<text x="68" y="87" text-anchor="end" fill="currentColor">0</text>
-<text x="68" y="119" text-anchor="end" fill="currentColor">−1</text>
-<path d="M80.00,80.00 L83.00,81.67 L86.00,83.34 L89.00,85.01 L92.00,86.65 L95.00,88.28 L98.00,89.89 L101.00,91.47 L104.00,93.02 L107.00,94.53 L110.00,96.00 L113.00,97.43 L116.00,98.81 L119.00,100.14 L122.00,101.41 L125.00,102.63 L128.00,103.78 L131.00,104.87 L134.00,105.89 L137.00,106.84 L140.00,107.71 L143.00,108.51 L146.00,109.23 L149.00,109.87 L152.00,110.43 L155.00,110.91 L158.00,111.30 L161.00,111.61 L164.00,111.82 L167.00,111.96 L170.00,112.00 L173.00,111.96 L176.00,111.82 L179.00,111.61 L182.00,111.30 L185.00,110.91 L188.00,110.43 L191.00,109.87 L194.00,109.23 L197.00,108.51 L200.00,107.71 L203.00,106.84 L206.00,105.89 L209.00,104.87 L212.00,103.78 L215.00,102.63 L218.00,101.41 L221.00,100.14 L224.00,98.81 L227.00,97.43 L230.00,96.00 L233.00,94.53 L236.00,93.02 L239.00,91.47 L242.00,89.89 L245.00,88.28 L248.00,86.65 L251.00,85.01 L254.00,83.34 L257.00,81.67 L260.00,80.00 L263.00,78.33 L266.00,76.66 L269.00,74.99 L272.00,73.35 L275.00,71.72 L278.00,70.11 L281.00,68.53 L284.00,66.98 L287.00,65.47 L290.00,64.00 L293.00,62.57 L296.00,61.19 L299.00,59.86 L302.00,58.59 L305.00,57.37 L308.00,56.22 L311.00,55.13 L314.00,54.11 L317.00,53.16 L320.00,52.29 L323.00,51.49 L326.00,50.77 L329.00,50.13 L332.00,49.57 L335.00,49.09 L338.00,48.70 L341.00,48.39 L344.00,48.18 L347.00,48.04 L350.00,48.00 L353.00,48.04 L356.00,48.18 L359.00,48.39 L362.00,48.70 L365.00,49.09 L368.00,49.57 L371.00,50.13 L374.00,50.77 L377.00,51.49 L380.00,52.29 L383.00,53.16 L386.00,54.11 L389.00,55.13 L392.00,56.22 L395.00,57.37 L398.00,58.59 L401.00,59.86 L404.00,61.19 L407.00,62.57 L410.00,64.00 L413.00,65.47 L416.00,66.98 L419.00,68.53 L422.00,70.11 L425.00,71.72 L428.00,73.35 L431.00,74.99 L434.00,76.66 L437.00,78.33 L440.00,80.00" fill="none" stroke="var(--chart-series-1)" stroke-width="3" />
-<text x="80" y="138" text-anchor="middle" fill="currentColor">−π</text>
-<text x="260" y="138" text-anchor="middle" fill="currentColor">0</text>
-<text x="440" y="138" text-anchor="middle" fill="currentColor">π</text>
-<text x="24" y="180" text-anchor="start" fill="currentColor">Треугольник</text>
-<path d="M80,198 V262 M80,230 H440" fill="none" stroke="var(--chart-axis)" />
-<text x="68" y="205" text-anchor="end" fill="currentColor">1</text>
-<text x="68" y="237" text-anchor="end" fill="currentColor">0</text>
-<text x="68" y="269" text-anchor="end" fill="currentColor">−1</text>
-<path d="M80.00,262.00 L260.00,198.00 L440.00,262.00" fill="none" stroke="var(--chart-series-1)" stroke-width="3" />
-<text x="80" y="288" text-anchor="middle" fill="currentColor">−π</text>
-<text x="260" y="288" text-anchor="middle" fill="currentColor">0</text>
-<text x="440" y="288" text-anchor="middle" fill="currentColor">π</text>
-<text x="24" y="330" text-anchor="start" fill="currentColor">Прямоугольник</text>
-<path d="M80,348 V412 M80,380 H440" fill="none" stroke="var(--chart-axis)" />
-<text x="68" y="355" text-anchor="end" fill="currentColor">1</text>
-<text x="68" y="387" text-anchor="end" fill="currentColor">0</text>
-<text x="68" y="419" text-anchor="end" fill="currentColor">−1</text>
-<path d="M80.00,412.00 L260.00,412.00 L260.00,348.00 L440.00,348.00" fill="none" stroke="var(--chart-series-1)" stroke-width="3" />
-<path d="M440.00,348.00 L440.00,412.00" fill="none" stroke="var(--chart-series-1)" stroke-width="3" stroke-dasharray="7 5" />
-<text x="80" y="438" text-anchor="middle" fill="currentColor">−π</text>
-<text x="260" y="438" text-anchor="middle" fill="currentColor">0</text>
-<text x="440" y="438" text-anchor="middle" fill="currentColor">π</text>
-<text x="24" y="480" text-anchor="start" fill="currentColor">Пила</text>
-<path d="M80,498 V562 M80,530 H440" fill="none" stroke="var(--chart-axis)" />
-<text x="68" y="505" text-anchor="end" fill="currentColor">1</text>
-<text x="68" y="537" text-anchor="end" fill="currentColor">0</text>
-<text x="68" y="569" text-anchor="end" fill="currentColor">−1</text>
-<path d="M80.00,562.00 L440.00,498.00" fill="none" stroke="var(--chart-series-1)" stroke-width="3" />
-<path d="M440.00,498.00 L440.00,562.00" fill="none" stroke="var(--chart-series-1)" stroke-width="3" stroke-dasharray="7 5" />
-<text x="80" y="588" text-anchor="middle" fill="currentColor">−π</text>
-<text x="260" y="588" text-anchor="middle" fill="currentColor">0</text>
-<text x="440" y="588" text-anchor="middle" fill="currentColor">π</text>
-<text x="440" y="624" text-anchor="end" fill="currentColor">φ, рад</text>
-  </svg>
-</Figure>
+<LfoDemo id="lfo-waveforms" figure={2} />
 
 Прямоугольная волна подходит для переключения между двумя положениями, пила — для повторяющегося прохода в одном направлении. Для плавного движения удобны синусоида и треугольник. Резкие формы при управлении усилением могут создавать щелчки; сглаживание переходов меняет их форму и должно быть осознанной частью эффекта.
 

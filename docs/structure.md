@@ -120,6 +120,8 @@ src/
     VisualizationsSection.astro ✅   # Раздел главной: карточки визуализаций и лента на смартфоне
     VisualizationPreview.astro ✅    # Декоративный SVG-превью карточки визуализации
     CompressorDemo.astro ✅          # Компрессор: характеристика, уровни во времени, параметры, плеер «до / после»
+    LfoDemo.astro ✅                 # Формы LFO: окружность фазы, четыре графика с курсором и расчётом, анимация
+    VisualizationCard.astro ✅       # Карточка визуализации для главной и страницы /visualizations/
     DataTable.astro ✅               # Таблица с caption, scope, закреплённым первым столбцом и прокруткой
     SearchButton.astro ✅            # Кнопка поиска в шапке
     SearchDialog.astro ✅            # Диалог поиска на <dialog>

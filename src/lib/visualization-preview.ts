@@ -1,6 +1,12 @@
 // Геометрия статичных превью карточек визуализаций: область 280 × 150, без осей и подписей.
-export type PreviewKind = 'tone' | 'phase' | 'sampling' | 'compressor';
-export const previewKinds: readonly PreviewKind[] = ['tone', 'phase', 'sampling', 'compressor'];
+export type PreviewKind = 'tone' | 'phase' | 'sampling' | 'compressor' | 'lfo';
+export const previewKinds: readonly PreviewKind[] = [
+  'tone',
+  'phase',
+  'sampling',
+  'compressor',
+  'lfo',
+];
 
 /** Роль цвета; в разметке превращается в `var(--chart-<роль>)`. */
 export type PreviewColor = 'signal' | 'result' | 'sample' | 'axis' | 'grid';
@@ -118,11 +124,35 @@ function compressorPreview(): Preview {
   };
 }
 
+/** Окружность фазы и два цикла форм (синусоида, пила) с вертикальным курсором текущей фазы. */
+function lfoPreview(): Preview {
+  const angle = -Math.PI / 4;
+  const tipX = 48 + 30 * Math.cos(angle);
+  const tipY = 75 - 30 * Math.sin(angle);
+  const cursor = 96 + 168 * ((angle + Math.PI) / (2 * Math.PI));
+  return {
+    paths: [
+      { d: 'M18 75a30 30 0 1 0 60 0a30 30 0 1 0-60 0', color: 'axis', width: 1.25 },
+      { d: `M48 75L${f1(tipX)} ${f1(tipY)}`, color: 'result', width: 2 },
+      { d: wave(96, 264, 42, 26, 1, Math.PI), color: 'signal', width: 2 },
+      { d: 'M96 134L264 82', color: 'signal', width: 2 },
+      { d: 'M264 82V134', color: 'signal', width: 2, dash: '4 3' },
+      { d: `M${f1(cursor)} 12V140`, color: 'result', width: 1.25 },
+    ],
+    dots: [
+      { x: Number(f1(tipX)), y: Number(f1(tipY)), color: 'result' },
+      { x: Number(f1(cursor)), y: Number(f1(42 - 26 * Math.sin(angle))), color: 'result' },
+      { x: Number(f1(cursor)), y: Number(f1(108 - 26 * (angle / Math.PI))), color: 'result' },
+    ],
+  };
+}
+
 const builders: Record<PreviewKind, () => Preview> = {
   tone: tonePreview,
   phase: phasePreview,
   sampling: samplingPreview,
   compressor: compressorPreview,
+  lfo: lfoPreview,
 };
 
 export const buildPreview = (kind: PreviewKind): Preview => builders[kind]();

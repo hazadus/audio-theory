@@ -1,0 +1,753 @@
+---
+// Визуализация форм LFO: окружность фазы и четыре графика одного цикла с курсором и расчётом значения,
+// легенда, статус, ползунок фазы, запуск анимации, примеры, сброс и подпись «Рис. N.».
+// При сборке рисуется начальное состояние −45°; скрипт включает параметры и обновляет курсоры и расчёты.
+// Без JS, во время загрузки и при ошибке параметры неактивны, а сообщение объясняет почему.
+import { demoCaptions } from '@/lib/demo-captions';
+import Icon from '@/components/Icon.astro';
+import { defaultPhase, lfoShapes, maxPhase, minPhase, phaseStep, presetPhases } from '@/lib/lfo';
+import {
+  formulaHtml,
+  lfoCaption,
+  lfoChartSvg,
+  lfoCircleSvg,
+  lfoStatus,
+  phaseText,
+  shapeNames,
+} from '@/lib/lfo-view';
+
+interface Props {
+  /** Номер рисунка: визуализации и рисунки нумеруются одной последовательностью. */
+  figure: number;
+  /** Якорь для ссылок `#id`; английский kebab-case. */
+  id?: string;
+}
+
+const { figure, id = demoCaptions.LfoDemo.defaultId } = Astro.props;
+
+const phase = defaultPhase;
+const status = lfoStatus(phase);
+const valueText = phaseText(phase);
+const fill = ((phase - minPhase) / (maxPhase - minPhase)) * 100;
+const presetLabels: Record<(typeof presetPhases)[number], string> = {
+  [-180]: '−π',
+  [-90]: '−π/2',
+  0: '0',
+  90: 'π/2',
+};
+---
+
+<figure class="lfo-demo" id={id} aria-labelledby={`${id}-name`} data-lfo-demo data-state="static">
+  <div class="lfo-demo-head">
+    <span class="lfo-demo-label">Визуализация {figure}</span>
+    <span class="lfo-demo-name" id={`${id}-name`}>
+      {demoCaptions.LfoDemo.name}
+    </span>
+  </div>
+  <div class="lfo-demo-plot">
+    <div class="lfo-demo-side">
+      <div class="lfo-demo-circle" data-circle set:html={lfoCircleSvg(phase, id)} />
+      <p class="lfo-demo-phase" data-phase-readout>
+        φ = {valueText}
+      </p>
+    </div>
+    <ul class="lfo-demo-waves">
+      {lfoShapes.map((shape) => (
+        <li class="lfo-demo-wave-item">
+          <div class="lfo-demo-wave-head">
+            <span class="lfo-demo-wave-name">{shapeNames[shape]}</span>
+            <span
+              class="lfo-demo-formula"
+              data-formula={shape}
+              set:html={formulaHtml(shape, phase)}
+            />
+          </div>
+          <div class="lfo-demo-chart" data-chart={shape} set:html={lfoChartSvg(shape, phase, id)} />
+        </li>
+      ))}
+    </ul>
+  </div>
+  <div class="lfo-demo-body">
+    <ul class="lfo-demo-legend" aria-label="Легенда">
+      <li>
+        <span class="lfo-demo-key wave" aria-hidden="true"></span>
+        <span>
+          форма волны <i>w</i>(<i>φ</i>)
+        </span>
+      </li>
+      <li>
+        <span class="lfo-demo-key cursor" aria-hidden="true"></span>
+        <span>
+          текущая фаза <i>φ</i>
+        </span>
+      </li>
+      <li>
+        <span class="lfo-demo-key dot" aria-hidden="true"></span>значение в этой фазе
+      </li>
+      <li>
+        <span class="lfo-demo-key jump" aria-hidden="true"></span>скачок к следующему циклу
+      </li>
+    </ul>
+    <p class="lfo-demo-status">
+      <span class="lfo-demo-icon">
+        <Icon name="info" size={18} />
+      </span>
+      <span>
+        <b data-status-title>{status.title}</b> <span data-status-text>{status.text}</span>
+      </span>
+    </p>
+  </div>
+  <p class="visually-hidden" aria-live="polite" data-announce></p>
+  <fieldset class="lfo-demo-controls" data-controls disabled>
+    <legend class="visually-hidden">Параметры визуализации</legend>
+    <div class="lfo-demo-param">
+      <div class="lfo-demo-param-head">
+        <label for={`${id}-phase`}>
+          Фаза <i>φ</i>
+        </label>
+        <output for={`${id}-phase`} data-phase-value>
+          {valueText}
+        </output>
+      </div>
+      <input
+        id={`${id}-phase`}
+        class="lfo-demo-range"
+        type="range"
+        min={minPhase}
+        max={maxPhase}
+        step={phaseStep}
+        value={phase}
+        aria-valuetext={valueText}
+        style={`--fill: ${fill}`}
+        data-phase
+      />
+      <div class="lfo-demo-scale" aria-hidden="true">
+        <span>−{-minPhase}°</span>
+        <span>шаг {phaseStep}°</span>
+        <span>{maxPhase}°</span>
+      </div>
+    </div>
+    <div class="lfo-demo-actions">
+      <button type="button" class="lfo-demo-play" data-play>
+        <span class="lfo-demo-play-icon play">
+          <Icon name="play" size={16} />
+        </span>
+        <span class="lfo-demo-play-icon pause">
+          <Icon name="pause" size={16} />
+        </span>
+        <span data-play-label>Запустить</span>
+      </button>
+      <div class="lfo-demo-presets" role="group" aria-label="Примеры фазы">
+        <span class="lfo-demo-presets-label" aria-hidden="true">
+          Примеры:
+        </span>
+        {presetPhases.map((value) => (
+          <button
+            type="button"
+            class="lfo-demo-preset"
+            aria-pressed={value === phase ? 'true' : 'false'}
+            aria-label={`${presetLabels[value]} (${value < 0 ? `−${-value}` : value}°)`}
+            data-preset={value}
+          >
+            {presetLabels[value]}
+          </button>
+        ))}
+      </div>
+      <button type="button" class="lfo-demo-reset" data-reset>
+        <Icon name="rotate-ccw" size={16} />
+        Сбросить
+      </button>
+    </div>
+    <p class="lfo-demo-note" data-controls-note>
+      Параметры работают с включённым JavaScript. Рисунок показывает начальное состояние.
+    </p>
+  </fieldset>
+  <figcaption class="lfo-demo-caption">
+    <b>Рис. {figure}.</b> {lfoCaption}
+  </figcaption>
+</figure>
+
+<script>
+  import { initLfoDemos } from '@/lib/lfo-demo-controller';
+
+  initLfoDemos();
+</script>
+
+<style is:global>
+  /* `overflow: clip`, а не `hidden`: окружность на широком экране прилипает к верху при прокрутке. */
+  .lfo-demo {
+    container-type: inline-size;
+    margin: var(--space-6) 0;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    overflow: clip;
+    font-family: var(--font-ui);
+    scroll-margin-top: 88px;
+  }
+
+  .lfo-demo-head {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 14px 20px;
+  }
+
+  .lfo-demo-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  .lfo-demo-name {
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .lfo-demo-plot {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px;
+    border-block: var(--border-width) solid var(--color-border);
+    background: var(--chart-bg);
+  }
+
+  .lfo-demo-side {
+    align-self: start;
+    position: sticky;
+    top: 72px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 16px 0 16px 16px;
+  }
+
+  /* Вся окружность — область перетаскивания: касание не прокручивает страницу. */
+  .lfo-demo-circle {
+    touch-action: none;
+  }
+
+  .lfo-demo[data-state='ready'] .lfo-demo-circle {
+    cursor: grab;
+  }
+
+  .lfo-demo[data-dragging='true'] .lfo-demo-circle {
+    cursor: grabbing;
+  }
+
+  .lfo-demo-circle-svg {
+    display: block;
+    width: 220px;
+    height: 220px;
+    overflow: visible;
+    user-select: none;
+  }
+
+  .lfo-demo-phase {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .lfo-demo-waves {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: 12px 20px 8px 0;
+    list-style: none;
+  }
+
+  .lfo-demo-wave-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 2px 12px;
+    padding-left: 36px;
+    font-size: 14px;
+  }
+
+  .lfo-demo-wave-name {
+    font-weight: 600;
+  }
+
+  .lfo-demo-formula {
+    font-family: var(--font-text);
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text);
+  }
+
+  /* Отступы — место для подписей делений: они выходят за область построения. */
+  .lfo-demo-chart {
+    padding: 8px 4px 26px 36px;
+  }
+
+  .lfo-demo-svg {
+    display: block;
+    width: 100%;
+    height: 72px;
+    overflow: visible;
+    font-size: var(--text-chart);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .lfo-demo-grid line {
+    stroke: var(--chart-grid);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .lfo-demo-axis {
+    stroke: var(--chart-axis);
+    stroke-width: 1;
+  }
+
+  .lfo-demo-ring {
+    fill: none;
+    stroke: var(--chart-axis);
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .lfo-demo-wave,
+  .lfo-demo-jump,
+  .lfo-demo-arc,
+  .lfo-demo-projection,
+  .lfo-demo-vector {
+    fill: none;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .lfo-demo-wave {
+    stroke: var(--chart-signal);
+    stroke-width: 2.5;
+  }
+
+  .lfo-demo-jump {
+    stroke: var(--chart-signal);
+    stroke-width: 2.5;
+    stroke-dasharray: 5 4;
+  }
+
+  .lfo-demo-cursor {
+    stroke: var(--chart-result);
+    stroke-width: 1.5;
+  }
+
+  .lfo-demo-dot {
+    fill: var(--chart-result);
+    stroke: var(--chart-bg);
+    stroke-width: 2;
+  }
+
+  .lfo-demo-vector {
+    stroke: var(--chart-result);
+    stroke-width: 2.25;
+  }
+
+  .lfo-demo-handle {
+    fill: var(--chart-result);
+    stroke: var(--chart-bg);
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .lfo-demo-arc {
+    stroke: var(--chart-label);
+    stroke-width: 1.5;
+  }
+
+  .lfo-demo-projection {
+    stroke: var(--chart-signal);
+    stroke-width: 1.5;
+    stroke-dasharray: 1.5 3;
+  }
+
+  .lfo-demo-angle {
+    fill: var(--chart-label);
+    font-family: var(--font-text);
+    font-style: italic;
+  }
+
+  .lfo-demo-ticks {
+    fill: var(--chart-label);
+  }
+
+  .lfo-demo-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 20px;
+  }
+
+  .lfo-demo-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 14px;
+  }
+
+  .lfo-demo-legend li {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .lfo-demo-legend i,
+  .lfo-demo-param-head i,
+  .lfo-demo-formula i {
+    font-family: var(--font-text);
+  }
+
+  .lfo-demo-key {
+    flex: none;
+    width: 18px;
+  }
+
+  .lfo-demo-key.wave {
+    height: 2.5px;
+    background: var(--chart-signal);
+  }
+
+  .lfo-demo-key.cursor {
+    width: 12px;
+    height: 14px;
+    background: linear-gradient(var(--chart-result), var(--chart-result)) center / 1.5px 100%
+      no-repeat;
+  }
+
+  .lfo-demo-key.dot {
+    width: 10px;
+    height: 10px;
+    margin-inline: 4px;
+    border-radius: 50%;
+    background: var(--chart-result);
+  }
+
+  .lfo-demo-key.jump {
+    width: 12px;
+    height: 14px;
+    background: repeating-linear-gradient(to bottom, var(--chart-signal) 0 4px, transparent 4px 7px)
+      center / 2.5px 100% no-repeat;
+  }
+
+  .lfo-demo-status {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin: 0;
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    box-shadow: inset 0 0 0 1px var(--color-border-strong);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .lfo-demo-icon {
+    display: flex;
+    flex: none;
+    margin-top: 1px;
+    color: var(--color-text-muted);
+  }
+
+  .lfo-demo .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .lfo-demo-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+    margin: 0;
+    padding: 14px 20px 16px;
+    border: 0;
+    border-top: var(--border-width) solid var(--color-border);
+  }
+
+  .lfo-demo-param {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .lfo-demo-param-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 4px 8px;
+    font-size: 14px;
+  }
+
+  .lfo-demo-param-head output {
+    font-size: 15px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* Ползунок как у визуализации фазы: дорожка 4 px с заливкой до значения, бегунок 20 px. */
+  .lfo-demo-range {
+    --half-thumb: 10px;
+    --track: linear-gradient(
+        to right,
+        var(--color-accent)
+          calc(var(--half-thumb) + (100% - 2 * var(--half-thumb)) * var(--fill) / 100),
+        var(--color-border) 0
+      )
+      center / 100% 4px no-repeat;
+
+    width: 100%;
+    height: 28px;
+    margin: 0;
+    background: transparent;
+    appearance: none;
+    cursor: pointer;
+    touch-action: pan-y;
+  }
+
+  .lfo-demo-range::-webkit-slider-runnable-track {
+    height: 28px;
+    background: var(--track);
+  }
+
+  .lfo-demo-range::-moz-range-track {
+    height: 28px;
+    background: var(--track);
+  }
+
+  .lfo-demo-range::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+    margin-top: 4px;
+    border: 2px solid var(--color-accent);
+    border-radius: 50%;
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-sm);
+    appearance: none;
+  }
+
+  .lfo-demo-range::-moz-range-thumb {
+    box-sizing: border-box;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--color-accent);
+    border-radius: 50%;
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .lfo-demo-range:focus-visible {
+    box-shadow: none;
+    outline: none;
+  }
+
+  .lfo-demo-range:focus-visible::-webkit-slider-thumb {
+    box-shadow: var(--focus-ring);
+  }
+
+  .lfo-demo-range:focus-visible::-moz-range-thumb {
+    box-shadow: var(--focus-ring);
+  }
+
+  .lfo-demo-scale {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .lfo-demo-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    align-items: center;
+  }
+
+  .lfo-demo-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .lfo-demo-presets-label {
+    margin-right: 2px;
+    font-size: 13px;
+    color: var(--color-text-muted);
+  }
+
+  .lfo-demo-preset {
+    height: 32px;
+    padding: 0 12px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-full);
+    background: transparent;
+    color: var(--color-text);
+    font: 500 14px var(--font-ui);
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+  }
+
+  .lfo-demo-preset[aria-pressed='true'] {
+    border-color: var(--color-accent);
+    background: var(--color-accent-soft);
+    font-weight: 600;
+  }
+
+  .lfo-demo-play,
+  .lfo-demo-reset {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    height: 36px;
+    padding: 0 12px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text);
+    font: 500 14px var(--font-ui);
+    cursor: pointer;
+  }
+
+  .lfo-demo-play {
+    min-width: 124px;
+    border-color: var(--color-accent);
+    background: var(--color-accent-soft);
+    font-weight: 600;
+  }
+
+  .lfo-demo-reset {
+    margin-left: auto;
+  }
+
+  .lfo-demo-play-icon {
+    display: flex;
+  }
+
+  .lfo-demo-play-icon.pause,
+  .lfo-demo[data-playing='true'] .lfo-demo-play-icon.play {
+    display: none;
+  }
+
+  .lfo-demo[data-playing='true'] .lfo-demo-play-icon.pause {
+    display: flex;
+  }
+
+  @media (hover: hover) {
+    .lfo-demo-preset:hover,
+    .lfo-demo-reset:hover {
+      background: var(--color-bg);
+    }
+
+    .lfo-demo-preset[aria-pressed='true']:hover,
+    .lfo-demo-play:hover {
+      background: var(--color-accent-soft);
+    }
+  }
+
+  /* Неактивные параметры не выглядят рабочими: приглушены, без указателя; сообщение объясняет причину. */
+  .lfo-demo-controls:disabled .lfo-demo-param,
+  .lfo-demo-controls:disabled .lfo-demo-actions {
+    opacity: 0.5;
+  }
+
+  .lfo-demo-controls:disabled * {
+    cursor: not-allowed;
+  }
+
+  .lfo-demo-note {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+  }
+
+  .lfo-demo[data-state='ready'] .lfo-demo-note {
+    display: none;
+  }
+
+  .lfo-demo[data-state='error'] .lfo-demo-note {
+    color: var(--color-error);
+  }
+
+  .lfo-demo-caption {
+    padding: 10px 20px 14px;
+    border-top: var(--border-width) solid var(--color-border);
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+  }
+
+  .lfo-demo-caption b {
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  @container (max-width: 719px) {
+    .lfo-demo-circle-svg {
+      width: 186px;
+      height: 186px;
+    }
+  }
+
+  /* Узкий контейнер: окружность над графиками, без прилипания — иначе она закрывала бы графики. */
+  @container (max-width: 559px) {
+    .lfo-demo-head,
+    .lfo-demo-body,
+    .lfo-demo-controls,
+    .lfo-demo-caption {
+      padding-inline: 16px;
+    }
+
+    .lfo-demo-plot {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
+    }
+
+    .lfo-demo-side {
+      position: static;
+      padding: 14px 0 4px;
+    }
+
+    .lfo-demo-waves {
+      padding: 8px 14px 4px 0;
+    }
+
+    .lfo-demo-wave-head,
+    .lfo-demo-chart {
+      padding-left: 30px;
+    }
+
+    .lfo-demo-svg .minor {
+      display: none;
+    }
+
+    .lfo-demo-reset {
+      margin-left: 0;
+    }
+  }
+</style>
