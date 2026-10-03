@@ -1,11 +1,12 @@
 // Геометрия статичных превью карточек визуализаций: область 280 × 150, без осей и подписей.
-export type PreviewKind = 'tone' | 'phase' | 'sampling' | 'compressor' | 'lfo';
+export type PreviewKind = 'tone' | 'phase' | 'sampling' | 'compressor' | 'lfo' | 'bytes';
 export const previewKinds: readonly PreviewKind[] = [
   'tone',
   'phase',
   'sampling',
   'compressor',
   'lfo',
+  'bytes',
 ];
 
 /** Роль цвета; в разметке превращается в `var(--chart-<роль>)`. */
@@ -147,12 +148,49 @@ function lfoPreview(): Preview {
   };
 }
 
+/** Карта чанков на линии нуля и строки байтов: выбранное поле выделено, его чанк отмечен точкой. */
+function bytesPreview(): Preview {
+  // Сегменты карты пропорциональны чанкам учебного файла: 12, 36, 24, 24 и 26 байт.
+  const segments = [12, 36, 24, 24, 26];
+  const scale = 248 / 122;
+  let x = 16;
+  let map = '';
+  for (const bytes of segments) {
+    const width = bytes * scale;
+    map += `M${f1(x + 2)} 75H${f1(x + width - 2)}`;
+    x += width;
+  }
+  const cell = (row: number, column: number) => {
+    const cx = 34 + column * 30;
+    const cy = row < 2 ? 25 + row * 22 : 103 + (row - 2) * 22;
+    return `M${cx} ${cy}H${cx + 16}`;
+  };
+  let grid = '';
+  let current = '';
+  for (let row = 0; row < 4; row += 1) {
+    for (let column = 0; column < 8; column += 1) {
+      // Выбранное поле — четыре байта во второй строке.
+      if (row === 1 && column >= 2 && column < 6) current += cell(row, column);
+      else grid += cell(row, column);
+    }
+  }
+  return {
+    paths: [
+      { d: map, color: 'axis', width: 6 },
+      { d: grid, color: 'grid', width: 8 },
+      { d: current, color: 'result', width: 8 },
+    ],
+    dots: [{ x: Number(f1(16 + 12 * scale + 18 * scale)), y: 75, color: 'result' }],
+  };
+}
+
 const builders: Record<PreviewKind, () => Preview> = {
   tone: tonePreview,
   phase: phasePreview,
   sampling: samplingPreview,
   compressor: compressorPreview,
   lfo: lfoPreview,
+  bytes: bytesPreview,
 };
 
 export const buildPreview = (kind: PreviewKind): Preview => builders[kind]();

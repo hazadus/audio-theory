@@ -1298,5 +1298,55 @@
       "article": "psychoacoustics",
       "anchor": "binaural-unmasking"
     }
+  },
+  {
+    "id": "wav-file",
+    "ru": "WAV-файл",
+    "en": "WAVE file",
+    "definition": "Звуковой файл со структурой RIFF и типом формы WAVE. Чанк fmt описывает параметры звука, чанк data содержит отсчёты; обычно это несжатый PCM.",
+    "target": {
+      "article": "wav-file",
+      "anchor": "riff"
+    }
+  },
+  {
+    "id": "riff",
+    "ru": "RIFF",
+    "en": "Resource Interchange File Format",
+    "definition": "Структура файла из помеченных блоков — чанков. Файл начинается с чанка RIFF: в нём тип формы, например WAVE, и вложенные чанки.",
+    "target": {
+      "article": "wav-file",
+      "anchor": "riff"
+    }
+  },
+  {
+    "id": "chunk",
+    "ru": "чанк",
+    "en": "chunk",
+    "definition": "Блок файла RIFF: идентификатор из четырёх символов, 32-битный размер данных и сами данные. После данных нечётной длины стоит нулевой байт выравнивания, в размер он не входит.",
+    "target": {
+      "article": "wav-file",
+      "anchor": "chunks"
+    }
+  },
+  {
+    "id": "little-endian",
+    "ru": "порядок байтов little-endian",
+    "en": "little-endian",
+    "definition": "Запись многобайтового числа, при которой младший байт идёт первым. Число 44 100 = 0xAC44 в четырёх байтах хранится как 44 AC 00 00.",
+    "target": {
+      "article": "wav-file",
+      "anchor": "bytes"
+    }
+  },
+  {
+    "id": "pcm",
+    "ru": "импульсно-кодовая модуляция",
+    "en": "pulse-code modulation, PCM",
+    "definition": "Представление сигнала последовательностью квантованных отсчётов, взятых через равные промежутки времени. В WAV код формата 1 означает PCM с целыми отсчётами.",
+    "target": {
+      "article": "wav-file",
+      "anchor": "fmt"
+    }
   }
 ]

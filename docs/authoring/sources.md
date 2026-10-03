@@ -180,3 +180,21 @@
 
 - [Analog Devices. Tutorial: Implementing a Tremolo Effect](https://wiki.analog.com/resources/tools-software/sharc-audio-module/baremetal/tremelo-effect-tutorial) — разделы Tutorial Overview и Basic Tremolo with Fixed Parameters: управление амплитудой через LFO, формула с наибольшим усилением 1, одно управляющее значение для стереоканалов.
 - [Cycling ’74. MSP Tutorial 9: Amplitude Modulation](https://docs.cycling74.com/legacy/max5/tutorials/msp-tut/mspchapter09.html) — смещение и масштабирование модулятора, глубина, различие AM и кольцевой модуляции, медленная пульсация и изменение тембра при высоких частотах управления. Шкала глубины в этом учебнике отличается от выбранной для статьи: полное ослабление достигается при 0,5.
+
+## Формат WAV и RIFF
+
+Прочитаны при подготовке статьи об устройстве WAV-файла:
+
+- [IBM Corporation, Microsoft Corporation. Multimedia Programming Interface and Data Specifications 1.0, август 1991](https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/Docs/riffmci.pdf) — первоисточник RIFF и WAVE. Гл. 2: чанк, `ckSize` без байта выравнивания, пропуск незнакомых чанков, `LIST`/`INFO` и строки ZSTR (с. 2-14), `JUNK` (с. 2-18). Гл. 3 с с. 3-22: обязательные `fmt ` и `data`, `fmt ` раньше `data`, формулы `nAvgBytesPerSec` и `nBlockAlign`, чередование каналов, 8 бит без знака и 9 бит и больше со знаком.
+- [Peter Kabal (McGill University). Wave File Specifications](https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html) — сводная таблица полей `fmt ` для 16, 18 и 40 байт, когда нужен `WAVE_FORMAT_EXTENSIBLE`, чанк `fact` для форматов не-PCM.
+- [Microsoft Learn. WAVEFORMATEX structure](https://learn.microsoft.com/en-us/windows/win32/api/mmreg/ns-mmreg-waveformatex) — назначение полей, `nBlockAlign` как размер кадра, что не может описать простой `WAVEFORMATEX`.
+- [EBU Tech 3285. Specification of the Broadcast Wave Format, версия 2.0, 2011](https://tech.ebu.ch/docs/tech/tech3285.pdf) — разд. 2.1–2.3: порядок чанков BWF, частные чанки нужно сохранять, поля `bext` (602 байта до переменной истории обработки).
+- [EBU Tech 3306. MBWF / RF64, 2009](https://tech.ebu.ch/docs/tech/tech3306v1_1.pdf) — разд. 3.4–3.5: причина предела 4 ГБ, `RF64`, `ds64`, значение −1 в 32-битных полях, `JUNK` не меньше 28 байт первым чанком как резерв.
+- [JUCE 9.0.3. juce_WavAudioFormat.cpp](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_formats/codecs/juce_WavAudioFormat.cpp), [AudioFormatManager](https://docs.juce.com/master/classjuce_1_1AudioFormatManager.html), [AudioFormatReader](https://docs.juce.com/master/classjuce_1_1AudioFormatReader.html) — обход чанков с выравниванием, `JUNK` после заголовка при записи, код формата 1 для 24 бит без маски каналов, поля читателя и метод `read`.
+
+## Stephen Davies — A Cool Brisk Walk Through Discrete Mathematics
+
+Учебник дискретной математики на LibreTexts; прочитаны при подготовке раздела о системах счисления в [математическом минимуме](../../src/content/articles/audio-math.mdx):
+
+- [§7.3. Hexadecimal (base 16)](https://math.libretexts.org/Bookshelves/Combinatorics_and_Discrete_Mathematics/A_Cool_Brisk_Walk_Through_Discrete_Mathematics_(Davies)/07:_Counting/7.3:_Hexadecimal_(base_16)) — позиционная запись, цифры A–F, перевод между основаниями.
+- [§7.4. Binary (base 2)](https://math.libretexts.org/Bookshelves/Combinatorics_and_Discrete_Mathematics/A_Cool_Brisk_Walk_Through_Discrete_Mathematics_(Davies)/07:_Counting/7.4:_Binary_(base_2)) — бит, байт из 8 бит, 256 значений, шестнадцатеричная цифра как 4 бита, числа без знака и дополнительный код.

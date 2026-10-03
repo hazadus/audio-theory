@@ -16,6 +16,7 @@ const slugs = [
   'lfo',
   'tremolo',
   'psychoacoustics',
+  'wav-file',
 ];
 
 const entry = {

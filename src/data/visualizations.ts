@@ -57,4 +57,12 @@ export const visualizations: readonly Visualization[] = [
     sound: false,
     preview: 'lfo',
   },
+  {
+    id: 'wav-dump',
+    slug: 'wav-file',
+    name: 'Байты WAV-файла по полям',
+    what: 'Поле или чанк учебного файла: смещение, байты и чтение значения.',
+    sound: false,
+    preview: 'bytes',
+  },
 ];

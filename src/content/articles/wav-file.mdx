@@ -1,0 +1,468 @@
+---
+slug: wav-file
+title: 'Устройство WAV-файла: RIFF, чанки, fmt и data'
+question: Как найти в WAV-файле параметры звука и сами отсчёты?
+topic: data
+tags: [WAV, форматы файлов, байты]
+prerequisites:
+  - label: Каналы и кадры
+    description: Отсчёты всех каналов в один момент и порядок их хранения в памяти.
+    target: { article: audio-data, anchor: memory-layout }
+  - label: Разрядность
+    description: Сколько бит отводится на один квантованный отсчёт.
+    target: { article: adc-dac, anchor: sampling-and-quantization }
+related:
+  - label: Двоичная и шестнадцатеричная запись
+    description: Биты, байты, цифры A–F и сборка числа из нескольких байтов.
+    target: { article: audio-math, anchor: number-bases }
+  - label: Аудиоданные в программах
+    description: Размер блока в кадрах, байтах и миллисекундах.
+    target: { article: audio-data, anchor: buffer-size }
+  - label: Частота дискретизации
+    description: Почему число кадров в секунду задаёт шаг времени между отсчётами.
+    target: { article: sampling, anchor: sampling-period }
+---
+
+import Callout from '@/components/Callout.astro';
+import CalloutCase from '@/components/CalloutCase.astro';
+import DataTable from '@/components/DataTable.astro';
+import Equation from '@/components/Equation.astro';
+import MarginNote from '@/components/MarginNote.astro';
+import SelfCheck from '@/components/SelfCheck.astro';
+import Term from '@/components/Term.astro';
+import WavDumpDemo from '@/components/WavDumpDemo.astro';
+
+Программа записывает звук в файл, другая программа его открывает и воспроизводит. Чтобы это сработало, обе должны одинаково понимать, где в файле частота дискретизации, сколько каналов и с какого байта начинаются отсчёты. <Term id="wav-file" firstMention define>WAV-файл</Term> отвечает на эти вопросы набором помеченных блоков. Их можно прочитать вручную, не зная ничего, кроме смещений и порядка байтов.
+
+Ниже по байтам разобран учебный файл из 122 байт. Из его устройства следует, почему звук не всегда начинается со смещения 44, зачем в файле блок `JUNK` без полезных данных и откуда берётся предел в 4 ГБ.
+
+## Файл как последовательность байтов {#bytes}
+
+Файл на диске — это последовательность байтов (byte). Каждый байт хранит целое число от 0 до 255. Номер байта от начала файла называют смещением (offset): первый байт имеет смещение 0, сотый — 99.
+
+<MarginNote items={[
+  { label: 'Математика для аудио → Двоичная и шестнадцатеричная запись', description: 'Цифры A–F, байт из двух цифр и сборка числа из байтов.', target: { article: 'audio-math', anchor: 'number-bases' } },
+]}>
+
+Байты принято записывать двумя шестнадцатеричными цифрами: от `00` до `FF`. Так их показывают программы просмотра файлов, и так они даны на рисунках ниже. Буквы в файле хранятся кодами ASCII: `R` — это `52`, `I` — `49`, `F` — `46`.
+
+</MarginNote>
+
+Число больше 255 не помещается в один байт и занимает несколько. Важно, в каком порядке они лежат. В WAV первым идёт младший байт — такой порядок называют <Term id="little-endian" firstMention define>little-endian</Term>. Частота 44 100 Гц в шестнадцатеричной записи равна `0x0000AC44` и хранится в четырёх байтах как `44 AC 00 00`. Чтобы получить число обратно, байты умножают на степени 256 по порядку: $68 + 172\cdot256 = 44\,100$.
+
+<Callout type="mistake" title="Байты нельзя читать слева направо как одно число">
+  <CalloutCase kind="wrong">
+
+Байты `44 AC 00 00` образуют число `0x44AC0000`, то есть 1 152 122 880.
+
+  </CalloutCase>
+  <CalloutCase kind="right">
+
+Первым стоит младший байт. Число равно `0x0000AC44` = 44 100. Обратный порядок, со старшим байтом в начале (big-endian), в RIFF допускается только в варианте RIFX с другим идентификатором; WAV-файлы используют little-endian.
+
+  </CalloutCase>
+</Callout>
+
+## Контейнер RIFF {#riff}
+
+WAV построен на <Term id="riff" firstMention define>RIFF</Term> (Resource Interchange File Format). Эту структуру описали IBM и Microsoft в 1991 году для мультимедийных файлов разных видов: звука, изображений, MIDI ([IBM, Microsoft, 1991, гл. 2](https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/Docs/riffmci.pdf)). Сам RIFF не говорит, что лежит внутри. Он задаёт только способ разложить данные по блокам — <Term id="chunk" firstMention>чанкам</Term>.
+
+Файл целиком — один чанк с идентификатором `RIFF`. Его первые 12 байт:
+
+1. Четыре символа `RIFF` (байты 0–3).
+2. Размер содержимого — 32-битное число без знака в little-endian (байты 4–7).
+3. Тип формы (form type) — четыре символа `WAVE` (байты 8–11). У других форматов на основе RIFF здесь стоит иное значение, например `RMID` для MIDI.
+
+Размер в байтах 4–7 не включает первые 8 байт: идентификатор и само поле размера. Поэтому он на 8 меньше длины файла. В учебном файле 122 байта, и в поле записано 114. После `WAVE` идут вложенные чанки, до конца файла.
+
+## Чанк: идентификатор, размер, данные {#chunks}
+
+<Term id="chunk" define>Чанк</Term> (chunk) устроен одинаково в любом файле RIFF:
+
+- идентификатор (chunk ID) — четыре символа ASCII; короткое имя дополняется пробелами, поэтому чанк формата называется `fmt ` с пробелом в конце;
+- размер (chunk size) — 32-битное число без знака, длина данных в байтах;
+- данные — ровно столько байт, сколько указано в размере.
+
+Если размер нечётный, после данных записан ещё один нулевой байт — байт выравнивания (pad byte). Благодаря ему каждый чанк начинается с чётного смещения. В размер этот байт не входит ([IBM, Microsoft, 1991, с. 2-2](https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/Docs/riffmci.pdf)). Отсюда правило, по которому находится следующий чанк:
+
+<Equation id="eq-next-chunk" number={1}>
+
+$$
+p_{\text{след}} = p + 8 + s + (s \bmod 2)
+$$
+
+<Fragment slot="symbols">
+  <dt>$p$</dt><dd>смещение идентификатора текущего чанка, байт;</dd>
+  <dt>$s$</dt><dd>значение поля размера, байт;</dd>
+  <dt>$s \bmod 2$</dt><dd>остаток от деления на 2: 1 для нечётного размера, 0 для чётного.</dd>
+</Fragment>
+
+</Equation>
+
+Восьмёрка — это заголовок чанка: 4 байта идентификатора и 4 байта размера. В учебном файле внутри списка `LIST` лежит чанк `INAM` с названием `Demo`: четыре буквы и завершающий нулевой байт, размер 5. Он начинается со смещения 108, данные занимают байты 116–120, байт 121 — выравнивание. Следующий чанк мог бы начаться со смещения $108 + 8 + 5 + 1 = 122$.
+
+<Callout type="mistake" title="Байт выравнивания не входит в размер">
+  <CalloutCase kind="wrong">
+
+У чанка с данными из 603 байт в поле размера записано 604: так он займёт чётное число байт.
+
+  </CalloutCase>
+  <CalloutCase kind="right">
+
+В поле записано 603 — длина самих данных. Байт выравнивания добавляется после них и учитывается только при переходе к следующему чанку по [формуле (1)](#eq-next-chunk).
+
+  </CalloutCase>
+</Callout>
+
+На [рис. 1](#wav-dump) показаны все байты учебного файла. Наведите указатель или коснитесь байта, чтобы увидеть, к какому полю он относится и как читается значение. Над дампом — карта из пяти чанков верхнего уровня: `RIFF` (заголовок файла), `JUNK`, `fmt `, `data` и `LIST`.
+
+<WavDumpDemo figure={1} id="wav-dump" />
+
+## Чанк fmt: параметры звука {#fmt}
+
+Чанк `fmt ` (format) описывает, как устроены звуковые данные. В простейшем случае его данные занимают 16 байт ([таблица 1](#fmt-fields)). Названия полей взяты из структуры `WAVEFORMATEX` в документации Microsoft ([Microsoft Learn](https://learn.microsoft.com/en-us/windows/win32/api/mmreg/ns-mmreg-waveformatex)).
+
+<DataTable
+  id="fmt-fields"
+  number={1}
+  caption="Поля данных чанка fmt для PCM. Смещение отсчитывается от начала данных чанка, то есть через 8 байт после идентификатора fmt. Значения — из учебного файла: 16 бит, стерео, 44 100 Гц."
+  columns={[
+    { label: 'Смещение' },
+    { label: 'Байт', align: 'end' },
+    { label: 'Поле' },
+    { label: 'Значение', align: 'end' },
+  ]}
+  rows={[
+    ['0', 2, 'код формата (wFormatTag)', '1'],
+    ['2', 2, 'число каналов (nChannels)', '2'],
+    ['4', 4, 'частота дискретизации (nSamplesPerSec)', '44 100'],
+    ['8', 4, 'байт в секунду (nAvgBytesPerSec)', '176 400'],
+    ['12', 2, 'размер кадра в байтах (nBlockAlign)', '4'],
+    ['14', 2, 'разрядность (wBitsPerSample)', '16'],
+  ]}
+/>
+
+Код формата 1 означает <Term id="pcm" firstMention define>импульсно-кодовую модуляцию</Term>, то есть несжатые целые отсчёты. Значение 3 означает отсчёты с плавающей точкой (IEEE float). Другие коды обозначают сжатые форматы, данные которых без отдельного декодера не прочитать.
+
+<Term id="sample-rate" firstMention>Частота дискретизации</Term> здесь — число кадров в секунду, а не число всех отсчётов: у стерео 44 100 кадров содержат 88 200 отсчётов. <Term id="bit-depth" firstMention>Разрядность</Term> — бит на один отсчёт одного канала.
+
+Два поля не несут новой информации: их можно вычислить из остальных ([IBM, Microsoft, 1991, с. 3-24](https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/Docs/riffmci.pdf)):
+
+<Equation id="eq-block-align" number={2}>
+
+$$
+\text{blockAlign} = C \cdot \frac{B}{8}, \qquad \text{byteRate} = f_s \cdot \text{blockAlign}
+$$
+
+<Fragment slot="symbols">
+  <dt>$C$</dt><dd>число каналов;</dd>
+  <dt>$B$</dt><dd>разрядность, бит на отсчёт; деление на 8 переводит биты в байты;</dd>
+  <dt>$f_s$</dt><dd>частота дискретизации, кадров в секунду;</dd>
+  <dt>$\text{blockAlign}$</dt><dd>размер одного кадра, байт;</dd>
+  <dt>$\text{byteRate}$</dt><dd>объём данных за секунду, байт/с.</dd>
+</Fragment>
+
+</Equation>
+
+Для учебного файла $\text{blockAlign} = 2 \cdot 16/8 = 4$ байта и $\text{byteRate} = 44\,100 \cdot 4 = 176\,400$ байт в секунду. Эти поля общие для всех кодов формата. У сжатых форматов их считают по правилам конкретного кодека, а не по [формуле (2)](#eq-block-align). По `byteRate` проигрыватель оценивает нужный размер буфера, а `blockAlign` подсказывает, какими порциями читать данные, чтобы не разрезать кадр.
+
+Чанк `fmt ` бывает длиннее 16 байт. Вариант на 18 байт добавляет поле `cbSize` с длиной дополнительных параметров, вариант на 40 байт — для [расширенного описания](#extensible) ([Kabal](https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html)). Поэтому читать поля нужно по размеру чанка, а переходить к следующему — по [формуле (1)](#eq-next-chunk), не предполагая длину 16.
+
+## Чанк data: отсчёты и длительность {#data}
+
+Чанк `data` содержит сами отсчёты, кадр за кадром. В стерео каналы чередуются: левый отсчёт первого кадра, правый отсчёт первого кадра, затем второй кадр ([IBM, Microsoft, 1991, разд. «Data Packing for PCM WAVE Files»](https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/Docs/riffmci.pdf)). Это то же <Term id="interleaved" firstMention>чередование каналов</Term>, что в буфере программы.
+
+<MarginNote items={[
+  { label: 'Аудиоданные в программах → Расположение каналов в памяти', description: 'Чередование каналов и отдельные массивы для каждого канала.', target: { article: 'audio-data', anchor: 'memory-layout' } },
+]}>
+
+В учебном файле 16 байт данных — четыре <Term id="audio-frame" firstMention>кадра</Term> по 4 байта. Каждый отсчёт — 16-битное целое со знаком в little-endian. Например, байты `00 01` дают `0x0100` = 256. Отрицательные числа записаны в дополнительном коде (two's complement): байты `00 FF` дают −256.
+
+</MarginNote>
+
+Отсчёты разрядностью до 8 бит хранятся без знака: тишине соответствует 128, а не 0. Начиная с 9 бит используются числа со знаком. Отсчёт занимает наименьшее целое число байтов, в которое помещается: 24-битный — три байта ([IBM, Microsoft, 1991, разд. «Data Format of the Samples»](https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/Docs/riffmci.pdf)).
+
+Длительность записи следует из размера данных и полей `fmt `:
+
+<Equation id="eq-duration" number={3}>
+
+$$
+N = \frac{s_{\text{data}}}{\text{blockAlign}}, \qquad t = \frac{N}{f_s} = \frac{s_{\text{data}}}{\text{byteRate}}
+$$
+
+<Fragment slot="symbols">
+  <dt>$s_{\text{data}}$</dt><dd>размер чанка data, байт;</dd>
+  <dt>$N$</dt><dd>число кадров;</dd>
+  <dt>$t$</dt><dd>длительность, с.</dd>
+</Fragment>
+
+</Equation>
+
+Минута стерео в 16 битах и 44,1 кГц занимает $176\,400 \cdot 60 = 10\,584\,000$ байт, около 10 МБ. В учебном файле $16/4 = 4$ кадра, и звучат они $16/176\,400 \approx 0{,}09$ мс. Если размер данных не делится на размер кадра, последний неполный кадр отбрасывают: так, например, считает число кадров JUCE ([`WavAudioFormat`, JUCE 9.0.3](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_formats/codecs/juce_WavAudioFormat.cpp)).
+
+## Чтение по чанкам {#reading}
+
+Самый простой WAV-файл состоит из трёх чанков подряд: `RIFF`, `fmt ` на 16 байт и `data`. Тогда отсчёты начинаются со смещения 44: $12 + (8 + 16) + 8$. Отсюда распространённое упрощение «пропусти 44 байта и читай звук». В учебном файле перед `fmt ` стоит `JUNK` на 36 байт, и отсчёты начинаются со смещения 80. Программа с упрощением прочитала бы заголовок `fmt ` как звук.
+
+<Callout type="important" title="Правило спецификации">
+
+Программа должна ожидать незнакомые чанки и пропускать их. Обязательны только `fmt ` и `data`, и `fmt ` стоит раньше `data` ([IBM, Microsoft, 1991, с. 3-22](https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/Docs/riffmci.pdf)). Другие чанки могут стоять до, между и после них.
+
+</Callout>
+
+Надёжное чтение поэтому идёт по чанкам:
+
+1. Проверить, что байты 0–3 — это `RIFF`, а байты 8–11 — `WAVE`. Конец данных — смещение $8 + {}$размер из байтов 4–7, но не дальше конца файла.
+2. Начиная со смещения 12, прочитать идентификатор и размер очередного чанка.
+3. Если это `fmt `, разобрать поля. Если `data`, запомнить смещение и размер отсчётов. Иначе ничего не делать.
+4. Перейти к следующему чанку по [формуле (1)](#eq-next-chunk) и повторить, пока до конца данных остаётся хотя бы 8 байт.
+5. Если не встретился `fmt ` или `data`, файл повреждён или это не PCM WAV.
+
+Вот этот алгоритм на C++ без библиотек. Файл целиком читается в массив байтов, а числа собираются из байтов сдвигами. Так результат не зависит от порядка байтов процессора и от выравнивания данных в памяти. Приведение указателя на байты к `std::uint32_t*` от обоих зависело бы.
+
+```cpp
+using Bytes = std::vector<std::uint8_t>;
+
+std::uint16_t readU16 (const Bytes& b, std::size_t pos)
+{
+    return static_cast<std::uint16_t> (b.at (pos) | (b.at (pos + 1) << 8));
+}
+
+std::uint32_t readU32 (const Bytes& b, std::size_t pos)
+{
+    return readU16 (b, pos) | (std::uint32_t (readU16 (b, pos + 2)) << 16);
+}
+
+std::string readId (const Bytes& b, std::size_t pos)
+{
+    std::string id;
+    for (std::size_t i = 0; i < 4; ++i)
+        id += static_cast<char> (b.at (pos + i));
+    return id;
+}
+```
+
+`readU16` ставит второй байт на место старшего: сдвиг на 8 бит умножает его на 256. `readU32` так же собирает 32-битное число из двух 16-битных половин. Метод `at` проверяет границы и выбрасывает исключение, если файл обрывается посреди поля.
+
+```cpp
+struct WavInfo
+{
+    std::uint16_t format = 0, channels = 0, blockAlign = 0, bits = 0;
+    std::uint32_t sampleRate = 0, byteRate = 0;
+    std::size_t dataOffset = 0, dataSize = 0;
+    bool hasFmt = false, hasData = false;
+};
+
+WavInfo parseWav (const Bytes& b)
+{
+    if (b.size() < 12 || readId (b, 0) != "RIFF" || readId (b, 8) != "WAVE")
+        throw std::runtime_error ("не RIFF/WAVE");
+
+    const std::size_t end = std::min<std::size_t> (b.size(), 8 + std::size_t (readU32 (b, 4)));
+    WavInfo info;
+    std::size_t pos = 12;
+
+    while (pos + 8 <= end)
+    {
+        const std::string id = readId (b, pos);
+        const std::size_t size = readU32 (b, pos + 4);
+        const std::size_t body = pos + 8;
+
+        if (size > end - body)
+            throw std::runtime_error ("чанк выходит за конец файла");
+
+        if (id == "fmt " && size >= 16)
+        {
+            info.format = readU16 (b, body);
+            info.channels = readU16 (b, body + 2);
+            info.sampleRate = readU32 (b, body + 4);
+            info.byteRate = readU32 (b, body + 8);
+            info.blockAlign = readU16 (b, body + 12);
+            info.bits = readU16 (b, body + 14);
+            info.hasFmt = true;
+        }
+        else if (id == "data")
+        {
+            info.dataOffset = body;
+            info.dataSize = size;
+            info.hasData = true;
+        }
+
+        pos = body + size + (size & 1); // незнакомые чанки просто пропускаем
+    }
+
+    if (! info.hasFmt || ! info.hasData)
+        throw std::runtime_error ("нет чанка fmt или data");
+    return info;
+}
+```
+
+Выражение `size & 1` — побитовое И с единицей: оно оставляет младший бит, то есть даёт тот же остаток от деления на 2, что в [формуле (1)](#eq-next-chunk). Проверка `size > end - body` ловит размер, который обещает больше байтов, чем есть в файле. Без неё обрезанная при копировании запись привела бы к чтению за концом массива.
+
+Для учебного файла функция вернёт 2 канала, 44 100 Гц, 16 бит и данные со смещения 80 длиной 16 байт. Файл передаётся так:
+
+```cpp
+std::ifstream file ("demo.wav", std::ios::binary);
+const Bytes bytes ((std::istreambuf_iterator<char> (file)), std::istreambuf_iterator<char>());
+const WavInfo info = parseWav (bytes);
+```
+
+Нужны заголовки `<algorithm>`, `<cstdint>`, `<fstream>`, `<iterator>`, `<stdexcept>`, `<string>` и `<vector>`. Чтение всего файла в память подходит для коротких записей. Для длинных читают только заголовки, а отсчёты — блоками со смещения `dataOffset`.
+
+## Служебные чанки {#metadata-chunks}
+
+Кроме `fmt ` и `data` в файлах часто встречаются чанки с вспомогательными сведениями. Звук они не меняют, но сдвигают положение остальных чанков.
+
+### JUNK: заполнитель {#junk}
+
+Данные `JUNK` не имеют значения, программа пропускает его по размеру ([IBM, Microsoft, 1991, с. 2-18](https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/Docs/riffmci.pdf)). Обычно `JUNK` резервирует место заранее. Рекомендация EBU — ставить первым чанком `JUNK` не меньше 28 байт: если запись превысит 4 ГБ, на его месте окажется чанк `ds64` формата RF64 ([EBU Tech 3306, 2009, разд. 3.5](https://tech.ebu.ch/docs/tech/tech3306v1_1.pdf)). Так делает и JUCE: `WavAudioFormat` по умолчанию записывает `JUNK` сразу после `WAVE`, и размер заголовка не зависит от того, понадобится RF64 или нет ([JUCE 9.0.3](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_formats/codecs/juce_WavAudioFormat.cpp)). Учебный файл повторяет этот приём.
+
+### bext: сведения Broadcast Wave {#bext}
+
+Формат Broadcast Wave (BWF) от EBU добавляет к WAV чанк `bext` ([EBU Tech 3285, версия 2.0, 2011](https://tech.ebu.ch/docs/tech/tech3285.pdf)). В нём описание записи, автор, дата и время создания, положение первого отсчёта в отсчётах от полуночи, показатели громкости и история обработки (coding history). Поля до истории занимают 602 байта, а история — строки переменной длины. Поэтому размер `bext` бывает нечётным, например 603, и тогда после него стоит байт выравнивания.
+
+### LIST и INFO: текстовые сведения {#list-info}
+
+Чанк `LIST` с типом `INFO` содержит вложенные чанки по тем же правилам: `INAM` — название, `IART` — исполнитель, `ISFT` — программа, создавшая файл. Каждый хранит строку с нулевым байтом в конце ([IBM, Microsoft, 1991, с. 2-14](https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/Docs/riffmci.pdf)). В учебном файле `LIST` стоит после `data`. Чтобы найти его, нужно пропустить весь звук.
+
+### Частные чанки {#private-chunks}
+
+Программы записывают и собственные чанки, описание которых может быть не опубликовано. Например, в файлах, экспортированных из некоторых программ, после `data` встречается чанк `LGWV`; в спецификациях RIFF и BWF его нет. Читателю достаточно правила: незнакомый идентификатор пропускается по размеру. Спецификация BWF требует от совместимых программ сохранять такие чанки при перезаписи файла, даже если они их не понимают ([EBU Tech 3285, разд. 2.1](https://tech.ebu.ch/docs/tech/tech3285.pdf)).
+
+## Запись минимального WAV {#writing}
+
+Запись идёт в обратном порядке: сначала вычисляются размеры, затем байты укладываются по [таблице 1](#fmt-fields). Минимальный файл — одна секунда цифровой тишины, 16 бит, моно, 48 000 Гц. Кадр занимает 2 байта, данные — $48\,000 \cdot 2 = 96\,000$ байт. Размер в заголовке RIFF складывается из `WAVE` и двух чанков с их заголовками: $4 + (8 + 16) + (8 + 96\,000) = 96\,036$.
+
+```cpp
+void putU16 (Bytes& out, std::uint16_t v)
+{
+    out.push_back (v & 0xFF);
+    out.push_back (v >> 8);
+}
+
+void putU32 (Bytes& out, std::uint32_t v)
+{
+    putU16 (out, v & 0xFFFF);
+    putU16 (out, v >> 16);
+}
+
+void putId (Bytes& out, const char* id)
+{
+    out.insert (out.end(), id, id + 4);
+}
+
+void writeSilence()
+{
+    const std::uint32_t sampleRate = 48000;
+    const std::uint16_t channels = 1, bits = 16;
+    const std::uint16_t blockAlign = channels * bits / 8;  // 2 байта на кадр
+    const std::uint32_t dataSize = sampleRate * blockAlign; // 96 000 байт = 1 с
+
+    Bytes out;
+    putId (out, "RIFF");
+    putU32 (out, 4 + (8 + 16) + (8 + dataSize));            // 96 036
+    putId (out, "WAVE");
+
+    putId (out, "fmt ");
+    putU32 (out, 16);
+    putU16 (out, 1);                                         // PCM
+    putU16 (out, channels);
+    putU32 (out, sampleRate);
+    putU32 (out, sampleRate * blockAlign);                   // 96 000 байт/с
+    putU16 (out, blockAlign);
+    putU16 (out, bits);
+
+    putId (out, "data");
+    putU32 (out, dataSize);
+    out.resize (out.size() + dataSize, 0);                   // тишина: все отсчёты 0
+
+    std::ofstream ("silence.wav", std::ios::binary)
+        .write (reinterpret_cast<const char*> (out.data()), std::streamsize (out.size()));
+}
+```
+
+`putU16` и `putU32` делают обратное `readU16` и `readU32`: сначала записывают младший байт. Получается файл из 96 044 байт. Его первые 44 байта в шестнадцатеричной записи:
+
+```text
+52 49 46 46  24 77 01 00  57 41 56 45   RIFF, 96 036, WAVE
+66 6D 74 20  10 00 00 00                fmt , 16
+01 00  01 00  80 BB 00 00  00 77 01 00  PCM, 1 канал, 48 000 Гц, 96 000 байт/с
+02 00  10 00                            кадр 2 байта, 16 бит
+64 61 74 61  00 77 01 00                data, 96 000
+```
+
+Нули в данных означают тишину только для отсчётов со знаком. В 8-битном файле тишина записывается байтами `80` (128). У 8-битного моно с нечётным числом кадров размер `data` нечётный, и после данных нужен байт выравнивания.
+
+## Чтение через JUCE {#juce}
+
+В JUCE файл открывают через `AudioFormatManager`: после `registerBasicFormats()` он перебирает известные форматы, включая WAV, и возвращает читатель `AudioFormatReader` ([JUCE, AudioFormatManager](https://docs.juce.com/master/classjuce_1_1AudioFormatManager.html)).
+
+```cpp
+juce::AudioFormatManager formats;
+formats.registerBasicFormats();
+
+std::unique_ptr<juce::AudioFormatReader> reader (
+    formats.createReaderFor (juce::File ("/path/to/demo.wav")));
+
+if (reader != nullptr)
+{
+    const double rate = reader->sampleRate;        // 44100
+    const auto channels = reader->numChannels;     // 2
+    const auto bits = reader->bitsPerSample;       // 16
+    const auto frames = reader->lengthInSamples;   // 4 кадра
+
+    juce::AudioBuffer<float> buffer ((int) channels, (int) frames);
+    reader->read (&buffer, 0, (int) frames, 0, true, true);
+}
+```
+
+`createReaderFor` возвращает `nullptr`, если ни один формат не распознал файл. Освободить читатель должен вызывающий код, поэтому указатель сразу передаётся в `std::unique_ptr`. `lengthInSamples` — число кадров, то есть отсчётов одного канала ([JUCE, AudioFormatReader](https://docs.juce.com/master/classjuce_1_1AudioFormatReader.html)).
+
+За этими строками скрыта работа из предыдущих разделов. Читатель JUCE обходит чанки, пропускает незнакомые с учётом байта выравнивания, понимает RF64 и расширенное описание формата. Сведения из `bext` и `LIST`/`INFO` он кладёт в `metadataValues`. Метод `read` переводит целые отсчёты в `float` в диапазоне от −1 до 1 и раскладывает чередующиеся каналы по отдельным массивам `AudioBuffer`. Такой буфер на весь файл годится для коротких записей: длинные читают блоками, меняя четвёртый аргумент — номер первого кадра.
+
+## Ограничения формата {#limits}
+
+### Предел 4 ГБ и RF64 {#rf64}
+
+Все размеры в RIFF — 32-битные числа без знака, наибольшее из них 4 294 967 295 байт, около 4 ГБ. Для стерео в 16 битах и 44,1 кГц это примерно 6 ч 46 мин звука, для стерео в 24 битах и 48 кГц — около 4 ч 9 мин, для восьми каналов в 24 битах и 96 кГц — около 31 мин.
+
+Формат RF64 из [EBU Tech 3306](https://tech.ebu.ch/docs/tech/tech3306v1_1.pdf) снимает предел, почти не меняя структуру. Первые четыре байта — `RF64` вместо `RIFF`. Сразу после `WAVE` стоит чанк `ds64` с 64-битными размерами файла и данных. В 32-битных полях записано `FFFFFFFF` (−1 в дополнительном коде): это знак, что настоящее значение нужно брать из `ds64`. Программа, которая ожидает `RIFF`, отвергнет такой файл уже на первых четырёх байтах и не примет −1 за настоящий размер.
+
+### Расширенное описание формата {#extensible}
+
+Поля `fmt ` из [таблицы 1](#fmt-fields) не говорят, какой канал на какой громкоговоритель идёт, и не отличают 20 значащих бит в трёхбайтовом отсчёте от полных 24. Для этого есть код формата `0xFFFE` (`WAVE_FORMAT_EXTENSIBLE`): данные `fmt ` занимают 40 байт и включают маску каналов, число значащих бит и идентификатор настоящего формата ([Microsoft Learn](https://learn.microsoft.com/en-us/windows/win32/api/mmreg/ns-mmreg-waveformatex)). Расширенное описание рекомендуется, когда каналов больше двух, разрядность больше 16 бит, значащих бит меньше размера отсчёта или нужно указать раскладку громкоговорителей ([Kabal](https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html)). На практике 24-битное стерео часто записывают и с кодом 1: так поступает, например, JUCE, если маска каналов не задана. Поэтому читатель должен понимать оба варианта.
+
+## Самопроверка {#self-check}
+
+<SelfCheck question="Файл 8 бит, моно, 22 050 Гц. Какие значения стоят в полях размера кадра и байт в секунду?">
+
+Размер кадра $1 \cdot 8/8 = 1$ байт, байт в секунду $22\,050 \cdot 1 = 22\,050$ по [формуле (2)](#eq-block-align).
+
+</SelfCheck>
+
+<SelfCheck question="Чанк bext с размером 603 начинается со смещения 12. С какого смещения начнётся следующий чанк?">
+
+$12 + 8 + 603 + 1 = 624$. Данные занимают байты 20–622, байт 623 — выравнивание, потому что 603 нечётно.
+
+</SelfCheck>
+
+<SelfCheck question="В стереофайле 16 бит, 44 100 Гц размер data равен 1 058 400 байт. Сколько в нём кадров и сколько секунд он звучит?">
+
+Кадр занимает 4 байта, поэтому кадров $1\,058\,400/4 = 264\,600$. Длительность $264\,600/44\,100 = 6$ с, или $1\,058\,400/176\,400$ по [формуле (3)](#eq-duration).
+
+</SelfCheck>
+
+<SelfCheck question="Почему программа, которая всегда читает звук со смещения 44, может выдать щелчок или шум в начале?">
+
+Перед `fmt ` или `data` могут стоять другие чанки, например `JUNK` или `bext`, а `fmt ` бывает длиннее 16 байт. Тогда по смещению 44 лежат не отсчёты, а байты заголовков, и программа воспроизведёт их как звук.
+
+</SelfCheck>
+
+## Источники {#sources}
+
+- [IBM Corporation, Microsoft Corporation. Multimedia Programming Interface and Data Specifications 1.0, август 1991](https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/Docs/riffmci.pdf) — гл. 2, с. 2-2–2-18: чанки, байт выравнивания, пропуск незнакомых чанков, `LIST`/`INFO`, `JUNK`; гл. 3, с. 3-22 и далее: форма WAVE, чанк `fmt `, формулы, расположение отсчётов PCM.
+- [Peter Kabal (McGill University). Wave File Specifications](https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html) — сводка полей `fmt ` для размеров 16, 18 и 40 байт, условия для `WAVE_FORMAT_EXTENSIBLE`.
+- [Microsoft Learn. WAVEFORMATEX structure](https://learn.microsoft.com/en-us/windows/win32/api/mmreg/ns-mmreg-waveformatex) — назначение полей, `nBlockAlign` как размер кадра, ограничения простого описания и `WAVEFORMATEXTENSIBLE`.
+- [EBU Tech 3285. Specification of the Broadcast Wave Format, версия 2.0, май 2011](https://tech.ebu.ch/docs/tech/tech3285.pdf) — разд. 2.1–2.3: структура BWF, частные чанки, поля `bext`.
+- [EBU Tech 3306. MBWF / RF64: An Extended File Format for Audio, июль 2009](https://tech.ebu.ch/docs/tech/tech3306v1_1.pdf) — разд. 3.4–3.5: предел 4 ГБ, `RF64`, `ds64`, резерв через `JUNK`.
+- [JUCE 9.0.3. juce_WavAudioFormat.cpp](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_formats/codecs/juce_WavAudioFormat.cpp), [AudioFormatManager](https://docs.juce.com/master/classjuce_1_1AudioFormatManager.html) и [AudioFormatReader](https://docs.juce.com/master/classjuce_1_1AudioFormatReader.html) — обход чанков, `JUNK` при записи, поля читателя и метод `read`.

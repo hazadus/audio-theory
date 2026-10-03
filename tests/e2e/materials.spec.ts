@@ -26,14 +26,15 @@ test(
       'signal-level',
       'sound-wave',
       'tremolo',
+      'wav-file',
     ]);
-    await expect(page.locator('[data-count]')).toHaveText('11 статей');
+    await expect(page.locator('[data-count]')).toHaveText('12 статей');
     await expect(chip(page, 'all')).toHaveAttribute('aria-pressed', 'true');
-    await expect(chip(page, 'all')).toContainText('11');
+    await expect(chip(page, 'all')).toContainText('12');
     await expect(chip(page, 'processing')).toContainText('3');
     await expect(chip(page, 'conv')).not.toHaveAttribute('aria-disabled', 'true');
     await expect(chip(page, 'conv')).toContainText('1');
-    await expect(chip(page, 'data')).toContainText('1');
+    await expect(chip(page, 'data')).toContainText('2');
     await expect(sortOption(page, 'date')).toHaveAttribute('aria-checked', 'true');
     expect(search(page)).toBe('');
   },
@@ -88,7 +89,7 @@ test(
   async ({ page }) => {
     await page.goto('materials/?sort=alpha');
     await expect(sortOption(page, 'alpha')).toHaveAttribute('aria-checked', 'true');
-    // Кириллические названия от «Аудиоданные…» до «Уровень…», затем латинское «LFO…».
+    // Кириллические названия от «Аудиоданные…» до «Устройство…», затем латинское «LFO…».
     expect(await slugs(page)).toEqual([
       'audio-data',
       'adc-dac',
@@ -100,6 +101,7 @@ test(
       'psychoacoustics',
       'tremolo',
       'signal-level',
+      'wav-file',
       'lfo',
     ]);
 
@@ -119,7 +121,14 @@ test(
       'sound-wave',
     ]);
     expect(order.slice(4, 6).sort()).toEqual(['sampling', 'signal-level']);
-    expect(order.slice(6)).toEqual(['adc-dac', 'audio-data', 'compressor', 'tremolo', 'lfo']);
+    expect(order.slice(6)).toEqual([
+      'adc-dac',
+      'audio-data',
+      'wav-file',
+      'compressor',
+      'tremolo',
+      'lfo',
+    ]);
     // Название группы стоит в заголовке, поэтому метка в строке скрыта.
     await expect(rows(page).first().locator('.overline')).toBeHidden();
   },
@@ -133,7 +142,7 @@ test('неверные значения query заменяются умолча�
   await expect(chip(page, 'all')).toHaveAttribute('aria-pressed', 'true');
   await expect(sortOption(page, 'date')).toHaveAttribute('aria-checked', 'true');
   expect(search(page)).toBe('');
-  expect((await slugs(page)).length).toBe(11);
+  expect((await slugs(page)).length).toBe(12);
 
   await page.goto('materials/?topic=basics&sort=random');
   expect(search(page)).toBe('?topic=basics');
@@ -245,8 +254,8 @@ test(
       const page = await context.newPage();
       await page.goto('materials/?topic=digital&sort=alpha');
       await expect(page.locator('[data-controls]')).toBeHidden();
-      expect((await slugs(page)).length).toBe(11);
-      await expect(page.locator('[data-count]')).toHaveText('11 статей');
+      expect((await slugs(page)).length).toBe(12);
+      await expect(page.locator('[data-count]')).toHaveText('12 статей');
       await expect(rows(page).first().getByRole('link')).toBeVisible();
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
         390,

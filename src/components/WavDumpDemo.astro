@@ -1,0 +1,576 @@
+---
+// Визуализация байтов WAV-файла: карта чанков, шестнадцатеричный дамп с колонкой ASCII и описание выбранного поля.
+// При сборке выбрано первое поле; скрипт включает выбор наведением, касанием, клавишами и кнопками.
+// Без JS, во время загрузки и при ошибке кнопки неактивны, а сообщение объясняет почему.
+import Icon from '@/components/Icon.astro';
+import { demoCaptions } from '@/lib/demo-captions';
+import { byteChar, byteHex, bytesPerRow, defaultField, fieldAt, wavExample } from '@/lib/wav-dump';
+import { chunkLabel, dumpCaption, fieldView } from '@/lib/wav-dump-view';
+
+interface Props {
+  /** Номер рисунка: визуализации и рисунки нумеруются одной последовательностью. */
+  figure: number;
+  /** Якорь для ссылок `#id`; английский kebab-case. */
+  id?: string;
+}
+
+const { figure, id = demoCaptions.WavDumpDemo.defaultId } = Astro.props;
+
+const { bytes, fields, chunks } = wavExample;
+const current = fields[defaultField]!;
+const view = fieldView(current);
+
+const rows = Array.from({ length: Math.ceil(bytes.length / bytesPerRow) }, (_, row) =>
+  Array.from(bytes.slice(row * bytesPerRow, (row + 1) * bytesPerRow), (byte, i) => {
+    const offset = row * bytesPerRow + i;
+    const index = fieldAt(offset);
+    const field = fields[index]!;
+    return {
+      byte,
+      offset,
+      index,
+      name: field.kind === 'fourcc',
+      current: index === defaultField,
+      chunk: field.chunk === current.chunk,
+    };
+  }),
+);
+
+const firstField = (chunkOffset: number) => fieldAt(chunkOffset);
+const byteClass = (cell: (typeof rows)[number][number]) =>
+  [cell.name && 'is-name', cell.current && 'is-current', cell.chunk && 'is-chunk']
+    .filter(Boolean)
+    .join(' ') || undefined;
+---
+
+<figure class="wav-dump" id={id} aria-labelledby={`${id}-name`} data-wav-dump data-state="static">
+  <div class="wav-dump-head">
+    <span class="wav-dump-label">Визуализация {figure}</span>
+    <span class="wav-dump-name" id={`${id}-name`}>
+      {demoCaptions.WavDumpDemo.name}
+    </span>
+  </div>
+  <fieldset class="wav-dump-map" data-map disabled>
+    <legend class="visually-hidden">Чанки файла</legend>
+    {chunks.map((chunk) => (
+      <button
+        type="button"
+        class="wav-dump-chunk"
+        style={`--bytes: ${chunk.length}`}
+        aria-pressed={chunk.id === current.chunk ? 'true' : 'false'}
+        data-chunk={chunk.id}
+        data-target={firstField(chunk.offset)}
+      >
+        <b>{chunkLabel(chunk.id)}</b>
+        <span>
+          {chunk.offset}–{chunk.offset + chunk.length - 1}
+        </span>
+      </button>
+    ))}
+  </fieldset>
+  <div class="wav-dump-body">
+    <div
+      class="wav-dump-bytes"
+      data-bytes
+      role="group"
+      aria-label="Байты файла: стрелки выбирают соседнее поле"
+    >
+      <div class="wav-dump-row wav-dump-columns" aria-hidden="true">
+        <span class="wav-dump-offset">Смещ.</span>
+        <span class="wav-dump-hex">Байты (hex)</span>
+        <span class="wav-dump-text">ASCII</span>
+      </div>
+      {rows.map((row) => (
+        <div class="wav-dump-row">
+          <span class="wav-dump-offset">{row[0]!.offset}</span>
+          <span class="wav-dump-hex">
+            {row.map((cell) => (
+              <span class={byteClass(cell)} data-field={cell.index}>
+                {byteHex(cell.byte)}
+              </span>
+            ))}
+          </span>
+          <span class="wav-dump-text" aria-hidden="true">
+            {row.map((cell) => (
+              <span class={byteClass(cell)} data-field={cell.index}>
+                {byteChar(cell.byte)}
+              </span>
+            ))}
+          </span>
+        </div>
+      ))}
+    </div>
+    <div class="wav-dump-detail">
+      <p class="wav-dump-field">
+        <span class="wav-dump-field-chunk" data-detail-chunk>
+          {view.chunk}
+        </span>
+        <b data-detail-name>{view.name}</b>
+        <code data-detail-spec hidden={!view.specName}>
+          {view.specName}
+        </code>
+      </p>
+      <dl class="wav-dump-facts">
+        <dt>Смещение</dt>
+        <dd data-detail-range>{view.range}</dd>
+        <dt>Байты</dt>
+        <dd>
+          <code data-detail-bytes>{view.bytes}</code>
+        </dd>
+        <dt>Чтение</dt>
+        <dd data-detail-reading>{view.reading}</dd>
+      </dl>
+      <p class="wav-dump-meaning">
+        <span class="wav-dump-icon">
+          <Icon name="info" size={18} />
+        </span>
+        <span data-detail-meaning>{view.meaning}</span>
+      </p>
+    </div>
+  </div>
+  <p class="visually-hidden" aria-live="polite" data-announce></p>
+  <fieldset class="wav-dump-controls" data-controls disabled>
+    <legend class="visually-hidden">Выбор поля</legend>
+    <div class="wav-dump-actions">
+      <div class="wav-dump-steps">
+        <button type="button" class="wav-dump-button" data-step="-1">
+          <Icon name="arrow-left" size={16} />
+          Предыдущее поле
+        </button>
+        <button type="button" class="wav-dump-button" data-step="1">
+          Следующее поле
+          <Icon name="arrow-right" size={16} />
+        </button>
+      </div>
+      <button type="button" class="wav-dump-button" data-reset>
+        <Icon name="rotate-ccw" size={16} />
+        Сбросить
+      </button>
+    </div>
+    <p class="wav-dump-note" data-controls-note>
+      Выбор поля работает с включённым JavaScript. Рисунок показывает первое поле файла.
+    </p>
+  </fieldset>
+  <figcaption class="wav-dump-caption">
+    <b>Рис. {figure}.</b> {dumpCaption}
+  </figcaption>
+</figure>
+
+<script>
+  import { initWavDumps } from '@/lib/wav-dump-controller';
+
+  initWavDumps();
+</script>
+
+<style is:global>
+  .wav-dump {
+    container-type: inline-size;
+    margin: var(--space-6) 0;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    overflow: hidden;
+    font-family: var(--font-ui);
+    scroll-margin-top: 88px;
+  }
+
+  .wav-dump-head {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 14px 20px;
+  }
+
+  .wav-dump-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  .wav-dump-name {
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  /* Карта чанков: ширина сегмента растёт с размером чанка, но подпись всегда помещается. */
+  .wav-dump-map {
+    display: flex;
+    gap: 4px;
+    min-width: 0;
+    margin: 0;
+    padding: 0 20px 14px;
+    border: 0;
+  }
+
+  .wav-dump-chunk {
+    display: flex;
+    flex: var(--bytes) 1 0;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+    padding: 6px 8px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text);
+    font: 400 12px var(--font-ui);
+    font-variant-numeric: tabular-nums;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .wav-dump-chunk b {
+    font: 600 14px var(--font-mono);
+    white-space: pre;
+  }
+
+  .wav-dump-chunk span {
+    color: var(--color-text-muted);
+    white-space: nowrap;
+  }
+
+  .wav-dump-chunk[aria-pressed='true'] {
+    border-color: var(--color-accent);
+    background: var(--color-accent-soft);
+  }
+
+  .wav-dump-body {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    border-top: var(--border-width) solid var(--color-border);
+  }
+
+  .wav-dump-bytes {
+    padding: 12px 16px 14px 20px;
+    border-right: var(--border-width) solid var(--color-border);
+    background: var(--chart-bg);
+    font: 14px/1 var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .wav-dump-bytes:focus-visible {
+    outline: none;
+    box-shadow: inset var(--focus-ring);
+  }
+
+  /* Ширины колонок в ch шрифта строки: неполная последняя строка совпадает с остальными. */
+  .wav-dump-row {
+    --cell-pad: 3px;
+    --char-pad: 1px;
+
+    display: grid;
+    grid-template-columns:
+      5ch calc(8 * (2ch + 2 * var(--cell-pad)))
+      calc(8 * (1ch + 2 * var(--char-pad)));
+    gap: 14px;
+    align-items: center;
+  }
+
+  .wav-dump-columns {
+    margin-bottom: 6px;
+  }
+
+  .wav-dump-columns > span {
+    font: 500 12px var(--font-ui);
+    color: var(--color-text-muted);
+    white-space: nowrap;
+  }
+
+  .wav-dump-offset {
+    text-align: right;
+    color: var(--color-text-muted);
+  }
+
+  .wav-dump-columns .wav-dump-offset {
+    text-align: left;
+  }
+
+  .wav-dump-hex,
+  .wav-dump-text {
+    display: grid;
+    justify-content: start;
+  }
+
+  .wav-dump-hex {
+    grid-template-columns: repeat(8, calc(2ch + 2 * var(--cell-pad)));
+  }
+
+  .wav-dump-text {
+    grid-template-columns: repeat(8, calc(1ch + 2 * var(--char-pad)));
+  }
+
+  .wav-dump-columns .wav-dump-hex,
+  .wav-dump-columns .wav-dump-text {
+    display: block;
+  }
+
+  .wav-dump-hex > span,
+  .wav-dump-text > span {
+    padding: 5px var(--cell-pad);
+    color: var(--color-text);
+    white-space: pre;
+  }
+
+  .wav-dump-text > span {
+    padding-inline: var(--char-pad);
+  }
+
+  .wav-dump-bytes [data-field] {
+    cursor: default;
+  }
+
+  .wav-dump[data-state='ready'] .wav-dump-bytes [data-field] {
+    cursor: pointer;
+  }
+
+  .wav-dump-bytes .is-name {
+    font-weight: 600;
+  }
+
+  /* Текущий чанк — фон без рамки; выбранное поле — заливка акцента и подчёркивание,
+     поэтому различие читается не только по цвету. */
+  .wav-dump-bytes .is-chunk {
+    background: var(--color-bg);
+  }
+
+  .wav-dump-bytes .is-current {
+    background: var(--color-accent-soft);
+    box-shadow: inset 0 -2px 0 var(--color-accent);
+    font-weight: 600;
+  }
+
+  .wav-dump-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+    padding: 14px 20px;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .wav-dump-field {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    align-items: baseline;
+    margin: 0;
+    font-size: 16px;
+  }
+
+  .wav-dump-field-chunk {
+    padding: 1px 6px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    font: 600 13px var(--font-mono);
+    white-space: pre;
+  }
+
+  .wav-dump-field code,
+  .wav-dump-facts code {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    overflow-wrap: anywhere;
+  }
+
+  .wav-dump-field code {
+    color: var(--color-text-muted);
+  }
+
+  .wav-dump-facts {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 6px 12px;
+    margin: 0;
+  }
+
+  .wav-dump-facts dt {
+    color: var(--color-text-muted);
+  }
+
+  .wav-dump-facts dd {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .wav-dump-meaning {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin: 0;
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    box-shadow: inset 0 0 0 1px var(--color-border-strong);
+  }
+
+  .wav-dump-icon {
+    display: flex;
+    flex: none;
+    margin-top: 1px;
+    color: var(--color-text-muted);
+  }
+
+  .wav-dump .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .wav-dump-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+    margin: 0;
+    padding: 14px 20px 16px;
+    border: 0;
+    border-top: var(--border-width) solid var(--color-border);
+  }
+
+  .wav-dump-actions,
+  .wav-dump-steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .wav-dump-actions {
+    justify-content: space-between;
+  }
+
+  .wav-dump-button {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    height: 36px;
+    padding: 0 12px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text);
+    font: 500 14px var(--font-ui);
+    cursor: pointer;
+  }
+
+  @media (hover: hover) {
+    .wav-dump-button:hover,
+    .wav-dump-chunk:hover {
+      background: var(--color-bg);
+    }
+
+    .wav-dump-chunk[aria-pressed='true']:hover {
+      background: var(--color-accent-soft);
+    }
+  }
+
+  .wav-dump-map:disabled,
+  .wav-dump-controls:disabled .wav-dump-actions {
+    opacity: 0.5;
+  }
+
+  .wav-dump-map:disabled *,
+  .wav-dump-controls:disabled * {
+    cursor: not-allowed;
+  }
+
+  .wav-dump-note {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+  }
+
+  .wav-dump[data-state='ready'] .wav-dump-note {
+    display: none;
+  }
+
+  .wav-dump[data-state='error'] .wav-dump-note {
+    color: var(--color-error);
+  }
+
+  .wav-dump-caption {
+    padding: 10px 20px 14px;
+    border-top: var(--border-width) solid var(--color-border);
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+  }
+
+  .wav-dump-caption b {
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  /* Дамп над описанием, когда рядом им тесно. */
+  @container (max-width: 699px) {
+    .wav-dump-body {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .wav-dump-bytes {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border-right: 0;
+      border-bottom: var(--border-width) solid var(--color-border);
+    }
+  }
+
+  @container (max-width: 559px) {
+    .wav-dump-head,
+    .wav-dump-detail,
+    .wav-dump-controls,
+    .wav-dump-caption {
+      padding-inline: 16px;
+    }
+
+    .wav-dump-map {
+      flex-wrap: wrap;
+      padding-inline: 16px;
+    }
+
+    .wav-dump-chunk {
+      flex: 1 1 0;
+      padding-inline: 6px;
+    }
+
+    .wav-dump-bytes {
+      padding-inline: 8px;
+      font-size: 13px;
+    }
+
+    .wav-dump-row {
+      --cell-pad: 2px;
+
+      gap: 8px;
+    }
+  }
+
+  @container (max-width: 359px) {
+    .wav-dump-bytes {
+      font-size: 12px;
+    }
+
+    .wav-dump-row {
+      --cell-pad: 1.5px;
+      --char-pad: 0.5px;
+
+      gap: 6px;
+    }
+
+    .wav-dump-chunk span {
+      display: none;
+    }
+  }
+</style>

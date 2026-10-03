@@ -18,6 +18,7 @@ export const demoCaptions = {
     name: 'Компрессор: характеристика и уровни во времени',
   },
   LfoDemo: { defaultId: 'lfo-waveforms', name: 'Четыре формы LFO из одной фазы' },
+  WavDumpDemo: { defaultId: 'wav-dump', name: 'Байты WAV-файла по полям' },
 } as const satisfies Record<string, DemoCaption>;
 
 export type DemoComponent = keyof typeof demoCaptions;

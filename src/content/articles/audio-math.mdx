@@ -81,6 +81,18 @@ $$
 
 <Term id="absolute-value" firstMention define>Модуль числа</Term> $|x|$ — расстояние от него до нуля: $|-0{,}8|=0{,}8$ и $|0{,}8|=0{,}8$. Знак исчезает и при возведении в квадрат: $(-0{,}8)^2=0{,}64$. При этом $-0{,}8^2=-0{,}64$: без скобок минус применяется после возведения в квадрат.
 
+## Двоичная и шестнадцатеричная запись {#number-bases}
+
+В обычной десятичной записи каждая цифра умножается на степень десяти по своему месту: $345 = 3\cdot10^2 + 4\cdot10^1 + 5\cdot10^0$. Такая запись называется позиционной, а 10 — её основанием. С тем же правилом можно взять другое основание; его указывают нижним индексом: $1011_2$.
+
+Двоичная (binary) запись использует только цифры 0 и 1, их называют битами (bit). Места соответствуют степеням двойки: $1011_2 = 1\cdot2^3 + 0\cdot2^2 + 1\cdot2^1 + 1\cdot2^0 = 8 + 2 + 1 = 11$. Восемь бит образуют байт (byte). В байте $2^8 = 256$ комбинаций, поэтому как число без знака он принимает значения от 0 до 255.
+
+Шестнадцатеричная (hexadecimal) запись использует 16 цифр: 0–9 и буквы A–F со значениями от 10 до 15. Поскольку $16 = 2^4$, одна шестнадцатеричная цифра заменяет ровно четыре бита, а байт записывается двумя цифрами — от 00 до FF. Например, $\text{AC}_{16} = 10\cdot16 + 12 = 172$, а $\text{FF}_{16} = 15\cdot16 + 15 = 255$. В программах вместо индекса пишут приставку `0x`: `0xAC44` $= 10\cdot16^3 + 12\cdot16^2 + 4\cdot16 + 4 = 44\,100$.
+
+Число из нескольких байтов можно читать как запись по основанию 256: каждый байт — одна «цифра». Если младший байт $b_0$, следующий $b_1$ и так далее, значение равно $b_0 + b_1\cdot256 + b_2\cdot256^2 + b_3\cdot256^3$. Число 44 100 состоит из байтов $\text{44}_{16} = 68$ и $\text{AC}_{16} = 172$: $68 + 172\cdot256 = 44\,100$. В каком порядке байты лежат в файле, определяет формат: в [WAV-файле](/wav-file/#bytes) младший байт идёт первым.
+
+Эти правила описывают целые числа без знака. Отрицательные целые обычно хранят в дополнительном коде (two's complement): тот же набор битов читается по особому правилу, и, например, 16-битное `0xFF00` означает −256.
+
 ## Функция, аргумент и график {#functions}
 
 <MarginNote items={[
@@ -391,6 +403,7 @@ $$
 - [Дискретизация](/sampling/#example): $x(t)$ и $x[n]$, неравенство для полосы частот, округление, sinc и сумма по отсчётам.
 - [АЦП и ЦАП](/adc-dac/#quantization): степени двойки, деление диапазона на число кодов, модуль ошибки и приближённая формула сигнал/шум.
 - [Аудиоданные в программах](/audio-data/#buffer-size): целые индексы от 0 до $N-1$, произведения для числа отсчётов и байтов, деление для длительности.
+- [Устройство WAV-файла](/wav-file/#bytes): шестнадцатеричная запись байтов, сборка числа из байтов по основанию 256, остаток от деления на 2 для байта выравнивания.
 - [Уровень сигнала](/signal-level/#rms) и [кривые равной громкости](/equal-loudness/#spl): логарифм отношения, сумма квадратов, корень и шкалы графика.
 - [LFO](/lfo/#destinations): доли, перенос угла в полуоткрытый интервал, модуль и кусочные функции. Например, $(l[n]+1)/2$ переводит диапазон $[-1,1]$ в $[0,1]$: сначала сдвигает его в $[0,2]$, затем уменьшает вдвое.
 - [Компрессор](/compressor/#threshold-ratio): вычитание отрицательных уровней, кусочная характеристика, экспонента и использование предыдущего состояния.
@@ -401,5 +414,6 @@ $$
 - [OpenStax, §5.1: Angles](https://openstax.org/books/precalculus-2e/pages/5-1-angles) — радианы, дуга и перевод градусов.
 - [OpenStax, §5.4: Right Triangle Trigonometry](https://openstax.org/books/precalculus-2e/pages/5-4-right-triangle-trigonometry) и [§5.2: Unit Circle, Sine and Cosine Functions](https://openstax.org/books/precalculus-2e/pages/5-2-unit-circle-sine-and-cosine-functions) — отношения сторон и координаты на окружности.
 - [OpenStax, §4.3: Logarithmic Functions](https://openstax.org/books/precalculus-2e/pages/4-3-logarithmic-functions), [§4.5: Logarithmic Properties](https://openstax.org/books/precalculus-2e/pages/4-5-logarithmic-properties) и [§4.1: Exponential Functions](https://openstax.org/books/precalculus-2e/pages/4-1-exponential-functions) — основания логарифмов, обратная операция и экспонента.
+- [Stephen Davies. A Cool Brisk Walk Through Discrete Mathematics, §7.3: Hexadecimal (base 16)](https://math.libretexts.org/Bookshelves/Combinatorics_and_Discrete_Mathematics/A_Cool_Brisk_Walk_Through_Discrete_Mathematics_(Davies)/07:_Counting/7.3:_Hexadecimal_(base_16)) и [§7.4: Binary (base 2)](https://math.libretexts.org/Bookshelves/Combinatorics_and_Discrete_Mathematics/A_Cool_Brisk_Walk_Through_Discrete_Mathematics_(Davies)/07:_Counting/7.4:_Binary_(base_2)) — позиционная запись, биты, байт из 8 бит, шестнадцатеричная цифра как 4 бита, дополнительный код.
 - [Julius O. Smith III. Mathematics of the DFT: Decibels](https://ccrma.stanford.edu/~jos/mdft/Decibels.html), [Signal Metrics](https://ccrma.stanford.edu/~jos/mdft/Signal_Metrics.html) и [Sampling Theorem](https://ccrma.stanford.edu/~jos/mdft/Sampling_Theorem.html) — децибелы, RMS и идеальная интерполяция через sinc.
 - [MathWorks. compressor, Algorithms](https://www.mathworks.com/help/audio/ref/compressor-system-object.html) — статическая характеристика и коэффициенты сглаживания атаки и восстановления.
