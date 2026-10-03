@@ -22,6 +22,7 @@ src/
   content/articles/                  # Статьи в MDX: пять статей первого выпуска и материалы по issue
   content.config.ts ✅               # Коллекция статей
   data/topics.ts ✅                  # Четыре тематические группы
+  data/visualizations.ts ✅          # Реестр интерактивных визуализаций для главной
   data/glossary.json ✅               # Единый источник определений
   data/equal-loudness.json ✅         # Коэффициенты ISO 226:2023 и источник графика
   components/                        # Каркас, учебные блоки, поиск и визуализация
@@ -79,6 +80,10 @@ src/
     compressor-view.ts ✅            # Тексты, параметры ползунков и разметка SVG визуализации компрессора
     compressor-audio-player.ts ✅    # Звук «до / после» компрессора по кругу через Web Audio
     compressor-demo-controller.ts ✅ # Параметры, примеры, сброс и плеер визуализации компрессора
+    demo-captions.ts ✅              # Названия подписей и якоря по умолчанию визуализаций статей
+    visualizations.ts ✅             # Проверка реестра визуализаций, состав раздела и адрес карточки
+    visualization-list.ts ✅         # Раздел визуализаций главной по коллекции статей
+    visualization-preview.ts ✅      # Геометрия статичных превью карточек
     rehype-site-urls.mjs ✅           # Преобразование адресов в Markdown/MDX
     rehype-math-errors.mjs ✅         # Ошибки формул блокируют сборку
     rehype-pagefind.mjs ✅            # Исключает дубли формул KaTeX из индекса Pagefind
@@ -112,6 +117,8 @@ src/
     SamplingDemo.astro ✅            # Эксперимент дискретизации: SVG, легенда, статус, параметры, подпись
     PhaseDemo.astro ✅               # Визуализация фазы: окружность, синусоиды, статус, параметр, подпись
     ToneDemo.astro ✅                # Генератор тона: значения f, T, λ, статус, параметр, плеер, подпись
+    VisualizationsSection.astro ✅   # Раздел главной: карточки визуализаций и лента на смартфоне
+    VisualizationPreview.astro ✅    # Декоративный SVG-превью карточки визуализации
     CompressorDemo.astro ✅          # Компрессор: характеристика, уровни во времени, параметры, плеер «до / после»
     DataTable.astro ✅               # Таблица с caption, scope, закреплённым первым столбцом и прокруткой
     SearchButton.astro ✅            # Кнопка поиска в шапке

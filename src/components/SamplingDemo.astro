@@ -2,6 +2,7 @@
 // Эксперимент дискретизации: график, легенда, статус, параметры и подпись «Рис. N.».
 // При сборке рисуется начальное состояние 8 000 Гц; скрипт включает параметры и перерисовывает тот же SVG.
 // Без JS, во время загрузки и при ошибке параметры неактивны, а сообщение объясняет почему.
+import { demoCaptions } from '@/lib/demo-captions';
 import Icon from '@/components/Icon.astro';
 import { samplingExperiment, signalFrequency } from '@/lib/sampling';
 import { initialVolume, listenDuration } from '@/lib/sampling-audio';
@@ -53,7 +54,7 @@ const warning = `Результат — чистый тон ${formatNumber(signa
   <div class="sampling-demo-head">
     <span class="sampling-demo-label">Визуализация {figure}</span>
     <span class="sampling-demo-name" id={`${id}-name`}>
-      Отсчёты синусоиды при разной частоте дискретизации
+      {demoCaptions.SamplingDemo.name}
     </span>
   </div>
   <div class="sampling-demo-chart" data-chart set:html={samplingChartSvg(experiment, alias, id)} />

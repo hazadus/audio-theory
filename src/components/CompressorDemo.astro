@@ -3,6 +3,7 @@
 // легенда, статус, шесть параметров, примеры, плеер «до / после» и подпись «Рис. N.».
 // При сборке рисуется начальное состояние; скрипт включает параметры и звук и перерисовывает те же SVG.
 // Без JS, во время загрузки и при ошибке параметры неактивны, а сообщение объясняет почему.
+import { demoCaptions } from '@/lib/demo-captions';
 import Icon from '@/components/Icon.astro';
 import { defaultSettings, presets, sameSettings } from '@/lib/compressor';
 import {
@@ -40,7 +41,7 @@ const view = compressorView(settings);
   <div class="compressor-demo-head">
     <span class="compressor-demo-label">Визуализация {figure}</span>
     <span class="compressor-demo-name" id={`${id}-name`}>
-      Компрессор: характеристика и уровни во времени
+      {demoCaptions.CompressorDemo.name}
     </span>
   </div>
   <div class="compressor-demo-plot">

@@ -13,7 +13,7 @@ test(
     await expect(page.locator('html')).toHaveAttribute('lang', 'ru');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Теория аудио');
     await expect(page.getByRole('main')).toContainText('Личный учебник по теории аудио');
-    await expect(page.locator('main section').first().locator('a.card').first()).toBeVisible();
+    await expect(page.locator('main section').nth(1).locator('a.card').first()).toBeVisible();
     await expect(page.locator('footer').getByRole('link', { name: 'GitHub' })).toHaveAttribute(
       'href',
       siteConfig.repository,
@@ -315,8 +315,9 @@ for (const [name, viewport] of [
         expect(await cards.count()).toBeGreaterThan(0);
         // Каждая карточка — одна ссылка без вложенных интерактивных элементов.
         expect(await page.locator('a.card a, a.card button').count()).toBe(0);
+        // Раздел визуализаций (`ul.viz-list`) идёт первым; остальные секции — тематические группы.
         expect(await page.locator('section ul.cards').count()).toBe(
-          await page.locator('main section').count(),
+          (await page.locator('main section').count()) - 1,
         );
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
           viewport.width,
@@ -347,3 +348,63 @@ test('кнопка поиска на главной открывает диал�
   await button.click();
   await expect(page.getByRole('dialog')).toBeVisible();
 });
+
+test(
+  'главная: карточки визуализаций ведут на якоря, звуковая метка и раскладка',
+  { tag: ['@ci', '@placement'] },
+  async ({ browser }, testInfo) => {
+    const base = testInfo.project.metadata.base as string;
+    const expected = [
+      { id: 'tone-demo', slug: 'sound-wave', sound: true },
+      { id: 'phase-demo', slug: 'sound-wave', sound: false },
+      { id: 'sampling-demo', slug: 'sampling', sound: true },
+      { id: 'compressor-demo', slug: 'compressor', sound: true },
+    ];
+    for (const viewport of [
+      { width: 1440, height: 900 },
+      { width: 599, height: 800 },
+      { width: 600, height: 800 },
+      { width: 320, height: 640 },
+    ]) {
+      const context = await browser.newContext({ baseURL: testInfo.project.use.baseURL, viewport });
+      try {
+        const page = await context.newPage();
+        await page.goto('./');
+        const cards = page.locator('a.viz-card');
+        await expect(cards).toHaveCount(expected.length);
+        for (const [index, item] of expected.entries()) {
+          const card = cards.nth(index);
+          await expect(card).toHaveAttribute('href', `${base}${item.slug}/#${item.id}`);
+          await expect(card.locator('svg.preview[aria-hidden="true"]')).toHaveCount(1);
+          await expect(card.getByText('Со звуком')).toHaveCount(item.sound ? 1 : 0);
+        }
+        expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+          viewport.width,
+        );
+        const list = page.locator('ul.viz-list');
+        const style = await list.evaluate((el) => {
+          const css = getComputedStyle(el);
+          return { snap: css.scrollSnapType, overflowX: css.overflowX };
+        });
+        if (viewport.width < 600) {
+          expect(style.snap).toContain('x mandatory');
+          expect(style.overflowX).toBe('auto');
+          expect((await cards.first().boundingBox())!.width).toBeCloseTo(264, 0);
+        } else {
+          expect(style.overflowX).toBe('visible');
+        }
+        if (viewport.width === 1440) {
+          const tops = await cards.evaluateAll((els) =>
+            els.map((el) => el.getBoundingClientRect().top),
+          );
+          expect(new Set(tops.map(Math.round)).size).toBe(1);
+          await cards.nth(2).click();
+          await expect(page).toHaveURL(`${base}sampling/#sampling-demo`);
+          await expect(page.locator('#sampling-demo')).toBeVisible();
+        }
+      } finally {
+        await context.close();
+      }
+    }
+  },
+);

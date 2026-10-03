@@ -2,6 +2,7 @@
 // Визуализация фазы: окружность с векторами и две синусоиды, легенда, статус, параметр φ и подпись «Рис. N.».
 // При сборке рисуется начальное состояние 90°; скрипт включает параметры и перерисовывает те же SVG.
 // Без JS, во время загрузки и при ошибке параметры неактивны, а сообщение объясняет почему.
+import { demoCaptions } from '@/lib/demo-captions';
 import Icon from '@/components/Icon.astro';
 import { defaultPhase, maxPhase, minPhase, phaseStep, presetPhases } from '@/lib/phase';
 import {
@@ -37,7 +38,7 @@ const fill = ((phase - minPhase) / (maxPhase - minPhase)) * 100;
   <div class="phase-demo-head">
     <span class="phase-demo-label">Визуализация {figure}</span>
     <span class="phase-demo-name" id={`${id}-name`}>
-      Начальная фаза и сдвиг во времени
+      {demoCaptions.PhaseDemo.name}
     </span>
   </div>
   <div class="phase-demo-plot">

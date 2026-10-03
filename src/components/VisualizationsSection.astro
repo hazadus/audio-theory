@@ -1,0 +1,206 @@
+---
+// Раздел главной «Интерактивные визуализации»: карточки из реестра `src/data/visualizations.ts`.
+// Без JS работает как обычный список ссылок; на смартфоне — лента с привязкой к карточкам.
+import Icon from '@/components/Icon.astro';
+import VisualizationPreview from '@/components/VisualizationPreview.astro';
+import { withBase } from '@/lib/urls';
+import type { VisualizationSection } from '@/lib/visualizations';
+
+interface Props {
+  section: VisualizationSection;
+}
+
+const { cards, total } = Astro.props.section;
+---
+
+{cards.length > 0 && (
+  <section class="group" aria-labelledby="visualizations-title">
+    <div class="group-head">
+      <div class="group-title">
+        <h2 id="visualizations-title">Интерактивные визуализации</h2>
+        <p>Графики и звук, параметры которых можно менять.</p>
+      </div>
+      {total > cards.length && (
+        <a class="viz-all" href={withBase('/visualizations/')}>
+          Все {total}
+          <Icon name="chevron-right" size={14} />
+        </a>
+      )}
+    </div>
+    <ul class="viz-list">
+      {cards.map((card) => (
+        <li>
+          <a class="viz-card" href={withBase(card.href)}>
+            <VisualizationPreview kind={card.preview} />
+            <span class="viz-body">
+              <span class="viz-title">{card.name}</span>
+              <span class="viz-what">{card.what}</span>
+              <span class="viz-meta">
+                <span class="viz-source">Из статьи «{card.articleTitle}»</span>
+                {card.sound && (
+                  <span class="viz-sound">
+                    <Icon name="volume-2" size={15} />
+                    Со звуком
+                  </span>
+                )}
+              </span>
+            </span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+)}
+
+<style>
+  .group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .group-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 16px;
+    padding-top: var(--space-5);
+    border-top: var(--border-width) solid var(--color-border);
+  }
+
+  .group-title {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    max-width: 640px;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: var(--text-2xl);
+    line-height: 1.2;
+    letter-spacing: var(--tracking-snug);
+  }
+
+  .group-title p {
+    margin: 0;
+    font-family: var(--font-text);
+    line-height: 1.5;
+    color: var(--color-text-muted);
+  }
+
+  .viz-all {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    color: var(--color-link);
+  }
+
+  .viz-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .viz-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-bg);
+    color: var(--color-text);
+    text-decoration: none;
+  }
+
+  .viz-card:hover {
+    border-color: var(--color-border-strong);
+    background: var(--color-surface);
+  }
+
+  .viz-card:focus-visible {
+    border-radius: var(--radius-lg);
+  }
+
+  .viz-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: 14px var(--space-4) var(--space-4);
+  }
+
+  .viz-title {
+    font-family: var(--font-text);
+    font-weight: 600;
+    font-size: 1.125rem;
+    line-height: 1.25;
+    text-wrap: balance;
+  }
+
+  .viz-what {
+    font-family: var(--font-text);
+    font-size: 0.9375rem;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+    text-wrap: pretty;
+  }
+
+  .viz-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 12px;
+    margin-top: auto;
+    padding-top: 6px;
+    font-size: var(--text-xs);
+    line-height: 1.35;
+    color: var(--color-text-muted);
+  }
+
+  .viz-source {
+    flex: 1 1 140px;
+  }
+
+  .viz-sound {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    white-space: nowrap;
+  }
+
+  @media (width >= 1024px) {
+    .viz-list {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  @media (width < 600px) {
+    .viz-list {
+      grid-auto-flow: column;
+      grid-template-columns: none;
+      grid-auto-columns: 264px;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x mandatory;
+      scroll-padding-inline: var(--page-gutter);
+      margin-inline: calc(-1 * var(--page-gutter));
+      padding-inline: var(--page-gutter);
+      padding-bottom: var(--space-1);
+    }
+
+    .viz-list > li {
+      scroll-snap-align: start;
+      min-width: 0;
+    }
+  }
+</style>

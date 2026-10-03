@@ -2,6 +2,7 @@
 // Генератор чистого тона: частота, период и длина волны, статус, параметр f, плеер и подпись «Рис. N.».
 // При сборке показывается начальное состояние 1 кГц; скрипт включает параметры и звук.
 // Без JS, во время загрузки и при ошибке параметры неактивны, а сообщение объясняет почему.
+import { demoCaptions } from '@/lib/demo-captions';
 import Icon from '@/components/Icon.astro';
 import { initialVolume } from '@/lib/sampling-audio';
 import { volumeStep, volumeText } from '@/lib/sampling-player';
@@ -41,7 +42,7 @@ const markText = (value: number) =>
   <div class="tone-demo-head">
     <span class="tone-demo-label">Визуализация {figure}</span>
     <span class="tone-demo-name" id={`${id}-name`}>
-      Генератор чистого тона
+      {demoCaptions.ToneDemo.name}
     </span>
   </div>
   <dl class="tone-demo-values">

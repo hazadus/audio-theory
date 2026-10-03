@@ -1,14 +1,17 @@
 ---
 import Icon from '@/components/Icon.astro';
+import VisualizationsSection from '@/components/VisualizationsSection.astro';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { topics } from '@/data/topics';
 import { loadArticleList } from '@/lib/article-list';
 import { formatUpdatedDate } from '@/lib/format-date';
 import { buildHomeGroups } from '@/lib/home';
+import { loadVisualizationSection } from '@/lib/visualization-list';
 import { materialsHref } from '@/lib/materials';
 import { withBase } from '@/lib/urls';
 
 const groups = buildHomeGroups(await loadArticleList(), topics);
+const visualizations = await loadVisualizationSection();
 ---
 
 <BaseLayout
@@ -28,6 +31,8 @@ const groups = buildHomeGroups(await loadArticleList(), topics);
         <kbd aria-hidden="true">/</kbd>
       </button>
     </div>
+
+    <VisualizationsSection section={visualizations} />
 
     {groups.map((group) => (
       <section class="group" aria-labelledby={`group-${group.id}`}>

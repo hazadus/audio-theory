@@ -5,6 +5,7 @@ import remarkMath from 'remark-math';
 import remarkParse from 'remark-parse';
 import { unified } from 'unified';
 import type { ArticleData } from '@/lib/articles';
+import { demoCaptions, isDemoComponent, type DemoComponent } from '@/lib/demo-captions';
 import type { Heading } from '@/lib/headings';
 import remarkHeadingAnchors from '@/lib/remark-heading-anchors.mjs';
 
@@ -173,6 +174,15 @@ function analyze(body: string): Analysis {
   }
   walk(tree);
   return analysis;
+}
+
+/** Интерактивные визуализации статьи: компонент и якорь (`id` или значение по умолчанию). */
+export function findDemos(body: string): { component: DemoComponent; id: string }[] {
+  return analyze(body).blocks.flatMap(({ name, node }) =>
+    isDemoComponent(name)
+      ? [{ component: name, id: stringAttribute(node, 'id') ?? demoCaptions[name].defaultId }]
+      : [],
+  );
 }
 
 /** Идентификаторы и нумерация блоков одной статьи; возвращает id блоков. */

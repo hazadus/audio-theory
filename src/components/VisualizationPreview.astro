@@ -1,0 +1,64 @@
+---
+// Декоративное превью карточки: статичный SVG на фоне графиков, без осей и подписей.
+import {
+  buildPreview,
+  previewHeight,
+  previewMidline,
+  previewWidth,
+} from '@/lib/visualization-preview';
+import type { PreviewKind } from '@/lib/visualization-preview';
+
+interface Props {
+  kind: PreviewKind;
+}
+
+const { paths, dots } = buildPreview(Astro.props.kind);
+const color = (role: string) => `var(--chart-${role})`;
+---
+
+<svg
+  class="preview"
+  viewBox={`0 0 ${previewWidth} ${previewHeight}`}
+  aria-hidden="true"
+  focusable="false"
+>
+  <line
+    x1="16"
+    y1={previewMidline}
+    x2="264"
+    y2={previewMidline}
+    stroke={color('grid')}
+    stroke-width="1"
+  ></line>
+  {paths.map((path) => (
+    <path
+      d={path.d}
+      fill="none"
+      stroke={color(path.color)}
+      stroke-width={path.width}
+      stroke-dasharray={path.dash}
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    ></path>
+  ))}
+  {dots.map((dot) => (
+    <circle
+      cx={dot.x}
+      cy={dot.y}
+      r="3.5"
+      fill={color('bg')}
+      stroke={color(dot.color)}
+      stroke-width="1.75"
+    ></circle>
+  ))}
+</svg>
+
+<style>
+  .preview {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: var(--chart-bg);
+    border-bottom: var(--border-width) solid var(--color-border);
+  }
+</style>
