@@ -6,6 +6,8 @@ import SearchDialog from '@/components/SearchDialog.astro';
 import SiteFooter from '@/components/SiteFooter.astro';
 import SiteHeader from '@/components/SiteHeader.astro';
 import { themeInitScript } from '@/lib/theme';
+import { feedPath, feedTitle } from '@/lib/updates-feed';
+import { withBase } from '@/lib/urls';
 
 interface Props {
   title: string;
@@ -25,6 +27,7 @@ const { title, description, section } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     {description && <meta name="description" content={description} />}
     <title>{title}</title>
+    <link rel="alternate" type="application/rss+xml" title={feedTitle} href={withBase(feedPath)} />
   </head>
   <body>
     <a class="skip-link" href="#content" data-pagefind-ignore>

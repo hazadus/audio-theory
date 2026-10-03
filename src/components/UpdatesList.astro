@@ -12,6 +12,7 @@ import {
   updateMeta,
   updateYears,
 } from '@/lib/update-view';
+import { feedIntro, feedPath } from '@/lib/updates-feed';
 import { withBase } from '@/lib/urls';
 
 interface Props {
@@ -26,8 +27,7 @@ const archive = Astro.props.year !== undefined;
 const days = year ? groupByDay(entries, year) : [];
 const earlier = year ? earlierYears(years, year) : [];
 const title = archive ? `Обновления за ${year} год` : 'Обновления';
-const intro =
-  'Новые материалы и дополнения к опубликованным, по датам. Ссылки ведут прямо к изменённому месту.';
+const intro = feedIntro;
 ---
 
 <BaseLayout {title} description={intro}>
@@ -36,6 +36,9 @@ const intro =
       <h1>{title}</h1>
       {year && !archive && <p class="year">{year} год</p>}
       <p class="intro">{intro}</p>
+      <a class="latest" href={withBase(feedPath)}>
+        RSS-лента
+      </a>
       {archive && (
         <a class="latest" href={withBase('/updates/')}>
           Последние обновления

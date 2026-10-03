@@ -247,3 +247,24 @@ test(
     expect(await overflow(page)).toBeLessThanOrEqual(0);
   },
 );
+
+test(
+  'RSS-лента: ссылка на странице и в head, лента отдаётся с абсолютными адресами',
+  { tag: ['@updates'] },
+  async ({ page, request }) => {
+    await page.goto('updates/');
+    const link = page.getByRole('link', { name: 'RSS-лента' });
+    await expect(link).toHaveAttribute('href', '/audio-theory/updates/feed.xml');
+    await expect(page.locator('link[rel="alternate"][type="application/rss+xml"]')).toHaveAttribute(
+      'href',
+      '/audio-theory/updates/feed.xml',
+    );
+
+    const response = await request.get('updates/feed.xml');
+    expect(response.ok()).toBe(true);
+    const xml = await response.text();
+    expect(xml.match(/<item>/g)).toHaveLength(7);
+    expect(xml).toContain('<guid isPermaLink="false">audio-theory-update:sampling-new</guid>');
+    expect(xml).not.toMatch(/href="\/|<link>\//);
+  },
+);
