@@ -8,7 +8,7 @@
 - [Обзор устройства](./docs/overview.md) — как работают отдельные части сайта.
 - [Спецификация](./docs/spec.md) — согласованные требования, контракты данных и правила публикации.
   - [Открытые вопросы](./docs/questions.md) — решения, которые предстоит обсудить.
-- [Подготовка материалов](./docs/authoring/rules.md) — общие правила, [чеклист](./docs/authoring/checklist.md), [источники](./docs/authoring/sources.md), [MDX-шаблон](./docs/authoring/article-template.mdx) и [проверка шаблона](./docs/authoring/template-review.md).
+- [Подготовка материалов](./docs/authoring/rules.md) — общие правила, [чеклист](./docs/authoring/checklist.md), [источники](./docs/authoring/sources.md), [MDX-шаблон](./docs/authoring/article-template.mdx), [шаблон записи журнала](./docs/authoring/update-template.md) и [проверка шаблона](./docs/authoring/template-review.md).
 - [Темы материалов](./docs/topics.md) — состав первого выпуска и задачи статей.
 - [Дизайн-система](./docs/design-system.md) — оформление, адаптация и поведение UI; [HTML-макеты](./docs/design/) — визуальные образцы.
 - [CI и деплой](./docs/deploy.md) — настройка GitHub Pages, workflow и проверка публикации нужного коммита.
