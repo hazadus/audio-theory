@@ -1418,5 +1418,155 @@
       "article": "audio-math",
       "anchor": "bitwise"
     }
+  },
+  {
+    "id": "bitrate",
+    "ru": "битрейт",
+    "en": "bit rate",
+    "definition": "Число бит на секунду звучания. У несжатого PCM равен произведению частоты дискретизации, разрядности и числа каналов: для CD 1 411 200 бит/с.",
+    "target": {
+      "article": "audio-compression",
+      "anchor": "bitrate-and-compression"
+    }
+  },
+  {
+    "id": "lossless-compression",
+    "ru": "сжатие без потерь",
+    "en": "lossless compression",
+    "definition": "Уменьшение объёма данных, после которого распаковка возвращает в точности исходные отсчёты. Так работают FLAC и ALAC.",
+    "target": {
+      "article": "audio-compression",
+      "anchor": "bitrate-and-compression"
+    }
+  },
+  {
+    "id": "lossy-compression",
+    "ru": "сжатие с потерями",
+    "en": "lossy compression",
+    "definition": "Уменьшение объёма за счёт замены сигнала приближением: восстановленные отсчёты отличаются от исходных. Так работают MP3, AAC и Opus.",
+    "target": {
+      "article": "audio-compression",
+      "anchor": "bitrate-and-compression"
+    }
+  },
+  {
+    "id": "codec",
+    "ru": "кодек",
+    "en": "codec",
+    "definition": "Алгоритм или программа, которая кодирует сигнал в сжатый поток и декодирует его обратно. Формат файла при этом задаёт упаковку данных и метаданных.",
+    "target": {
+      "article": "audio-compression",
+      "anchor": "bitrate-and-compression"
+    }
+  },
+  {
+    "id": "aiff",
+    "ru": "AIFF",
+    "en": "Audio Interchange File Format",
+    "definition": "Формат звукового файла Apple на основе контейнера IFF: чанки COMM с параметрами и SSND с отсчётами PCM, числа записаны старшим байтом вперёд.",
+    "target": {
+      "article": "audio-compression",
+      "anchor": "aiff"
+    }
+  },
+  {
+    "id": "big-endian",
+    "ru": "порядок байтов big-endian",
+    "en": "big-endian",
+    "definition": "Запись многобайтового числа, при которой старший байт идёт первым. Число 44 100 = 0xAC44 в четырёх байтах хранится как 00 00 AC 44.",
+    "target": {
+      "article": "audio-compression",
+      "anchor": "aiff"
+    }
+  },
+  {
+    "id": "flac",
+    "ru": "FLAC",
+    "en": "Free Lossless Audio Codec",
+    "definition": "Формат сжатия звука без потерь: блоки PCM кодируются предсказанием по предыдущим отсчётам и остатком в кодах Райса. Описан в RFC 9639.",
+    "target": {
+      "article": "audio-compression",
+      "anchor": "flac"
+    }
+  },
+  {
+    "id": "linear-prediction",
+    "ru": "линейное предсказание",
+    "en": "linear prediction",
+    "definition": "Оценка отсчёта взвешенной суммой нескольких предыдущих отсчётов. Во FLAC используются фиксированные предсказатели порядка 0–4 и предсказатели с записанными коэффициентами.",
+    "target": {
+      "article": "audio-compression",
+      "anchor": "prediction"
+    }
+  },
+  {
+    "id": "prediction-residual",
+    "ru": "остаток предсказания",
+    "en": "prediction residual",
+    "definition": "Разность между отсчётом и его предсказанием. При удачном предсказании остаток близок к нулю и записывается меньшим числом бит, чем отсчёт.",
+    "target": {
+      "article": "audio-compression",
+      "anchor": "prediction"
+    }
+  },
+  {
+    "id": "rice-code",
+    "ru": "код Райса",
+    "en": "Rice code",
+    "definition": "Код переменной длины для неотрицательных целых: частное от деления на 2^k записывается унарно, остаток — k битами. Короток для чисел около нуля.",
+    "target": {
+      "article": "audio-compression",
+      "anchor": "rice-codes"
+    }
+  },
+  {
+    "id": "mid-side-stereo",
+    "ru": "стерео «середина и разность»",
+    "en": "mid-side stereo",
+    "definition": "Замена левого и правого каналов на их среднее и разность. Для похожих каналов разность мала и кодируется короче.",
+    "target": {
+      "article": "audio-compression",
+      "anchor": "stereo-decorrelation"
+    }
+  },
+  {
+    "id": "mp3",
+    "ru": "MP3",
+    "en": "MPEG-1/2 Audio Layer III",
+    "definition": "Формат сжатия звука с потерями: гибридный банк фильтров, психоакустическая модель, неравномерное квантование и коды Хаффмана в кадрах по 1152 отсчёта.",
+    "target": {
+      "article": "audio-compression",
+      "anchor": "mp3"
+    }
+  },
+  {
+    "id": "mdct",
+    "ru": "модифицированное дискретное косинусное преобразование",
+    "en": "modified discrete cosine transform, MDCT",
+    "definition": "Преобразование блока отсчётов в частотные линии с перекрытием соседних блоков. В MP3 делит каждую из 32 полос ещё на 18 линий.",
+    "target": {
+      "article": "audio-compression",
+      "anchor": "mp3-encoder"
+    }
+  },
+  {
+    "id": "huffman-coding",
+    "ru": "код Хаффмана",
+    "en": "Huffman coding",
+    "definition": "Префиксный код, в котором частым значениям назначены короткие кодовые слова, а редким — длинные. В MP3 кодирует квантованные частотные линии.",
+    "target": {
+      "article": "audio-compression",
+      "anchor": "mp3-encoder"
+    }
+  },
+  {
+    "id": "bit-reservoir",
+    "ru": "битовый резервуар",
+    "en": "bit reservoir",
+    "definition": "Механизм MP3: кадр может начать свои данные в месте, оставленном свободным предыдущими кадрами. Сложный фрагмент получает больше бит при постоянном битрейте.",
+    "target": {
+      "article": "audio-compression",
+      "anchor": "mp3-frame"
+    }
   }
 ]

@@ -73,4 +73,12 @@ export const visualizations: readonly Visualization[] = [
     sound: false,
     preview: 'pcm',
   },
+  {
+    id: 'flac-prediction',
+    slug: 'audio-compression',
+    name: 'Предсказание FLAC: остаток и коды Райса',
+    what: 'Сигнал и порядок предсказания: остаток, параметр Райса и размер подкадра.',
+    sound: false,
+    preview: 'prediction',
+  },
 ];

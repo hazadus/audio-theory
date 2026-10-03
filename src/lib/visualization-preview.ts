@@ -1,5 +1,6 @@
 // Геометрия статичных превью карточек визуализаций: область 280 × 150, без осей и подписей.
-export type PreviewKind = 'tone' | 'phase' | 'sampling' | 'compressor' | 'lfo' | 'bytes' | 'pcm';
+export type PreviewKind =
+  'tone' | 'phase' | 'sampling' | 'compressor' | 'lfo' | 'bytes' | 'pcm' | 'prediction';
 export const previewKinds: readonly PreviewKind[] = [
   'tone',
   'phase',
@@ -8,6 +9,7 @@ export const previewKinds: readonly PreviewKind[] = [
   'lfo',
   'bytes',
   'pcm',
+  'prediction',
 ];
 
 /** Роль цвета; в разметке превращается в `var(--chart-<роль>)`. */
@@ -211,6 +213,31 @@ const builders: Record<PreviewKind, () => Preview> = {
       dots: [],
     };
   },
+  prediction: predictionPreview,
 };
+
+function predictionPreview(): Preview {
+  // Сверху отсчёты плавного сигнала, снизу — малый остаток предсказания в тех же моментах.
+  const count = 16;
+  const dots: PreviewDot[] = [];
+  let stems = '';
+  for (let i = 0; i < count; i += 1) {
+    const t = i / (count - 1);
+    const x = 24 + 232 * t;
+    dots.push({
+      x: Number(f1(x)),
+      y: Number(f1(46 - 28 * Math.sin(2 * Math.PI * 0.9 * t))),
+      color: 'signal',
+    });
+    if (i >= 2) stems += `M${f1(x)} 118V${f1(118 - 9 * Math.sin(2 * Math.PI * 0.9 * t + 1.2))}`;
+  }
+  return {
+    paths: [
+      { d: 'M16 118H264', color: 'axis', width: 1 },
+      { d: stems, color: 'sample', width: 3 },
+    ],
+    dots,
+  };
+}
 
 export const buildPreview = (kind: PreviewKind): Preview => builders[kind]();

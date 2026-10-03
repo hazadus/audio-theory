@@ -18,6 +18,7 @@ const slugs = [
   'psychoacoustics',
   'wav-file',
   'integer-pcm',
+  'audio-compression',
 ];
 
 const entry = {

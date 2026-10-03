@@ -1,0 +1,629 @@
+---
+// Предсказание FLAC: отсчёты и предсказание, остаток, расчёт размера подкадра и первые коды Райса.
+// При сборке рисуется начальное состояние (тон 1 кГц, порядок 2); скрипт включает выбор сигнала и порядка.
+// Без JS, во время загрузки и при ошибке параметры неактивны, а сообщение объясняет почему.
+import Icon from '@/components/Icon.astro';
+import { demoCaptions } from '@/lib/demo-captions';
+import {
+  defaultOrder,
+  defaultSignal,
+  encodeFixed,
+  predictorOrders,
+  signalIds,
+  signals,
+} from '@/lib/flac-prediction';
+import {
+  predictionCaption,
+  predictionStatus,
+  residualChartSvg,
+  signalChartSvg,
+  stepRows,
+  stepsNote,
+  summaryRows,
+} from '@/lib/flac-prediction-view';
+
+interface Props {
+  /** Номер рисунка: визуализации и рисунки нумеруются одной последовательностью. */
+  figure: number;
+  /** Якорь для ссылок `#id`; английский kebab-case. */
+  id?: string;
+}
+
+const { figure, id = demoCaptions.FlacPredictionDemo.defaultId } = Astro.props;
+const result = encodeFixed(defaultSignal, defaultOrder);
+const status = predictionStatus(result);
+---
+
+<figure class="flac-demo" id={id} aria-labelledby={`${id}-name`} data-flac-demo data-state="static">
+  <div class="flac-demo-head">
+    <span class="flac-demo-label">Визуализация {figure}</span>
+    <span class="flac-demo-name" id={`${id}-name`}>
+      {demoCaptions.FlacPredictionDemo.name}
+    </span>
+  </div>
+  <div class="flac-demo-plot">
+    <p class="flac-demo-axis-title" aria-hidden="true">
+      Отсчёты x[n] и предсказание x̂[n]
+    </p>
+    <div class="flac-demo-chart signal" data-signal-chart set:html={signalChartSvg(result, id)} />
+    <p class="flac-demo-axis-title" aria-hidden="true">
+      Остаток e[n], своя шкала
+    </p>
+    <div
+      class="flac-demo-chart residual"
+      data-residual-chart
+      set:html={residualChartSvg(result, id)}
+    />
+  </div>
+  <div class="flac-demo-body">
+    <ul class="flac-demo-legend" aria-label="Легенда">
+      <li>
+        <span class="flac-demo-key sample" aria-hidden="true"></span>отсчёт
+      </li>
+      <li>
+        <span class="flac-demo-key prediction" aria-hidden="true"></span>предсказание
+      </li>
+      <li>
+        <span class="flac-demo-key residual" aria-hidden="true"></span>остаток
+      </li>
+      <li>
+        <span class="flac-demo-key warmup" aria-hidden="true"></span>разогрев: хранится как есть
+      </li>
+    </ul>
+    <p class="flac-demo-status">
+      <span class="flac-demo-icon">
+        <Icon name="info" size={18} />
+      </span>
+      <span>
+        <b data-status-title>{status.title}</b> <span data-status-text>{status.text}</span>
+      </span>
+    </p>
+    <div class="flac-demo-results">
+      <dl class="flac-demo-summary" aria-label="Размер подкадра" data-summary>
+        {summaryRows(result).map((row) => (
+          <div class={row.total ? 'total' : undefined}>
+            <dt>{row.label}</dt>
+            <dd>{row.value}</dd>
+          </div>
+        ))}
+      </dl>
+      <div
+        class="flac-demo-steps"
+        role="region"
+        aria-label="Первые остатки и их коды Райса"
+        tabindex="0"
+      >
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">n</th>
+              <th scope="col">x[n]</th>
+              <th scope="col">x̂[n]</th>
+              <th scope="col">e[n]</th>
+              <th scope="col">u</th>
+              <th scope="col">код Райса</th>
+            </tr>
+          </thead>
+          <tbody data-steps>
+            {stepRows(result).map(([n, ...cells]) => (
+              <tr>
+                <th scope="row">{n}</th>
+                {cells.map((cell, i) => (
+                  <td class={i === cells.length - 1 ? 'code' : undefined}>{cell}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p class="flac-demo-steps-note" data-steps-note>
+          {stepsNote(result)}
+        </p>
+      </div>
+    </div>
+  </div>
+  <p class="visually-hidden" aria-live="polite" data-announce></p>
+  <fieldset class="flac-demo-controls" data-controls disabled data-pagefind-ignore>
+    <legend class="visually-hidden">Параметры визуализации</legend>
+    <div class="flac-demo-group" role="group" aria-labelledby={`${id}-signal-label`}>
+      <span class="flac-demo-group-label" id={`${id}-signal-label`}>
+        Сигнал
+      </span>
+      {signalIds.map((signal) => (
+        <button
+          type="button"
+          class="flac-demo-choice"
+          aria-pressed={signal === defaultSignal ? 'true' : 'false'}
+          data-signal={signal}
+        >
+          {signals[signal].label}
+        </button>
+      ))}
+    </div>
+    <div class="flac-demo-group" role="group" aria-labelledby={`${id}-order-label`}>
+      <span class="flac-demo-group-label" id={`${id}-order-label`}>
+        Порядок предсказания
+      </span>
+      {predictorOrders.map((order) => (
+        <button
+          type="button"
+          class="flac-demo-choice order"
+          aria-pressed={order === defaultOrder ? 'true' : 'false'}
+          data-order={order}
+        >
+          {order}
+        </button>
+      ))}
+    </div>
+    <div class="flac-demo-actions">
+      <button type="button" class="flac-demo-reset" data-reset>
+        <Icon name="rotate-ccw" size={16} />
+        Сбросить
+      </button>
+    </div>
+    <p class="flac-demo-note" data-controls-note>
+      Параметры работают с включённым JavaScript. Рисунок показывает тон 1&nbsp;кГц и порядок 2.
+    </p>
+  </fieldset>
+  <figcaption class="flac-demo-caption">
+    <b>Рис. {figure}.</b> {predictionCaption}
+  </figcaption>
+</figure>
+
+<script>
+  import { initFlacPredictionDemos } from '@/lib/flac-prediction-controller';
+
+  initFlacPredictionDemos();
+</script>
+
+<style is:global>
+  .flac-demo {
+    container-type: inline-size;
+    margin: var(--space-6) 0;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    overflow: hidden;
+    font-family: var(--font-ui);
+    scroll-margin-top: 88px;
+  }
+
+  .flac-demo-head {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 14px 20px;
+  }
+
+  .flac-demo-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  .flac-demo-name {
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .flac-demo-plot {
+    padding: 10px 14px 14px;
+    border-block: var(--border-width) solid var(--color-border);
+    background: var(--chart-bg);
+  }
+
+  .flac-demo-axis-title {
+    margin: 0 0 6px;
+    font-size: 13px;
+    color: var(--chart-label);
+  }
+
+  /* Отступы — место для подписей делений: они выходят за область построения. */
+  .flac-demo-chart {
+    padding: 4px 6px 14px 64px;
+  }
+
+  .flac-demo-chart.residual {
+    padding-bottom: 44px;
+  }
+
+  .flac-demo-svg {
+    display: block;
+    width: 100%;
+    overflow: visible;
+    font-size: var(--text-chart);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .flac-demo-svg.signal {
+    height: 200px;
+  }
+
+  .flac-demo-svg.residual {
+    height: 120px;
+  }
+
+  .flac-demo-grid line {
+    stroke: var(--chart-grid);
+    stroke-width: 1;
+  }
+
+  .flac-demo-axis {
+    stroke: var(--chart-axis);
+    stroke-width: 1;
+  }
+
+  .flac-demo-warmup-band {
+    fill: var(--chart-grid);
+    opacity: 0.6;
+  }
+
+  .flac-demo-band-label {
+    fill: var(--chart-label);
+  }
+
+  .flac-demo-line {
+    fill: none;
+    stroke: var(--chart-signal);
+    stroke-width: 1.25;
+    opacity: 0.55;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .flac-demo-sample {
+    fill: var(--chart-signal);
+  }
+
+  .flac-demo-sample.warmup {
+    fill: var(--chart-label);
+  }
+
+  .flac-demo-prediction {
+    fill: none;
+    stroke: var(--chart-result);
+    stroke-width: 2;
+  }
+
+  .flac-demo-stem {
+    stroke: var(--chart-sample);
+    stroke-width: 2;
+  }
+
+  .flac-demo-residual {
+    fill: var(--chart-sample);
+  }
+
+  .flac-demo-ticks {
+    fill: var(--chart-label);
+  }
+
+  .flac-demo-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 20px;
+  }
+
+  .flac-demo-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 14px;
+  }
+
+  .flac-demo-legend li {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .flac-demo-key {
+    flex: none;
+    border-radius: 50%;
+  }
+
+  .flac-demo-key.sample {
+    width: 8px;
+    height: 8px;
+    background: var(--chart-signal);
+  }
+
+  .flac-demo-key.prediction {
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--chart-result);
+  }
+
+  .flac-demo-key.residual {
+    width: 4px;
+    height: 14px;
+    border-radius: 2px;
+    background: var(--chart-sample);
+  }
+
+  .flac-demo-key.warmup {
+    width: 16px;
+    height: 14px;
+    border-radius: 2px;
+    background:
+      radial-gradient(circle, var(--chart-label) 3.5px, transparent 4px), var(--chart-grid);
+  }
+
+  .flac-demo-status {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin: 0;
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    box-shadow: inset 0 0 0 1px var(--color-border-strong);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .flac-demo-icon {
+    display: flex;
+    flex: none;
+    margin-top: 1px;
+    color: var(--color-text-muted);
+  }
+
+  .flac-demo-results {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    gap: 16px;
+    align-items: start;
+  }
+
+  .flac-demo-summary {
+    display: grid;
+    gap: 4px;
+    margin: 0;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .flac-demo-summary div {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 2px 12px;
+    padding-bottom: 4px;
+    border-bottom: var(--border-width) solid var(--color-border);
+  }
+
+  .flac-demo-summary dt {
+    color: var(--color-text-muted);
+  }
+
+  .flac-demo-summary dd {
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  .flac-demo-summary .total dt,
+  .flac-demo-summary .total dd {
+    color: var(--color-text);
+    font-weight: 600;
+  }
+
+  .flac-demo-steps {
+    min-width: 0;
+    overflow-x: auto;
+    border-radius: var(--radius-md);
+  }
+
+  .flac-demo-steps:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+
+  .flac-demo-steps table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .flac-demo-steps th,
+  .flac-demo-steps td {
+    padding: 3px 8px;
+    border-bottom: var(--border-width) solid var(--color-border);
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .flac-demo-steps thead th {
+    font-weight: 600;
+    color: var(--color-text-muted);
+  }
+
+  .flac-demo-steps tbody th {
+    font-weight: 400;
+    color: var(--color-text-muted);
+  }
+
+  .flac-demo-steps .code,
+  .flac-demo-steps thead th:last-child {
+    text-align: left;
+  }
+
+  .flac-demo-steps .code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  .flac-demo-steps-note {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--color-text-muted);
+  }
+
+  .flac-demo .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .flac-demo-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+    margin: 0;
+    padding: 14px 20px 16px;
+    border: 0;
+    border-top: var(--border-width) solid var(--color-border);
+  }
+
+  .flac-demo-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .flac-demo-group-label {
+    min-width: 11em;
+    margin-right: 4px;
+    font-size: 14px;
+  }
+
+  .flac-demo-choice {
+    height: 32px;
+    padding: 0 12px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-full);
+    background: transparent;
+    color: var(--color-text);
+    font: 500 14px var(--font-ui);
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+  }
+
+  .flac-demo-choice.order {
+    min-width: 40px;
+  }
+
+  .flac-demo-choice[aria-pressed='true'] {
+    border-color: var(--color-accent);
+    background: var(--color-accent-soft);
+    font-weight: 600;
+  }
+
+  .flac-demo-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .flac-demo-reset {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    height: 36px;
+    padding: 0 12px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text);
+    font: 500 14px var(--font-ui);
+    cursor: pointer;
+  }
+
+  @media (hover: hover) {
+    .flac-demo-choice:hover,
+    .flac-demo-reset:hover {
+      background: var(--color-bg);
+    }
+
+    .flac-demo-choice[aria-pressed='true']:hover {
+      background: var(--color-accent-soft);
+    }
+  }
+
+  /* Неактивные параметры не выглядят рабочими: приглушены, без указателя; сообщение объясняет причину. */
+  .flac-demo-controls:disabled .flac-demo-group,
+  .flac-demo-controls:disabled .flac-demo-actions {
+    opacity: 0.5;
+  }
+
+  .flac-demo-controls:disabled * {
+    cursor: not-allowed;
+  }
+
+  .flac-demo-note {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+  }
+
+  .flac-demo[data-state='ready'] .flac-demo-note {
+    display: none;
+  }
+
+  .flac-demo[data-state='error'] .flac-demo-note {
+    color: var(--color-error);
+  }
+
+  .flac-demo-caption {
+    padding: 10px 20px 14px;
+    border-top: var(--border-width) solid var(--color-border);
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+  }
+
+  .flac-demo-caption b {
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  @container (max-width: 719px) {
+    .flac-demo-results {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @container (max-width: 559px) {
+    .flac-demo-head,
+    .flac-demo-body,
+    .flac-demo-controls,
+    .flac-demo-caption {
+      padding-inline: 16px;
+    }
+
+    .flac-demo-plot {
+      padding-inline: 10px;
+    }
+
+    .flac-demo-chart {
+      padding-left: 58px;
+    }
+
+    .flac-demo-svg.signal {
+      height: 170px;
+    }
+
+    .flac-demo-svg .minor {
+      display: none;
+    }
+
+    .flac-demo-group-label {
+      min-width: 100%;
+    }
+  }
+</style>

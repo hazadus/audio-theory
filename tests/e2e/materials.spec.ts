@@ -16,6 +16,7 @@ test(
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Все материалы');
     expect((await slugs(page)).sort()).toEqual([
       'adc-dac',
+      'audio-compression',
       'audio-data',
       'audio-math',
       'compressor',
@@ -29,13 +30,13 @@ test(
       'tremolo',
       'wav-file',
     ]);
-    await expect(page.locator('[data-count]')).toHaveText('13 статей');
+    await expect(page.locator('[data-count]')).toHaveText('14 статей');
     await expect(chip(page, 'all')).toHaveAttribute('aria-pressed', 'true');
-    await expect(chip(page, 'all')).toContainText('13');
+    await expect(chip(page, 'all')).toContainText('14');
     await expect(chip(page, 'processing')).toContainText('3');
     await expect(chip(page, 'conv')).not.toHaveAttribute('aria-disabled', 'true');
     await expect(chip(page, 'conv')).toContainText('1');
-    await expect(chip(page, 'data')).toContainText('3');
+    await expect(chip(page, 'data')).toContainText('4');
     await expect(sortOption(page, 'date')).toHaveAttribute('aria-checked', 'true');
     expect(search(page)).toBe('');
   },
@@ -103,6 +104,7 @@ test(
       'tremolo',
       'signal-level',
       'wav-file',
+      'audio-compression',
       'integer-pcm',
       'lfo',
     ]);
@@ -127,6 +129,7 @@ test(
       'adc-dac',
       'audio-data',
       'wav-file',
+      'audio-compression',
       'integer-pcm',
       'compressor',
       'tremolo',
@@ -145,7 +148,7 @@ test('неверные значения query заменяются умолча�
   await expect(chip(page, 'all')).toHaveAttribute('aria-pressed', 'true');
   await expect(sortOption(page, 'date')).toHaveAttribute('aria-checked', 'true');
   expect(search(page)).toBe('');
-  expect((await slugs(page)).length).toBe(13);
+  expect((await slugs(page)).length).toBe(14);
 
   await page.goto('materials/?topic=basics&sort=random');
   expect(search(page)).toBe('?topic=basics');
@@ -257,8 +260,8 @@ test(
       const page = await context.newPage();
       await page.goto('materials/?topic=digital&sort=alpha');
       await expect(page.locator('[data-controls]')).toBeHidden();
-      expect((await slugs(page)).length).toBe(13);
-      await expect(page.locator('[data-count]')).toHaveText('13 статей');
+      expect((await slugs(page)).length).toBe(14);
+      await expect(page.locator('[data-count]')).toHaveText('14 статей');
       await expect(rows(page).first().getByRole('link')).toBeVisible();
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
         390,
