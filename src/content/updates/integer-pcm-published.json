@@ -1,0 +1,17 @@
+{
+  "id": "integer-pcm-published",
+  "date": "2026-10-03",
+  "order": 5,
+  "type": "new",
+  "article": "integer-pcm",
+  "summary": "Как прочитать отсчёт целочисленного PCM из байтов и перевести его в float и обратно без ошибок знака, масштаба и округления.",
+  "items": [
+    {
+      "text": "24-битный отсчёт: байты, знак и float",
+      "target": {
+        "article": "integer-pcm",
+        "anchor": "pcm-sample"
+      }
+    }
+  ]
+}

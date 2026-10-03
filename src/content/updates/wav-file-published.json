@@ -1,0 +1,17 @@
+{
+  "id": "wav-file-published",
+  "date": "2026-10-03",
+  "order": 4,
+  "type": "new",
+  "article": "wav-file",
+  "summary": "Как устроен WAV-файл: контейнер RIFF, чанки, параметры в fmt и отсчёты в data; чтение и запись.",
+  "items": [
+    {
+      "text": "Байты WAV-файла по полям",
+      "target": {
+        "article": "wav-file",
+        "anchor": "wav-dump"
+      }
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "sound-wave-published",
+  "date": "2026-10-02",
+  "order": 1,
+  "type": "new",
+  "article": "sound-wave",
+  "summary": "Что такое звук физически: колебания давления, частота, период, длина волны, фаза и амплитуда; как звук становится аналоговым электрическим сигналом.",
+  "items": [
+    {
+      "text": "Генератор чистого тона",
+      "target": {
+        "article": "sound-wave",
+        "anchor": "tone-demo"
+      }
+    },
+    {
+      "text": "Начальная фаза и сдвиг во времени",
+      "target": {
+        "article": "sound-wave",
+        "anchor": "phase-demo"
+      }
+    }
+  ]
+}

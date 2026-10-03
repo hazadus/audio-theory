@@ -1,6 +1,7 @@
 // Проверяет коллекцию статей: маршруты из slug, отказ при неверных данных, отсутствие служебных статей в публикации.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { cp, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -10,12 +11,19 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const temporaryRoot = join(root, '.e2e');
 await mkdir(temporaryRoot, { recursive: true });
 const temporary = await mkdtemp(join(temporaryRoot, 'articles-'));
+// Служебные статьи не связаны с публичным журналом: их сборка идёт с пустым журналом.
+const emptyUpdates = join(temporary, 'updates-empty');
+await mkdir(emptyUpdates, { recursive: true });
 
 function build(outDir, fixture, { draft = false, dir, base = '/' } = {}) {
   const env = { ...process.env };
   delete env.ARTICLES_DIR;
   delete env.ALLOW_DRAFT_ARTICLES;
-  if (fixture) env.ARTICLES_DIR = dir ?? `./tests/fixtures/articles/${fixture}`;
+  delete env.UPDATES_DIR;
+  if (fixture) {
+    env.ARTICLES_DIR = dir ?? `./tests/fixtures/articles/${fixture}`;
+    env.UPDATES_DIR = emptyUpdates;
+  }
   if (draft) env.ALLOW_DRAFT_ARTICLES = '1';
   return spawnSync(
     process.execPath,
@@ -44,7 +52,7 @@ try {
   assert.equal([...home.matchAll(/class="all[^"]*"[^>]*>Все 1</g)].length, 2);
   assert.equal([...home.matchAll(/class="card[ "]/g)].length, 2);
 
-  // Публичный журнал пока пуст: страница показывает «Обновлений пока нет» без фильтра, года и архива.
+  // Журнал служебной сборки пуст: страница показывает «Обновлений пока нет» без фильтра, года и архива.
   const updates = await readFile(join(validDir, 'updates', 'index.html'), 'utf8');
   assert.match(updates, /Обновлений пока нет/);
   assert.doesNotMatch(
@@ -255,7 +263,15 @@ try {
   ).filter((file) => file.endsWith('.mdx')).length;
   // HTML-страниц: главная, материалы, визуализации, обновления, глоссарий, «О проекте», 404 и статьи; Pagefind
   // считает их все, а фрагменты строит только для страниц с `data-pagefind-body` (проверяется ниже).
-  const pages = 7 + realArticles;
+  // К ним добавляются страницы годов журнала: по одной на год, в котором есть публичные записи.
+  const updateYears = new Set(
+    (await readdir(join(root, 'src/content/updates')))
+      .filter((file) => file.endsWith('.json'))
+      .map((file) =>
+        JSON.parse(readFileSync(join(root, 'src/content/updates', file), 'utf8')).date.slice(0, 4),
+      ),
+  ).size;
+  const pages = 7 + realArticles + updateYears;
   assert.match(
     published.stdout + published.stderr,
     new RegExp(`Артефакт проверен: ${pages} страниц; индекс Pagefind: ${pages} страниц`),

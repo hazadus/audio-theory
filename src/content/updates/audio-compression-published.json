@@ -1,0 +1,17 @@
+{
+  "id": "audio-compression-published",
+  "date": "2026-10-04",
+  "order": 1,
+  "type": "new",
+  "article": "audio-compression",
+  "summary": "Чем различаются форматы AIFF, FLAC и MP3: порядок байтов, сжатие без потерь и с потерями, битрейт и экономия места.",
+  "items": [
+    {
+      "text": "Предсказание FLAC: остаток и коды Райса",
+      "target": {
+        "article": "audio-compression",
+        "anchor": "flac-prediction"
+      }
+    }
+  ]
+}

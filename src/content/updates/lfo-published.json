@@ -1,0 +1,17 @@
+{
+  "id": "lfo-published",
+  "date": "2026-10-02",
+  "order": 8,
+  "type": "new",
+  "article": "lfo",
+  "summary": "Как низкочастотное колебание управляет звуком: фазовый аккумулятор, формы волн и реализация на C++ и JUCE.",
+  "items": [
+    {
+      "text": "Четыре формы LFO из одной фазы",
+      "target": {
+        "article": "lfo",
+        "anchor": "lfo-waveforms"
+      }
+    }
+  ]
+}

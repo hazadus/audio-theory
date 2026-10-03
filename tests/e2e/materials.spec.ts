@@ -215,7 +215,7 @@ test(
   async ({ page }, testInfo) => {
     const base = testInfo.project.metadata.base as string;
     await page.goto('./');
-    const all = page.locator('a.all');
+    const all = page.locator('.group a.all');
     await expect(all.first()).toHaveAttribute(
       'href',
       /\/materials\/\?topic=(basics|digital|processing)$/,

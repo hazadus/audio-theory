@@ -13,7 +13,7 @@ test(
     await expect(page.locator('html')).toHaveAttribute('lang', 'ru');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Теория аудио');
     await expect(page.getByRole('main')).toContainText('Личный учебник по теории аудио');
-    await expect(page.locator('main section').nth(1).locator('a.card').first()).toBeVisible();
+    await expect(page.locator('main section.group a.card').first()).toBeVisible();
     await expect(page.locator('footer').getByRole('link', { name: 'GitHub' })).toHaveAttribute(
       'href',
       siteConfig.repository,

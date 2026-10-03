@@ -34,11 +34,9 @@ describe('Коллекция обновлений', () => {
   it('принимает служебные записи и не включает их в публичный журнал', () => {
     check([publication, addition]);
     check([]);
-    expect(
-      readdirSync(new URL('../../src/content/updates/', import.meta.url)).filter((name) =>
-        name.endsWith('.json'),
-      ),
-    ).toEqual([]);
+    const publicNames = readdirSync(new URL('../../src/content/updates/', import.meta.url));
+    expect(publicNames).not.toContain(`${publication.id}.json`);
+    expect(publicNames).not.toContain(`${addition.id}.json`);
   });
 
   it.each([
