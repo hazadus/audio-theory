@@ -1218,5 +1218,85 @@
       "article": "psychoacoustics",
       "anchor": "perceptual-coding"
     }
+  },
+  {
+    "id": "just-noticeable-difference",
+    "ru": "едва заметная разность",
+    "en": "just noticeable difference, JND",
+    "definition": "Наименьшее изменение уровня, частоты или другой величины звука, которое слушатель замечает при сравнении. Определяется статистически, по доле правильных ответов.",
+    "target": {
+      "article": "psychoacoustics",
+      "anchor": "level-jnd"
+    }
+  },
+  {
+    "id": "timbre",
+    "ru": "тембр",
+    "en": "timbre",
+    "definition": "Свойство слухового ощущения, по которому различают два звука одинаковой высоты и громкости. Зависит от состава гармоник, их уровней и изменения во времени.",
+    "target": {
+      "article": "psychoacoustics",
+      "anchor": "complex-pitch"
+    }
+  },
+  {
+    "id": "missing-fundamental",
+    "ru": "пропущенная основная частота",
+    "en": "missing fundamental",
+    "definition": "Восприятие высоты гармонического звука по его основной частоте, когда составляющей с этой частотой в спектре нет.",
+    "target": {
+      "article": "psychoacoustics",
+      "anchor": "complex-pitch"
+    }
+  },
+  {
+    "id": "cone-of-confusion",
+    "ru": "конус неопределённости",
+    "en": "cone of confusion",
+    "definition": "Направления, для которых межушные разности времени и уровня одинаковы. По этим двум подсказкам источники на таком конусе не различить.",
+    "target": {
+      "article": "psychoacoustics",
+      "anchor": "localization"
+    }
+  },
+  {
+    "id": "hrtf",
+    "ru": "передаточная функция головы",
+    "en": "head-related transfer function, HRTF",
+    "definition": "Частотная характеристика пути звука от источника до барабанной перепонки с учётом головы, ушной раковины и торса. Своя для каждого направления прихода звука.",
+    "target": {
+      "article": "psychoacoustics",
+      "anchor": "localization"
+    }
+  },
+  {
+    "id": "precedence-effect",
+    "ru": "эффект предшествования",
+    "en": "precedence effect",
+    "definition": "Направление на источник определяется по первому пришедшему звуку, а запоздавшие копии до порога эха не слышны как отдельные звуки.",
+    "target": {
+      "article": "psychoacoustics",
+      "anchor": "precedence"
+    }
+  },
+  {
+    "id": "echo-threshold",
+    "ru": "порог эха",
+    "en": "echo threshold",
+    "definition": "Наименьшая задержка, при которой запоздавшая копия звука слышна отдельно, как эхо. Для щелчков — единицы миллисекунд, для речи и музыки — десятки.",
+    "target": {
+      "article": "psychoacoustics",
+      "anchor": "precedence"
+    }
+  },
+  {
+    "id": "binaural-unmasking",
+    "ru": "бинауральная демаскировка",
+    "en": "binaural unmasking",
+    "definition": "Снижение порога маскировки, когда сигнал и шум по-разному соотносятся по фазе или времени у двух ушей. Наибольшее на частотах 200–300 Гц.",
+    "target": {
+      "article": "psychoacoustics",
+      "anchor": "binaural-unmasking"
+    }
   }
 ]
