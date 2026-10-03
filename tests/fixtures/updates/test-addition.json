@@ -1,0 +1,14 @@
+{
+  "id": "test-addition",
+  "date": "2024-03-01",
+  "order": 1,
+  "type": "updated",
+  "article": "test-sampling",
+  "items": [
+    {
+      "text": "Теорема отсчётов",
+      "target": { "article": "test-sampling", "anchor": "sampling-theorem" }
+    },
+    { "text": "Связанный материал", "target": { "article": "test-wave" } }
+  ]
+}

@@ -209,6 +209,16 @@ export function findDemos(body: string): { component: DemoComponent; id: string 
   );
 }
 
+/** Все цели разделов и учебных блоков, включая стандартные id визуализаций. */
+export function getArticleAnchors(body: string, headings: Pick<Heading, 'slug'>[]): Set<string> {
+  const headingIds = new Set(headings.map((heading) => heading.slug));
+  return new Set([
+    ...headingIds,
+    ...checkBlocks(analyze(body), headingIds, []),
+    ...findDemos(body).map(({ id }) => id),
+  ]);
+}
+
 /** Идентификаторы и нумерация блоков одной статьи; возвращает id блоков. */
 function checkBlocks(analysis: Analysis, headingIds: Set<string>, problems: string[]): string[] {
   const ids = new Set<string>();

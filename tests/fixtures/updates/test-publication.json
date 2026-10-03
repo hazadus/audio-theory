@@ -1,0 +1,9 @@
+{
+  "id": "test-publication",
+  "date": "2024-02-29",
+  "order": 1,
+  "type": "new",
+  "article": "test-sampling",
+  "summary": "Служебная запись для проверки журнала.",
+  "items": []
+}
