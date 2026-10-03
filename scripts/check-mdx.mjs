@@ -43,6 +43,12 @@ try {
     assert.equal(valid.status, 0, valid.stdout + valid.stderr);
     const html = await readFile(join(validDir, '__test/mdx/index.html'), 'utf8');
     assert.match(html, /Служебный материал/);
+    const notesHtml = await readFile(join(validDir, '__test/margin-notes/index.html'), 'utf8');
+    // Заметки после абзацев: 3/1/2 ссылки; цели используют фактический базовый путь.
+    assert.equal((notesHtml.match(/aria-label="Подробнее"/g) ?? []).length, 3);
+    assert.ok(notesHtml.includes(`href="${base}sampling/#sampling-period"`));
+    assert.ok(notesHtml.includes(`href="${base}audio-math/"`));
+    assert.match(notesHtml, /<p[^>]*>Короткий абзац[^<]*<\/p>\s*<aside[^>]*aria-label="Подробнее"/);
     // 2 исходные формулы + 2 в обозначениях и 3 блока `Equation`.
     assert.equal((html.match(/class="katex"/g) ?? []).length, 7);
     assert.equal((html.match(/<math\s/g) ?? []).length, 7);

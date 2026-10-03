@@ -15,6 +15,10 @@ export default defineConfig({
             pattern: '/__test/mdx/',
             entrypoint: fileURLToPath(new URL('./valid.astro', import.meta.url)),
           });
+          injectRoute({
+            pattern: '/__test/margin-notes/',
+            entrypoint: fileURLToPath(new URL('./margin-notes.astro', import.meta.url)),
+          });
         },
       },
     },

@@ -1,0 +1,24 @@
+---
+// Служебный образец использует настоящую сетку статьи, включая оглавление и правое поле.
+import ArticleLayout from '@/layouts/ArticleLayout.astro';
+import { getToc } from '@/lib/headings';
+import { Content, getHeadings } from './margin-notes.mdx';
+---
+
+<ArticleLayout
+  data={{
+    slug: 'mdx-fixture',
+    title: 'Проверка заметок на полях',
+    question: 'Как выглядят учебные компоненты в статье?',
+    topic: 'digital',
+    tags: ['служебный образец'],
+    related: [
+      { label: 'Дискретизация', description: 'Отсчёты и период.', target: { article: 'sampling' } },
+    ],
+  }}
+  toc={getToc(getHeadings())}
+  updated={null}
+  readingMinutes={1}
+>
+  <Content />
+</ArticleLayout>

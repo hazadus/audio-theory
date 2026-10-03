@@ -30,9 +30,9 @@ export const fixtureProjects = (ciOnly: boolean) =>
     name: `${fixture.name}-${browserName}`,
     grep: ciOnly
       ? browserName === 'webkit'
-        ? /(?=.*@sampling)(?=.*@ci(?:\s|$))/
-        : /(?=.*@sampling)(?=.*@ci-cross-browser)/
-      : /@sampling/,
+        ? /(?=.*@(?:sampling|margin-notes))(?=.*@ci(?:\s|$))/
+        : /(?=.*@(?:sampling|margin-notes))(?=.*@ci-cross-browser)/
+      : /@(?:sampling|margin-notes)/,
     metadata: { base: fixture.base },
     use: {
       ...browserDevice(browserName),
@@ -58,7 +58,7 @@ export default defineConfig({
               : browserName === 'webkit'
                 ? /@ci(?:\s|$)/
                 : /@ci-cross-browser/,
-          grepInvert: /@sampling/,
+          grepInvert: /@(?:sampling|margin-notes)/,
           metadata: { base },
           use: {
             ...browserDevice(browserName),

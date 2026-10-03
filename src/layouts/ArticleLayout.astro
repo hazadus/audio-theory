@@ -507,6 +507,50 @@ const links = (items: typeof data.related) =>
     }
   }
 
+  /* Только статьи с заметками резервируют правое поле. 240 + 24 + 680 + 48 + 208 = 1200 px.
+     Текст сужается при нехватке места; широкие блоки используют освободившееся правое поле. */
+  @media screen and (width >= 1280px) {
+    .page:has(:global(.margin-note)) {
+      grid-template-columns: 240px minmax(0, 1fr);
+      column-gap: var(--space-6);
+    }
+
+    .page:has(:global(.margin-note)) .body {
+      max-width: none;
+    }
+
+    .page:has(:global(.margin-note)) :is(.breadcrumbs, .head, .prerequisites, .related) {
+      max-width: min(var(--content-width), 100% - 256px);
+    }
+
+    .page:has(:global(.margin-note)) .prose > :global(*) {
+      width: calc(100% - 256px);
+      box-sizing: border-box;
+    }
+
+    .page:has(:global(.margin-note)) .prose > :global(.margin-note-block) {
+      width: 100%;
+    }
+
+    .page:has(:global(.margin-note)) .prose > :global(:is(figure, .data-table)) {
+      width: min(var(--wide-width), 100%);
+    }
+  }
+
+  @media print {
+    .page:has(:global(.margin-note)) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .page:has(:global(.margin-note)) :is(.breadcrumbs, .head, .body) {
+      grid-column: 1;
+    }
+
+    .page:has(:global(.margin-note)) .toc-cell {
+      display: none;
+    }
+  }
+
   /* Тело статьи приходит из MDX без классов компонента. */
   .prose {
     display: flex;

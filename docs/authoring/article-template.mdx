@@ -13,13 +13,20 @@ related:
 import Callout from '@/components/Callout.astro';
 import Equation from '@/components/Equation.astro';
 import SelfCheck from '@/components/SelfCheck.astro';
+import MarginNote from '@/components/MarginNote.astro';
 
 Это служебный образец оформления, предназначенный для локальной проверки шаблона.
 
 ## Понятие {#concept}
 
+<MarginNote items={[
+  { label: 'Дискретизация', description: 'Отсчёты и восстановление непрерывного сигнала.', target: { url: 'https://ru.wikipedia.org/wiki/Дискретизация' } },
+]}>
+
 При равномерной дискретизации частота дискретизации (sample rate) задаёт число отсчётов за секунду.
 Период дискретизации (sampling period) — интервал между соседними отсчётами.
+
+</MarginNote>
 
 <Callout type="definition" title="Период дискретизации">
 
