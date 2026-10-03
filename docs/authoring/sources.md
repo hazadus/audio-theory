@@ -154,3 +154,10 @@
 - [Audio Engineering Society. Learn More: Equal loudness contours](https://aes.org/resources/audio-topics/loudness-project/learn-more/) — прочитан одноимённый раздел: частотная чувствительность слуха, изменение формы кривых с уровнем и воспринимаемого баланса музыки.
 - [Steven W. Smith. Human Hearing, глава 22](https://www.dspguide.com/ch22/1.htm) — прочитан раздел об устройстве наружного, среднего и внутреннего уха, преобразовании колебаний в нервные сигналы и частотной избирательности.
 - [Roland Sottek, Thiago Lobato, Moritz Bender, Julian Becker. Modeling the ISO 226:2023 equal-loudness-level contours by standardized loudness methods, Forum Acusticum 2023](https://dael.euracoustics.org/confs/fa2023/data/articles/000585.pdf) — прочитаны разделы 2–5: пересмотр ISO 226, частотные фильтры и нелинейность слуха, сравнение моделей для чистых тонов.
+
+## Analog Devices и Cycling ’74 — тремоло и амплитудная модуляция
+
+Прочитаны при подготовке статьи о тремоло:
+
+- [Analog Devices. Tutorial: Implementing a Tremolo Effect](https://wiki.analog.com/resources/tools-software/sharc-audio-module/baremetal/tremelo-effect-tutorial) — разделы Tutorial Overview и Basic Tremolo with Fixed Parameters: управление амплитудой через LFO, формула с наибольшим усилением 1, одно управляющее значение для стереоканалов.
+- [Cycling ’74. MSP Tutorial 9: Amplitude Modulation](https://docs.cycling74.com/legacy/max5/tutorials/msp-tut/mspchapter09.html) — смещение и масштабирование модулятора, глубина, различие AM и кольцевой модуляции, медленная пульсация и изменение тембра при высоких частотах управления. Шкала глубины в этом учебнике отличается от выбранной для статьи: полное ослабление достигается при 0,5.

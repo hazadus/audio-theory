@@ -1,0 +1,153 @@
+---
+// Статичные SVG тремоло: аудиоволна, преобразование LFO и сравнение глубины.
+import { attenuationGain, centeredGain } from '@/lib/tremolo';
+
+interface Props {
+  kind: 'signal' | 'stages' | 'depths';
+}
+const { kind } = Astro.props;
+const lfo = (time: number) => Math.sin(2 * Math.PI * 5 * time);
+const input = (time: number) => 0.7 * Math.sin(2 * Math.PI * 40 * time);
+const panels =
+  kind === 'signal'
+    ? [
+        { label: 'Вход: тон 40 Гц', min: -1.1, max: 1.1, ticks: [-1, 0, 1], curves: [input] },
+        {
+          label: 'Выход: LFO 5 Гц, D = 75 %',
+          min: -1.1,
+          max: 1.1,
+          ticks: [-1, 0, 1],
+          curves: [(t: number) => input(t) * attenuationGain(lfo(t), 0.75)],
+          envelope: (t: number) => 0.7 * attenuationGain(lfo(t), 0.75),
+        },
+      ]
+    : kind === 'stages'
+      ? [
+          { label: 'l[n]: от −1 до +1', curves: [lfo] },
+          { label: '0,4 · l[n]: от −0,4 до +0,4', curves: [(t: number) => 0.4 * lfo(t)] },
+          {
+            label: '1 + 0,4 · l[n]: от 0,6 до 1,4',
+            curves: [(t: number) => centeredGain(lfo(t), 0.4)],
+          },
+        ].map((panel) => ({ ...panel, min: -1.5, max: 1.5, ticks: [-1, 0, 1] }))
+      : [0, 0.4, 1].map((depth) => ({
+          label: `Усиление g[n], D = ${depth * 100} %`,
+          min: 0,
+          max: 2,
+          ticks: [0, 1, 2],
+          curves: [
+            (t: number) => attenuationGain(lfo(t), depth),
+            (t: number) => centeredGain(lfo(t), depth),
+          ],
+        }));
+const header = kind === 'depths' ? 65 : 0;
+const rowHeight = 220;
+const left = 76;
+const right = 448;
+const top = 55;
+const bottom = 155;
+const format = (value: number) => value.toLocaleString('ru-RU');
+function path(fn: (time: number) => number, min: number, max: number): string {
+  return Array.from({ length: 801 }, (_, i) => {
+    const time = (i / 800) * 0.4;
+    const x = left + (i / 800) * (right - left);
+    const y = bottom - ((fn(time) - min) / (max - min)) * (bottom - top);
+    return `${i === 0 ? 'M' : 'L'}${x.toFixed(2)},${y.toFixed(2)}`;
+  }).join(' ');
+}
+---
+
+<svg
+  class="tremolo-plot"
+  viewBox={`0 0 480 ${header + panels.length * rowHeight}`}
+  xmlns="http://www.w3.org/2000/svg"
+>
+  {kind === 'depths' && (
+    <>
+      <path d="M24,24 H62" class="curve" />
+      <text x="76" y="30">
+        Только ослабление
+      </text>
+      <path d="M24,49 H62" class="curve centered" />
+      <text x="76" y="55">
+        Колебание вокруг 1
+      </text>
+    </>
+  )}
+  {panels.map((panel, index) => {
+    const y = (value: number) =>
+      bottom - ((value - panel.min) / (panel.max - panel.min)) * (bottom - top);
+    return (
+      <g transform={`translate(0 ${header + index * rowHeight})`}>
+        <text x="24" y="30">
+          {panel.label}
+        </text>
+        {panel.ticks.map((tick) => (
+          <>
+            <path d={`M${left},${y(tick)} H${right}`} class={tick === 0 ? 'axis' : 'grid'} />
+            <text x={left - 12} y={y(tick) + 6} text-anchor="end">
+              {format(tick)}
+            </text>
+          </>
+        ))}
+        <path d={`M${left},${top} V${bottom}`} class="axis" />
+        {panel.curves.map((curve, curveIndex) => (
+          <path
+            d={path(curve, panel.min, panel.max)}
+            class={curveIndex === 0 ? 'curve' : 'curve centered'}
+          />
+        ))}
+        {'envelope' in panel &&
+          typeof panel.envelope === 'function' &&
+          [1, -1].map((sign) => (
+            <path
+              d={path((time) => sign * panel.envelope!(time), panel.min, panel.max)}
+              class="curve envelope"
+            />
+          ))}
+        {[0, 0.1, 0.2, 0.3, 0.4].map((tick) => (
+          <text x={left + (tick / 0.4) * (right - left)} y={bottom + 30} text-anchor="middle">
+            {format(tick)}
+          </text>
+        ))}
+        <text x={right} y={bottom + 50} text-anchor="end">
+          t, с
+        </text>
+      </g>
+    );
+  })}
+</svg>
+
+<style is:global>
+  .figure-frame:has(> .tremolo-plot) {
+    container-type: inline-size;
+  }
+  .figure-frame > .tremolo-plot {
+    font-size: clamp(10px, calc(30px - 3cqw), 22px);
+  }
+  .tremolo-plot text {
+    fill: currentColor;
+  }
+  .tremolo-plot path {
+    fill: none;
+  }
+  .tremolo-plot .axis {
+    stroke: var(--chart-axis);
+  }
+  .tremolo-plot .grid {
+    stroke: var(--chart-grid);
+  }
+  .tremolo-plot .curve {
+    stroke: var(--chart-series-1);
+    stroke-width: 2;
+  }
+  .tremolo-plot .centered {
+    stroke: var(--chart-series-2);
+    stroke-width: 3;
+    stroke-dasharray: 8 6;
+  }
+  .tremolo-plot .envelope {
+    stroke: var(--chart-series-2);
+    stroke-dasharray: 8 6;
+  }
+</style>

@@ -14,6 +14,7 @@ const slugs = [
   'audio-data',
   'audio-math',
   'lfo',
+  'tremolo',
 ];
 
 const entry = {
