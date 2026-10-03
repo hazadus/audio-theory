@@ -485,8 +485,8 @@
     "en": "threshold of hearing",
     "definition": "Минимальный уровень звука, который слушатель способен обнаружить в заданных условиях. Зависит от частоты и слушателя; опорные 20 мкПа не задают его для всех частот.",
     "target": {
-      "article": "sound-wave",
-      "anchor": "amplitude"
+      "article": "psychoacoustics",
+      "anchor": "hearing-threshold"
     }
   },
   {
@@ -495,8 +495,8 @@
     "en": "auditory masking",
     "definition": "Снижение слышимости одного звука из-за присутствия другого. Из-за маскировки восприятие сложного звука нельзя определить только по кривым равной громкости чистых тонов.",
     "target": {
-      "article": "equal-loudness",
-      "anchor": "music"
+      "article": "psychoacoustics",
+      "anchor": "simultaneous-masking"
     }
   },
   {
@@ -1107,6 +1107,116 @@
     "target": {
       "article": "tremolo",
       "anchor": "centered"
+    }
+  },
+  {
+    "id": "psychoacoustics",
+    "ru": "психоакустика",
+    "en": "psychoacoustics",
+    "definition": "Раздел науки о связи физических свойств звука с тем, что слышит человек: громкостью, высотой, направлением и слышимостью одних звуков на фоне других.",
+    "target": {
+      "article": "psychoacoustics",
+      "anchor": "stimulus-and-sensation"
+    }
+  },
+  {
+    "id": "threshold-of-pain",
+    "ru": "болевой порог",
+    "en": "threshold of pain",
+    "definition": "Уровень звука, при котором слушание становится болезненным. Условно около 130 дБ SPL; задаёт верхнюю границу слуховой области.",
+    "target": {
+      "article": "psychoacoustics",
+      "anchor": "hearing-threshold"
+    }
+  },
+  {
+    "id": "sone",
+    "ru": "сон",
+    "en": "sone",
+    "definition": "Единица громкости как ощущения: 1 сон — громкость тона 1 кГц при 40 дБ SPL. По приближённому правилу громкость удваивается при росте уровня громкости на 10 фон.",
+    "target": {
+      "article": "psychoacoustics",
+      "anchor": "loudness"
+    }
+  },
+  {
+    "id": "critical-band",
+    "ru": "критическая полоса",
+    "en": "critical band",
+    "definition": "Полоса частот, в пределах которой слух объединяет составляющие при оценке громкости и маскировки. Около 100 Гц до 500 Гц, выше — примерно 20 % средней частоты.",
+    "target": {
+      "article": "psychoacoustics",
+      "anchor": "critical-bands"
+    }
+  },
+  {
+    "id": "bark",
+    "ru": "барк",
+    "en": "Bark",
+    "definition": "Единица шкалы критических полос: расстояние в 1 барк соответствует ширине одной критической полосы. Слышимый диапазон делят примерно на 24 полосы.",
+    "target": {
+      "article": "psychoacoustics",
+      "anchor": "critical-bands"
+    }
+  },
+  {
+    "id": "masking-threshold",
+    "ru": "порог маскировки",
+    "en": "masking threshold",
+    "definition": "Уровень, ниже которого тестовый звук не слышен при наличии маскирующего звука. Выше порога слышимости в тишине рядом с маскером по частоте и времени.",
+    "target": {
+      "article": "psychoacoustics",
+      "anchor": "simultaneous-masking"
+    }
+  },
+  {
+    "id": "temporal-masking",
+    "ru": "временная маскировка",
+    "en": "temporal masking",
+    "definition": "Маскировка тестового звука, звучащего до начала маскера (предмаскировка) или после его окончания (постмаскировка).",
+    "target": {
+      "article": "psychoacoustics",
+      "anchor": "temporal-masking"
+    }
+  },
+  {
+    "id": "interaural-time-difference",
+    "ru": "межушная разность времени",
+    "en": "interaural time difference, ITD",
+    "definition": "Разность моментов прихода звука к левому и правому уху. У человека не превышает долей миллисекунды и важна для направления на низких частотах.",
+    "target": {
+      "article": "psychoacoustics",
+      "anchor": "localization"
+    }
+  },
+  {
+    "id": "interaural-level-difference",
+    "ru": "межушная разность уровней",
+    "en": "interaural level difference, ILD",
+    "definition": "Разность уровней звука у двух ушей из-за звуковой тени головы. Растёт с частотой и важна для направления на высоких частотах.",
+    "target": {
+      "article": "psychoacoustics",
+      "anchor": "localization"
+    }
+  },
+  {
+    "id": "perceptual-coding",
+    "ru": "перцептивное кодирование",
+    "en": "perceptual audio coding",
+    "definition": "Сжатие звука с потерями, при котором модель слуха оценивает порог маскировки, а шум квантования стараются удержать ниже него. Применяется в MP3 и AAC.",
+    "target": {
+      "article": "psychoacoustics",
+      "anchor": "perceptual-coding"
+    }
+  },
+  {
+    "id": "pre-echo",
+    "ru": "предэхо",
+    "en": "pre-echo",
+    "definition": "Артефакт перцептивного кодирования: шум квантования распределяется по блоку и звучит раньше резкой атаки. Слышен, если выходит за время предмаскировки.",
+    "target": {
+      "article": "psychoacoustics",
+      "anchor": "perceptual-coding"
     }
   }
 ]

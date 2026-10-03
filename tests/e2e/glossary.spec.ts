@@ -46,12 +46,19 @@ test('цели «Подробнее» ведут на существующие �
     .locator('dd a.more')
     .evaluateAll((links) => links.map((l) => (l as HTMLAnchorElement).href));
   expect(hrefs).toHaveLength(glossary.length);
+  // Каждая страница открывается один раз: терминов больше сотни, целей — около полутора десятков.
+  const anchorsByPage = new Map<string, string[]>();
   for (const href of hrefs) {
     const { hash } = new URL(href);
-    const response = await page.request.get(href.replace(hash, ''));
-    expect(response.status(), href).toBe(200);
-    await page.goto(href);
-    if (hash) expect(await page.locator(`[id="${hash.slice(1)}"]`).count(), href).toBe(1);
+    const pageUrl = href.replace(hash, '');
+    anchorsByPage.set(pageUrl, [...(anchorsByPage.get(pageUrl) ?? []), hash]);
+  }
+  for (const [pageUrl, hashes] of anchorsByPage) {
+    const response = await page.goto(pageUrl);
+    expect(response?.status(), pageUrl).toBe(200);
+    for (const hash of hashes.filter(Boolean)) {
+      expect(await page.locator(`[id="${hash.slice(1)}"]`).count(), pageUrl + hash).toBe(1);
+    }
   }
 });
 

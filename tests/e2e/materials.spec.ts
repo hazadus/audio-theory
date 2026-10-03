@@ -21,14 +21,15 @@ test(
       'compressor',
       'equal-loudness',
       'lfo',
+      'psychoacoustics',
       'sampling',
       'signal-level',
       'sound-wave',
       'tremolo',
     ]);
-    await expect(page.locator('[data-count]')).toHaveText('10 статей');
+    await expect(page.locator('[data-count]')).toHaveText('11 статей');
     await expect(chip(page, 'all')).toHaveAttribute('aria-pressed', 'true');
-    await expect(chip(page, 'all')).toContainText('10');
+    await expect(chip(page, 'all')).toContainText('11');
     await expect(chip(page, 'processing')).toContainText('3');
     await expect(chip(page, 'conv')).not.toHaveAttribute('aria-disabled', 'true');
     await expect(chip(page, 'conv')).toContainText('1');
@@ -96,6 +97,7 @@ test(
       'compressor',
       'equal-loudness',
       'audio-math',
+      'psychoacoustics',
       'tremolo',
       'signal-level',
       'lfo',
@@ -110,9 +112,14 @@ test(
     await expect(headings.nth(3)).toContainText('Аудиоданные в программах');
     await expect(headings.nth(4)).toContainText('Обработка звука');
     const order = await slugs(page);
-    expect(order.slice(0, 3).sort()).toEqual(['audio-math', 'equal-loudness', 'sound-wave']);
-    expect(order.slice(3, 5).sort()).toEqual(['sampling', 'signal-level']);
-    expect(order.slice(5)).toEqual(['adc-dac', 'audio-data', 'compressor', 'tremolo', 'lfo']);
+    expect(order.slice(0, 4).sort()).toEqual([
+      'audio-math',
+      'equal-loudness',
+      'psychoacoustics',
+      'sound-wave',
+    ]);
+    expect(order.slice(4, 6).sort()).toEqual(['sampling', 'signal-level']);
+    expect(order.slice(6)).toEqual(['adc-dac', 'audio-data', 'compressor', 'tremolo', 'lfo']);
     // Название группы стоит в заголовке, поэтому метка в строке скрыта.
     await expect(rows(page).first().locator('.overline')).toBeHidden();
   },
@@ -126,11 +133,16 @@ test('неверные значения query заменяются умолча�
   await expect(chip(page, 'all')).toHaveAttribute('aria-pressed', 'true');
   await expect(sortOption(page, 'date')).toHaveAttribute('aria-checked', 'true');
   expect(search(page)).toBe('');
-  expect((await slugs(page)).length).toBe(10);
+  expect((await slugs(page)).length).toBe(11);
 
   await page.goto('materials/?topic=basics&sort=random');
   expect(search(page)).toBe('?topic=basics');
-  expect((await slugs(page)).sort()).toEqual(['audio-math', 'equal-loudness', 'sound-wave']);
+  expect((await slugs(page)).sort()).toEqual([
+    'audio-math',
+    'equal-loudness',
+    'psychoacoustics',
+    'sound-wave',
+  ]);
 });
 
 test('пустая тема из сохранённого адреса показывает сообщение и ссылку на все материалы', async ({
@@ -233,8 +245,8 @@ test(
       const page = await context.newPage();
       await page.goto('materials/?topic=digital&sort=alpha');
       await expect(page.locator('[data-controls]')).toBeHidden();
-      expect((await slugs(page)).length).toBe(10);
-      await expect(page.locator('[data-count]')).toHaveText('10 статей');
+      expect((await slugs(page)).length).toBe(11);
+      await expect(page.locator('[data-count]')).toHaveText('11 статей');
       await expect(rows(page).first().getByRole('link')).toBeVisible();
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
         390,

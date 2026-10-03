@@ -1,0 +1,275 @@
+---
+// Статичные SVG психоакустики: слуховая область, маскировка тоном и схема временной маскировки.
+import { hearingThreshold, hearingThresholdAt, toneMaskingThreshold } from '@/lib/psychoacoustics';
+
+interface Props {
+  kind: 'field' | 'masking' | 'temporal';
+}
+const { kind } = Astro.props;
+
+const left = 76;
+const right = 456;
+const top = 96;
+const bottom = 296;
+const minHz = 20;
+const maxHz = 12500;
+const x = (frequencyHz: number) =>
+  left + (Math.log10(frequencyHz / minHz) / Math.log10(maxHz / minHz)) * (right - left);
+const range = kind === 'field' ? { min: -10, max: 140 } : { min: -10, max: 90 };
+const y = (dbSpl: number) =>
+  bottom - ((dbSpl - range.min) / (range.max - range.min)) * (bottom - top);
+const levelTicks = kind === 'field' ? [0, 40, 80, 120] : [0, 20, 40, 60, 80];
+const frequencyTicks = [
+  { frequencyHz: 20, label: '20' },
+  { frequencyHz: 100, label: '100' },
+  { frequencyHz: 1000, label: '1 000' },
+  { frequencyHz: 10000, label: '10 000' },
+];
+const line = (points: { frequencyHz: number; dbSpl: number }[]) =>
+  points
+    .map(
+      ({ frequencyHz, dbSpl }, i) =>
+        `${i === 0 ? 'M' : 'L'}${x(frequencyHz).toFixed(2)},${y(dbSpl).toFixed(2)}`,
+    )
+    .join(' ');
+const quietPath = line(hearingThreshold);
+
+// Область между порогом в тишине и условным болевым порогом 130 дБ SPL.
+const painDbSpl = 130;
+const fieldPath = `${quietPath} L${x(maxHz).toFixed(2)},${y(painDbSpl).toFixed(2)} L${x(minHz).toFixed(2)},${y(painDbSpl).toFixed(2)} Z`;
+
+// Тон 1 кГц 80 дБ SPL; порог маскировки показан там, где он выше нижней границы оси.
+const maskerHz = 1000;
+const maskerDbSpl = 80;
+const grid = Array.from({ length: 601 }, (_, i) => minHz * (maxHz / minHz) ** (i / 600));
+const masking = grid
+  .map((frequencyHz) => ({
+    frequencyHz,
+    dbSpl: toneMaskingThreshold(frequencyHz, maskerHz, maskerDbSpl),
+  }))
+  .filter(({ dbSpl }) => dbSpl >= range.min);
+const masked = masking.filter(({ frequencyHz, dbSpl }) => dbSpl > hearingThresholdAt(frequencyHz));
+const maskedPath = `${line(masked)} ${[...masked]
+  .reverse()
+  .map(
+    ({ frequencyHz }) =>
+      `L${x(frequencyHz).toFixed(2)},${y(hearingThresholdAt(frequencyHz)).toFixed(2)}`,
+  )
+  .join(' ')} Z`;
+
+// Схема временной маскировки: три участка оси времени с собственными делениями.
+const quietY = 250;
+const simultaneousY = 120;
+const pre = { x0: 64, x1: 154, from: -10, to: 0 };
+const during = { x0: 172, x1: 262 };
+const post = { x0: 280, x1: 456, from: 0, to: 300 };
+const preX = (ms: number) => pre.x0 + ((ms - pre.from) / (pre.to - pre.from)) * (pre.x1 - pre.x0);
+const postX = (ms: number) =>
+  post.x0 + ((ms - post.from) / (post.to - post.from)) * (post.x1 - post.x0);
+// Форма условная: предмаскировка заметна в последние миллисекунды, постмаскировка спадает за ~200 мс.
+const prePath = Array.from({ length: 101 }, (_, i) => {
+  const ms = pre.from + (i / 100) * (pre.to - pre.from);
+  const level = Math.exp(ms / 1.2);
+  return `${i === 0 ? 'M' : 'L'}${preX(ms).toFixed(2)},${(quietY - level * (quietY - simultaneousY)).toFixed(2)}`;
+}).join(' ');
+const postPath = Array.from({ length: 151 }, (_, i) => {
+  const ms = (i / 150) * post.to;
+  const level = Math.max(0, 1 - Math.log10(1 + ms / 5) / Math.log10(1 + 200 / 5));
+  return `L${postX(ms).toFixed(2)},${(quietY - level * (quietY - simultaneousY)).toFixed(2)}`;
+}).join(' ');
+const temporalPath = `${prePath} L${during.x0},${simultaneousY} H${during.x1} L${post.x0},${simultaneousY} ${postPath}`;
+---
+
+{kind === 'temporal' ? (
+  <svg class="psychoacoustics-plot" viewBox="0 0 480 330" xmlns="http://www.w3.org/2000/svg">
+    <path d="M24,24 H62" class="curve" />
+    <text x="76" y="30">
+      Порог для тихого тестового звука
+    </text>
+    <path d="M24,49 H62" class="quiet" />
+    <text x="76" y="55">
+      Порог в тишине
+    </text>
+    <rect x={during.x0} y="84" width={during.x1 - during.x0} height="18" class="masker" />
+    <text x={(during.x0 + during.x1) / 2} y="78" text-anchor="middle">
+      маскер
+    </text>
+    <path d={`M${pre.x0},${quietY} H${post.x1}`} class="quiet" />
+    <path d={`M${pre.x0 - 12},100 V272`} class="axis" />
+    <path
+      d={`M${pre.x0},272 H${pre.x1} M${during.x0},272 H${during.x1} M${post.x0},272 H${post.x1}`}
+      class="axis"
+    />
+    <path
+      d={`M${pre.x1 + 4},278 l6,-12 M${pre.x1 + 10},278 l6,-12 M${during.x1 + 4},278 l6,-12 M${during.x1 + 10},278 l6,-12`}
+      class="axis"
+    />
+    <path d={temporalPath} class="curve" />
+    <text x={preX(-10)} y="298" text-anchor="middle">
+      −10
+    </text>
+    <text x={preX(0)} y="298" text-anchor="middle">
+      0
+    </text>
+    {[0, 100, 200, 300].map((ms) => (
+      <text x={postX(ms)} y="298" text-anchor={ms === 300 ? 'end' : 'middle'}>
+        {ms}
+      </text>
+    ))}
+    <text x={(pre.x0 + pre.x1) / 2} y="322" text-anchor="middle">
+      до начала, мс
+    </text>
+    <text x={post.x1} y="322" text-anchor="end">
+      после конца, мс
+    </text>
+    <text x={(during.x0 + during.x1) / 2} y="190" text-anchor="middle">
+      во время
+    </text>
+  </svg>
+) : (
+  <svg class="psychoacoustics-plot" viewBox="0 0 480 356" xmlns="http://www.w3.org/2000/svg">
+    {kind === 'field' ? (
+      <>
+        <path d="M24,24 H62" class="curve" />
+        <text x="76" y="30">
+          Порог слышимости
+        </text>
+        <path d="M24,49 H62" class="pain" />
+        <text x="76" y="55">
+          Условный болевой порог
+        </text>
+      </>
+    ) : (
+      <>
+        <path d="M24,24 H62" class="curve" />
+        <text x="76" y="30">
+          Порог в тишине
+        </text>
+        <path d="M24,49 H62" class="mask" />
+        <text x="76" y="55">
+          Порог маскировки (модель)
+        </text>
+      </>
+    )}
+    {levelTicks.map((level) => (
+      <>
+        <path d={`M${left},${y(level)} H${right}`} class={level === 0 ? 'axis' : 'grid'} />
+        <text x={left - 12} y={y(level) + 6} text-anchor="end">
+          {level}
+        </text>
+      </>
+    ))}
+    {frequencyTicks.map(({ frequencyHz, label }) => (
+      <>
+        <path d={`M${x(frequencyHz)},${top} V${bottom}`} class="grid" />
+        <text
+          x={x(frequencyHz)}
+          y={bottom + 26}
+          text-anchor={frequencyHz === minHz ? 'start' : 'middle'}
+        >
+          {label}
+        </text>
+      </>
+    ))}
+    <path d={`M${left},${top} V${bottom} H${right}`} class="axis" />
+    <text x="24" y={top - 12}>
+      дБ SPL
+    </text>
+    <text x={right} y={bottom + 52} text-anchor="end">
+      f, Гц (лог. шкала)
+    </text>
+    {kind === 'field' ? (
+      <>
+        <path d={fieldPath} class="area" />
+        <path d={quietPath} class="curve" />
+        <path d={`M${left},${y(painDbSpl)} H${right}`} class="pain" />
+        <text x={x(1000)} y={y(70)} text-anchor="middle">
+          слуховая область
+        </text>
+      </>
+    ) : (
+      <>
+        <path d={maskedPath} class="area masked" />
+        <path d={quietPath} class="curve" />
+        <path d={line(masking)} class="mask" />
+        <path d={`M${x(maskerHz)},${y(range.min)} V${y(maskerDbSpl)}`} class="stem" />
+        <circle cx={x(maskerHz)} cy={y(maskerDbSpl)} r="5" class="marker" />
+        <text x={x(maskerHz) + 12} y={y(maskerDbSpl) + 5}>
+          тон 1 кГц,
+        </text>
+        <text x={x(maskerHz) + 12} y={y(maskerDbSpl) + 27}>
+          80 дБ SPL
+        </text>
+      </>
+    )}
+  </svg>
+)}
+
+<style is:global>
+  .figure-frame:has(> .psychoacoustics-plot) {
+    container-type: inline-size;
+  }
+  .figure-frame > .psychoacoustics-plot {
+    font-size: clamp(10px, calc(30px - 3cqw), 22px);
+  }
+  /* На страницах с заметками рисунок может занять правое поле и вырасти до 880 px. */
+  @container (width >= 700px) {
+    .figure-frame > .psychoacoustics-plot {
+      font-size: 8.5px;
+    }
+  }
+  .psychoacoustics-plot text {
+    fill: currentColor;
+  }
+  .psychoacoustics-plot path {
+    fill: none;
+  }
+  .psychoacoustics-plot .axis {
+    stroke: var(--chart-axis);
+  }
+  .psychoacoustics-plot .grid {
+    stroke: var(--chart-grid);
+  }
+  .psychoacoustics-plot .curve {
+    stroke: var(--chart-series-1);
+    stroke-width: 2.5;
+  }
+  .psychoacoustics-plot .quiet {
+    stroke: var(--chart-axis);
+    stroke-width: 1.5;
+    stroke-dasharray: 3 4;
+  }
+  .psychoacoustics-plot .pain {
+    stroke: var(--chart-series-4);
+    stroke-width: 2.5;
+    stroke-dasharray: 8 3 2 3;
+  }
+  .psychoacoustics-plot .mask {
+    stroke: var(--chart-series-3);
+    stroke-width: 2.5;
+    stroke-dasharray: 6 4;
+  }
+  .psychoacoustics-plot path.area {
+    fill: var(--chart-series-1);
+    fill-opacity: 0.1;
+    stroke: none;
+  }
+  .psychoacoustics-plot path.masked {
+    fill: var(--chart-series-3);
+    fill-opacity: 0.18;
+  }
+  .psychoacoustics-plot .stem {
+    stroke: var(--chart-series-2);
+    stroke-width: 2;
+  }
+  .psychoacoustics-plot .marker {
+    fill: var(--chart-bg);
+    stroke: var(--chart-series-2);
+    stroke-width: 2;
+  }
+  .psychoacoustics-plot .masker {
+    fill: var(--chart-series-2);
+    fill-opacity: 0.25;
+    stroke: var(--chart-series-2);
+  }
+</style>
