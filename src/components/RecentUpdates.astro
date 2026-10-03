@@ -1,0 +1,126 @@
+---
+// «Недавно на сайте»: три последние записи журнала и ссылка на все обновления; пустой журнал — без блока.
+import Icon from '@/components/Icon.astro';
+import { loadUpdates } from '@/lib/update-list';
+import { recentUpdates } from '@/lib/recent-updates';
+import { withBase } from '@/lib/urls';
+
+const entries = recentUpdates(await loadUpdates());
+---
+
+{entries.length > 0 && (
+  <section class="recent" aria-labelledby="recent-title" data-recent-updates data-pagefind-ignore>
+    <div class="head">
+      <h2 id="recent-title">Недавно на сайте</h2>
+      <a class="all" href={withBase('/updates/')}>
+        Все обновления
+        <Icon name="chevron-right" size={14} />
+      </a>
+    </div>
+    <ul>
+      {entries.map((entry) => (
+        <li>
+          <time datetime={entry.date}>{entry.dateLabel}</time>
+          <span class:list={['badge', entry.type]}>{entry.typeLabel}</span>
+          <a href={entry.href}>{entry.text}</a>
+        </li>
+      ))}
+    </ul>
+  </section>
+)}
+
+<style>
+  .recent {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 16px;
+    padding-top: var(--space-5);
+    border-top: var(--border-width) solid var(--color-border);
+  }
+
+  h2 {
+    margin: 0;
+    font-size: var(--text-2xl);
+    line-height: 1.2;
+    letter-spacing: var(--tracking-snug);
+  }
+
+  .all {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    color: var(--color-link);
+  }
+
+  ul {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 12px;
+    padding: var(--space-3) 0;
+    border-bottom: var(--border-width) solid var(--color-border);
+  }
+
+  time {
+    min-width: 9.5rem;
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+  }
+
+  .badge {
+    padding: 4px 7px;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .badge.new {
+    background: var(--color-accent-soft);
+    color: var(--color-accent);
+  }
+
+  .badge.updated {
+    box-shadow: inset 0 0 0 1px var(--color-border-strong);
+    color: var(--color-text-muted);
+  }
+
+  li a {
+    min-width: 0;
+    font-family: var(--font-text);
+    font-size: var(--text-base);
+    overflow-wrap: anywhere;
+  }
+
+  /* Смартфон: дата и метка в первой строке, текст-ссылка под ними в одну колонку. */
+  @media (width < 600px) {
+    time {
+      min-width: 0;
+    }
+
+    li a {
+      flex-basis: 100%;
+    }
+  }
+</style>

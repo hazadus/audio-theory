@@ -35,7 +35,9 @@ src/
     update-list.ts ✅                # Загрузка журнала с метаданными статьи и адресами
     update-view.ts ✅                # Годы, секции дат, метаданные записи и фильтр type в адресе
     updates-controller.ts ✅        # Фильтр type, история и раскрытие цели прямого якоря
-    updates-feed.ts                 # RSS из журнала: XML, абсолютные URL, стабильные guid и даты
+    article-dates.ts ✅               # Публикация, дополнение и дата сортировки статьи из журнала и Git
+    recent-updates.ts ✅              # Блок «Недавно на сайте»: три последние записи
+    updates-feed.ts ✅                            # RSS из журнала: XML, абсолютные URL, стабильные guid и даты
     articles.ts ✅                   # Схема frontmatter и уникальность slug
     margin-note.ts ✅               # Контракт 1–3 ссылок заметки «Подробнее»
     links.ts ✅                      # Цели ссылок и их разрешение с базовым путём
@@ -121,10 +123,11 @@ src/
     TremoloPlot.astro ✅              # Статичные графики сигнала, преобразования LFO и глубины тремоло
     PsychoacousticsPlot.astro ✅      # Статичные SVG слуховой области, маскировки и временной маскировки
     SiteHeader.astro ✅              # Шапка, навигация и компактное меню
-    SiteFooter.astro ✅              # Подвал с описанием и внешними ссылками
+    SiteFooter.astro ✅              # Подвал: описание, «Обновления», «RSS» и внешние ссылки
+    RecentUpdates.astro ✅                      # «Недавно на сайте» на главной
     ThemeChoice.astro ✅             # Три варианта темы для мобильного меню
     UpdatesList.astro ✅            # Общий журнал для /updates/ и /updates/YYYY/
-    RecentUpdates.astro             # Три последние записи на главной
+    RecentUpdates.astro ✅                     # Три последние записи на главной
     Icon.astro ✅                    # Иконки Lucide с обводкой 1.5/1.75 px
     MarginNote.astro ✅              # Абзац и заметка «Подробнее» без JS, поле и узкий вариант
     Term.astro ✅                    # Термин из глоссария: ссылка, английское название, подсказка

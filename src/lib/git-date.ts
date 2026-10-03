@@ -1,4 +1,4 @@
-// Дата обновления статьи — дата последнего коммита её файла в Git; дата сборки её не заменяет.
+// Дата публикации статьи по Git — дата первого коммита её файла с учётом переименований; дата сборки её не заменяет.
 import { execFileSync } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 
@@ -10,11 +10,11 @@ function git(cwd: string, args: string[]): string {
 }
 
 /**
- * Возвращает дату последнего коммита файла в формате ISO 8601 с часовым поясом коммитера
- * или `null` для «Черновика» — файла без коммитов (новый или только в индексе).
+ * Возвращает дату первого коммита файла (с учётом переименований) в формате ISO 8601
+ * с часовым поясом коммитера или `null` для «Черновика» — файла без коммитов (новый или только в индексе).
  * Без `allowDraft` бросает ошибку при отсутствии даты, при неполной истории и вне Git-репозитория.
  */
-export function getUpdatedDate(
+export function getPublishedDate(
   file: string,
   { allowDraft }: { allowDraft: boolean },
 ): string | null {
@@ -22,7 +22,7 @@ export function getUpdatedDate(
   const cwd = dirname(path);
   let date: string;
   try {
-    date = git(cwd, ['log', '-1', '--format=%cI', '--', path]).trim();
+    date = git(cwd, ['log', '--follow', '--format=%cI', '--', path]).trim().split('\n').at(-1)!;
     if (
       date &&
       !allowDraft &&

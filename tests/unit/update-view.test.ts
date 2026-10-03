@@ -6,6 +6,7 @@ import {
   groupByDay,
   parseTypeFilter,
   serializeTypeFilter,
+  updateEntryPath,
   updateMeta,
   updateYears,
 } from '@/lib/update-view';
@@ -71,5 +72,13 @@ describe('Фильтр типа в адресе', () => {
     expect(serializeTypeFilter('?utm=1&type=new', 'all')).toBe('?utm=1');
     expect(serializeTypeFilter('?type=bad&utm=1', 'updated')).toBe('?utm=1&type=updated');
     expect(serializeTypeFilter('?type=bad', 'all')).toBe('');
+  });
+});
+
+describe('updateEntryPath', () => {
+  it('адрес записи — год даты и якорь update-<id>', () => {
+    expect(updateEntryPath({ id: 'wave-new', date: '2025-12-31' })).toBe(
+      '/updates/2025/#update-wave-new',
+    );
   });
 });

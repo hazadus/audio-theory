@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { getUpdatedDate } from '@/lib/git-date';
+import { getPublishedDate } from '@/lib/git-date';
 
 let root: string;
 
@@ -47,16 +47,24 @@ beforeAll(() => {
 
 afterAll(() => rmSync(root, { recursive: true, force: true }));
 
-describe('getUpdatedDate', () => {
-  it('берёт дату последнего коммита именно этого файла, а не репозитория', () => {
-    expect(getUpdatedDate(join(root, 'a.mdx'), published)).toBe('2023-04-13T13:00:00+03:00');
-    expect(getUpdatedDate(join(root, 'b.mdx'), published)).toBe('2024-05-14T14:00:00+03:00');
+describe('getPublishedDate', () => {
+  it('берёт дату первого коммита именно этого файла: правки её не меняют', () => {
+    expect(getPublishedDate(join(root, 'a.mdx'), published)).toBe('2020-01-10T10:00:00+03:00');
+    expect(getPublishedDate(join(root, 'b.mdx'), published)).toBe('2022-03-12T12:00:00+03:00');
+  });
+
+  it('учитывает переименование файла', () => {
+    git(root, ['mv', 'b.mdx', 'renamed.mdx']);
+    git(root, ['commit', '-m', 'Переименование'], '2025-06-15T15:00:00+03:00');
+    expect(getPublishedDate(join(root, 'renamed.mdx'), published)).toBe(
+      '2022-03-12T12:00:00+03:00',
+    );
   });
 
   it('не зависит от даты сборки и от правок рабочего дерева', () => {
     writeFileSync(join(root, 'a.mdx'), 'правка без коммита');
     try {
-      expect(getUpdatedDate(join(root, 'a.mdx'), published)).toBe('2023-04-13T13:00:00+03:00');
+      expect(getPublishedDate(join(root, 'a.mdx'), published)).toBe('2020-01-10T10:00:00+03:00');
     } finally {
       git(root, ['checkout', '--', 'a.mdx']);
     }
@@ -65,16 +73,16 @@ describe('getUpdatedDate', () => {
   it('новый файл: «Черновик» в локальном режиме и ошибка в публикуемой сборке', () => {
     const file = join(root, 'new.mdx');
     writeFileSync(file, 'новая статья');
-    expect(getUpdatedDate(file, draft)).toBeNull();
-    expect(() => getUpdatedDate(file, published)).toThrow(/нет Git-даты/);
+    expect(getPublishedDate(file, draft)).toBeNull();
+    expect(() => getPublishedDate(file, published)).toThrow(/нет Git-даты/);
   });
 
   it('файл только в индексе без коммита тоже «Черновик»', () => {
     const file = join(root, 'staged.mdx');
     writeFileSync(file, 'в индексе');
     git(root, ['add', 'staged.mdx']);
-    expect(getUpdatedDate(file, draft)).toBeNull();
-    expect(() => getUpdatedDate(file, published)).toThrow(/нет Git-даты/);
+    expect(getPublishedDate(file, draft)).toBeNull();
+    expect(() => getPublishedDate(file, published)).toThrow(/нет Git-даты/);
   });
 
   it('вне Git-репозитория: «Черновик» локально и ошибка при публикации', () => {
@@ -82,8 +90,8 @@ describe('getUpdatedDate', () => {
     try {
       const file = join(outside, 'x.mdx');
       writeFileSync(file, 'x');
-      expect(getUpdatedDate(file, draft)).toBeNull();
-      expect(() => getUpdatedDate(file, published)).toThrow(/Не удалось получить Git-дату/);
+      expect(getPublishedDate(file, draft)).toBeNull();
+      expect(() => getPublishedDate(file, published)).toThrow(/Не удалось получить Git-дату/);
     } finally {
       rmSync(outside, { recursive: true, force: true });
     }
@@ -92,6 +100,6 @@ describe('getUpdatedDate', () => {
   it('неполная история отвергается в публикуемой сборке', () => {
     const clone = join(root, 'shallow');
     git(root, ['clone', '-q', '--depth', '1', `file://${root}`, clone]);
-    expect(() => getUpdatedDate(join(clone, 'a.mdx'), published)).toThrow(/неполная/);
+    expect(() => getPublishedDate(join(clone, 'a.mdx'), published)).toThrow(/неполная/);
   });
 });

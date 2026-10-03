@@ -1,5 +1,6 @@
 ---
 import Icon from '@/components/Icon.astro';
+import RecentUpdates from '@/components/RecentUpdates.astro';
 import VisualizationsSection from '@/components/VisualizationsSection.astro';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { topics } from '@/data/topics';
@@ -33,6 +34,8 @@ const visualizations = await loadVisualizationSection();
     </div>
 
     <VisualizationsSection section={visualizations} />
+
+    <RecentUpdates />
 
     {groups.map((group) => (
       <section class="group" aria-labelledby={`group-${group.id}`}>

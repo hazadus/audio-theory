@@ -7,6 +7,7 @@ import type { ArticleData } from '@/lib/articles';
 import type { TocItem } from '@/lib/headings';
 import { resolveTarget } from '@/lib/links';
 import { topics } from '@/data/topics';
+import type { ArticleDates } from '@/lib/article-dates';
 import { formatUpdatedDate } from '@/lib/format-date';
 import { materialsHref } from '@/lib/materials';
 import { withBase } from '@/lib/urls';
@@ -16,12 +17,12 @@ import '@/styles/math.css';
 interface Props {
   data: ArticleData;
   toc: TocItem[];
-  /** ISO-дата последнего коммита файла; `null` — «Черновик». */
-  updated: string | null;
+  /** Публикация и последнее дополнение из журнала; без публикации — «Черновик». */
+  dates: ArticleDates;
   readingMinutes: number;
 }
 
-const { data, toc, updated, readingMinutes } = Astro.props;
+const { data, toc, dates, readingMinutes } = Astro.props;
 const group = topics.find((topic) => topic.id === data.topic)!;
 const prerequisites = data.prerequisites ?? [];
 
@@ -56,12 +57,21 @@ const links = (items: typeof data.related) =>
         <h1>{data.title}</h1>
         <p class="question">{data.question}</p>
         <div class="meta">
-          {updated ? (
+          {dates.published ? (
             <span data-pagefind-ignore>
-              Обновлено <time datetime={updated.slice(0, 10)}>{formatUpdatedDate(updated)}</time>
+              Опубликовано{' '}
+              <time datetime={dates.published}>{formatUpdatedDate(dates.published)}</time>
             </span>
           ) : (
             <span data-pagefind-ignore>Черновик</span>
+          )}
+          {dates.addition && (
+            <span data-pagefind-ignore>
+              Дополнено{' '}
+              <a href={withBase(dates.addition.path)}>
+                <time datetime={dates.addition.date}>{formatUpdatedDate(dates.addition.date)}</time>
+              </a>
+            </span>
           )}
           <span class="reading" data-pagefind-ignore>
             <Icon name="clock" size={16} />

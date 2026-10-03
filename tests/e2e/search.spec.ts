@@ -156,7 +156,9 @@ test('Pagefind не индексирует каркас, элементы упр
     for (const result of results) expect(result.content, query).not.toContain(query);
   }
   const [article] = await searchIndex(page, base, 'частота дискретизации');
-  expect(article.content).not.toMatch(/мин чтения|Обновлено|Связанные темы|Определение:/);
+  expect(article.content).not.toMatch(
+    /мин чтения|Опубликовано|Дополнено|Связанные темы|Определение:/,
+  );
   // Визуальная копия формулы не дублирует символы: «x(t)x(t)x(t)».
   expect(article.content).not.toMatch(/(\w\(t\))\1/);
 });

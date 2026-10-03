@@ -53,9 +53,10 @@ try {
   );
   assert.deepEqual(
     (await readdir(join(validDir, 'updates'))).sort(),
-    ['index.html'],
-    'пустой журнал не создаёт страниц годов',
+    ['feed.xml', 'index.html'],
+    'пустой журнал не создаёт страниц годов, только ленту',
   );
+  assert.doesNotMatch(home, /Недавно на сайте/, 'пустой журнал не выводит блок на главной');
 
   // Лимит четырёх карточек в группе: «Все N» считает все статьи, карточки — четыре самых свежих.
   const manyDir = join(temporary, 'many-src');
@@ -157,7 +158,7 @@ try {
   assert.match(crumbs, /<a href="\/materials\/\?topic=digital"[^>]*>[\s\S]*Цифровой сигнал<\/a>/);
   assert.match(sampling, /<a href="\/materials\/"[^>]*aria-current="page"[^>]*>Материалы<\/a>/);
   assert.match(sampling, /<h1[^>]*>Служебная статья<\/h1>/);
-  assert.match(sampling, /Обновлено <time datetime="[^"]+"[^>]*>\d{1,2} [а-я]+ \d{4}<\/time>/);
+  assert.match(sampling, /Опубликовано <time datetime="[^"]+"[^>]*>\d{1,2} [а-я]+ \d{4}<\/time>/);
   assert.match(sampling, /проверка<\/li>\s*<li[^>]*>образец/);
   assert.match(sampling, /<aside[^>]*aria-label="Что нужно знать заранее"/);
   assert.match(sampling, /<h2[^>]*>Связанные темы<\/h2>/);
@@ -200,7 +201,7 @@ try {
   const committedHtml = await readFile(join(validDir, 'test-wave', 'index.html'), 'utf8');
   assert.match(
     committedHtml,
-    /Обновлено <time datetime="\d{4}-\d{2}-\d{2}"[^>]*>\d{1,2} [а-я]+ \d{4}<\/time>/,
+    /Опубликовано <time datetime="\d{4}-\d{2}-\d{2}"[^>]*>\d{1,2} [а-я]+ \d{4}<\/time>/,
   );
   assert.doesNotMatch(committedHtml, /Черновик/);
 

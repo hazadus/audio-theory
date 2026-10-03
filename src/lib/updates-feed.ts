@@ -1,5 +1,5 @@
 // RSS 2.0 из журнала обновлений: абсолютные адреса, стабильные guid и даты записей.
-import { typeLabels, yearOf, type UpdateType } from '@/lib/update-view';
+import { typeLabels, updateEntryPath, type UpdateType } from '@/lib/update-view';
 import { withBase } from '@/lib/urls';
 
 export const feedTitle = 'Теория аудио — обновления';
@@ -46,10 +46,7 @@ export const feedGuid = (id: string) => `audio-theory-update:${id}`;
 
 function itemXml(entry: FeedEntry, absolute: (path: string) => string, base: string): string {
   const article = absolute(entry.href);
-  const link =
-    entry.type === 'new'
-      ? article
-      : absolute(withBase(`/updates/${yearOf(entry.date)}/#update-${entry.id}`, base));
+  const link = entry.type === 'new' ? article : absolute(withBase(updateEntryPath(entry), base));
   const html =
     entry.type === 'new'
       ? `<p>${escapeXml(entry.summary ?? '')}</p><p><a href="${escapeXml(article)}">Читать статью</a></p>`

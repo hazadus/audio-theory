@@ -4,7 +4,8 @@ import { assertValidArticles } from '@/lib/article-content';
 import { loadUpdates } from '@/lib/update-list';
 import { assertUniqueSlugs } from '@/lib/articles';
 import { assertUniqueAnchors, getToc } from '@/lib/headings';
-import { allowDraftEnv, getUpdatedDate } from '@/lib/git-date';
+import { resolveArticleDates } from '@/lib/article-dates';
+import { allowDraftEnv, getPublishedDate } from '@/lib/git-date';
 import ArticleLayout from '@/layouts/ArticleLayout.astro';
 import { resolveReadingMinutes } from '@/lib/reading-time';
 
@@ -32,11 +33,14 @@ assertUniqueAnchors(headings, article.id);
 const toc = getToc(headings);
 const readingMinutes = resolveReadingMinutes(article.body ?? '', article.data.readingMinutes);
 // Dev-сервер и сборка с ALLOW_DRAFT_ARTICLES=1 показывают «Черновик» для файла без коммита; иначе это ошибка.
-const updated = getUpdatedDate(article.filePath!, {
-  allowDraft: import.meta.env.DEV || process.env[allowDraftEnv] === '1',
-});
+const dates = resolveArticleDates(
+  getPublishedDate(article.filePath!, {
+    allowDraft: import.meta.env.DEV || process.env[allowDraftEnv] === '1',
+  }),
+  (await loadUpdates()).filter(({ article: slug }) => slug === article.data.slug),
+);
 ---
 
-<ArticleLayout data={article.data} {toc} {updated} {readingMinutes}>
+<ArticleLayout data={article.data} {toc} {dates} {readingMinutes}>
   <Content />
 </ArticleLayout>

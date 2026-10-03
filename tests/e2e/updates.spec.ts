@@ -268,3 +268,63 @@ test(
     expect(xml).not.toMatch(/href="\/|<link>\//);
   },
 );
+
+test(
+  'главная: блок «Недавно на сайте» и даты карточек из журнала',
+  { tag: ['@updates'] },
+  async ({ page }) => {
+    await page.goto('');
+    const block = page.locator('[data-recent-updates]');
+    await expect(block.getByRole('heading', { name: 'Недавно на сайте' })).toBeVisible();
+    await expect(block.locator('li')).toHaveCount(3);
+    await expect(block.getByRole('link', { name: 'Все обновления' })).toHaveAttribute(
+      'href',
+      '/audio-theory/updates/',
+    );
+    const first = block.locator('li').first();
+    await expect(first.locator('.badge')).toHaveText('Дополнено');
+    await expect(first.locator('time')).toHaveAttribute('datetime', '2026-10-04');
+    await expect(first.getByRole('link')).toHaveText('Служебная статья: Наложение спектров');
+    await expect(first.getByRole('link')).toHaveAttribute(
+      'href',
+      '/audio-theory/updates/2026/#update-sampling-added',
+    );
+    // Карточки показывают дату последнего дополнения, а не Git-дату файла.
+    await expect(page.locator('.card-meta').first()).toContainText('4 октября 2026');
+
+    await page.setViewportSize({ width: 320, height: 800 });
+    expect(await overflow(page)).toBeLessThanOrEqual(0);
+
+    await first.getByRole('link').click();
+    await expect(page).toHaveURL(/\/updates\/2026\/#update-sampling-added$/);
+    await expect(page.locator('#update-sampling-added')).toBeVisible();
+  },
+);
+
+test(
+  'статья: «Опубликовано» из записи «Новое» и «Дополнено» со ссылкой на журнал',
+  { tag: ['@updates'] },
+  async ({ page }) => {
+    await page.goto('test-wave/');
+    const meta = page.locator('.meta');
+    await expect(meta).toContainText('Опубликовано 10 мая 2023');
+    await expect(meta).not.toContainText('Обновлено');
+    const added = meta.getByRole('link', { name: '4 октября 2026' });
+    await expect(added).toHaveAttribute('href', '/audio-theory/updates/2026/#update-wave-long');
+    await added.click();
+    await expect(page).toHaveURL(/\/updates\/2026\/#update-wave-long$/);
+  },
+);
+
+test('подвал: ссылки «Обновления» и «RSS»', { tag: ['@updates'] }, async ({ page }) => {
+  await page.goto('about/');
+  const footer = page.locator('footer');
+  await expect(footer.getByRole('link', { name: 'Обновления' })).toHaveAttribute(
+    'href',
+    '/audio-theory/updates/',
+  );
+  await expect(footer.getByRole('link', { name: 'RSS' })).toHaveAttribute(
+    'href',
+    '/audio-theory/updates/feed.xml',
+  );
+});

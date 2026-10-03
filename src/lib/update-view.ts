@@ -28,6 +28,11 @@ export function yearOf(date: string): string {
   return date.slice(0, 4);
 }
 
+/** Постоянный адрес записи в архиве без базового пути: `/updates/YYYY/#update-<id>`. */
+export function updateEntryPath(entry: { id: string; date: string }): string {
+  return `/updates/${yearOf(entry.date)}/#update-${entry.id}`;
+}
+
 /** Непустые годы по убыванию. */
 export function updateYears(entries: readonly Dated[]): string[] {
   return [...new Set(entries.map(({ date }) => yearOf(date)))].sort().reverse();
