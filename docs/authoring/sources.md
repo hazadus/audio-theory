@@ -2,6 +2,18 @@
 
 Пополняемый список литературы для подготовки и дополнения материалов по [общим правилам](rules.md). Добавлять полезные источники после чтения: автор, название, ссылка и темы применения. Для конкретного утверждения проверять подходящий раздел и ссылаться на него в статье. Рекомендация не делает источник обязательным или единственным.
 
+## Jay Abramson и соавторы — OpenStax, Precalculus 2e
+
+Учебник с объяснениями и упражнениями; прочитанные при подготовке [математического минимума](../../src/content/articles/audio-math.mdx) разделы:
+
+- [§1.1. Functions and Function Notation](https://openstax.org/books/precalculus-2e/pages/1-1-functions-and-function-notation) — функция, аргумент, чтение обозначений и кусочные правила.
+- [§5.1. Angles](https://openstax.org/books/precalculus-2e/pages/5-1-angles) — радианы, длина дуги, перевод градусов и направление угла.
+- [§5.4. Right Triangle Trigonometry](https://openstax.org/books/precalculus-2e/pages/5-4-right-triangle-trigonometry) и [§5.2. Unit Circle: Sine and Cosine Functions](https://openstax.org/books/precalculus-2e/pages/5-2-unit-circle-sine-and-cosine-functions) — отношения сторон, координаты на окружности и значения синуса и косинуса.
+- [§4.3. Logarithmic Functions](https://openstax.org/books/precalculus-2e/pages/4-3-logarithmic-functions) и [§4.5. Logarithmic Properties](https://openstax.org/books/precalculus-2e/pages/4-5-logarithmic-properties) — десятичный и натуральный логарифмы, допустимые аргументы, произведение, частное и степень.
+- [§4.1. Exponential Functions](https://openstax.org/books/precalculus-2e/pages/4-1-exponential-functions) — основания степеней, число e, экспоненциальный рост и спад.
+
+Подходит для объяснения базовой математики до её применения к аудио. Рисунки статьи собственные; иллюстрации учебника не копируются.
+
 ## Steven W. Smith — The Scientist and Engineer's Guide to Digital Signal Processing
 
 [Книга, глава 1 и оглавление](https://www.dspguide.com/ch1.htm). Рекомендована автором проекта. Подходит для основ цифровой обработки сигналов, дискретизации, АЦП/ЦАП, представления чисел, спектрального анализа и фильтров. Выбирать главу по теме; не переносить утверждения из обзорной главы на специальные вопросы без проверки.

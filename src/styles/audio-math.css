@@ -1,0 +1,11 @@
+/* Схема окружности сохраняет читаемые подписи при масштабировании на смартфоне. */
+#unit-circle .figure-frame {
+  container-type: inline-size;
+  width: 100%;
+  max-width: 340px;
+  align-self: center;
+}
+
+#unit-circle .figure-frame > svg {
+  font-size: clamp(16px, calc(30px - 4cqw), 22px);
+}

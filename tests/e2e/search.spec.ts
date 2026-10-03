@@ -115,6 +115,16 @@ test(
         slug: 'sampling',
         title: 'Дискретизация: отсчёты, период и частота дискретизации',
       },
+      {
+        query: 'суммирование',
+        slug: 'audio-math',
+        title: 'Математика для аудио',
+      },
+      {
+        query: 'radian',
+        slug: 'audio-math',
+        title: 'Математика для аудио',
+      },
     ];
     for (const { query, slug, title } of cases) {
       const results = await searchIndex(page, base, query);
