@@ -65,4 +65,12 @@ export const visualizations: readonly Visualization[] = [
     sound: false,
     preview: 'bytes',
   },
+  {
+    id: 'pcm-sample',
+    slug: 'integer-pcm',
+    name: '24-битный отсчёт: байты, знак и float',
+    what: 'Целое число или три байта: биты, расширение знака и нормированное значение.',
+    sound: false,
+    preview: 'pcm',
+  },
 ];

@@ -17,6 +17,7 @@ const slugs = [
   'tremolo',
   'psychoacoustics',
   'wav-file',
+  'integer-pcm',
 ];
 
 const entry = {

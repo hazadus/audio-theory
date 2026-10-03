@@ -395,7 +395,7 @@ test(
         }
         if (viewport.width === 1440) {
           // Визуализаций больше четырёх: «Все N» ведёт на страницу со всеми карточками.
-          const all = page.getByRole('link', { name: /^Все 6/ });
+          const all = page.getByRole('link', { name: /^Все 7/ });
           await expect(all).toHaveAttribute('href', `${base}visualizations/`);
           const tops = await cards.evaluateAll((els) =>
             els.map((el) => el.getBoundingClientRect().top),
@@ -406,13 +406,14 @@ test(
           await expect(page.locator('#sampling-demo')).toBeVisible();
           await page.goto('visualizations/');
           const allCards = page.locator('a.viz-card');
-          await expect(allCards).toHaveCount(6);
+          await expect(allCards).toHaveCount(7);
           await expect(allCards.nth(4)).toHaveAttribute('href', `${base}lfo/#lfo-waveforms`);
           await expect(allCards.nth(4).getByText('Со звуком')).toHaveCount(0);
           await allCards.nth(4).click();
           await expect(page.locator('#lfo-waveforms')).toBeVisible();
           await page.goBack();
           await expect(allCards.nth(5)).toHaveAttribute('href', `${base}wav-file/#wav-dump`);
+          await expect(allCards.nth(6)).toHaveAttribute('href', `${base}integer-pcm/#pcm-sample`);
           await expect(allCards.nth(5).getByText('Со звуком')).toHaveCount(0);
         }
       } finally {

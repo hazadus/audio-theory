@@ -1,5 +1,5 @@
 // Геометрия статичных превью карточек визуализаций: область 280 × 150, без осей и подписей.
-export type PreviewKind = 'tone' | 'phase' | 'sampling' | 'compressor' | 'lfo' | 'bytes';
+export type PreviewKind = 'tone' | 'phase' | 'sampling' | 'compressor' | 'lfo' | 'bytes' | 'pcm';
 export const previewKinds: readonly PreviewKind[] = [
   'tone',
   'phase',
@@ -7,6 +7,7 @@ export const previewKinds: readonly PreviewKind[] = [
   'compressor',
   'lfo',
   'bytes',
+  'pcm',
 ];
 
 /** Роль цвета; в разметке превращается в `var(--chart-<роль>)`. */
@@ -191,6 +192,25 @@ const builders: Record<PreviewKind, () => Preview> = {
   compressor: compressorPreview,
   lfo: lfoPreview,
   bytes: bytesPreview,
+  pcm: () => {
+    let original = '';
+    let extended = '';
+    for (let i = 0; i < 24; i++) original += `M${70 + i * 8} 44v20`;
+    for (let i = 0; i < 32; i++) extended += `M${6 + i * 8} 100v20`;
+    return {
+      paths: [
+        { d: original, color: 'signal', width: 3 },
+        { d: extended, color: 'grid', width: 3 },
+        {
+          d: 'M6 100v20M14 100v20M22 100v20M30 100v20M38 100v20M46 100v20M54 100v20M62 100v20',
+          color: 'result',
+          width: 3,
+        },
+        { d: 'M70 74v12', color: 'axis', width: 1.5 },
+      ],
+      dots: [],
+    };
+  },
 };
 
 export const buildPreview = (kind: PreviewKind): Preview => builders[kind]();

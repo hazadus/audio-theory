@@ -198,3 +198,12 @@
 
 - [§7.3. Hexadecimal (base 16)](https://math.libretexts.org/Bookshelves/Combinatorics_and_Discrete_Mathematics/A_Cool_Brisk_Walk_Through_Discrete_Mathematics_(Davies)/07:_Counting/7.3:_Hexadecimal_(base_16)) — позиционная запись, цифры A–F, перевод между основаниями.
 - [§7.4. Binary (base 2)](https://math.libretexts.org/Bookshelves/Combinatorics_and_Discrete_Mathematics/A_Cool_Brisk_Walk_Through_Discrete_Mathematics_(Davies)/07:_Counting/7.4:_Binary_(base_2)) — бит, байт из 8 бит, 256 значений, шестнадцатеричная цифра как 4 бита, числа без знака и дополнительный код.
+
+## Целочисленный PCM и преобразования чисел
+
+Прочитаны при подготовке статьи по issue #12:
+
+- [Steven W. Smith. Глава 4.2: Fixed Point (Integers)](https://www.dspguide.com/ch4/2.htm) — код со смещением, дополнительный код, знак и асимметрия диапазона; для WAV смещение проверять по спецификации формата.
+- [libsndfile. FAQ, Q10](https://libsndfile.github.io/libsndfile/FAQ.html#Q010) — различие масштабов чтения и записи int ↔ нормированный float; не заменяет проверку конкретной версии.
+- [Рабочий текст стандарта C++: Floating-integral conversions](https://eel.is/c++draft/conv.fpint), [Integral conversions](https://eel.is/c++draft/conv.integral), [Shift operators](https://eel.is/c++draft/expr.shift), [AND](https://eel.is/c++draft/expr.bit.and), [OR](https://eel.is/c++draft/expr.or), [Unary operators](https://eel.is/c++draft/expr.unary.op) — условия преобразований и побитовых операций; различать требования C++17 и C++20.
+- [JUCE 9.0.3. AudioDataConverters](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_basics/buffers/juce_AudioDataConverters.h), [AudioData::Pointer](https://docs.juce.com/master/classjuce_1_1AudioData_1_1Pointer.html) — чтение и запись Int16/Int24, масштаб, границы и округление. Исходники изучены по локальной копии точного релиза.

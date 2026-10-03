@@ -81,6 +81,8 @@ src/
     compressor-view.ts ✅            # Тексты, параметры ползунков и разметка SVG визуализации компрессора
     compressor-audio-player.ts ✅    # Звук «до / после» компрессора по кругу через Web Audio
     compressor-demo-controller.ts ✅ # Параметры, примеры, сброс и плеер визуализации компрессора
+    integer-pcm.ts ✅                # Чтение и запись PCM, binary32, разбор 24 бит
+    pcm-sample-controller.ts ✅       # Ввод числа/байтов, ошибки и сброс
     demo-captions.ts ✅              # Названия подписей и якоря по умолчанию визуализаций статей
     visualizations.ts ✅             # Проверка реестра визуализаций, состав раздела и адрес карточки
     visualization-list.ts ✅         # Раздел визуализаций главной по коллекции статей
@@ -123,6 +125,7 @@ src/
     VisualizationPreview.astro ✅    # Декоративный SVG-превью карточки визуализации
     CompressorDemo.astro ✅          # Компрессор: характеристика, уровни во времени, параметры, плеер «до / после»
     LfoDemo.astro ✅                 # Формы LFO: окружность фазы, четыре графика с курсором и расчётом, анимация
+    PcmSampleDemo.astro ✅           # Число и три байта PCM: знак, расширение и float
     WavDumpDemo.astro ✅             # Байты WAV-файла: карта чанков, шестнадцатеричный дамп, описание поля
     VisualizationCard.astro ✅       # Карточка визуализации для главной и страницы /visualizations/
     DataTable.astro ✅               # Таблица с caption, scope, закреплённым первым столбцом и прокруткой

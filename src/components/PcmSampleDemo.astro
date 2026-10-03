@@ -1,0 +1,264 @@
+---
+// Один 24-битный отсчёт: число и байты, знаковый бит, расширение до int32 и перевод в float.
+import { demoCaptions } from '@/lib/demo-captions';
+import { defaultPcm24, pcm24View } from '@/lib/integer-pcm';
+
+interface Props {
+  figure: number;
+  id?: string;
+}
+const { figure, id = demoCaptions.PcmSampleDemo.defaultId } = Astro.props;
+const view = pcm24View(defaultPcm24);
+---
+
+<figure class="pcm-demo" id={id} data-pcm-demo data-state="static" aria-labelledby={`${id}-name`}>
+  <div class="pcm-head">
+    <span class="pcm-label">Визуализация {figure}</span>
+    <b id={`${id}-name`}>{demoCaptions.PcmSampleDemo.name}</b>
+  </div>
+  <div class="pcm-result">
+    <dl>
+      <dt>Байты в файле (LE)</dt>
+      <dd>
+        <code data-result="bytes">{view.bytes}</code>
+      </dd>
+      <dt>24 бита: старшие слева</dt>
+      <dd>
+        <code data-result="bits">{view.bits}</code>
+      </dd>
+      <dt>Знаковый бит</dt>
+      <dd data-result="sign">{view.sign}</dd>
+      <dt>Чтение со знаком</dt>
+      <dd data-result="reading">{view.reading}</dd>
+      <dt>Расширение до 32 бит</dt>
+      <dd>
+        <code>
+          <strong data-extension>{view.extension}</strong>{' '}
+          <span data-extended-rest>{view.extended.slice(3)}</span>
+        </code>
+      </dd>
+      <dt>Рабочий float</dt>
+      <dd data-result="float">{view.float}</dd>
+    </dl>
+    <p>
+      Подчёркнутый байт добавлен при расширении знака. Байты в строке расширения показаны старшими
+      слева, а в файле младший идёт первым.
+    </p>
+  </div>
+  <fieldset data-controls disabled data-pagefind-ignore>
+    <legend class="visually-hidden">Параметры отсчёта</legend>
+    <form data-integer-form>
+      <label for={`${id}-integer`}>Целое (−8388608…8388607)</label>
+      <div class="pcm-input-row">
+        <input
+          id={`${id}-integer`}
+          name="integer"
+          type="text"
+          inputmode="text"
+          value={String(defaultPcm24)}
+          aria-describedby={`${id}-status`}
+        />
+        <button type="submit">Разобрать число</button>
+      </div>
+    </form>
+    <form data-bytes-form>
+      <label for={`${id}-bytes`}>Три байта little-endian (hex)</label>
+      <div class="pcm-input-row">
+        <input
+          id={`${id}-bytes`}
+          name="bytes"
+          type="text"
+          value={view.bytes}
+          spellcheck="false"
+          autocapitalize="characters"
+          aria-describedby={`${id}-status`}
+        />
+        <button type="submit">Разобрать байты</button>
+      </div>
+    </form>
+    <div class="pcm-examples">
+      <button type="button" data-example="0">
+        Ноль
+      </button>
+      <button type="button" data-example="-1">
+        −1
+      </button>
+      <button type="button" data-example="-8388608">
+        Минимум
+      </button>
+      <button type="button" data-example="8388607">
+        Максимум
+      </button>
+      <button type="button" data-reset>
+        Сбросить
+      </button>
+    </div>
+  </fieldset>
+  <p class="pcm-status" id={`${id}-status`} role="status" data-status>
+    Для ввода нужен JavaScript. Показан отсчёт −256.
+  </p>
+  <figcaption>
+    <b>Рис. {figure}.</b> Один знаковый 24-битный отсчёт в трёх байтах little-endian. Масштаб —
+    8388608; ввод числа и байтов задаёт одно значение. Звука нет.
+  </figcaption>
+</figure>
+
+<script>
+  import { initPcmSamples } from '@/lib/pcm-sample-controller';
+  initPcmSamples();
+</script>
+
+<style>
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .pcm-demo {
+    margin: var(--space-6) 0;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    overflow: hidden;
+    font: 14px/1.5 var(--font-ui);
+    scroll-margin-top: 88px;
+  }
+  .pcm-head {
+    display: flex;
+    flex-direction: column;
+    padding: 14px 20px;
+    gap: 2px;
+  }
+  .pcm-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+  .pcm-head b {
+    font-size: 17px;
+  }
+  .pcm-result {
+    padding: 16px 20px;
+    background: var(--chart-bg);
+    border-block: 1px solid var(--color-border);
+  }
+  dl {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px 20px;
+    margin: 0;
+  }
+  dt {
+    color: var(--color-text-muted);
+  }
+  dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
+  }
+  code {
+    font: 13px/1.7 var(--font-mono);
+    white-space: normal;
+  }
+  strong {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    color: var(--color-accent);
+  }
+  .pcm-result p {
+    margin: 12px 0 0;
+    color: var(--color-text-muted);
+    font-size: 13px;
+  }
+  fieldset {
+    min-width: 0;
+    margin: 0;
+    padding: 16px 20px 0;
+    border: 0;
+    display: grid;
+    gap: 14px;
+  }
+  label {
+    display: block;
+    margin-bottom: 4px;
+  }
+  .pcm-input-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  input {
+    width: 180px;
+    min-width: 0;
+    max-width: 100%;
+    padding: 6px 10px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font: 16px var(--font-mono);
+  }
+  button {
+    min-height: 36px;
+    padding: 6px 12px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text);
+    font: 500 14px var(--font-ui);
+    cursor: pointer;
+  }
+  button:hover {
+    background: var(--color-bg);
+  }
+  fieldset:disabled {
+    opacity: 0.5;
+  }
+  fieldset:disabled * {
+    cursor: not-allowed;
+  }
+  .pcm-examples {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .pcm-status {
+    padding: 12px 20px;
+    margin: 0;
+    color: var(--color-text-muted);
+  }
+  .pcm-status[data-error] {
+    color: var(--color-error);
+  }
+  figcaption {
+    padding: 12px 20px;
+    border-top: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+  }
+  figcaption b {
+    color: var(--color-text);
+  }
+  @media (max-width: 599px) {
+    dl {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
+    }
+    dd {
+      margin-bottom: 10px;
+    }
+    .pcm-result,
+    .pcm-head,
+    fieldset,
+    .pcm-status,
+    figcaption {
+      padding-inline: 16px;
+    }
+  }
+</style>

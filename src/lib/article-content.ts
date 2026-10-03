@@ -61,6 +61,12 @@ const blockRules: Record<string, BlockRule> = {
     idRequired: false,
     numberRequired: true,
   },
+  PcmSampleDemo: {
+    sequence: 'figure',
+    numberAttribute: 'figure',
+    idRequired: false,
+    numberRequired: true,
+  },
   DataTable: {
     sequence: 'table',
     numberAttribute: 'number',

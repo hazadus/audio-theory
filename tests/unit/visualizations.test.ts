@@ -91,10 +91,11 @@ describe('buildVisualizationSection', () => {
 describe('findDemos', () => {
   it('берёт id или значение по умолчанию и пропускает другие блоки', () => {
     const body =
-      '<ToneDemo figure={1} />\n\n<CompressorDemo figure={2} id="comp" />\n\n<Figure number={3} id="f" />';
+      '<ToneDemo figure={1} />\n\n<CompressorDemo figure={2} id="comp" />\n\n<PcmSampleDemo figure={3} />\n\n<Figure number={4} id="f" />';
     expect(findDemos(body)).toEqual([
       { component: 'ToneDemo', id: 'tone-demo' },
       { component: 'CompressorDemo', id: 'comp' },
+      { component: 'PcmSampleDemo', id: 'pcm-sample' },
     ]);
   });
 });

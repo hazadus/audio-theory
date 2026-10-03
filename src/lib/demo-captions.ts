@@ -19,6 +19,7 @@ export const demoCaptions = {
   },
   LfoDemo: { defaultId: 'lfo-waveforms', name: 'Четыре формы LFO из одной фазы' },
   WavDumpDemo: { defaultId: 'wav-dump', name: 'Байты WAV-файла по полям' },
+  PcmSampleDemo: { defaultId: 'pcm-sample', name: '24-битный отсчёт: байты, знак и float' },
 } as const satisfies Record<string, DemoCaption>;
 
 export type DemoComponent = keyof typeof demoCaptions;
