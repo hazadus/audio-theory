@@ -31,6 +31,7 @@ import CalloutCase from '@/components/CalloutCase.astro';
 import DataTable from '@/components/DataTable.astro';
 import Equation from '@/components/Equation.astro';
 import Figure from '@/components/Figure.astro';
+import MarginNote from '@/components/MarginNote.astro';
 import SelfCheck from '@/components/SelfCheck.astro';
 import Term from '@/components/Term.astro';
 
@@ -75,7 +76,13 @@ $$
   ]}
 />
 
+<MarginNote items={[
+  { label: 'Математика для аудио → Децибелы и обратный перевод', description: 'Порядок вычисления логарифма и перевод уровня в отношение амплитуд.', target: { article: 'audio-math', anchor: 'decibels' } },
+]}>
+
 Удвоение амплитуды точно равно $20 \lg 2 \approx 6{,}02$ дБ, а удвоение мощности — $10 \lg 2 \approx 3{,}01$ дБ ([Julius O. Smith, Properties of dB Scales](https://ccrma.stanford.edu/~jos/mdft/Properties_DB_Scales.html)). Отношения перемножаются, а децибелы складываются: ослабление в 2 раза и затем ещё в 10 раз — это −6 − 20 = −26 дБ.
+
+</MarginNote>
 
 <Callout type="important" title="Децибел — отношение, а не единица громкости">
 
@@ -85,7 +92,13 @@ $$
 
 ## Полная шкала: dBFS {#dbfs}
 
+<MarginNote items={[
+  { label: 'Аудиоданные в программах → Представление отсчёта', description: 'Нормирование целых отсчётов и отличие полной шкалы от диапазона float.', target: { article: 'audio-data', anchor: 'sample-values' } },
+]}>
+
 За полную шкалу принимают предельный уровень выбранного аудиоформата. Для нормированных отсчётов с плавающей точкой её номинальные границы — ±1, хотя сам тип допускает значения за ними; у знакового 16-битного целого диапазон от −32 768 до 32 767. При опоре на пиковое значение полной шкалы уровень записывают в единицах <Term id="dbfs" firstMention define />: 0 dBFS — граница полной шкалы, меньшие ненулевые модули дают отрицательный уровень. Внутри обработки с плавающей точкой возможны и положительные уровни dBFS; они требуют внимания перед выходом в тракт с ограниченным диапазоном ([Julius O. Smith, dB Full Scale](https://ccrma.stanford.edu/~jos/mdft/DB_Full_Scale_dBFS.html); [Wikipedia, DBFS](https://en.wikipedia.org/wiki/DBFS)).
+
+</MarginNote>
 
 Например, отсчёт 0,5 имеет уровень $20 \lg 0{,}5 \approx -6$ dBFS, а отсчёт 0,001 — −60 dBFS. В целочисленной записи положительного уровня в dBFS не бывает: значение больше полной шкалы заменяется крайним. Такое ограничение срезает вершины волны и называется <Term id="clipping" firstMention>клиппингом</Term>; на слух оно воспринимается как искажение.
 
@@ -128,7 +141,14 @@ $$
 
 </Equation>
 
+<MarginNote items={[
+  { label: 'Математика для аудио → Сумма Σ и RMS', description: 'Пошаговый расчёт суммы квадратов на четырёх отсчётах.', target: { article: 'audio-math', anchor: 'sums-and-rms' } },
+  { label: 'Кривые равной громкости → Громкость и фоны', description: 'Почему физический уровень сигнала и ощущение громкости различаются.', target: { article: 'equal-loudness', anchor: 'loudness-level' } },
+]}>
+
 Квадрат под корнем — это средняя мощность сигнала, а $x_\text{RMS}$ — её корень ([Julius O. Smith, Signal Metrics](https://ccrma.stanford.edu/~jos/mdft/Signal_Metrics.html)). Для синусоиды с амплитудой $A$ при усреднении за целое число периодов средняя мощность равна $A^2/2$, поэтому $x_\text{RMS} = A/\sqrt{2} \approx 0{,}707\,A$. Уровень RMS синусоиды на 3 дБ ниже её пика: синусоида с пиком 0 dBFS имеет RMS около −3 dBFS.
+
+</MarginNote>
 
 Разность пикового уровня и уровня RMS называют <Term id="crest-factor" firstMention define>пик-фактором</Term>. У синусоиды он равен 3 дБ, у прямоугольной волны — 0 дБ: её модуль всё время одинаков. У ударных и речи пик-фактор больше: короткие пики намного выше среднего.
 
@@ -188,11 +208,23 @@ $$
 
 Огибающую можно получить двумя способами, соответствующими разделам выше. Пиковая огибающая отслеживает модуль отсчётов: быстро поднимается вслед за ростом сигнала и плавно опускается после него. Огибающая RMS усредняет квадраты отсчётов в скользящем окне. Длина окна задаёт компромисс. Короткое окно быстро реагирует на удары, но если оно короче периода самого низкого тона, кривая начинает дрожать вместе с волной: у тона 100 Гц период 10 мс. Длинное окно сглаживает дрожание, но запаздывает и размывает короткие пики.
 
+<MarginNote items={[
+  { label: 'Как работает компрессор → Устройство', description: 'Как детектор уровня управляет ослаблением сигнала.', target: { article: 'compressor', anchor: 'structure' } },
+]}>
+
 Огибающая нужна устройствам, которые меняют усиление в зависимости от уровня: <Term id="compressor" firstMention>компрессору</Term>, <Term id="limiter" firstMention>лимитеру</Term>, <Term id="noise-gate" firstMention>шумовому гейту</Term>. Они сравнивают огибающую с порогом и решают, насколько ослабить сигнал в каждый момент.
+
+</MarginNote>
 
 ## Динамический диапазон {#dynamic-range}
 
+<MarginNote items={[
+  { label: 'АЦП и ЦАП → Пределы разрядности', description: 'Шум квантования и условия расчёта отношения сигнал/шум.', target: { article: 'adc-dac', anchor: 'quantization-error' } },
+]}>
+
 Разность самого высокого и самого низкого уровня называют <Term id="dynamic-range" firstMention define>динамическим диапазоном</Term>. У записи это разность между громкими и тихими местами, у системы — между наибольшим уровнем без перегрузки и уровнем собственного шума ([Julius O. Smith, Dynamic Range](https://ccrma.stanford.edu/~jos/mdft/Dynamic_Range.html)). Например, 16-битная запись даёт около 96 дБ: $20 \lg 2^{16} \approx 96{,}3$ дБ ([Wikipedia, DBFS](https://en.wikipedia.org/wiki/DBFS)).
+
+</MarginNote>
 
 Если динамический диапазон записи больше, чем подходит для условий прослушивания, тихие места тонут в шуме улицы или машины, а громкие оказываются слишком громкими. Сузить его, не трогая отдельные ноты вручную, помогает [компрессор](/compressor/).
 

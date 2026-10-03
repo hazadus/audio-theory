@@ -21,6 +21,9 @@ async function geometry(page: Page) {
       wide: rect(document.querySelector('#margin-wide')!),
       toc: rect(document.querySelector('.toc')!),
       overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+      shortFormulas: [
+        ...document.querySelectorAll('.margin-note-block')[1]!.querySelectorAll('p > .katex'),
+      ].map((element) => ({ client: element.clientWidth, scroll: element.scrollWidth })),
     };
   });
 }
@@ -29,6 +32,12 @@ async function checkLayout(page: Page, onMargin: boolean) {
   const result = await geometry(page);
   expect(result.overflow).toBe(false);
   expect(result.notes).toHaveLength(3);
+  // Короткие формулы с индексами полностью помещаются: служебные ячейки KaTeX
+  // не должны создавать полосы прокрутки, даже при увеличении текста.
+  expect(result.shortFormulas).toHaveLength(2);
+  for (const formula of result.shortFormulas) {
+    expect(formula.scroll).toBe(formula.client);
+  }
   for (const { note, paragraph, previousTag, children } of result.notes) {
     expect(previousTag).toBe('P');
     expect(children).toBe(2);
@@ -97,6 +106,13 @@ test.describe('Заметки «Подробнее»', { tag: '@margin-notes' },
       await checkLayout(page, true);
       await page.setViewportSize({ width: 320, height: 900 });
       await checkLayout(page, false);
+      const longFormula = page.locator('.margin-note-block').last().locator('p > .katex');
+      const longSize = await longFormula.evaluate((element) => ({
+        client: element.clientWidth,
+        scroll: element.scrollWidth,
+      }));
+      // Реальное переполнение длинной формулы прокручивается внутри неё.
+      expect(longSize.scroll).toBeGreaterThan(longSize.client);
       // 200 % масштаба сужает CSS-окно 1440 px до 720 px: заметки возвращаются в поток.
       await page.setViewportSize({ width: 720, height: 450 });
       await checkLayout(page, false);

@@ -31,6 +31,7 @@ import CalloutCase from '@/components/CalloutCase.astro';
 import DataTable from '@/components/DataTable.astro';
 import Equation from '@/components/Equation.astro';
 import Figure from '@/components/Figure.astro';
+import MarginNote from '@/components/MarginNote.astro';
 import SamplingDemo from '@/components/SamplingDemo.astro';
 import SelfCheck from '@/components/SelfCheck.astro';
 import Term from '@/components/Term.astro';
@@ -41,7 +42,13 @@ import Term from '@/components/Term.astro';
 
 Пусть $x(t)$ — напряжение на выходе микрофона из статьи о [звуковой волне и аналоговом сигнале](/sound-wave/#analog-signal). Измерение такого сигнала через одинаковые интервалы времени с сохранением каждого результата называется <Term id="sampling" firstMention define>дискретизацией</Term>. Каждое сохранённое значение — это <Term id="sample" firstMention define>отсчёт</Term>; в звукозаписи чаще говорят «сэмпл».
 
+<MarginNote items={[
+  { label: 'Математика для аудио → Функция, аргумент и график', description: 'Чем отличаются x(t) и x[n] и как читать аргумент функции.', target: { article: 'audio-math', anchor: 'functions' } },
+]}>
+
 Отсчёты нумеруют целыми числами $n = 0, 1, 2, \ldots$ в порядке измерения. Отсчёт с номером $n$ обозначают $x[n]$: квадратные скобки показывают, что аргумент — номер, а не время. Интервал между соседними измерениями называется <Term id="sampling-period" firstMention>периодом дискретизации</Term> $T_s$, поэтому отсчёт $n$ взят в момент $t_n = n T_s$ ([формула 1](#eq-sample)). Такие же обозначения использует Julius O. Smith в [определении ДПФ](https://ccrma.stanford.edu/~jos/mdft/DFT_Definition.html).
+
+</MarginNote>
 
 <Equation id="eq-sample" number={1}>
 
@@ -124,7 +131,13 @@ $$
   </svg>
 </Figure>
 
-Между отсчётами в записи ничего нет. Smith описывает это так: изменения входного сигнала между моментами измерения полностью игнорируются ([Smith, глава 3.1](https://www.dspguide.com/ch3/1.htm)). Дискретизация делает дискретным время, а значения отсчётов на этом шаге остаются точными.
+<MarginNote items={[
+  { label: 'Steven W. Smith → Quantization', description: 'Почему измерения не сохраняют изменения сигнала между отсчётами.', target: { url: 'https://www.dspguide.com/ch3/1.htm' } },
+]}>
+
+Между отсчётами в записи ничего нет. Изменения входного сигнала между моментами измерения не сохраняются. Дискретизация делает дискретным время, а значения отсчётов на этом шаге остаются точными.
+
+</MarginNote>
 
 <Callout type="mistake" title="Отсчёт — короткий фрагмент звука">
 
@@ -168,7 +181,13 @@ $$
 
 Формула имеет тот же вид, что и связь частоты и периода звука $f = 1/T$ [из статьи о звуковой волне](/sound-wave/#frequency), но описывает другое. $T$ и $f$ — свойства самого сигнала, а $T_s$ и $f_s$ выбираются при записи и задают, как часто сигнал измеряют. Индекс $s$ — от английского sampling.
 
+<MarginNote items={[
+  { label: 'Аудиоданные в программах → Каналы и кадры', description: 'Как считать отсчёты при переходе от моно к стерео.', target: { article: 'audio-data', anchor: 'channels-and-frames' } },
+]}>
+
 Частота дискретизации компакт-диска — 44 100 отсчётов в секунду ([Smith, CCRMA](https://ccrma.stanford.edu/~jos/mdft/Introduction_Sampling.html)). По формуле 2 период дискретизации $T_s = 1 / 44\,100 \approx 22{,}7$ мкс. Момент отсчёта с номером $n$ равен $n T_s$, а за время $t$ набирается $f_s \cdot t$ отсчётов: одна минута монофонической записи при 44,1 кГц — это $44\,100 \cdot 60 = 2\,646\,000$ отсчётов.
+
+</MarginNote>
 
 <SelfCheck question="Сколько отсчётов приходится на 10 мс записи при частоте дискретизации 44,1 кГц и в какой момент взят отсчёт с номером 441?">
 
@@ -280,9 +299,22 @@ $$
 
 </Equation>
 
-Сумма берётся по всем отсчётам, от минус до плюс бесконечности, поэтому формула 4 — математическая модель, а не процедура для конечной записи. В реальном <Term id="dac" firstMention>цифро-аналоговом преобразователе</Term> восстановление выполняют фильтры с конечной крутизной характеристики; их работа разобрана в [статье об АЦП и ЦАП](/adc-dac/#reconstruction).
+<MarginNote items={[
+  { label: 'Математика для аудио → Функция sinc', description: 'Как читать бесконечную сумму и почему она проходит через отсчёты.', target: { article: 'audio-math', anchor: 'sinc' } },
+  { label: 'АЦП и ЦАП → От чисел к напряжению', description: 'Удержание уровня, спектральные копии и восстановительный фильтр.', target: { article: 'adc-dac', anchor: 'reconstruction' } },
+]}>
+
+Сумма берётся по всем отсчётам, от минус до плюс бесконечности, поэтому формула 4 — математическая модель, а не процедура для конечной записи. В реальном <Term id="dac" firstMention>цифро-аналоговом преобразователе</Term> восстановление выполняют фильтры с конечной крутизной характеристики.
+
+</MarginNote>
+
+<MarginNote items={[
+  { label: 'Математика для аудио → Округление', description: 'Числовой пример выбора ближайшего целого и частоты после наложения.', target: { article: 'audio-math', anchor: 'rounding' } },
+]}>
 
 Если тон выше $f_s / 2$, формула 4 всё равно даёт сигнал без частот выше этой границы, только уже другой. Для синусоиды его можно найти без суммирования. Замена частоты $f$ на $f - k f_s$ с любым целым $k$ не меняет отсчётов: $\sin\bigl(2\pi (f - k f_s)\, n / f_s\bigr) = \sin(2\pi f n / f_s - 2\pi k n)$, а $2\pi k n$ — целое число оборотов. Если выбрать $k$, ближайшее к $f / f_s$, получится частота $f'$ в полосе от $-f_s / 2$ до $f_s / 2$ ([формула 5](#eq-alias)). Восстановление по формуле 4 даёт синусоиду именно этой частоты, $y(t) = \sin(2\pi f' t)$.
+
+</MarginNote>
 
 <Equation id="eq-alias" number={5}>
 

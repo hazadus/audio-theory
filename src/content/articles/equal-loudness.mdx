@@ -25,6 +25,7 @@ import DataTable from '@/components/DataTable.astro';
 import EqualLoudnessChart from '@/components/EqualLoudnessChart.astro';
 import Equation from '@/components/Equation.astro';
 import Figure from '@/components/Figure.astro';
+import MarginNote from '@/components/MarginNote.astro';
 import SelfCheck from '@/components/SelfCheck.astro';
 import Term from '@/components/Term.astro';
 import { equalLoudnessContours } from '@/lib/equal-loudness';
@@ -33,7 +34,13 @@ import { equalLoudnessContours } from '@/lib/equal-loudness';
 
 ## Звуковое давление и его уровень {#spl}
 
-Для описания <Term id="sound-pressure" firstMention>звукового давления</Term> берут его <Term id="rms-level" firstMention>среднеквадратичное значение</Term> $p_\mathrm{RMS}$ в паскалях. Способ расчёта RMS разобран в [статье об уровне сигнала](/signal-level/#rms). Усреднение самого давления у синусоиды дало бы ноль, потому что положительные и отрицательные отклонения компенсируются.
+<MarginNote items={[
+  { label: 'Уровень сигнала → RMS', description: 'Как квадраты, среднее и корень дают среднеквадратичное значение.', target: { article: 'signal-level', anchor: 'rms' } },
+]}>
+
+Для описания <Term id="sound-pressure" firstMention>звукового давления</Term> берут его <Term id="rms-level" firstMention>среднеквадратичное значение</Term> $p_\mathrm{RMS}$ в паскалях. Усреднение самого давления у синусоиды дало бы ноль, потому что положительные и отрицательные отклонения компенсируются.
+
+</MarginNote>
 
 <Term id="sound-pressure-level" firstMention define /> записывают в <Term id="decibel" firstMention>децибелах</Term> относительно опорного давления $p_0 = 20$ мкПа в воздухе. Обозначение «дБ SPL» уточняет эту опору. [Формула (1)](#eq-spl) связывает уровень с давлением ([NERC Vocabulary Server, sound pressure level in air](https://vocab.nerc.ac.uk/collection/P07/current/CFSN0309/)).
 
@@ -84,7 +91,13 @@ $$
   <EqualLoudnessChart />
 </Figure>
 
+<MarginNote items={[
+  { label: 'Математика для аудио → Логарифмическая шкала', description: 'Равные отношения частот и середина между делениями шкалы.', target: { article: 'audio-math', anchor: 'logarithmic-scale' } },
+]}>
+
 Горизонтальная ось показывает частоту. Шкала логарифмическая: увеличение частоты в десять раз занимает одинаковое расстояние, например от 100 Гц до 1 кГц. Вертикальная ось показывает требуемый SPL. Чем выше точка на выбранной кривой, тем больше давление нужно для той же громкости.
+
+</MarginNote>
 
 Чтобы прочитать кривую 40 фон:
 
@@ -120,7 +133,13 @@ $$
 
 ## Почему форма кривых меняется {#hearing}
 
-Звук проходит через наружное и среднее ухо к внутреннему. Во внутреннем ухе колебания преобразуются в нервные сигналы, причём разные участки чувствительны к разным частотам ([Steven W. Smith, Human Hearing](https://www.dspguide.com/ch22/1.htm)). Передача колебаний и реакция слуховой системы зависят от частоты. Поэтому равное давление снаружи не вызывает равного ощущения во всём диапазоне.
+<MarginNote items={[
+  { label: 'Steven W. Smith → Human Hearing', description: 'Передача звука через ухо и чувствительность к разным частотам.', target: { url: 'https://www.dspguide.com/ch22/1.htm' } },
+]}>
+
+Звук проходит через наружное и среднее ухо к внутреннему. Во внутреннем ухе колебания преобразуются в нервные сигналы, причём разные участки чувствительны к разным частотам. Передача колебаний и реакция слуховой системы зависят от частоты. Поэтому равное давление снаружи не вызывает равного ощущения во всём диапазоне.
+
+</MarginNote>
 
 На графике наименьший требуемый SPL приходится примерно на 3–4 кГц: здесь слух наиболее чувствителен. Низким частотам требуется большее давление. Рост ощущения при росте давления тоже зависит от частоты: слуховая система нелинейна ([Sottek и соавторы, раздел 3](https://dael.euracoustics.org/confs/fa2023/data/articles/000585.pdf)). Поэтому кривые для разных уровней нельзя получить простым вертикальным сдвигом одной линии.
 

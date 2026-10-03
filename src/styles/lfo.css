@@ -8,3 +8,10 @@
      кегль, широкий — меньший. Геометрия графиков масштабируется как прежде. */
   font-size: clamp(10px, calc(30px - 3cqw), 22px);
 }
+
+/* Рисунок рядом с заметками расширяется до 880 px; подписи остаются 12–16 px. */
+@container (width >= 700px) {
+  :is(#phase-and-frequency, #lfo-waveforms) .figure-frame > svg {
+    font-size: 8.5px;
+  }
+}

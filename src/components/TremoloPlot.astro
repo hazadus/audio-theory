@@ -125,6 +125,12 @@ function path(fn: (time: number) => number, min: number, max: number): string {
   .figure-frame > .tremolo-plot {
     font-size: clamp(10px, calc(30px - 3cqw), 22px);
   }
+  /* На страницах с заметками рисунок может занять правое поле и вырасти до 880 px. */
+  @container (width >= 700px) {
+    .figure-frame > .tremolo-plot {
+      font-size: 8.5px;
+    }
+  }
   .tremolo-plot text {
     fill: currentColor;
   }

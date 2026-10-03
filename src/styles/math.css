@@ -4,3 +4,17 @@
 .katex .cyrillic_fallback {
   font-family: var(--font-text);
 }
+
+/* Длинная формула внутри абзаца прокручивается сама при увеличенном тексте. */
+p > .katex {
+  display: inline-flex;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* KaTeX компенсирует 2 px служебной ячейки индексов отрицательным margin.
+   Оставляем для неё место внутри прокрутки, а также для нижних выносных элементов. */
+p > .katex > .katex-html {
+  padding: 1px 2px 1px 0;
+}
