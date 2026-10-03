@@ -1,0 +1,21 @@
+{
+  "slug": "sound-engineer",
+  "title": "Служебный маршрут звукорежиссёра",
+  "audience": "Тестовая аудитория.",
+  "description": "Проверка связанного маршрута.",
+  "stages": [
+    {
+      "id": "hearing",
+      "title": "Слух",
+      "description": "Как ощущается громкость.",
+      "items": [
+        {
+          "id": "loudness",
+          "target": {
+            "article": "equal-loudness"
+          }
+        }
+      ]
+    }
+  ]
+}

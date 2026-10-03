@@ -1,0 +1,34 @@
+{
+  "slug": "programmer",
+  "title": "Служебный маршрут программиста",
+  "audience": "Тестовая аудитория.",
+  "description": "Служебный маршрут для проверки данных, не для публикации.",
+  "stages": [
+    {
+      "id": "basics",
+      "title": "Основы",
+      "description": "Знакомство с сигналом.",
+      "items": []
+    },
+    {
+      "id": "digital",
+      "title": "Цифровой сигнал",
+      "description": "Отсчёты и повторное обращение к разделу.",
+      "items": [
+        {
+          "id": "sampling",
+          "target": {
+            "article": "sampling"
+          }
+        },
+        {
+          "id": "pressure",
+          "target": {
+            "article": "sound-wave",
+            "anchor": "pressure"
+          }
+        }
+      ]
+    }
+  ]
+}

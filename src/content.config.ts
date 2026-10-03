@@ -1,5 +1,6 @@
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
+import { trackSchema } from '@/lib/tracks';
 import { updateSchema } from '@/lib/updates';
 import { articleSchema } from '@/lib/articles';
 
@@ -7,6 +8,14 @@ import { articleSchema } from '@/lib/articles';
 const base = process.env.ARTICLES_DIR ?? './src/content/articles';
 
 export const collections = {
+  tracks: defineCollection({
+    loader: glob({
+      pattern: '*.json',
+      base: process.env.TRACKS_DIR ?? './src/content/tracks',
+      generateId: ({ entry }) => entry,
+    }),
+    schema: trackSchema,
+  }),
   updates: defineCollection({
     loader: glob({
       pattern: '*.json',

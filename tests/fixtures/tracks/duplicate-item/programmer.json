@@ -1,0 +1,56 @@
+{
+  "slug": "programmer",
+  "title": "Служебный маршрут программиста",
+  "audience": "Тестовая аудитория.",
+  "description": "Служебный маршрут для проверки данных, не для публикации.",
+  "stages": [
+    {
+      "id": "basics",
+      "title": "Основы",
+      "description": "Знакомство с сигналом.",
+      "items": [
+        {
+          "id": "wave",
+          "target": {
+            "article": "sound-wave"
+          }
+        },
+        {
+          "id": "frequency",
+          "target": {
+            "article": "sound-wave",
+            "anchor": "frequency"
+          }
+        },
+        {
+          "id": "phase",
+          "target": {
+            "article": "sound-wave",
+            "anchor": "phase"
+          },
+          "optional": true
+        }
+      ]
+    },
+    {
+      "id": "digital",
+      "title": "Цифровой сигнал",
+      "description": "Отсчёты и повторное обращение к разделу.",
+      "items": [
+        {
+          "id": "wave",
+          "target": {
+            "article": "sampling"
+          }
+        },
+        {
+          "id": "pressure",
+          "target": {
+            "article": "sound-wave",
+            "anchor": "pressure"
+          }
+        }
+      ]
+    }
+  ]
+}
