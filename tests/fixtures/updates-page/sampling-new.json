@@ -1,0 +1,18 @@
+{
+  "id": "sampling-new",
+  "date": "2026-10-04",
+  "order": 1,
+  "type": "new",
+  "article": "test-sampling",
+  "summary": "Служебное описание статьи: что в ней рассказано и зачем она нужна читателю.",
+  "items": [
+    {
+      "text": "Теорема отсчётов",
+      "target": { "article": "test-sampling", "anchor": "sampling-theorem" }
+    },
+    {
+      "text": "Частота Найквиста",
+      "target": { "article": "test-sampling", "anchor": "nyquist-frequency" }
+    }
+  ]
+}

@@ -44,6 +44,19 @@ try {
   assert.equal([...home.matchAll(/class="all[^"]*"[^>]*>Все 1</g)].length, 2);
   assert.equal([...home.matchAll(/class="card[ "]/g)].length, 2);
 
+  // Публичный журнал пока пуст: страница показывает «Обновлений пока нет» без фильтра, года и архива.
+  const updates = await readFile(join(validDir, 'updates', 'index.html'), 'utf8');
+  assert.match(updates, /Обновлений пока нет/);
+  assert.doesNotMatch(
+    updates,
+    /class="[^"]*controls|aria-label="Архив обновлений"|data-pagefind-body=/,
+  );
+  assert.deepEqual(
+    (await readdir(join(validDir, 'updates'))).sort(),
+    ['index.html'],
+    'пустой журнал не создаёт страниц годов',
+  );
+
   // Лимит четырёх карточек в группе: «Все N» считает все статьи, карточки — четыре самых свежих.
   const manyDir = join(temporary, 'many-src');
   await mkdir(manyDir, { recursive: true });
@@ -239,9 +252,9 @@ try {
   const realArticles = (
     await readdir(join(root, 'src/content/articles'), { recursive: true })
   ).filter((file) => file.endsWith('.mdx')).length;
-  // HTML-страниц: главная, материалы, визуализации, глоссарий, «О проекте», 404 и статьи; Pagefind
+  // HTML-страниц: главная, материалы, визуализации, обновления, глоссарий, «О проекте», 404 и статьи; Pagefind
   // считает их все, а фрагменты строит только для страниц с `data-pagefind-body` (проверяется ниже).
-  const pages = 6 + realArticles;
+  const pages = 7 + realArticles;
   assert.match(
     published.stdout + published.stderr,
     new RegExp(`Артефакт проверен: ${pages} страниц; индекс Pagefind: ${pages} страниц`),

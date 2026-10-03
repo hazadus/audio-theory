@@ -1,0 +1,14 @@
+---
+import UpdatesList from '@/components/UpdatesList.astro';
+import { loadUpdates } from '@/lib/update-list';
+import { updateYears } from '@/lib/update-view';
+
+// Адрес создаётся для каждого непустого года, включая последний; пустой или чужой год даёт 404.
+export async function getStaticPaths() {
+  return updateYears(await loadUpdates()).map((year) => ({ params: { year } }));
+}
+
+const { year } = Astro.params;
+---
+
+<UpdatesList {year} />

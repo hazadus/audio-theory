@@ -1,0 +1,19 @@
+{
+  "id": "wave-2025",
+  "date": "2025-12-31",
+  "order": 1,
+  "type": "updated",
+  "article": "test-wave",
+  "items": [
+    {
+      "text": "Первый пункт",
+      "target": { "article": "test-sampling", "anchor": "sampling-theorem" }
+    },
+    {
+      "text": "Второй пункт",
+      "target": { "article": "test-sampling", "anchor": "nyquist-frequency" }
+    },
+    { "text": "Третий пункт", "target": { "article": "test-sampling", "anchor": "aliasing" } },
+    { "text": "Четвёртый пункт", "target": { "article": "test-sampling", "anchor": "sources" } }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "id": "sampling-added",
+  "date": "2026-10-04",
+  "order": 3,
+  "type": "updated",
+  "article": "test-sampling",
+  "items": [
+    {
+      "text": "Наложение спектров",
+      "target": { "article": "test-sampling", "anchor": "aliasing" }
+    },
+    { "text": "Связанный материал", "target": { "article": "test-wave" } }
+  ]
+}

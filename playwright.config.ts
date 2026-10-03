@@ -15,6 +15,9 @@ const fixture = {
   config: 'tests/fixtures/mdx/astro.config.mjs',
 };
 
+// Журнал обновлений: сборка с служебными статьями и записями, публичный журнал пока пуст.
+const updates = { name: 'updates', base: '/audio-theory/', port: 4394 };
+
 const browserDevice = (browserName: string) =>
   devices[
     browserName === 'chromium'
@@ -24,21 +27,39 @@ const browserDevice = (browserName: string) =>
         : 'Desktop Safari'
   ];
 
-/** Служебная сборка: выбранные сценарии CI либо все сценарии для диагностики. */
-export const fixtureProjects = (ciOnly: boolean) =>
+/** Служебная сборка: выбранные сценарии CI либо все сценарии с метками `tags` для диагностики. */
+const servedProjects = (
+  server: { name: string; base: string; port: number },
+  tags: string,
+  ciOnly: boolean,
+) =>
   ['chromium', 'firefox', 'webkit'].map((browserName) => ({
-    name: `${fixture.name}-${browserName}`,
+    name: `${server.name}-${browserName}`,
     grep: ciOnly
       ? browserName === 'webkit'
-        ? /(?=.*@(?:sampling|margin-notes))(?=.*@ci(?:\s|$))/
-        : /(?=.*@(?:sampling|margin-notes))(?=.*@ci-cross-browser)/
-      : /@(?:sampling|margin-notes)/,
-    metadata: { base: fixture.base },
+        ? new RegExp(`(?=.*@(?:${tags}))(?=.*@ci(?:\\s|$))`)
+        : new RegExp(`(?=.*@(?:${tags}))(?=.*@ci-cross-browser)`)
+      : new RegExp(`@(?:${tags})`),
+    metadata: { base: server.base },
     use: {
       ...browserDevice(browserName),
-      baseURL: `http://127.0.0.1:${fixture.port}${fixture.base}`,
+      baseURL: `http://127.0.0.1:${server.port}${server.base}`,
     },
   }));
+
+export const fixtureProjects = (ciOnly: boolean) =>
+  servedProjects(fixture, 'sampling|margin-notes', ciOnly);
+
+// Сценарии журнала не входят в обязательный набор CI (он ограничен 88 проверками): их запускает
+// `playwright.full.config.ts` вместе с этим сервером.
+export const updatesProjects = () => servedProjects(updates, 'updates', false);
+
+export const updatesServer = {
+  command: `npm run preview -- --ignore-lock --host 127.0.0.1 --port ${updates.port} --base ${updates.base} --outDir .e2e/${updates.name}`,
+  url: `http://127.0.0.1:${updates.port}${updates.base}updates/`,
+  reuseExistingServer: false,
+  timeout: 30_000,
+};
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -58,7 +79,7 @@ export default defineConfig({
               : browserName === 'webkit'
                 ? /@ci(?:\s|$)/
                 : /@ci-cross-browser/,
-          grepInvert: /@(?:sampling|margin-notes)/,
+          grepInvert: /@(?:sampling|margin-notes|updates)/,
           metadata: { base },
           use: {
             ...browserDevice(browserName),

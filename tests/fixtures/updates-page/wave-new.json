@@ -1,0 +1,9 @@
+{
+  "id": "wave-new",
+  "date": "2023-05-10",
+  "order": 1,
+  "type": "new",
+  "article": "test-wave",
+  "summary": "Служебное описание первой статьи за прошлый год.",
+  "items": []
+}
