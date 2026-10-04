@@ -8,6 +8,7 @@ import type { TocItem } from '@/lib/headings';
 import { resolveTarget } from '@/lib/links';
 import { topics } from '@/data/topics';
 import type { ArticleDates } from '@/lib/article-dates';
+import type { NavTrack } from '@/lib/track-navigation';
 import { formatUpdatedDate } from '@/lib/format-date';
 import { materialsHref } from '@/lib/materials';
 import { withBase } from '@/lib/urls';
@@ -20,9 +21,19 @@ interface Props {
   /** Публикация и последнее дополнение из журнала; без публикации — «Черновик». */
   dates: ArticleDates;
   readingMinutes: number;
+  /** Этапы треков, куда входит статья или её раздел; без вхождений строка «В треках» не выводится. */
+  articleTracks?: {
+    slug: string;
+    title: string;
+    stageId: string;
+    stageNumber: number;
+    href: string;
+  }[];
+  /** Полный порядок элементов треков статьи для блока «Трек» по адресу. */
+  trackNav?: NavTrack[];
 }
 
-const { data, toc, dates, readingMinutes } = Astro.props;
+const { data, toc, dates, readingMinutes, articleTracks = [], trackNav = [] } = Astro.props;
 const group = topics.find((topic) => topic.id === data.topic)!;
 const prerequisites = data.prerequisites ?? [];
 
@@ -83,6 +94,16 @@ const links = (items: typeof data.related) =>
             ))}
           </ul>
         </div>
+        {articleTracks.length > 0 && (
+          <p class="in-tracks" data-in-tracks data-pagefind-ignore>
+            <span>В треках:</span>
+            {articleTracks.map((item) => (
+              <a href={item.href}>
+                {item.title}, этап {item.stageNumber}
+              </a>
+            ))}
+          </p>
+        )}
       </header>
 
       {toc.length > 0 && (
@@ -122,6 +143,22 @@ const links = (items: typeof data.related) =>
         <div class="prose">
           <slot />
         </div>
+        {trackNav.length > 0 && (
+          <>
+            <nav
+              class="track-nav"
+              data-track-nav
+              data-article={data.slug}
+              data-pagefind-ignore
+              hidden
+            />
+            <script
+              type="application/json"
+              data-track-nav-data
+              set:html={JSON.stringify(trackNav).replace(/</g, '\\u003c')}
+            />
+          </>
+        )}
         <section class="related" aria-labelledby="related-title" data-pagefind-ignore>
           <h2 id="related-title">Связанные темы</h2>
           <ul>
@@ -153,11 +190,13 @@ const links = (items: typeof data.related) =>
   import { initHeadingLinks } from '@/lib/heading-links-controller';
   import { initReadingProgress } from '@/lib/reading-progress-controller';
   import { initToc } from '@/lib/toc-controller';
+  import { initTrackNavigation } from '@/lib/track-navigation-controller';
 
   initToc();
   initHeadingLinks();
   initCodeBlocks();
   initReadingProgress();
+  initTrackNavigation();
 </script>
 
 <style>
@@ -263,6 +302,97 @@ const links = (items: typeof data.related) =>
     color: var(--color-text-muted);
     font-family: var(--font-ui);
     font-size: 14px;
+  }
+
+  .in-tracks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px var(--space-3);
+    margin: 0;
+    color: var(--color-text-muted);
+    font-family: var(--font-ui);
+    font-size: 14px;
+  }
+
+  /* Блок строится в браузере по адресу; стили глобальные, потому что узлы создаёт скрипт. */
+  .track-nav {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: 18px 20px;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    font-family: var(--font-ui);
+  }
+
+  .track-nav[hidden] {
+    display: none;
+  }
+
+  .track-nav :global(.summary) {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-1) var(--space-4);
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 13px;
+  }
+
+  .track-nav :global(.steps) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+  }
+
+  .track-nav :global(.step) {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-height: 44px;
+    padding: 10px 14px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    color: var(--color-text);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+
+  .track-nav :global(.step:hover) {
+    border-color: var(--color-accent);
+  }
+
+  .track-nav :global(.step.next) {
+    text-align: end;
+  }
+
+  .track-nav :global(.step-label),
+  .track-nav :global(.step-note) {
+    color: var(--color-text-muted);
+    font-size: 12px;
+  }
+
+  .track-nav :global(.step-title) {
+    font-family: var(--font-text);
+    font-size: 16px;
+    font-weight: 600;
+    line-height: var(--leading-snug);
+  }
+
+  @media (width >= 600px) {
+    .track-nav :global(.steps) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .track-nav :global(.step.next:only-child) {
+      grid-column: 2;
+    }
+  }
+
+  .in-tracks span {
+    color: var(--color-text-muted);
   }
 
   .reading {
@@ -588,6 +718,13 @@ const links = (items: typeof data.related) =>
   .prose :global(h3),
   .prose :global(h4) {
     scroll-margin-top: 88px;
+  }
+
+  /* Целевой раздел выделяется так же, как термин глоссария; геометрия текста не меняется. */
+  .prose :global(:is(h2, h3, h4):target) {
+    border-radius: 6px;
+    background: var(--color-accent-soft);
+    box-shadow: 0 0 0 6px var(--color-accent-soft);
   }
 
   /* Ссылка `#` видна при наведении на заголовок и при фокусе; на тач-экране без hover остаётся приглушённой. */

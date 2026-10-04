@@ -10,7 +10,9 @@ function fixture(base: string) {
       base,
       {
         type: 'text/html',
-        body: `<title>Теория аудио</title><main><h1>Теория аудио</h1></main>
+        body: `<title>Теория аудио</title><header><a href="${base}tracks/">Треки</a></header>
+          <main><h1>Теория аудио</h1>
+          <section data-start-tracks><a class="card" href="${base}tracks/demo/">Демо</a></section></main>
           <link rel="stylesheet" href="${base}assets/main.css">
           <script src="assets/app.js"></script><img src="assets/chart.svg">
           <style>body{background:url('assets/chart.svg')}</style>
@@ -40,7 +42,13 @@ function fixture(base: string) {
         body: `<main><h1>Трек для демо</h1><a class="item" href="${base}sound-wave/?track=demo&item=a#x">Статья</a></main>`,
       },
     ],
-    [`${base}sound-wave/`, { type: 'text/html', body: '<main><h1>Звуковая волна</h1></main>' }],
+    [
+      `${base}sound-wave/`,
+      {
+        type: 'text/html',
+        body: '<main><h1>Звуковая волна</h1><p data-in-tracks></p><nav data-track-nav hidden></nav></main>',
+      },
+    ],
   ]);
 }
 
@@ -64,7 +72,7 @@ test.each(['/', '/audio-theory/'])(
         tracks: 1,
       },
     );
-    expect(fetchResource).toHaveBeenCalledTimes(10);
+    expect(fetchResource).toHaveBeenCalledTimes(11);
     expect(
       fetchResource.mock.calls.every(([url]) =>
         String(url).startsWith(`https://example.org${base}`),

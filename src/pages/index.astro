@@ -1,17 +1,20 @@
 ---
 import Icon from '@/components/Icon.astro';
 import RecentUpdates from '@/components/RecentUpdates.astro';
+import TrackCard from '@/components/TrackCard.astro';
 import VisualizationsSection from '@/components/VisualizationsSection.astro';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { topics } from '@/data/topics';
 import { loadArticleList } from '@/lib/article-list';
 import { formatUpdatedDate } from '@/lib/format-date';
 import { buildHomeGroups } from '@/lib/home';
+import { loadTracks } from '@/lib/track-list';
 import { loadVisualizationSection } from '@/lib/visualization-list';
 import { materialsHref } from '@/lib/materials';
 import { withBase } from '@/lib/urls';
 
 const groups = buildHomeGroups(await loadArticleList(), topics);
+const tracks = await loadTracks();
 const visualizations = await loadVisualizationSection();
 ---
 
@@ -32,6 +35,26 @@ const visualizations = await loadVisualizationSection();
         <kbd aria-hidden="true">/</kbd>
       </button>
     </div>
+
+    {tracks.length > 0 && (
+      <section class="start" aria-labelledby="start-title" data-start-tracks data-pagefind-ignore>
+        <div class="start-head">
+          <h2 id="start-title">С чего начать</h2>
+          <p>Треки: материалы сайта в порядке чтения под вашу задачу.</p>
+        </div>
+        <ul class="start-grid">
+          {tracks.map((track) => (
+            <li>
+              <TrackCard {track} />
+            </li>
+          ))}
+        </ul>
+        <a class="all" href={withBase('/tracks/')}>
+          Все треки
+          <Icon name="chevron-right" size={14} />
+        </a>
+      </section>
+    )}
 
     <VisualizationsSection section={visualizations} />
 
@@ -196,6 +219,39 @@ const visualizations = await loadVisualizationSection();
     color: var(--color-link);
   }
 
+  .start {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .start-head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .start-head p {
+    margin: 0;
+    font-family: var(--font-text);
+    line-height: 1.5;
+    color: var(--color-text-muted);
+  }
+
+  /* Одна колонка; 2 от 600 px, 3 от 1024 px. Ячейки фиксированной ширины: одиночная карточка не растягивается. */
+  .start-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .start .all {
+    align-self: flex-start;
+  }
+
   .cards {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
@@ -245,7 +301,17 @@ const visualizations = await loadVisualizationSection();
     color: var(--color-text-muted);
   }
 
+  @media (width >= 600px) {
+    .start-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
   @media (width >= 1024px) {
+    .start-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
     kbd {
       display: block;
     }

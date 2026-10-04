@@ -6,7 +6,7 @@ const placements = [
 ];
 export default defineConfig({
   testDir: './tests/e2e',
-  testMatch: ['track-updates.spec.ts', 'tracks.spec.ts'],
+  testMatch: ['track-updates.spec.ts', 'tracks.spec.ts', 'track-navigation.spec.ts'],
   fullyParallel: true,
   forbidOnly: true,
   reporter: 'list',

@@ -8,6 +8,9 @@ import { resolveArticleDates } from '@/lib/article-dates';
 import { allowDraftEnv, getPublishedDate } from '@/lib/git-date';
 import ArticleLayout from '@/layouts/ArticleLayout.astro';
 import { resolveReadingMinutes } from '@/lib/reading-time';
+import { loadTrackData } from '@/lib/track-data';
+import { getArticleTracks } from '@/lib/tracks';
+import { buildNavData } from '@/lib/track-navigation';
 
 export async function getStaticPaths() {
   const articles = await getCollection('articles');
@@ -39,8 +42,11 @@ const dates = resolveArticleDates(
   }),
   (await loadUpdates()).filter(({ article: slug }) => slug === article.data.slug),
 );
+const tracks = await loadTrackData();
+const articleTracks = getArticleTracks(tracks, article.data.slug);
+const trackNav = buildNavData(tracks, article.data.slug);
 ---
 
-<ArticleLayout data={article.data} {toc} {dates} {readingMinutes}>
+<ArticleLayout data={article.data} {toc} {dates} {readingMinutes} {articleTracks} {trackNav}>
   <Content />
 </ArticleLayout>

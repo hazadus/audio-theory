@@ -145,6 +145,14 @@ function heading(document) {
   return value;
 }
 
+function hasAttribute(document, name) {
+  let count = 0;
+  walk(document, (node) => {
+    if ((node.attrs ?? []).some((attr) => attr.name === name)) count += 1;
+  });
+  return count;
+}
+
 /** Каталог `tracks/`, страница каждой карточки и все ссылки её элементов на статьи сайта. */
 async function checkTracks(home, request) {
   const catalogUrl = new URL('tracks/', home);
@@ -171,6 +179,33 @@ async function checkTracks(home, request) {
     }
     for (const href of links(page, 'item')) targets.add(local(href, trackUrl).href);
   }
-  for (const target of targets) await request(new URL(target), 'html');
+  for (const target of targets) {
+    const article = parse(await request(new URL(target), 'html'));
+    // Строка «В треках» и условный блок есть на каждой статье, которая входит в трек.
+    for (const marker of ['data-in-tracks', 'data-track-nav']) {
+      if (!hasAttribute(article, marker)) throw new Error(`${target} — отсутствует ${marker}`);
+    }
+  }
+  if (cards.length > 0) {
+    const start = parse(await request(home, 'html'));
+    if (hasAttribute(start, 'data-start-tracks') !== 1) {
+      throw new Error(`${home.href} — отсутствует блок «С чего начать»`);
+    }
+    const homeCards = links(start, 'card').filter((href) =>
+      local(href, home).href.includes('/tracks/'),
+    );
+    if (new Set(homeCards.map((href) => local(href, home).href)).size !== cards.length) {
+      throw new Error(`${home.href} — карточки главной не совпадают с каталогом`);
+    }
+    let menu = false;
+    walk(start, (node) => {
+      if (node.tagName === 'a' && text(node).trim() === 'Треки') {
+        menu ||=
+          local(node.attrs.find(({ name }) => name === 'href')?.value, home).href ===
+          catalogUrl.href;
+      }
+    });
+    if (!menu) throw new Error(`${home.href} — в шапке нет ссылки «Треки»`);
+  }
   return cards.length;
 }

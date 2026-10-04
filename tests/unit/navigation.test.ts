@@ -28,7 +28,21 @@ describe('активный пункт навигации', () => {
 describe('список пунктов', () => {
   it('содержит только существующие маршруты', () => {
     // Пункт добавляется вместе со страницей: ссылок на несуществующие маршруты быть не должно.
-    expect(navItems.map((item) => item.href)).toEqual(['/materials/', '/glossary/', '/about/']);
+    expect(navItems.map((item) => item.href)).toEqual([
+      '/materials/',
+      '/tracks/',
+      '/glossary/',
+      '/about/',
+    ]);
+  });
+
+  it('«Треки» активны на каталоге и страницах треков, но не на статье и главной', () => {
+    const item = navItems.find((entry) => entry.href === '/tracks/')!;
+    expect(isActive(item, '/audio-theory/tracks/', '/audio-theory/')).toBe(true);
+    expect(isActive(item, '/audio-theory/tracks/programmer/', '/audio-theory/')).toBe(true);
+    expect(isActive(item, '/tracks-old/', '/')).toBe(false);
+    expect(isActive(item, '/audio-theory/sampling/', '/audio-theory/', 'materials')).toBe(false);
+    expect(isActive(item, '/audio-theory/', '/audio-theory/')).toBe(false);
   });
 
   it('«Материалы» активны на страницах раздела, но не на других', () => {
