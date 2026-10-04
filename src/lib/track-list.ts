@@ -1,32 +1,17 @@
-// Загрузка коллекции tracks: цели проверяются по публикациям и заголовкам render() статей.
-import { getCollection, render } from 'astro:content';
-import { assertUniqueSlugs } from '@/lib/articles';
-import { assertUniqueAnchors } from '@/lib/headings';
-import { buildTrackList } from '@/lib/tracks';
+// Представление треков с датами: исходные данные и проверенный журнал без циклической загрузки.
+import { loadTrackData } from '@/lib/track-data';
+import { loadUpdates } from '@/lib/update-list';
+import { resolveArticleDates } from '@/lib/article-dates';
 
-/** Пустая коллекция допустима до подготовки маршрутов; фикстуры подключаются только явно. */
+/** Даты из проверенного журнала; в локальном режиме отсутствие публикации — «Черновик». */
 export async function loadTracks(base = import.meta.env.BASE_URL) {
-  const entries = await getCollection('tracks');
-  if (!entries.length) return [];
-  const [articles, updates] = await Promise.all([
-    getCollection('articles'),
-    getCollection('updates'),
-  ]);
-  assertUniqueSlugs(articles);
-  const published = new Set(
-    updates.filter(({ data }) => data.type === 'new').map(({ data }) => data.article),
-  );
-  const targets = await Promise.all(
-    articles.map(async (article) => {
-      const { headings } = await render(article);
-      assertUniqueAnchors(headings, article.id);
-      return {
-        slug: article.data.slug,
-        title: article.data.title,
-        headings,
-        published: published.has(article.data.slug),
-      };
-    }),
-  );
-  return buildTrackList(entries, targets, base);
+  const tracks = await loadTrackData(base);
+  const updates = await loadUpdates(base, tracks);
+  return tracks.map((track) => ({
+    ...track,
+    dates: resolveArticleDates(
+      null,
+      updates.filter((entry) => entry.track === track.slug),
+    ),
+  }));
 }

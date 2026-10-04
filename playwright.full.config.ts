@@ -4,7 +4,10 @@ import config, { fixtureProjects, updatesProjects, updatesServer } from './playw
 
 const root = config.projects!.find((project) => project.name === 'root-chromium')!;
 const prefixed = config.projects!.filter((project) => project.name!.startsWith('prefixed-'));
-const allScenarios = { grep: undefined, grepInvert: /@(?:sampling|margin-notes|updates)/ };
+const allScenarios = {
+  grep: undefined,
+  grepInvert: /@(?:sampling|margin-notes|updates|track-updates)/,
+};
 
 export default defineConfig(config, {
   projects: [

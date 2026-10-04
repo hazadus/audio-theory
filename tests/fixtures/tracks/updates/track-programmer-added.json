@@ -1,0 +1,16 @@
+{
+  "id": "track-programmer-added",
+  "date": "2026-10-04",
+  "order": 901,
+  "type": "updated",
+  "track": "programmer",
+  "items": [
+    {
+      "text": "Этап цифрового сигнала",
+      "target": {
+        "track": "programmer",
+        "anchor": "stage-digital"
+      }
+    }
+  ]
+}

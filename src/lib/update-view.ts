@@ -1,4 +1,5 @@
 // Представление журнала обновлений: годы, секции дат, подписи и фильтр типа в адресе.
+import { plural } from '@/lib/sampling-view';
 import { formatUpdatedDate } from '@/lib/format-date';
 
 export type UpdateType = 'new' | 'updated';
@@ -60,7 +61,13 @@ export function earlierYears(years: readonly string[], year: string): string[] {
 }
 
 /** Строка метаданных записи: «Статья · Группа · 12 мин». */
-export function updateMeta(entry: { kind: string; topic: string; readingMinutes: number }): string {
+export function updateMeta(
+  entry:
+    | { kind: string; topic: string; readingMinutes: number }
+    | { kind: 'Трек'; stageCount: number; itemCount: number },
+): string {
+  if ('stageCount' in entry)
+    return `Трек · ${entry.stageCount} ${plural(entry.stageCount, 'этап', 'этапа', 'этапов')} · ${entry.itemCount} ${plural(entry.itemCount, 'элемент', 'элемента', 'элементов')}`;
   return `${entry.kind} · ${entry.topic} · ${entry.readingMinutes} мин`;
 }
 

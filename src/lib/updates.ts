@@ -32,24 +32,30 @@ const fields = {
     .regex(/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/, 'id — английский kebab-case, начинается с буквы'),
   date: z.string().refine(isCalendarDate, 'date — существующая дата YYYY-MM-DD'),
   order: z.number().int().positive(),
-  article: text,
+  article: text.optional(),
+  track: text.optional(),
 };
 const item = z.strictObject({ text: plainText, target: internalTarget });
 
-export const updateSchema = z.discriminatedUnion('type', [
-  z.strictObject({
-    ...fields,
-    type: z.literal('new'),
-    summary: plainText,
-    items: z.array(item).max(4),
-  }),
-  z.strictObject({
-    ...fields,
-    type: z.literal('updated'),
-    summary: plainText.optional(),
-    items: z.array(item).min(1).max(4),
-  }),
-]);
+export const updateSchema = z
+  .discriminatedUnion('type', [
+    z.strictObject({
+      ...fields,
+      type: z.literal('new'),
+      summary: plainText,
+      items: z.array(item).max(4),
+    }),
+    z.strictObject({
+      ...fields,
+      type: z.literal('updated'),
+      summary: plainText.optional(),
+      items: z.array(item).min(1).max(4),
+    }),
+  ])
+  .refine(
+    (data) => (data.article !== undefined) !== (data.track !== undefined),
+    'запись относится ровно к статье или треку',
+  );
 
 export type UpdateData = z.infer<typeof updateSchema>;
 
@@ -58,14 +64,24 @@ export interface UpdateArticle {
   anchors: ReadonlySet<string>;
 }
 
+export interface UpdateTrack {
+  slug: string;
+  stages: readonly { id: string }[];
+}
+
 /** Проверяет весь журнал, в том числе уникальность id и порядка, хронологию и цели. */
 export function assertValidUpdates(
   entries: readonly { id: string; data: UpdateData }[],
   articles: readonly UpdateArticle[],
   glossaryIds: Iterable<string>,
   today = moscowToday(),
+  tracks: readonly UpdateTrack[] = [],
+  { requireTrackPublications = true } = {},
 ): void {
   const bySlug = new Map(articles.map((article) => [article.slug, article]));
+  const byTrack = new Map(tracks.map((track) => [track.slug, track]));
+  const materialKey = (data: UpdateData) =>
+    data.track !== undefined ? `track:${data.track}` : `article:${data.article}`;
   const terms = new Set(glossaryIds);
   const ids = new Set<string>();
   const orders = new Set<string>();
@@ -81,14 +97,25 @@ export function assertValidUpdates(
     if (orders.has(order)) fail('повторный порядок внутри дня');
     orders.add(order);
     if (data.date > today) fail('будущая дата запрещена');
-    if (!bySlug.has(data.article)) fail(`неизвестная статья «${data.article}»`);
+    if (data.track !== undefined) {
+      if (!byTrack.has(data.track)) fail(`неизвестный трек «${data.track}»`);
+    } else if (!bySlug.has(data.article!)) fail(`неизвестная статья «${data.article}»`);
     if (data.type === 'new') {
-      if (publications.has(data.article)) fail('повторная запись «Новое» для статьи');
-      publications.set(data.article, data.date);
+      if (publications.has(materialKey(data))) fail('повторная запись «Новое» для материала');
+      publications.set(materialKey(data), data.date);
     }
     for (const { target } of data.items) {
       if ('glossary' in target) {
         if (!terms.has(target.glossary)) fail(`неизвестный термин «${target.glossary}»`);
+      } else if ('track' in target) {
+        const track = byTrack.get(target.track);
+        if (!track) fail(`неизвестный трек «${target.track}» в пункте`);
+        else if (
+          target.anchor &&
+          !track.stages.some((stage) => `stage-${stage.id}` === target.anchor)
+        ) {
+          fail(`несуществующий якорь этапа «${target.track}#${target.anchor}»`);
+        }
       } else {
         const article = bySlug.get(target.article);
         if (!article) fail(`неизвестная статья «${target.article}» в пункте`);
@@ -99,9 +126,17 @@ export function assertValidUpdates(
     }
   }
   for (const { id, data } of entries) {
-    const publication = publications.get(data.article);
+    const publication = publications.get(materialKey(data));
+    if (data.track !== undefined && data.type === 'updated' && !publication) {
+      failures.push(`${id}: дополнение трека без публикации`);
+    }
     if (data.type === 'updated' && publication && data.date < publication) {
       failures.push(`${id}: дополнение предшествует публикации`);
+    }
+  }
+  if (requireTrackPublications) {
+    for (const { slug } of tracks) {
+      if (!publications.has(`track:${slug}`)) failures.push(`трек «${slug}»: нет записи «Новое»`);
     }
   }
   if (failures.length)

@@ -14,10 +14,12 @@ export interface FeedEntry {
   /** `YYYY-MM-DD` по Москве. */
   date: string;
   type: UpdateType;
-  /** Актуальное название статьи. */
+  /** Актуальное название статьи или трека. */
   title: string;
   summary?: string;
-  /** Адрес статьи с базовым путём. */
+  /** Без поля — статья, для совместимости прежних источников. */
+  kind?: 'Статья' | 'Трек';
+  /** Адрес материала с базовым путём. */
   href: string;
   items: readonly { text: string; href: string }[];
 }
@@ -49,7 +51,7 @@ function itemXml(entry: FeedEntry, absolute: (path: string) => string, base: str
   const link = entry.type === 'new' ? article : absolute(withBase(updateEntryPath(entry), base));
   const html =
     entry.type === 'new'
-      ? `<p>${escapeXml(entry.summary ?? '')}</p><p><a href="${escapeXml(article)}">Читать статью</a></p>`
+      ? `<p>${escapeXml(entry.summary ?? '')}</p><p><a href="${escapeXml(article)}">${entry.kind === 'Трек' ? 'Открыть трек' : 'Читать статью'}</a></p>`
       : `<p><a href="${escapeXml(article)}">${escapeXml(entry.title)}</a></p><ul>${entry.items
           .map(
             (item) =>

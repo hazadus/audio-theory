@@ -1,0 +1,23 @@
+---
+// Служебная цель ссылок журнала: реальные данные и даты, без реализации дизайна страницы трека.
+import { loadTracks } from '@/lib/track-list';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  return (await loadTracks()).map((track) => ({ params: { slug: track.slug }, props: { track } }));
+}
+const { track } = Astro.props;
+---
+
+<BaseLayout title={track.title}>
+  <main id="content" data-pagefind-ignore>
+    <h1>{track.title}</h1>
+    <p data-track-date>{track.dates.sortDate ?? 'Черновик'}</p>
+    {track.stages.map((stage) => (
+      <section>
+        <h2 id={stage.anchor}>{stage.title}</h2>
+        <p>{stage.description}</p>
+      </section>
+    ))}
+  </main>
+</BaseLayout>

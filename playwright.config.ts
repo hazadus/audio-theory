@@ -79,7 +79,7 @@ export default defineConfig({
               : browserName === 'webkit'
                 ? /@ci(?:\s|$)/
                 : /@ci-cross-browser/,
-          grepInvert: /@(?:sampling|margin-notes|updates)/,
+          grepInvert: /@(?:sampling|margin-notes|updates|track-updates)/,
           metadata: { base },
           use: {
             ...browserDevice(browserName),

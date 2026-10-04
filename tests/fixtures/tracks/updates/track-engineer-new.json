@@ -1,0 +1,17 @@
+{
+  "id": "track-engineer-new",
+  "date": "2026-10-04",
+  "order": 900,
+  "type": "new",
+  "track": "sound-engineer",
+  "summary": "Служебное описание маршрута звукорежиссёра.",
+  "items": [
+    {
+      "text": "Этап слуха",
+      "target": {
+        "track": "sound-engineer",
+        "anchor": "stage-hearing"
+      }
+    }
+  ]
+}
