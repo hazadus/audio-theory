@@ -17,7 +17,7 @@ ARTICLES_DIR=./docs/authoring just dev --host 127.0.0.1 --port 4321
 
 ## Браузерные проверки
 
-`just test-e2e` собирает сайт последовательно в `.e2e/root/` и `.e2e/prefixed/`, проверяя ссылки, ресурсы и индекс в обеих сборках, затем служебную сборку с конфигурацией `tests/fixtures/mdx/astro.config.mjs` в `.e2e/fixture/` (под `/audio-theory/`, порт 4393). `playwright.config.ts` запускает обязательный сокращённый набор; CI использует ту же команду `npm run test:e2e`.
+`just test-e2e` собирает сайт последовательно в `.e2e/root/` и `.e2e/prefixed/`, проверяя ссылки, ресурсы и индекс в обеих сборках, затем служебную сборку с конфигурацией `tests/fixtures/mdx/astro.config.mjs` в `.e2e/fixture/` (под `/audio-theory/`, порт 4393). `playwright.config.ts` запускает обязательный сокращённый набор; CI использует ту же команду `npm run test:e2e:ci`. Полная диагностика `just test-e2e-full` вызывает `npm run test:e2e`, который дополнительно собирает журнал обновлений в `.e2e/updates/` (`scripts/build-updates-fixture.mjs`); обязательному набору эта сборка не нужна.
 
 | Проект | Сценарии | Назначение |
 | --- | --- | --- |

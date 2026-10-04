@@ -19,7 +19,9 @@
     "typecheck": "astro check && tsc --noEmit",
     "test": "vitest run",
     "test:production": "node scripts/test-production.mjs",
-    "test:e2e": "npm run build -- --base / --outDir .e2e/root && npm run build -- --base /audio-theory/ --outDir .e2e/prefixed && npm run build -- --config tests/fixtures/mdx/astro.config.mjs --base /audio-theory/ --outDir .e2e/fixture && node scripts/build-updates-fixture.mjs && playwright test",
+    "test:e2e:builds": "npm run build -- --base / --outDir .e2e/root && npm run build -- --base /audio-theory/ --outDir .e2e/prefixed && npm run build -- --config tests/fixtures/mdx/astro.config.mjs --base /audio-theory/ --outDir .e2e/fixture",
+    "test:e2e:ci": "npm run test:e2e:builds && playwright test",
+    "test:e2e": "npm run test:e2e:builds && node scripts/build-updates-fixture.mjs && playwright test",
     "test:tracks": "node scripts/check-tracks.mjs",
     "test:track-updates": "node scripts/check-tracks.mjs --browser-fixture && playwright test --config playwright.tracks.config.ts"
   },

@@ -1,4 +1,4 @@
-# Проверяет каркас и публикует проверенную сборку с базовым путём GitHub Pages.
+# Проверяет каркас параллельными заданиями и публикует проверенную сборку с базовым путём GitHub Pages.
 name: GitHub Pages
 
 on:
@@ -17,14 +17,11 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
-    name: Проверки и сборка
+  # Этап 1: быстрая статическая проверка; долгие задания запускаются только после её успеха.
+  static:
+    name: Форматирование, линтер и типы
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    # Playwright 1.63.0-noble: браузеры и библиотеки уже установлены в образе.
-    container:
-      image: mcr.microsoft.com/playwright@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27
-      options: --user 1001 --init --ipc=host
+    timeout-minutes: 8
     steps:
       - name: Получить полную Git-историю
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -54,24 +51,164 @@ jobs:
       - name: Проверить типы
         run: npm run typecheck
 
+  # Параллельно с этапом 1: unit-тесты не блокируют этап 2, но обязательны для деплоя.
+  unit:
+    name: Unit-тесты
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Получить полную Git-историю
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Установить Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22.23.1'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Установить зафиксированные зависимости
+        run: npm ci
+
       - name: Проверить unit-тесты и блокировку ошибочной сборки
         run: npm run test
+
+  # Этап 2: долгие проверки идут параллельно после успеха `static`.
+  mdx:
+    name: MDX и формулы
+    runs-on: ubuntu-24.04
+    needs: static
+    timeout-minutes: 8
+    steps:
+      - name: Получить полную Git-историю
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Установить Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22.23.1'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Установить зафиксированные зависимости
+        run: npm ci
 
       - name: Проверить MDX, формулы и изоляцию тестовых материалов
         run: npm run test:mdx
 
+  articles:
+    name: Материалы и ссылки
+    runs-on: ubuntu-24.04
+    needs: static
+    timeout-minutes: 8
+    steps:
+      - name: Получить полную Git-историю
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Установить Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22.23.1'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Установить зафиксированные зависимости
+        run: npm ci
+
       - name: Проверить материалы, ссылки, якоря, нумерацию и изоляцию служебных статей
         run: npm run test:articles
+
+  tracks:
+    name: Треки
+    runs-on: ubuntu-24.04
+    needs: static
+    timeout-minutes: 8
+    steps:
+      - name: Получить полную Git-историю
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Установить Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22.23.1'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Установить зафиксированные зависимости
+        run: npm ci
 
       - name: Проверить треки, ошибочные цели и изоляцию служебных маршрутов
         run: npm run test:tracks
 
-      # Проверяет обе сборки и Pagefind; Playwright запускает явно выбранные сценарии CI.
-      - name: Собрать и проверить сайт в корне и под префиксом
-        run: npm run test:e2e
+  track-updates:
+    name: Журнал и страницы треков в браузере
+    runs-on: ubuntu-24.04
+    needs: static
+    timeout-minutes: 8
+    # Playwright 1.63.0-noble: браузеры и библиотеки уже установлены в образе.
+    container:
+      image: mcr.microsoft.com/playwright@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27
+      options: --user 1001 --init --ipc=host
+    steps:
+      - name: Получить полную Git-историю
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Установить Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22.23.1'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Установить зафиксированные зависимости
+        run: npm ci
 
       - name: Проверить страницы и журнал треков на служебных маршрутах
         run: npm run test:track-updates
+
+  build:
+    name: Сборка и браузерные проверки
+    runs-on: ubuntu-24.04
+    needs: static
+    timeout-minutes: 8
+    # Playwright 1.63.0-noble: браузеры и библиотеки уже установлены в образе.
+    container:
+      image: mcr.microsoft.com/playwright@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27
+      options: --user 1001 --init --ipc=host
+    steps:
+      - name: Получить полную Git-историю
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Установить Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22.23.1'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Установить зафиксированные зависимости
+        run: npm ci
+
+      - name: Собрать и проверить сайт в корне и под префиксом
+        run: npm run test:e2e:ci
 
       - name: Настроить GitHub Pages
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
@@ -87,7 +224,8 @@ jobs:
   deploy:
     name: Деплой GitHub Pages
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-    needs: build
+    # Этап 3: публикация ждёт этап 2 целиком (он сам идёт после этапа 1).
+    needs: [unit, mdx, articles, tracks, track-updates, build]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
