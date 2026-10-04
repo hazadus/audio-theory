@@ -1,0 +1,93 @@
+---
+// Каталог треков: все маршруты с описаниями, счётчиками и названиями этапов.
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import TrackCard from '@/components/TrackCard.astro';
+import { loadTracks } from '@/lib/track-list';
+
+const tracks = await loadTracks();
+const intro = 'Материалы сайта в порядке чтения под вашу задачу.';
+---
+
+<BaseLayout title="Треки" description={intro}>
+  <main id="content" data-pagefind-ignore>
+    <header class="head">
+      <h1>Треки</h1>
+      <p class="intro">{intro}</p>
+    </header>
+    {tracks.length === 0 ? (
+      <p class="none">Треки готовятся.</p>
+    ) : (
+      <ul class="grid">
+        {tracks.map((track) => (
+          <li>
+            <TrackCard {track} stages={track.stages.map((stage) => stage.title)} />
+          </li>
+        ))}
+      </ul>
+    )}
+  </main>
+</BaseLayout>
+
+<style>
+  main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-7);
+    width: min(var(--container-max), 100% - 2 * var(--page-gutter));
+    margin: 0 auto;
+    padding-top: var(--space-6);
+    padding-bottom: var(--space-10);
+  }
+
+  @media (min-width: 600px) {
+    main {
+      padding-top: 56px;
+    }
+  }
+
+  .head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    max-width: 760px;
+  }
+
+  h1 {
+    margin: 0;
+    font-family: var(--font-text);
+    font-size: var(--text-4xl);
+    font-weight: 600;
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+    text-wrap: balance;
+  }
+
+  .intro {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-family: var(--font-text);
+    font-size: var(--text-lg);
+    line-height: 1.5;
+  }
+
+  .none {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-family: var(--font-ui);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 600px) {
+    .grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

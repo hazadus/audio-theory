@@ -26,6 +26,21 @@ function fixture(base: string) {
     [`${base}assets/chart.svg`, { type: 'image/svg+xml', body: '<svg/>' }],
     [`${base}assets/app.js`, { type: 'text/javascript', body: 'export {};' }],
     [`${base}pagefind/pagefind.js`, { type: 'application/javascript', body: 'export {};' }],
+    [
+      `${base}tracks/`,
+      {
+        type: 'text/html',
+        body: `<main><h1>Треки</h1><a class="card astro-x" href="${base}tracks/demo/">Демо</a></main>`,
+      },
+    ],
+    [
+      `${base}tracks/demo/`,
+      {
+        type: 'text/html',
+        body: `<main><h1>Трек для демо</h1><a class="item" href="${base}sound-wave/?track=demo&item=a#x">Статья</a></main>`,
+      },
+    ],
+    [`${base}sound-wave/`, { type: 'text/html', body: '<main><h1>Звуковая волна</h1></main>' }],
   ]);
 }
 
@@ -46,9 +61,10 @@ test.each(['/', '/audio-theory/'])(
       {
         url: `https://example.org${base}`,
         resources: 6,
+        tracks: 1,
       },
     );
-    expect(fetchResource).toHaveBeenCalledTimes(7);
+    expect(fetchResource).toHaveBeenCalledTimes(10);
     expect(
       fetchResource.mock.calls.every(([url]) =>
         String(url).startsWith(`https://example.org${base}`),
@@ -148,7 +164,7 @@ test('CLI проходит на HTTP-сайте и возвращает ошиб
   try {
     expect(await runCommand(url)).toEqual({
       code: 0,
-      output: `Production: ${url} — страница и 6 ресурсов проверены.\n`,
+      output: `Production: ${url} — страница, 6 ресурсов и 1 треков проверены.\n`,
     });
     files.delete('/audio-theory/assets/font.woff2');
     const missing = await runCommand(url);
@@ -168,4 +184,39 @@ test('CLI требует явный публичный адрес', () => {
   const result = spawnSync(process.execPath, ['scripts/test-production.mjs'], { encoding: 'utf8' });
   expect(result.status).toBe(1);
   expect(result.stderr).toContain('Использование: just test-production');
+});
+
+test.each(['tracks/', 'tracks/demo/', 'sound-wave/'])(
+  'считает страницу %s из каталога треков обязательной',
+  async (page) => {
+    const files = fixture('/audio-theory/');
+    files.delete(`/audio-theory/${page}`);
+    await expect(
+      checkProduction('https://example.org/audio-theory/', {
+        fetchResource: fetchFixture(files),
+      }),
+    ).rejects.toThrow(`${page} — HTTP 404`);
+  },
+);
+
+test('допускает пустой каталог треков до публикации маршрутов', async () => {
+  const files = fixture('/audio-theory/');
+  files.set('/audio-theory/tracks/', {
+    type: 'text/html',
+    body: '<main><h1>Треки</h1><p>Треки готовятся.</p></main>',
+  });
+  await expect(
+    checkProduction('https://example.org/audio-theory/', { fetchResource: fetchFixture(files) }),
+  ).resolves.toMatchObject({ tracks: 0 });
+});
+
+test('отвергает ссылку элемента трека вне базового пути', async () => {
+  const files = fixture('/audio-theory/');
+  files.set('/audio-theory/tracks/demo/', {
+    type: 'text/html',
+    body: '<main><h1>Трек для демо</h1><a class="item" href="/sound-wave/">Статья</a></main>',
+  });
+  await expect(
+    checkProduction('https://example.org/audio-theory/', { fetchResource: fetchFixture(files) }),
+  ).rejects.toThrow('ссылка вне базового пути');
 });

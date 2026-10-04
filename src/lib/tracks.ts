@@ -1,7 +1,6 @@
 // Контракт треков, проверки опубликованных целей и вычисляемые названия, счётчики и связи.
 import { z } from 'astro/zod';
 import type { Heading } from '@/lib/headings';
-import { resolveTarget } from '@/lib/links';
 import { withBase } from '@/lib/urls';
 
 const identifier = z
@@ -139,7 +138,12 @@ export function buildTrackList(
             position: ++position,
             title: item.target.anchor === undefined ? article.title : heading!.text,
             articleTitle: article.title,
-            href: resolveTarget(item.target, base),
+            href: withBase(
+              `/${item.target.article}/?track=${data.slug}&item=${item.id}${
+                item.target.anchor === undefined ? '' : `#${item.target.anchor}`
+              }`,
+              base,
+            ),
           };
         }),
       }));

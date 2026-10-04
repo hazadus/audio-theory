@@ -6,7 +6,7 @@ const root = config.projects!.find((project) => project.name === 'root-chromium'
 const prefixed = config.projects!.filter((project) => project.name!.startsWith('prefixed-'));
 const allScenarios = {
   grep: undefined,
-  grepInvert: /@(?:sampling|margin-notes|updates|track-updates)/,
+  grepInvert: /@(?:sampling|margin-notes|updates|track-updates|tracks)/,
 };
 
 export default defineConfig(config, {

@@ -25,7 +25,7 @@ test(
     await page.goto('updates/2025/#update-track-programmer-new');
     await expect(page.locator('#update-track-programmer-new .badge')).toHaveText('Новое');
     await page.locator('#update-track-programmer-new .title').click();
-    await expect(page.locator('[data-track-date]')).toHaveText('2026-10-04');
+    await expect(page.locator('.updated time')).toHaveAttribute('datetime', '2026-10-04');
     await page.goto('updates/2026/#update-track-programmer-added');
     await page.locator('#update-track-programmer-added li a').click();
     await expect(page).toHaveURL(new RegExp('/tracks/programmer/#stage-digital$'));

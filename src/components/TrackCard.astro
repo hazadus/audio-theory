@@ -1,0 +1,81 @@
+---
+// Карточка трека: одна обычная ссылка; в каталоге дополнительно перечислены названия этапов.
+import { trackCounts } from '@/lib/track-view';
+
+interface Props {
+  track: { title: string; audience: string; href: string; stageCount: number; itemCount: number };
+  /** Названия этапов в порядке чтения; выводятся только в каталоге. */
+  stages?: string[];
+}
+
+const { track, stages = [] } = Astro.props;
+---
+
+<a class="card" href={track.href}>
+  <span class="title">{track.title}</span>
+  <span class="audience">{track.audience}</span>
+  {stages.length > 0 && (
+    <ol class="stages">
+      {stages.map((stage) => (
+        <li>{stage}</li>
+      ))}
+    </ol>
+  )}
+  <span class="counts">{trackCounts(track)}</span>
+</a>
+
+<style>
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    box-sizing: border-box;
+    min-width: 0;
+    height: 100%;
+    padding: 14px 16px;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    color: var(--color-text);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+
+  .card:visited {
+    color: var(--color-text);
+  }
+
+  .card:hover {
+    border-color: var(--color-border-strong);
+    background: var(--color-surface);
+  }
+
+  .title {
+    font-family: var(--font-text);
+    font-size: 18px;
+    font-weight: 600;
+    line-height: var(--leading-snug);
+  }
+
+  .audience {
+    color: var(--color-text-muted);
+    font-family: var(--font-text);
+    font-size: 14px;
+    line-height: var(--leading-normal);
+  }
+
+  .stages {
+    margin: 0;
+    padding-inline-start: 1.4em;
+    color: var(--color-text-muted);
+    font-family: var(--font-ui);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+  }
+
+  .counts {
+    margin-top: auto;
+    color: var(--color-text-muted);
+    font-family: var(--font-ui);
+    font-size: 12px;
+  }
+</style>

@@ -261,7 +261,7 @@ try {
   const realArticles = (
     await readdir(join(root, 'src/content/articles'), { recursive: true })
   ).filter((file) => file.endsWith('.mdx')).length;
-  // HTML-страниц: главная, материалы, визуализации, обновления, глоссарий, «О проекте», 404 и статьи; Pagefind
+  // HTML-страниц: главная, материалы, визуализации, обновления, каталог треков, глоссарий, «О проекте», 404 и статьи; Pagefind
   // считает их все, а фрагменты строит только для страниц с `data-pagefind-body` (проверяется ниже).
   // К ним добавляются страницы годов журнала: по одной на год, в котором есть публичные записи.
   const updateYears = new Set(
@@ -271,7 +271,7 @@ try {
         JSON.parse(readFileSync(join(root, 'src/content/updates', file), 'utf8')).date.slice(0, 4),
       ),
   ).size;
-  const pages = 7 + realArticles + updateYears;
+  const pages = 8 + realArticles + updateYears;
   assert.match(
     published.stdout + published.stderr,
     new RegExp(`Артефакт проверен: ${pages} страниц; индекс Pagefind: ${pages} страниц`),

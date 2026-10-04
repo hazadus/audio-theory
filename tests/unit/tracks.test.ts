@@ -216,8 +216,9 @@ describe('Представление треков', () => {
       ]);
       expect(items[1]).toMatchObject({
         articleTitle: 'Актуальное название волны',
-        href: `${base}sound-wave/#frequency`,
+        href: `${base}sound-wave/?track=programmer&item=frequency#frequency`,
       });
+      expect(items[0].href).toBe(`${base}sound-wave/?track=programmer&item=wave`);
       expect(items[2].optional).toBe(true);
       expect(first.related[0]).toMatchObject({
         title: 'Служебный маршрут звукорежиссёра',

@@ -1,4 +1,4 @@
-// Журнал треков на изолированных сборках: Chromium в корне и WebKit под префиксом.
+// Журнал и страницы треков на изолированных сборках: Chromium в корне и WebKit под префиксом.
 import { defineConfig, devices } from '@playwright/test';
 const placements = [
   { name: 'root', base: '/', port: 4395, device: 'Desktop Chrome' },
@@ -6,7 +6,7 @@ const placements = [
 ];
 export default defineConfig({
   testDir: './tests/e2e',
-  testMatch: 'track-updates.spec.ts',
+  testMatch: ['track-updates.spec.ts', 'tracks.spec.ts'],
   fullyParallel: true,
   forbidOnly: true,
   reporter: 'list',

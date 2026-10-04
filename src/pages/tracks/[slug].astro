@@ -1,0 +1,284 @@
+---
+// Страница трека: переключатель, счётчики, легенда, этапы, дата обновления и связанные треки.
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import TrackStages from '@/components/TrackStages.astro';
+import { loadTracks } from '@/lib/track-list';
+import { trackCounts, trackHeading, trackUpdated } from '@/lib/track-view';
+import { withBase } from '@/lib/urls';
+
+export async function getStaticPaths() {
+  const tracks = await loadTracks();
+  return tracks.map((track) => ({
+    params: { slug: track.slug },
+    props: { track, tracks },
+  }));
+}
+
+const { track, tracks } = Astro.props;
+const updated = trackUpdated(track.dates.sortDate);
+const heading = trackHeading(track);
+---
+
+<BaseLayout title={heading} description={track.description}>
+  <main id="content" data-pagefind-ignore data-track={track.slug}>
+    <nav class="breadcrumbs" aria-label="Хлебные крошки">
+      <ol>
+        <li>
+          <a href={withBase('/tracks/')}>Треки</a>
+        </li>
+        <li aria-hidden="true" class="sep">
+          /
+        </li>
+        <li>{track.title}</li>
+      </ol>
+    </nav>
+
+    <header class="head">
+      <h1>{heading}</h1>
+      <p class="description">{track.description}</p>
+    </header>
+
+    <nav class="switcher" aria-label="Треки чтения">
+      <ul>
+        {tracks.map((entry) => (
+          <li>
+            <a href={entry.href} aria-current={entry.slug === track.slug ? 'page' : undefined}>
+              {entry.title}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    <div class="summary">
+      <p class="counts">{trackCounts(track)}</p>
+      <ul class="legend" aria-label="Обозначения">
+        <li>
+          <span class="swatch article" aria-hidden="true"></span>Статья
+        </li>
+        <li>
+          <span class="swatch section" aria-hidden="true"></span>Раздел статьи
+        </li>
+        <li>
+          <span class="swatch optional" aria-hidden="true"></span>По желанию
+        </li>
+      </ul>
+    </div>
+
+    <TrackStages stages={track.stages} />
+
+    <footer class="foot">
+      <p class="updated">
+        {updated ? (
+          <>
+            Трек обновлён <time datetime={updated.iso}>{updated.label}</time>
+          </>
+        ) : (
+          'Черновик'
+        )}
+      </p>
+      {track.related.length > 0 && (
+        <section aria-labelledby="related-title">
+          <h2 id="related-title">Связанные треки</h2>
+          <ul>
+            {track.related.map((related) => (
+              <li>
+                <a href={related.href}>{related.title}</a>
+                <span>{related.description}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </footer>
+  </main>
+</BaseLayout>
+
+<style>
+  main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    width: min(var(--container-max), 100% - 2 * var(--page-gutter));
+    margin: 0 auto;
+    padding-top: var(--space-6);
+    padding-bottom: var(--space-10);
+  }
+
+  @media (min-width: 600px) {
+    main {
+      padding-top: 56px;
+    }
+  }
+
+  ol,
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .breadcrumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    color: var(--color-text-muted);
+    font-family: var(--font-ui);
+    font-size: 14px;
+  }
+
+  .breadcrumbs a {
+    color: var(--color-text-muted);
+  }
+
+  .head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    max-width: 760px;
+  }
+
+  h1 {
+    margin: 0;
+    font-family: var(--font-text);
+    font-size: var(--text-4xl);
+    font-weight: 600;
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+  }
+
+  .description {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-family: var(--font-text);
+    font-size: var(--text-lg);
+    line-height: 1.5;
+  }
+
+  /* Ряд прокручивается локально; страница вбок не сдвигается. */
+  .switcher {
+    max-width: 100%;
+    overflow-x: auto;
+    padding: 4px;
+    margin: -4px;
+  }
+
+  .switcher ul {
+    display: flex;
+    gap: var(--space-2);
+    width: max-content;
+  }
+
+  .switcher a {
+    display: inline-flex;
+    align-items: center;
+    box-sizing: border-box;
+    min-height: 44px;
+    padding-inline: 14px;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-full);
+    color: var(--color-text);
+    font-family: var(--font-ui);
+    font-size: 14px;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .switcher a:visited {
+    color: var(--color-text);
+  }
+
+  .switcher a[aria-current='page'] {
+    border-color: var(--color-accent-soft);
+    background: var(--color-accent-soft);
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+
+  @media (min-width: 600px) {
+    .switcher a {
+      min-height: 40px;
+    }
+  }
+
+  .summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-6);
+    color: var(--color-text-muted);
+    font-family: var(--font-ui);
+    font-size: var(--text-sm);
+  }
+
+  .counts {
+    margin: 0;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+  }
+
+  .legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .swatch {
+    width: 18px;
+    height: 12px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: 3px;
+  }
+
+  .swatch.article {
+    background: var(--color-bg);
+  }
+
+  .swatch.section {
+    background: var(--color-surface);
+  }
+
+  .swatch.optional {
+    border-style: dashed;
+  }
+
+  .foot {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    padding-top: var(--space-5);
+    border-top: var(--border-width) solid var(--color-border);
+    font-family: var(--font-ui);
+  }
+
+  .updated {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+  }
+
+  .foot h2 {
+    margin: 0 0 var(--space-2);
+    font-family: var(--font-text);
+    font-size: var(--text-lg);
+    font-weight: 600;
+  }
+
+  .foot section li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px var(--space-3);
+    padding-block: 4px;
+    font-size: var(--text-ui);
+  }
+
+  .foot section li span {
+    color: var(--color-text-muted);
+  }
+</style>

@@ -118,5 +118,59 @@ export async function checkProduction(address, { fetchResource = fetch, timeout 
       }
     }
   }
-  return { url: home.href, resources: queue.length };
+  const tracks = await checkTracks(home, request);
+  return { url: home.href, resources: queue.length, tracks };
+}
+
+/** Классы элемента как список: у Astro к ним добавляются служебные `astro-*`. */
+function classes(node) {
+  const value = (node.attrs ?? []).find(({ name }) => name === 'class')?.value ?? '';
+  return value.split(/\s+/);
+}
+
+function links(document, className) {
+  const found = [];
+  walk(document, (node) => {
+    if (node.tagName !== 'a' || !classes(node).includes(className)) return;
+    found.push(node.attrs.find(({ name }) => name === 'href')?.value);
+  });
+  return found.filter(Boolean);
+}
+
+function heading(document) {
+  let value = '';
+  walk(document, (node) => {
+    if (node.tagName === 'h1' && !value) value = text(node).trim();
+  });
+  return value;
+}
+
+/** Каталог `tracks/`, страница каждой карточки и все ссылки её элементов на статьи сайта. */
+async function checkTracks(home, request) {
+  const catalogUrl = new URL('tracks/', home);
+  const catalog = parse(await request(catalogUrl, 'html'));
+  if (heading(catalog) !== 'Треки') {
+    throw new Error(`${catalogUrl.href} — отсутствует заголовок «Треки»`);
+  }
+  const local = (href, source) => {
+    const url = new URL(href, source);
+    if (url.origin !== home.origin || !url.pathname.startsWith(home.pathname)) {
+      throw new Error(`${url.href} — ссылка вне базового пути ${home.pathname}`);
+    }
+    url.hash = '';
+    url.search = '';
+    return url;
+  };
+  const cards = [...new Set(links(catalog, 'card').map((href) => local(href, catalogUrl).href))];
+  const targets = new Set();
+  for (const card of cards) {
+    const trackUrl = new URL(card);
+    const page = parse(await request(trackUrl, 'html'));
+    if (!heading(page).startsWith('Трек')) {
+      throw new Error(`${card} — отсутствует заголовок трека`);
+    }
+    for (const href of links(page, 'item')) targets.add(local(href, trackUrl).href);
+  }
+  for (const target of targets) await request(new URL(target), 'html');
+  return cards.length;
 }

@@ -1,0 +1,192 @@
+---
+// Этапы трека: ось с номерами, пояснения и ссылки на статьи и разделы в порядке чтения.
+import type { TrackView } from '@/lib/tracks';
+
+interface Props {
+  stages: TrackView['stages'];
+}
+
+const { stages } = Astro.props;
+---
+
+<ol class="stages">
+  {stages.map((stage) => (
+    <li class="stage" id={stage.anchor}>
+      <span class="marker" aria-hidden="true">
+        {stage.number}
+      </span>
+      <div class="intro">
+        <h2>{stage.title}</h2>
+        <p>{stage.description}</p>
+      </div>
+      <ul class="items">
+        {stage.items.map((item) => (
+          <li>
+            <a
+              class:list={[
+                'item',
+                item.target.anchor === undefined ? 'article' : 'section',
+                { optional: item.optional },
+              ]}
+              href={item.href}
+            >
+              {item.target.anchor !== undefined && <span class="caption">{item.articleTitle}</span>}
+              <span class="name">{item.title}</span>
+              {item.optional && <span class="caption">по желанию</span>}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </li>
+  ))}
+</ol>
+
+<style>
+  .stages {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-7);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .stage {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+    padding-inline-start: 40px;
+    scroll-margin-top: 88px;
+  }
+
+  /* Ось: круг с номером и линия до следующего этапа; после последнего этапа линии нет. */
+  .marker {
+    position: absolute;
+    inset-inline-start: 0;
+    top: 0;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-full);
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .stage:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 11px;
+    top: 28px;
+    bottom: calc(-1 * var(--space-7) + 4px);
+    width: 2px;
+    background: var(--color-border);
+  }
+
+  h2 {
+    margin: 0;
+    font-family: var(--font-text);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    line-height: var(--leading-snug);
+    overflow-wrap: anywhere;
+  }
+
+  .intro p {
+    margin: var(--space-2) 0 0;
+    color: var(--color-text-muted);
+    font-family: var(--font-text);
+    font-size: var(--text-ui);
+    line-height: var(--leading-normal);
+    hyphens: none;
+  }
+
+  .items {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .items > li {
+    display: flex;
+    min-width: 0;
+  }
+
+  .item {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 56px;
+    padding: 10px 14px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: 8px;
+    color: var(--color-text);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+
+  .item:visited {
+    color: var(--color-text);
+  }
+
+  .item.article {
+    background: var(--color-bg);
+  }
+
+  .item.section {
+    background: var(--color-surface);
+  }
+
+  .item.optional {
+    border-style: dashed;
+  }
+
+  .item:hover {
+    border-color: var(--color-accent);
+  }
+
+  .name {
+    font-family: var(--font-text);
+    font-size: 16px;
+    font-weight: 600;
+    line-height: var(--leading-snug);
+  }
+
+  .caption {
+    color: var(--color-text-muted);
+    font-family: var(--font-ui);
+    font-size: 12px;
+    line-height: var(--leading-normal);
+  }
+
+  @media (min-width: 600px) {
+    .items {
+      grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr));
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .stage {
+      grid-template-columns: 240px minmax(0, 1fr);
+      gap: var(--space-7);
+    }
+
+    .stages {
+      gap: 40px;
+    }
+
+    .stage:not(:last-child)::before {
+      bottom: -36px;
+    }
+  }
+</style>
