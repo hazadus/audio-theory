@@ -10,7 +10,16 @@ await mkdir(join(root, '.e2e'), { recursive: true });
 const temporary = await mkdtemp(join(root, '.e2e', 'tracks-'));
 const browserFixture = process.argv.includes('--browser-fixture');
 const updatesDir = join(temporary, 'updates');
-await cp(join(root, 'src/content/updates'), updatesDir, { recursive: true });
+const articleUpdatesDir = join(temporary, 'article-updates');
+await mkdir(articleUpdatesDir);
+// Служебные треки заменяют публичные: их журнал наследует только записи статей.
+for (const file of await readdir(join(root, 'src/content/updates'))) {
+  if (!file.endsWith('.json')) continue;
+  const source = join(root, 'src/content/updates', file);
+  const update = JSON.parse(await readFile(source, 'utf8'));
+  if (update.article) await cp(source, join(articleUpdatesDir, file));
+}
+await cp(articleUpdatesDir, updatesDir, { recursive: true });
 await cp(join(root, 'tests/fixtures/tracks/updates'), updatesDir, { recursive: true });
 
 function build(name, base, fixture, draft = false, trackUpdates = true) {
@@ -20,7 +29,7 @@ function build(name, base, fixture, draft = false, trackUpdates = true) {
   }
   if (fixture) {
     env.TRACKS_DIR = `./tests/fixtures/tracks/${fixture}`;
-    env.UPDATES_DIR = trackUpdates ? updatesDir : './src/content/updates';
+    env.UPDATES_DIR = trackUpdates ? updatesDir : articleUpdatesDir;
   }
   if (draft) env.ALLOW_DRAFT_ARTICLES = '1';
   const result = spawnSync(

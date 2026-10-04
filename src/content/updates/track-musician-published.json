@@ -1,0 +1,17 @@
+{
+  "id": "track-musician-published",
+  "date": "2026-10-04",
+  "order": 4,
+  "type": "new",
+  "track": "musician",
+  "summary": "Частота и высота тона, уровни записи, компрессия и модуляция. Разделы о LFO и тремоло объясняют действие параметров без обязательного чтения кода.",
+  "items": [
+    {
+      "text": "Первый этап: частота и восприятие",
+      "target": {
+        "track": "musician",
+        "anchor": "stage-sound-and-hearing"
+      }
+    }
+  ]
+}

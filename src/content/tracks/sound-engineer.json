@@ -1,0 +1,132 @@
+{
+  "slug": "sound-engineer",
+  "title": "Звукорежиссёр",
+  "audience": "Для тех, кто записывает звук и сводит музыку.",
+  "description": "Физические свойства звука, слуховое восприятие, цифровая запись и управление динамикой. В конце — битрейт, сжатие и ограничения форматов файлов.",
+  "stages": [
+    {
+      "id": "acoustics",
+      "title": "Звук и слух",
+      "description": "Свяжите частоту, амплитуду и фазу с восприятием звука. Разберите маскировку, направление источника и зависимость громкости от частоты и уровня.",
+      "items": [
+        {
+          "id": "sound-wave",
+          "target": {
+            "article": "sound-wave"
+          }
+        },
+        {
+          "id": "psychoacoustics",
+          "target": {
+            "article": "psychoacoustics"
+          }
+        },
+        {
+          "id": "equal-loudness",
+          "target": {
+            "article": "equal-loudness"
+          }
+        }
+      ]
+    },
+    {
+      "id": "recording",
+      "title": "Цифровая запись и уровни",
+      "description": "Разделите частоту дискретизации и разрядность, разберите dBFS, пик и RMS. Дополнительный раздел объясняет, почему размер блока связан с задержкой, но не равен полной задержке тракта.",
+      "items": [
+        {
+          "id": "sampling",
+          "target": {
+            "article": "sampling"
+          }
+        },
+        {
+          "id": "adc-dac",
+          "target": {
+            "article": "adc-dac"
+          }
+        },
+        {
+          "id": "signal-level",
+          "target": {
+            "article": "signal-level"
+          }
+        },
+        {
+          "id": "block-latency",
+          "target": {
+            "article": "audio-data",
+            "anchor": "block-time-and-latency"
+          },
+          "optional": true
+        }
+      ]
+    },
+    {
+      "id": "processing",
+      "title": "Динамика и сравнение обработки",
+      "description": "Разберите порог, степень сжатия, атаку, восстановление и компенсацию усиления компрессора. Затем вернитесь к сравнению обработки при одинаковой громкости и маскировке инструментов в миксе.",
+      "items": [
+        {
+          "id": "compressor",
+          "target": {
+            "article": "compressor"
+          }
+        },
+        {
+          "id": "mixing",
+          "target": {
+            "article": "psychoacoustics",
+            "anchor": "mixing"
+          }
+        }
+      ]
+    },
+    {
+      "id": "delivery",
+      "title": "Форматы и объём записи",
+      "description": "Сравните сжатие без потерь и с потерями, зависимость размера FLAC от записи и артефакты MP3. По желанию прочитайте о пределе размера WAV и расширенном описании каналов.",
+      "items": [
+        {
+          "id": "bitrate",
+          "target": {
+            "article": "audio-compression",
+            "anchor": "bitrate-and-compression"
+          }
+        },
+        {
+          "id": "flac-size",
+          "target": {
+            "article": "audio-compression",
+            "anchor": "flac-ratio"
+          }
+        },
+        {
+          "id": "mp3-artifacts",
+          "target": {
+            "article": "audio-compression",
+            "anchor": "mp3-artifacts"
+          }
+        },
+        {
+          "id": "wav-limits",
+          "target": {
+            "article": "wav-file",
+            "anchor": "limits"
+          },
+          "optional": true
+        }
+      ]
+    }
+  ],
+  "related": [
+    {
+      "track": "programmer",
+      "description": "Представление отсчётов и буферов, байты файлов и реализация модуляции."
+    },
+    {
+      "track": "musician",
+      "description": "Управление параметрами модуляции и динамики при работе с инструментами."
+    }
+  ]
+}

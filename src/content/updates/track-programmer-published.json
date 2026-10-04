@@ -1,0 +1,17 @@
+{
+  "id": "track-programmer-published",
+  "date": "2026-10-04",
+  "order": 2,
+  "type": "new",
+  "track": "programmer",
+  "summary": "От звуковой волны к отсчётам в памяти, чтению файлов и обработке на C++ и JUCE. Маршрут объясняет масштаб чисел, устройство буферов и расчёт модуляции.",
+  "items": [
+    {
+      "text": "Первый этап: сигнал и обозначения",
+      "target": {
+        "track": "programmer",
+        "anchor": "stage-basics"
+      }
+    }
+  ]
+}

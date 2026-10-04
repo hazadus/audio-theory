@@ -11,7 +11,7 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const temporaryRoot = join(root, '.e2e');
 await mkdir(temporaryRoot, { recursive: true });
 const temporary = await mkdtemp(join(temporaryRoot, 'articles-'));
-// Служебные статьи не связаны с публичным журналом: их сборка идёт с пустым журналом.
+// Служебные статьи не связаны с публичным журналом и треками: обе коллекции пусты.
 const emptyUpdates = join(temporary, 'updates-empty');
 await mkdir(emptyUpdates, { recursive: true });
 
@@ -20,9 +20,11 @@ function build(outDir, fixture, { draft = false, dir, base = '/' } = {}) {
   delete env.ARTICLES_DIR;
   delete env.ALLOW_DRAFT_ARTICLES;
   delete env.UPDATES_DIR;
+  delete env.TRACKS_DIR;
   if (fixture) {
     env.ARTICLES_DIR = dir ?? `./tests/fixtures/articles/${fixture}`;
     env.UPDATES_DIR = emptyUpdates;
+    env.TRACKS_DIR = emptyUpdates;
   }
   if (draft) env.ALLOW_DRAFT_ARTICLES = '1';
   return spawnSync(
@@ -263,7 +265,7 @@ try {
   ).filter((file) => file.endsWith('.mdx')).length;
   // HTML-страниц: главная, материалы, визуализации, обновления, каталог треков, глоссарий, «О проекте», 404 и статьи; Pagefind
   // считает их все, а фрагменты строит только для страниц с `data-pagefind-body` (проверяется ниже).
-  // К ним добавляются страницы годов журнала: по одной на год, в котором есть публичные записи.
+  // К ним добавляются страницы треков и годов журнала: по одной на трек и непустой год.
   const updateYears = new Set(
     (await readdir(join(root, 'src/content/updates')))
       .filter((file) => file.endsWith('.json'))
@@ -271,7 +273,10 @@ try {
         JSON.parse(readFileSync(join(root, 'src/content/updates', file), 'utf8')).date.slice(0, 4),
       ),
   ).size;
-  const pages = 8 + realArticles + updateYears;
+  const realTracks = (await readdir(join(root, 'src/content/tracks'))).filter((file) =>
+    file.endsWith('.json'),
+  ).length;
+  const pages = 8 + realArticles + realTracks + updateYears;
   assert.match(
     published.stdout + published.stderr,
     new RegExp(`Артефакт проверен: ${pages} страниц; индекс Pagefind: ${pages} страниц`),

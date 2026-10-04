@@ -1,0 +1,138 @@
+{
+  "slug": "musician",
+  "title": "Музыкант",
+  "audience": "Для тех, кто играет, записывает партии и работает с синтезаторами.",
+  "description": "Частота и высота тона, уровни записи, компрессия и модуляция. Разделы о LFO и тремоло объясняют действие параметров без обязательного чтения кода.",
+  "stages": [
+    {
+      "id": "sound-and-hearing",
+      "title": "Частота и восприятие",
+      "description": "Начните с периода, частоты и фазы, затем сравните физическую частоту с воспринимаемой высотой и громкостью. Кривые равной громкости объясняют, почему баланс музыки меняется с уровнем прослушивания.",
+      "items": [
+        {
+          "id": "frequency",
+          "target": {
+            "article": "sound-wave",
+            "anchor": "frequency"
+          }
+        },
+        {
+          "id": "pitch",
+          "target": {
+            "article": "psychoacoustics",
+            "anchor": "pitch"
+          }
+        },
+        {
+          "id": "loudness",
+          "target": {
+            "article": "psychoacoustics",
+            "anchor": "loudness"
+          }
+        },
+        {
+          "id": "equal-loudness",
+          "target": {
+            "article": "equal-loudness"
+          }
+        }
+      ]
+    },
+    {
+      "id": "recording",
+      "title": "Запись и динамика",
+      "description": "Разберите полную шкалу цифрового сигнала, пиковый и среднеквадратичный уровни. Затем исследуйте, как настройки компрессора меняют динамику и звучание; работу преобразователей можно прочитать дополнительно.",
+      "items": [
+        {
+          "id": "dbfs",
+          "target": {
+            "article": "signal-level",
+            "anchor": "dbfs"
+          }
+        },
+        {
+          "id": "peak",
+          "target": {
+            "article": "signal-level",
+            "anchor": "peak"
+          }
+        },
+        {
+          "id": "rms",
+          "target": {
+            "article": "signal-level",
+            "anchor": "rms"
+          }
+        },
+        {
+          "id": "compressor",
+          "target": {
+            "article": "compressor"
+          }
+        },
+        {
+          "id": "adc-dac",
+          "target": {
+            "article": "adc-dac"
+          },
+          "optional": true
+        }
+      ]
+    },
+    {
+      "id": "modulation",
+      "title": "LFO и тремоло",
+      "description": "Выясните, что может менять LFO и как скорость управляющего колебания связана с пульсацией. Разберите принцип тремоло, два способа расчёта усиления и различие их шкал глубины.",
+      "items": [
+        {
+          "id": "lfo-frequency",
+          "target": {
+            "article": "lfo",
+            "anchor": "low-frequency"
+          }
+        },
+        {
+          "id": "lfo-destinations",
+          "target": {
+            "article": "lfo",
+            "anchor": "destinations"
+          }
+        },
+        {
+          "id": "tremolo-principle",
+          "target": {
+            "article": "tremolo",
+            "anchor": "principle"
+          }
+        },
+        {
+          "id": "tremolo-attenuation",
+          "target": {
+            "article": "tremolo",
+            "anchor": "attenuation"
+          }
+        },
+        {
+          "id": "tremolo-centered",
+          "target": {
+            "article": "tremolo",
+            "anchor": "centered"
+          }
+        },
+        {
+          "id": "tremolo-depth",
+          "target": {
+            "article": "tremolo",
+            "anchor": "depth-comparison"
+          }
+        }
+      ]
+    }
+  ],
+  "related": [
+    {
+      "track": "sound-engineer",
+      "description": "Слуховое восприятие, цифровой тракт и обработка при записи и сведении."
+    }
+  ]
+}

@@ -1,0 +1,123 @@
+{
+  "slug": "programmer",
+  "title": "Программист",
+  "audience": "Для тех, кто пишет аудиоприложения и плагины.",
+  "description": "От звуковой волны к отсчётам в памяти, чтению файлов и обработке на C++ и JUCE. Маршрут объясняет масштаб чисел, устройство буферов и расчёт модуляции.",
+  "stages": [
+    {
+      "id": "basics",
+      "title": "Сигнал и обозначения",
+      "description": "Разберите частоту, амплитуду, фазу и переход от звука к напряжению. Если формулы незнакомы, начните с математического справочника.",
+      "items": [
+        {
+          "id": "audio-math",
+          "target": {
+            "article": "audio-math"
+          },
+          "optional": true
+        },
+        {
+          "id": "sound-wave",
+          "target": {
+            "article": "sound-wave"
+          }
+        }
+      ]
+    },
+    {
+      "id": "digital-signal",
+      "title": "Отсчёты и буферы",
+      "description": "Проследите дискретизацию и квантование, затем разберите шкалу уровня, каналы, кадры и расположение отсчётов в памяти.",
+      "items": [
+        {
+          "id": "sampling",
+          "target": {
+            "article": "sampling"
+          }
+        },
+        {
+          "id": "adc-dac",
+          "target": {
+            "article": "adc-dac"
+          }
+        },
+        {
+          "id": "signal-level",
+          "target": {
+            "article": "signal-level"
+          }
+        },
+        {
+          "id": "audio-data",
+          "target": {
+            "article": "audio-data"
+          }
+        }
+      ]
+    },
+    {
+      "id": "files",
+      "title": "Байты и форматы файлов",
+      "description": "Прочитайте целочисленный PCM, разберите чтение WAV по чанкам и сравните способы сжатия. Перед MP3 познакомьтесь с частотной маскировкой.",
+      "items": [
+        {
+          "id": "integer-pcm",
+          "target": {
+            "article": "integer-pcm"
+          }
+        },
+        {
+          "id": "wav-file",
+          "target": {
+            "article": "wav-file"
+          }
+        },
+        {
+          "id": "masking",
+          "target": {
+            "article": "psychoacoustics",
+            "anchor": "simultaneous-masking"
+          }
+        },
+        {
+          "id": "audio-compression",
+          "target": {
+            "article": "audio-compression"
+          }
+        }
+      ]
+    },
+    {
+      "id": "processing",
+      "title": "Модуляция и обработка",
+      "description": "Постройте LFO и примените его к усилению в тремоло. По желанию разберите, как компрессор вычисляет ослабление по уровню сигнала.",
+      "items": [
+        {
+          "id": "lfo",
+          "target": {
+            "article": "lfo"
+          }
+        },
+        {
+          "id": "tremolo",
+          "target": {
+            "article": "tremolo"
+          }
+        },
+        {
+          "id": "compressor",
+          "target": {
+            "article": "compressor"
+          },
+          "optional": true
+        }
+      ]
+    }
+  ],
+  "related": [
+    {
+      "track": "sound-engineer",
+      "description": "Уровни и обработка со стороны записи, слухового восприятия и сравнения звука."
+    }
+  ]
+}

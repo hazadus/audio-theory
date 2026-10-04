@@ -1,0 +1,134 @@
+{
+  "slug": "music-lover",
+  "title": "Меломан",
+  "audience": "Для тех, кто хочет понимать звук при прослушивании музыки.",
+  "description": "Почему частота и уровень сигнала не полностью описывают слышимый звук, как читать кривые равной громкости и чем различаются сжатие с потерями и без них.",
+  "stages": [
+    {
+      "id": "sound-and-hearing",
+      "title": "Звуковая волна и ощущения",
+      "description": "Познакомьтесь с частотой и амплитудой, затем разберите воспринимаемые громкость и высоту тона. Направление звука — дополнительный раздел для интересующихся пространственным слухом.",
+      "items": [
+        {
+          "id": "frequency",
+          "target": {
+            "article": "sound-wave",
+            "anchor": "frequency"
+          }
+        },
+        {
+          "id": "amplitude",
+          "target": {
+            "article": "sound-wave",
+            "anchor": "amplitude"
+          }
+        },
+        {
+          "id": "loudness",
+          "target": {
+            "article": "psychoacoustics",
+            "anchor": "loudness"
+          }
+        },
+        {
+          "id": "pitch",
+          "target": {
+            "article": "psychoacoustics",
+            "anchor": "pitch"
+          }
+        },
+        {
+          "id": "localization",
+          "target": {
+            "article": "psychoacoustics",
+            "anchor": "localization"
+          },
+          "optional": true
+        }
+      ]
+    },
+    {
+      "id": "listening-level",
+      "title": "Громкость прослушивания",
+      "description": "Начните со звукового давления, дБ SPL и фонов, затем научитесь читать кривые равной громкости и свяжите их с балансом музыки. Проверьте условия измерений и пределы применения графика к реальному прослушиванию.",
+      "items": [
+        {
+          "id": "sound-pressure-level",
+          "target": {
+            "article": "equal-loudness",
+            "anchor": "spl"
+          }
+        },
+        {
+          "id": "loudness-level",
+          "target": {
+            "article": "equal-loudness",
+            "anchor": "loudness-level"
+          }
+        },
+        {
+          "id": "contours",
+          "target": {
+            "article": "equal-loudness",
+            "anchor": "reading-contours"
+          }
+        },
+        {
+          "id": "music",
+          "target": {
+            "article": "equal-loudness",
+            "anchor": "music"
+          }
+        },
+        {
+          "id": "conditions",
+          "target": {
+            "article": "equal-loudness",
+            "anchor": "conditions"
+          }
+        }
+      ]
+    },
+    {
+      "id": "formats",
+      "title": "Файлы и качество",
+      "description": "Разберите битрейт и различие между точным восстановлением отсчётов и сжатием с потерями. Сравните экономию места во FLAC и артефакты MP3; устройство АЦП и ЦАП — по желанию.",
+      "items": [
+        {
+          "id": "bitrate",
+          "target": {
+            "article": "audio-compression",
+            "anchor": "bitrate-and-compression"
+          }
+        },
+        {
+          "id": "flac-size",
+          "target": {
+            "article": "audio-compression",
+            "anchor": "flac-ratio"
+          }
+        },
+        {
+          "id": "mp3-artifacts",
+          "target": {
+            "article": "audio-compression",
+            "anchor": "mp3-artifacts"
+          }
+        },
+        {
+          "id": "adc-dac",
+          "target": {
+            "article": "adc-dac"
+          },
+          "optional": true
+        }
+      ]
+    }
+  ],
+  "related": [
+    {
+      "track": "dj",
+      "description": "Пиковый уровень, RMS, маскировка и подготовка музыкальной библиотеки."
+    }
+  ]
+}

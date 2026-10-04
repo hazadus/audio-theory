@@ -1,0 +1,17 @@
+{
+  "id": "track-sound-engineer-published",
+  "date": "2026-10-04",
+  "order": 3,
+  "type": "new",
+  "track": "sound-engineer",
+  "summary": "Физические свойства звука, слуховое восприятие, цифровая запись и управление динамикой. В конце — битрейт, сжатие и ограничения форматов файлов.",
+  "items": [
+    {
+      "text": "Первый этап: звук и слух",
+      "target": {
+        "track": "sound-engineer",
+        "anchor": "stage-acoustics"
+      }
+    }
+  ]
+}

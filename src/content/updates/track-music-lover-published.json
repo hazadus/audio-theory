@@ -1,0 +1,17 @@
+{
+  "id": "track-music-lover-published",
+  "date": "2026-10-04",
+  "order": 6,
+  "type": "new",
+  "track": "music-lover",
+  "summary": "Почему частота и уровень сигнала не полностью описывают слышимый звук, как читать кривые равной громкости и чем различаются сжатие с потерями и без них.",
+  "items": [
+    {
+      "text": "Первый этап: звуковая волна и ощущения",
+      "target": {
+        "track": "music-lover",
+        "anchor": "stage-sound-and-hearing"
+      }
+    }
+  ]
+}

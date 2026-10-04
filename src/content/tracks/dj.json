@@ -1,0 +1,145 @@
+{
+  "slug": "dj",
+  "title": "Диджей",
+  "audience": "Для тех, кто готовит музыкальную библиотеку и играет сеты.",
+  "description": "Уровень сигнала, громкость прослушивания, маскировка при наложении музыки и форматы файлов. Дополнительные разделы знакомят с задержкой блока и динамической обработкой.",
+  "stages": [
+    {
+      "id": "levels",
+      "title": "Сигнал и уровень",
+      "description": "Разберите частоту и амплитуду, затем шкалу dBFS, пик и RMS. Разделы помогают отличать цифровой уровень от положения регулятора и воспринимаемой громкости.",
+      "items": [
+        {
+          "id": "frequency",
+          "target": {
+            "article": "sound-wave",
+            "anchor": "frequency"
+          }
+        },
+        {
+          "id": "amplitude",
+          "target": {
+            "article": "sound-wave",
+            "anchor": "amplitude"
+          }
+        },
+        {
+          "id": "dbfs",
+          "target": {
+            "article": "signal-level",
+            "anchor": "dbfs"
+          }
+        },
+        {
+          "id": "peak",
+          "target": {
+            "article": "signal-level",
+            "anchor": "peak"
+          }
+        },
+        {
+          "id": "rms",
+          "target": {
+            "article": "signal-level",
+            "anchor": "rms"
+          }
+        }
+      ]
+    },
+    {
+      "id": "listening",
+      "title": "Прослушивание и наложение музыки",
+      "description": "Кривые равной громкости показывают влияние уровня прослушивания на частотный баланс. Маскировка и раздел о сведении объясняют, почему партии могут перекрывать друг друга и зачем выравнивать громкость при сравнении. Полный разбор компрессора и задержка блока — по желанию.",
+      "items": [
+        {
+          "id": "equal-loudness",
+          "target": {
+            "article": "equal-loudness"
+          }
+        },
+        {
+          "id": "masking",
+          "target": {
+            "article": "psychoacoustics",
+            "anchor": "simultaneous-masking"
+          }
+        },
+        {
+          "id": "mixing",
+          "target": {
+            "article": "psychoacoustics",
+            "anchor": "mixing"
+          }
+        },
+        {
+          "id": "compressor",
+          "target": {
+            "article": "compressor"
+          },
+          "optional": true
+        },
+        {
+          "id": "block-latency",
+          "target": {
+            "article": "audio-data",
+            "anchor": "block-time-and-latency"
+          },
+          "optional": true
+        }
+      ]
+    },
+    {
+      "id": "library",
+      "title": "Форматы музыкальной библиотеки",
+      "description": "Сравните битрейт и сжатие с потерями и без них. Разберите размер FLAC, постоянный и переменный битрейт MP3 и артефакты сжатия; обзор других форматов можно прочитать дополнительно.",
+      "items": [
+        {
+          "id": "bitrate",
+          "target": {
+            "article": "audio-compression",
+            "anchor": "bitrate-and-compression"
+          }
+        },
+        {
+          "id": "flac-size",
+          "target": {
+            "article": "audio-compression",
+            "anchor": "flac-ratio"
+          }
+        },
+        {
+          "id": "mp3-bitrate",
+          "target": {
+            "article": "audio-compression",
+            "anchor": "mp3-bitrate"
+          }
+        },
+        {
+          "id": "mp3-artifacts",
+          "target": {
+            "article": "audio-compression",
+            "anchor": "mp3-artifacts"
+          }
+        },
+        {
+          "id": "other-formats",
+          "target": {
+            "article": "audio-compression",
+            "anchor": "other-formats"
+          },
+          "optional": true
+        }
+      ]
+    }
+  ],
+  "related": [
+    {
+      "track": "music-lover",
+      "description": "Слуховое восприятие и форматы со стороны прослушивания музыки."
+    },
+    {
+      "track": "sound-engineer",
+      "description": "Полный разбор цифровой записи, уровней и динамической обработки."
+    }
+  ]
+}
