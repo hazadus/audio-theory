@@ -1,0 +1,37 @@
+{
+  "id": "psychoacoustics-models-and-musical-pitch",
+  "date": "2026-10-05",
+  "order": 1,
+  "type": "updated",
+  "article": "psychoacoustics",
+  "items": [
+    {
+      "text": "Громкость коротких звуков и пределы правила «+10 дБ — вдвое громче»",
+      "target": {
+        "article": "psychoacoustics",
+        "anchor": "loudness"
+      }
+    },
+    {
+      "text": "Ноты, октавы, выраженность высоты и ограничения пропущенной основной частоты",
+      "target": {
+        "article": "psychoacoustics",
+        "anchor": "pitch"
+      }
+    },
+    {
+      "text": "Частичная маскировка и условия измерения временной маскировки",
+      "target": {
+        "article": "psychoacoustics",
+        "anchor": "partial-masking"
+      }
+    },
+    {
+      "text": "Переход от пульсации к шероховатости при ускорении модуляции",
+      "target": {
+        "article": "psychoacoustics",
+        "anchor": "fluctuation-and-roughness"
+      }
+    }
+  ]
+}
