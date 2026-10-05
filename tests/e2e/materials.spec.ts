@@ -23,6 +23,7 @@ test(
       'equal-loudness',
       'integer-pcm',
       'lfo',
+      'limiter',
       'mixing',
       'noise',
       'psychoacoustics',
@@ -33,10 +34,10 @@ test(
       'tremolo',
       'wav-file',
     ]);
-    await expect(page.locator('[data-count]')).toHaveText('17 статей');
+    await expect(page.locator('[data-count]')).toHaveText('18 статей');
     await expect(chip(page, 'all')).toHaveAttribute('aria-pressed', 'true');
-    await expect(chip(page, 'all')).toContainText('17');
-    await expect(chip(page, 'processing')).toContainText('5');
+    await expect(chip(page, 'all')).toContainText('18');
+    await expect(chip(page, 'processing')).toContainText('6');
     await expect(chip(page, 'conv')).not.toHaveAttribute('aria-disabled', 'true');
     await expect(chip(page, 'conv')).toContainText('1');
     await expect(chip(page, 'data')).toContainText('4');
@@ -101,11 +102,12 @@ test(
       'noise',
       'sampling',
       'sound-wave',
-      'compressor',
       'equal-loudness',
       'audio-math',
       'mixing',
       'synth-oscillators',
+      'compressor',
+      'limiter',
       'psychoacoustics',
       'tremolo',
       'signal-level',
@@ -139,8 +141,9 @@ test(
       'audio-compression',
       'integer-pcm',
       'noise',
-      'compressor',
       'mixing',
+      'compressor',
+      'limiter',
       'tremolo',
       'lfo',
       'synth-oscillators',
@@ -158,7 +161,7 @@ test('неверные значения query заменяются умолча�
   await expect(chip(page, 'all')).toHaveAttribute('aria-pressed', 'true');
   await expect(sortOption(page, 'date')).toHaveAttribute('aria-checked', 'true');
   expect(search(page)).toBe('');
-  expect((await slugs(page)).length).toBe(17);
+  expect((await slugs(page)).length).toBe(18);
 
   await page.goto('materials/?topic=basics&sort=random');
   expect(search(page)).toBe('?topic=basics');
@@ -270,8 +273,8 @@ test(
       const page = await context.newPage();
       await page.goto('materials/?topic=digital&sort=alpha');
       await expect(page.locator('[data-controls]')).toBeHidden();
-      expect((await slugs(page)).length).toBe(17);
-      await expect(page.locator('[data-count]')).toHaveText('17 статей');
+      expect((await slugs(page)).length).toBe(18);
+      await expect(page.locator('[data-count]')).toHaveText('18 статей');
       await expect(rows(page).first().getByRole('link')).toBeVisible();
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
         390,
