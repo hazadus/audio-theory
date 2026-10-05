@@ -12,15 +12,24 @@ const browserFixture = process.argv.includes('--browser-fixture');
 const updatesDir = join(temporary, 'updates');
 const articleUpdatesDir = join(temporary, 'article-updates');
 await mkdir(articleUpdatesDir);
-// Служебные треки заменяют публичные: их журнал наследует только записи статей.
+// Служебные треки заменяют публичные: их журнал наследует только записи статей не новее
+// служебных, чтобы новые публикации не вытесняли фикстуры из последних обновлений.
+const fixtureUpdatesDir = join(root, 'tests/fixtures/tracks/updates');
+let fixtureLatest = '';
+for (const file of await readdir(fixtureUpdatesDir)) {
+  if (!file.endsWith('.json')) continue;
+  const { date } = JSON.parse(await readFile(join(fixtureUpdatesDir, file), 'utf8'));
+  if (date > fixtureLatest) fixtureLatest = date;
+}
 for (const file of await readdir(join(root, 'src/content/updates'))) {
   if (!file.endsWith('.json')) continue;
   const source = join(root, 'src/content/updates', file);
   const update = JSON.parse(await readFile(source, 'utf8'));
-  if (update.article) await cp(source, join(articleUpdatesDir, file));
+  if (update.article && update.date <= fixtureLatest)
+    await cp(source, join(articleUpdatesDir, file));
 }
 await cp(articleUpdatesDir, updatesDir, { recursive: true });
-await cp(join(root, 'tests/fixtures/tracks/updates'), updatesDir, { recursive: true });
+await cp(fixtureUpdatesDir, updatesDir, { recursive: true });
 
 function build(name, base, fixture, draft = false, trackUpdates = true) {
   const env = { ...process.env };
