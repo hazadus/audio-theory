@@ -1,7 +1,17 @@
 // Геометрия статичных превью карточек визуализаций: область 280 × 150, без осей и подписей.
 export type PreviewKind =
-  'tone' | 'phase' | 'sampling' | 'compressor' | 'lfo' | 'bytes' | 'pcm' | 'prediction' | 'mixing';
+  | 'tone'
+  | 'phase'
+  | 'sampling'
+  | 'compressor'
+  | 'lfo'
+  | 'bytes'
+  | 'pcm'
+  | 'prediction'
+  | 'mixing'
+  | 'noise';
 export const previewKinds: readonly PreviewKind[] = [
+  'noise',
   'tone',
   'phase',
   'sampling',
@@ -189,6 +199,24 @@ function bytesPreview(): Preview {
 }
 
 const builders: Record<PreviewKind, () => Preview> = {
+  noise: () => ({
+    paths: [
+      { d: 'M18 40H262', color: 'signal', width: 2 },
+      { d: 'M18 18L262 80', color: 'result', width: 2, dash: '6 4' },
+      {
+        d: 'M30 136V132M66 136V128M102 136V120M138 136V104M174 136V88',
+        color: 'signal',
+        width: 12,
+      },
+      {
+        d: 'M46 136V114M82 136V113M118 136V116M154 136V113M190 136V115',
+        color: 'result',
+        width: 8,
+        dash: '3 2',
+      },
+    ],
+    dots: [],
+  }),
   tone: tonePreview,
   phase: phasePreview,
   sampling: samplingPreview,

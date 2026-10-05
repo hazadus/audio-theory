@@ -1,0 +1,31 @@
+{
+  "id": "noise-published",
+  "date": "2026-10-05",
+  "order": 5,
+  "type": "new",
+  "article": "noise",
+  "summary": "Белый и розовый спектры, PRNG и seed, генераторы C++/JUCE с сохраняемым состоянием, уровни и отличие от TPDF-дизеринга. Эксперимент сравнивает звучание, PSD и мощность октав при одинаковом RMS.",
+  "items": [
+    {
+      "text": "Спектр и звучание белого и розового шума",
+      "target": {
+        "article": "noise",
+        "anchor": "noise-demo"
+      }
+    },
+    {
+      "text": "Генератор Voss–McCartney на C++/JUCE",
+      "target": {
+        "article": "noise",
+        "anchor": "pink-generator"
+      }
+    },
+    {
+      "text": "Шумовой источник в аудиоблоке JUCE",
+      "target": {
+        "article": "noise",
+        "anchor": "juce-source"
+      }
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "id": "audio-math-noise",
+  "date": "2026-10-05",
+  "order": 6,
+  "type": "updated",
+  "article": "audio-math",
+  "items": [
+    {
+      "text": "Вероятность, распределение и ожидаемое среднее",
+      "target": {
+        "article": "audio-math",
+        "anchor": "probability-and-expectation"
+      }
+    },
+    {
+      "text": "Обратная пропорциональность",
+      "target": {
+        "article": "audio-math",
+        "anchor": "inverse-proportionality"
+      }
+    },
+    {
+      "text": "Плотность и мощность частотной полосы",
+      "target": {
+        "article": "audio-math",
+        "anchor": "density-and-bands"
+      }
+    }
+  ]
+}

@@ -20,6 +20,7 @@ const slugs = [
   'integer-pcm',
   'audio-compression',
   'mixing',
+  'noise',
 ];
 
 const entry = {

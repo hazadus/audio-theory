@@ -24,6 +24,14 @@ describe('resolveArticleDates', () => {
     });
   });
 
+  it('подготовленный журнал не превращает файл без истории Git в опубликованную статью', () => {
+    expect(resolveArticleDates(null, [addition, older, published], { isDraft: true })).toEqual({
+      published: null,
+      addition: null,
+      sortDate: null,
+    });
+  });
+
   it('последнее дополнение даёт ссылку на запись архива и дату сортировки', () => {
     const dates = resolveArticleDates(null, [addition, older, published]);
     expect(dates.addition).toEqual({ date: '2026-09-10', path: '/updates/2026/#update-a-add' });

@@ -1,0 +1,16 @@
+{
+  "id": "track-programmer-noise",
+  "date": "2026-10-05",
+  "order": 8,
+  "type": "updated",
+  "track": "programmer",
+  "items": [
+    {
+      "text": "Шумовой источник после LFO и тремоло",
+      "target": {
+        "track": "programmer",
+        "anchor": "stage-processing"
+      }
+    }
+  ]
+}

@@ -16,15 +16,19 @@ export async function loadArticleList(): Promise<HomeArticle[]> {
   assertUniqueSlugs(entries);
   const allowDraft = import.meta.env.DEV || process.env[allowDraftEnv] === '1';
   const updates = await loadUpdates();
-  return entries.map(({ data, body, filePath }) => ({
-    slug: data.slug,
-    title: data.title,
-    question: data.question,
-    topic: data.topic,
-    updated: resolveArticleDates(
-      getPublishedDate(filePath!, { allowDraft }),
-      updates.filter(({ article }) => article === data.slug),
-    ).sortDate,
-    readingMinutes: resolveReadingMinutes(body ?? '', data.readingMinutes),
-  }));
+  return entries.map(({ data, body, filePath }) => {
+    const gitPublished = getPublishedDate(filePath!, { allowDraft });
+    return {
+      slug: data.slug,
+      title: data.title,
+      question: data.question,
+      topic: data.topic,
+      updated: resolveArticleDates(
+        gitPublished,
+        updates.filter(({ article }) => article === data.slug),
+        { isDraft: gitPublished === null },
+      ).sortDate,
+      readingMinutes: resolveReadingMinutes(body ?? '', data.readingMinutes),
+    };
+  });
 }

@@ -1,0 +1,388 @@
+---
+// Шумовой эксперимент с начальным SVG без JavaScript и конечным фрагментом для прослушивания.
+import { demoCaptions } from '@/lib/demo-captions';
+import { createNoiseExperiment, defaultNoiseSeed, noiseOctaves } from '@/lib/noise';
+import { noiseCaption, noiseDb, noiseNumber, noiseStatus, noiseSvg } from '@/lib/noise-view';
+interface Props {
+  figure: number;
+  id?: string;
+}
+const { figure, id = 'noise-demo' } = Astro.props;
+const experiment = createNoiseExperiment();
+---
+
+<figure
+  id={id}
+  class="noise-demo"
+  data-noise-demo
+  data-state="static"
+  aria-labelledby={`${id}-name`}
+>
+  <div class="head">
+    <span>Визуализация {figure}</span>
+    <b id={`${id}-name`}>{demoCaptions.NoiseDemo.name}</b>
+  </div>
+  <div
+    class="chart"
+    data-chart
+    role="region"
+    aria-label="Графики шума; без JavaScript на узком экране можно прокрутить"
+    tabindex="0"
+    set:html={noiseSvg(experiment, id)}
+  />
+  <ul class="legend" aria-label="Легенда">
+    <li>
+      <i class="white"></i>Белый: сплошная линия
+    </li>
+    <li>
+      <i class="pink"></i>Розовый: пунктир и штриховка
+    </li>
+  </ul>
+  <p class="status" data-status>
+    {noiseStatus(experiment)}
+  </p>
+  <p class="explanation">
+    PSD усреднена по сегментам с окном Hann: 8 192 отсчёта, перекрытие 50 %. Для линии усредняется
+    мощность на герц в полосах по 1/12 октавы; столбики показывают мощность целой октавы. Среднее
+    фрагмента не удаляется.
+  </p>
+  <details class="bands">
+    <summary>Мощность октав числами</summary>
+    <div role="region" aria-label="Таблица мощности октав" tabindex="0">
+      <table>
+        <caption>Октавные полосы: дБ относительно среднего квадрата всего фрагмента</caption>
+        <thead>
+          <tr>
+            <th scope="col">Полоса, Гц</th>
+            <th scope="col">Белый, дБ</th>
+            <th scope="col">Розовый, дБ</th>
+          </tr>
+        </thead>
+        <tbody data-bands>
+          {noiseOctaves.map((low, i) => (
+            <tr>
+              <th scope="row">
+                {low}–{low * 2}
+              </th>
+              <td>
+                {noiseNumber(
+                  noiseDb(experiment.white.octaves[i] / experiment.white.metrics.rms ** 2),
+                )}
+              </td>
+              <td>
+                {noiseNumber(
+                  noiseDb(experiment.pink.octaves[i] / experiment.pink.metrics.rms ** 2),
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </details>
+  <fieldset disabled data-controls data-pagefind-ignore>
+    <legend class="sr-only">Параметры шумового фрагмента</legend>
+    <label for={`${id}-seed`}>Seed — целое число от 0 до 4294967295</label>
+    <div class="seed-row">
+      <input
+        id={`${id}-seed`}
+        data-seed
+        type="text"
+        inputmode="numeric"
+        maxlength="10"
+        value={defaultNoiseSeed}
+        aria-describedby={`${id}-seed-error`}
+      />
+      <button type="button" data-apply>
+        Применить seed
+      </button>
+      <button type="button" data-reset>
+        Сбросить
+      </button>
+    </div>
+    <p class="seed-error" id={`${id}-seed-error`} data-seed-error role="status"></p>
+    <div class="actions" role="group" aria-label="Шум для прослушивания">
+      <button type="button" data-kind="white" aria-pressed="true">
+        Белый шум
+      </button>
+      <button type="button" data-kind="pink" aria-pressed="false">
+        Розовый шум
+      </button>
+    </div>
+  </fieldset>
+  <p class="explanation">
+    Прослушивание: 4 секунды выбранного шума. Позиция и громкость меняют только звук плеера, графики
+    выше от них не зависят. Равный RMS не означает равную воспринимаемую громкость. Начните с
+    умеренной громкости устройства.
+  </p>
+  <fieldset class="audio" disabled data-audio-controls data-pagefind-ignore>
+    <legend class="sr-only">Плеер шумового фрагмента</legend>
+    <div class="actions">
+      <button type="button" data-play>
+        Воспроизвести
+      </button>
+      <button type="button" data-stop>
+        Остановить
+      </button>
+      <output data-time>0:00,0 / 0:04,0</output>
+    </div>
+    <label for={`${id}-position`}>Позиция, с</label>
+    <input id={`${id}-position`} data-position type="range" min="0" max="4" step="0.1" value="0" />
+    <div class="volume-row">
+      <label for={`${id}-volume`}>Громкость</label>
+      <output for={`${id}-volume`} data-volume-output>
+        30 %
+      </output>
+      <input id={`${id}-volume`} data-volume type="range" min="0" max="100" step="5" value="30" />
+      <button type="button" data-mute aria-pressed="false">
+        Выключить звук
+      </button>
+    </div>
+    <p data-audio-status role="status">
+      Звук доступен при включённом JavaScript.
+    </p>
+  </fieldset>
+  <p class="note" data-note>
+    Показано начальное состояние. Управление и прослушивание доступны при включённом JavaScript.
+  </p>
+  <p class="sr-only" data-announce aria-live="polite"></p>
+  <figcaption>
+    <b>Рис. {figure}.</b> <span data-caption>{noiseCaption(defaultNoiseSeed)}</span>
+  </figcaption>
+</figure>
+<script>
+  import { initNoiseDemos } from '@/lib/noise-demo-controller';
+  initNoiseDemos();
+</script>
+<style is:global>
+  .noise-demo {
+    margin: var(--space-6) 0;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    overflow: hidden;
+    font-family: var(--font-ui);
+    scroll-margin-top: 88px;
+  }
+  .noise-demo .head {
+    display: grid;
+    gap: 3px;
+    padding: 14px 16px;
+  }
+  .noise-demo .head span {
+    font-size: 12px;
+    color: var(--color-text-muted);
+  }
+  .noise-demo .head b {
+    font-size: 17px;
+  }
+  .noise-demo .chart {
+    background: var(--chart-bg);
+    overflow-x: auto;
+  }
+  .noise-demo .chart svg {
+    display: block;
+    width: auto;
+    max-width: none;
+    font-family: var(--font-ui);
+    font-size: 12px;
+  }
+  .noise-demo svg path {
+    fill: none;
+    vector-effect: non-scaling-stroke;
+  }
+  .noise-demo svg .label {
+    fill: var(--chart-label);
+    font-weight: 600;
+    font-size: 13px;
+  }
+  .noise-demo svg .tick {
+    fill: var(--chart-label);
+  }
+  .noise-demo svg .grid {
+    stroke: var(--chart-grid);
+    stroke-width: 1;
+  }
+  .noise-demo svg .white {
+    stroke: var(--chart-signal);
+    stroke-width: 1.5;
+  }
+  .noise-demo svg .pink {
+    stroke: var(--chart-result);
+    stroke-width: 2;
+    stroke-dasharray: 6 4;
+  }
+  .noise-demo svg .bar.white {
+    fill: var(--chart-signal);
+    stroke: none;
+  }
+  .noise-demo svg .bar.pink {
+    stroke-dasharray: none;
+  }
+  .noise-demo svg .hatch {
+    stroke: var(--chart-result);
+    stroke-width: 1;
+  }
+  .noise-demo .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    padding: 12px 16px;
+    margin: 0;
+    list-style: none;
+    font-size: 14px;
+  }
+  .noise-demo .legend li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .noise-demo .legend i {
+    width: 18px;
+    height: 0;
+    border-top: 2px solid var(--chart-signal);
+  }
+  .noise-demo .legend .pink {
+    border-color: var(--chart-result);
+    border-top-style: dashed;
+  }
+  .noise-demo :is(.status, .explanation, .note) {
+    margin: 0;
+    padding: 0 16px 12px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .noise-demo .explanation {
+    padding-top: 12px;
+  }
+  .noise-demo .bands {
+    margin: 0 16px 16px;
+    font-size: 14px;
+  }
+  .noise-demo summary {
+    cursor: pointer;
+    padding-block: 8px;
+  }
+  .noise-demo .bands div {
+    overflow-x: auto;
+  }
+  .noise-demo table {
+    width: 100%;
+    min-width: 330px;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .noise-demo table caption {
+    text-align: left;
+    padding: 8px 0;
+    color: var(--color-text-muted);
+  }
+  .noise-demo :is(th, td) {
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--color-border);
+    text-align: right;
+  }
+  .noise-demo tr th:first-child {
+    text-align: left;
+  }
+  .noise-demo fieldset {
+    display: grid;
+    gap: 10px;
+    min-width: 0;
+    margin: 0;
+    border: 0;
+    border-top: var(--border-width) solid var(--color-border);
+    padding: 16px;
+    font-size: 14px;
+  }
+  .noise-demo .seed-row,
+  .noise-demo .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+  .noise-demo [data-seed] {
+    min-width: 0;
+    width: 130px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    padding: 8px;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font: 16px var(--font-mono);
+  }
+  .noise-demo button {
+    min-height: 44px;
+    padding: 6px 12px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font: inherit;
+    cursor: pointer;
+  }
+  .noise-demo button[aria-pressed='true'] {
+    border-color: var(--color-accent);
+    background: var(--color-accent-soft);
+    font-weight: 600;
+  }
+  .noise-demo :is(button, input, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+  .noise-demo fieldset:disabled {
+    opacity: 0.5;
+  }
+  .noise-demo .seed-error {
+    margin: 0;
+    color: var(--color-text);
+  }
+  .noise-demo .seed-error:empty {
+    display: none;
+  }
+  .noise-demo input[type='range'] {
+    width: 100%;
+    margin: 0;
+    min-height: 32px;
+    accent-color: var(--color-accent);
+    touch-action: pan-y;
+  }
+  .noise-demo .volume-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+  }
+  .noise-demo .volume-row input {
+    grid-column: 1 / -1;
+  }
+  .noise-demo .volume-row button {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+  .noise-demo output {
+    font-variant-numeric: tabular-nums;
+  }
+  .noise-demo .audio p {
+    margin: 0;
+    line-height: 1.5;
+  }
+  .noise-demo .note {
+    color: var(--color-text-muted);
+    padding-top: 12px;
+  }
+  .noise-demo figcaption {
+    padding: 12px 16px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--color-text-muted);
+  }
+  .noise-demo .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+</style>

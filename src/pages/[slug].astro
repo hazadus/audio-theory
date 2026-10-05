@@ -36,11 +36,13 @@ assertUniqueAnchors(headings, article.id);
 const toc = getToc(headings);
 const readingMinutes = resolveReadingMinutes(article.body ?? '', article.data.readingMinutes);
 // Dev-сервер и сборка с ALLOW_DRAFT_ARTICLES=1 показывают «Черновик» для файла без коммита; иначе это ошибка.
+const gitPublished = getPublishedDate(article.filePath!, {
+  allowDraft: import.meta.env.DEV || process.env[allowDraftEnv] === '1',
+});
 const dates = resolveArticleDates(
-  getPublishedDate(article.filePath!, {
-    allowDraft: import.meta.env.DEV || process.env[allowDraftEnv] === '1',
-  }),
+  gitPublished,
   (await loadUpdates()).filter(({ article: slug }) => slug === article.data.slug),
+  { isDraft: gitPublished === null },
 );
 const tracks = await loadTrackData();
 const articleTracks = getArticleTracks(tracks, article.data.slug);

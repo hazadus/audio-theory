@@ -1668,5 +1668,185 @@
       "article": "mixing",
       "anchor": "headroom"
     }
+  },
+  {
+    "id": "noise-signal",
+    "ru": "шумовой сигнал",
+    "en": "noise signal",
+    "definition": "Сигнал со случайными или псевдослучайными изменениями; обычный фрагмент не имеет одной повторяющейся периодической формы.",
+    "target": {
+      "article": "noise",
+      "anchor": "randomness"
+    }
+  },
+  {
+    "id": "prng",
+    "ru": "генератор псевдослучайных чисел",
+    "en": "pseudorandom number generator, PRNG",
+    "definition": "Детерминированный алгоритм, который по текущему состоянию выдаёт следующее число и обновляет состояние. Одинаковое начало и порядок вызовов воспроизводят последовательность.",
+    "target": {
+      "article": "noise",
+      "anchor": "randomness"
+    }
+  },
+  {
+    "id": "random-seed",
+    "ru": "начальное состояние генератора",
+    "en": "seed",
+    "definition": "Значение, задающее начало псевдослучайной последовательности. Воспроизводимость требует той же реализации и того же порядка вызовов.",
+    "target": {
+      "article": "noise",
+      "anchor": "seed"
+    }
+  },
+  {
+    "id": "uniform-distribution",
+    "ru": "равномерное распределение",
+    "en": "uniform distribution",
+    "definition": "Распределение, в котором интервалы значений одинаковой ширины имеют одинаковую вероятность. Не определяет временные связи между отсчётами.",
+    "target": {
+      "article": "noise",
+      "anchor": "white-generator"
+    }
+  },
+  {
+    "id": "white-noise",
+    "ru": "белый шум",
+    "en": "white noise",
+    "definition": "Шум с постоянной спектральной плотностью мощности в рассматриваемой полосе. Полосы одинаковой ширины в герцах содержат одинаковую ожидаемую мощность.",
+    "target": {
+      "article": "noise",
+      "anchor": "white-spectrum"
+    }
+  },
+  {
+    "id": "power-spectral-density",
+    "ru": "спектральная плотность мощности",
+    "en": "power spectral density, PSD",
+    "definition": "Распределение мощности сигнала на единицу частоты. Для безразмерных отсчётов измеряется в 1/Гц; мощность полосы соответствует площади под графиком PSD.",
+    "target": {
+      "article": "noise",
+      "anchor": "white-spectrum"
+    }
+  },
+  {
+    "id": "colored-noise",
+    "ru": "цветной шум",
+    "en": "colored noise",
+    "definition": "Шум, спектральная плотность мощности которого зависит от частоты. Цвет описывает спектральный баланс, а не распределение амплитуд отдельных отсчётов.",
+    "target": {
+      "article": "noise",
+      "anchor": "pink-spectrum"
+    }
+  },
+  {
+    "id": "pink-noise",
+    "ru": "розовый шум",
+    "en": "pink noise",
+    "definition": "Шум, PSD которого приблизительно обратно пропорциональна частоте в рабочей полосе: спад около 3 дБ на октаву и примерно одинаковая мощность октав.",
+    "target": {
+      "article": "noise",
+      "anchor": "pink-spectrum"
+    }
+  },
+  {
+    "id": "spectral-slope",
+    "ru": "спектральный наклон",
+    "en": "spectral slope",
+    "definition": "Изменение выбранной спектральной величины при изменении частоты; часто выражается в децибелах на октаву. Для PSD и мощности целой полосы наклоны могут различаться.",
+    "target": {
+      "article": "noise",
+      "anchor": "pink-spectrum"
+    }
+  },
+  {
+    "id": "voss-mccartney",
+    "ru": "алгоритм Voss–McCartney",
+    "en": "Voss–McCartney algorithm",
+    "definition": "Приближённая генерация розового шума суммированием случайных значений с разными интервалами обновления; состояние рядов сохраняется между отсчётами.",
+    "target": {
+      "article": "noise",
+      "anchor": "pink-generator"
+    }
+  },
+  {
+    "id": "sample-mean",
+    "ru": "среднее значение фрагмента",
+    "en": "sample mean",
+    "definition": "Сумма значений отсчётов конечного фрагмента, делённая на их число. Может отличаться от математического ожидания порождающего процесса.",
+    "target": {
+      "article": "noise",
+      "anchor": "levels"
+    }
+  },
+  {
+    "id": "dc-offset",
+    "ru": "постоянная составляющая",
+    "en": "DC offset",
+    "definition": "Постоянное смещение сигнала относительно нуля. Ненулевое среднее короткого фрагмента шума само по себе не доказывает такое смещение генератора.",
+    "target": {
+      "article": "noise",
+      "anchor": "levels"
+    }
+  },
+  {
+    "id": "tpdf-dither",
+    "ru": "TPDF-дизеринг",
+    "en": "triangular probability density function dither, TPDF dither",
+    "definition": "Шум с треугольным распределением амплитуд, добавляемый перед квантованием. В обычной схеме его размах равен двум шагам квантования.",
+    "target": {
+      "article": "noise",
+      "anchor": "dither"
+    }
+  },
+  {
+    "id": "expected-value",
+    "ru": "математическое ожидание",
+    "en": "expected value",
+    "definition": "Среднее значение, заданное вероятностной моделью. Для конечного набора возможных значений вычисляется как их сумма с весами-вероятностями.",
+    "target": {
+      "article": "audio-math",
+      "anchor": "probability-and-expectation"
+    }
+  },
+  {
+    "id": "probability",
+    "ru": "вероятность",
+    "en": "probability",
+    "definition": "Число от 0 до 1, описывающее возможность события в заданной модели. Не обещает точную долю события в короткой серии опытов.",
+    "target": {
+      "article": "audio-math",
+      "anchor": "probability-and-expectation"
+    }
+  },
+  {
+    "id": "histogram",
+    "ru": "гистограмма",
+    "en": "histogram",
+    "definition": "График числа наблюдений в интервалах значений. Показывает распределение значений, но не сохраняет их порядок во времени.",
+    "target": {
+      "article": "audio-math",
+      "anchor": "probability-and-expectation"
+    }
+  },
+  {
+    "id": "statistical-independence",
+    "ru": "статистическая независимость",
+    "en": "statistical independence",
+    "definition": "Знание значения одной случайной величины не меняет вероятностей значений другой. Это более сильное условие, чем отсутствие линейной корреляции.",
+    "target": {
+      "article": "audio-math",
+      "anchor": "probability-and-expectation"
+    }
+  },
+  {
+    "id": "uncorrelatedness",
+    "ru": "некоррелированность",
+    "en": "uncorrelatedness",
+    "definition": "Отсутствие линейной статистической связи между случайными величинами. Само по себе не исключает другие виды зависимости.",
+    "target": {
+      "article": "audio-math",
+      "anchor": "probability-and-expectation"
+    }
   }
 ]

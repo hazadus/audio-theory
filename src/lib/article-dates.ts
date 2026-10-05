@@ -8,7 +8,7 @@ interface DatedEntry {
 }
 
 export interface ArticleDates {
-  /** `YYYY-MM-DD`; `null` — «Черновик» без записи «Новое» и без истории Git. */
+  /** `YYYY-MM-DD`; `null` — «Черновик» без истории Git, в том числе с подготовленной записью «Новое». */
   published: string | null;
   /** Последняя запись «Дополнено» статьи; `null`, если дополнений нет. */
   addition: { date: string; path: string } | null;
@@ -18,12 +18,16 @@ export interface ArticleDates {
 
 /**
  * Записи передаются в порядке журнала (свежие первыми). Публикация — запись «Новое», а до её
- * появления — первый коммит файла (`gitPublished`, ISO 8601). Git-даты правок не используются.
+ * появления — первый коммит файла (`gitPublished`, ISO 8601). Для незакоммиченной статьи
+ * вызывающая сторона передаёт `isDraft`: подготовленный журнал не меняет её статус.
+ * Треки тоже используют эту функцию, но их публикация определяется только журналом.
  */
 export function resolveArticleDates(
   gitPublished: string | null,
   entries: readonly DatedEntry[],
+  { isDraft = false }: { isDraft?: boolean } = {},
 ): ArticleDates {
+  if (isDraft) return { published: null, addition: null, sortDate: null };
   const published =
     entries.find(({ type }) => type === 'new')?.date ?? gitPublished?.slice(0, 10) ?? null;
   const last = entries.find(({ type }) => type === 'updated');

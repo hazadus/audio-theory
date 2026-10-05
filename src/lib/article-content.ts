@@ -24,6 +24,12 @@ interface BlockRule {
 
 /** Учебные блоки с нумерацией: рисунки и визуализации — одна последовательность, таблицы и формулы — свои. */
 const blockRules: Record<string, BlockRule> = {
+  NoiseDemo: {
+    sequence: 'figure',
+    numberAttribute: 'figure',
+    idRequired: false,
+    numberRequired: true,
+  },
   Figure: { sequence: 'figure', numberAttribute: 'number', idRequired: true, numberRequired: true },
   SamplingDemo: {
     sequence: 'figure',

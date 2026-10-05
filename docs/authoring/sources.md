@@ -269,3 +269,21 @@
 - [JUCE 9.0.3. AudioSampleBuffer](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_basics/buffers/juce_AudioSampleBuffer.h) — локальные исходники `clear`, `addFrom`, `applyGain`, условия размеров и отсутствие ограничения до ±1.
 
 - [Julius O. Smith III. Clipping Nonlinearity](https://www.dsprelated.com/freebooks/pasp/Clipping_Nonlinearity.html) — прочитаны определение жёсткого ограничения и объяснение необратимости.
+
+## Белый и розовый шум
+
+Прочитаны при подготовке `/noise/`:
+
+- [Steven W. Smith. Глава 2.2: Mean and Standard Deviation](https://www.dspguide.com/ch2/2.htm), [2.3: Signal vs. Underlying Process](https://www.dspguide.com/ch2/3.htm), [2.4: Histogram, Pmf and Pdf](https://www.dspguide.com/ch2/4.htm) и [2.6: Digital Noise Generation](https://www.dspguide.com/ch2/6.htm) — среднее и DC, измеренный фрагмент и модель, распределения, равномерный шум, PRNG и seed. В статистическом разделе различать деление на N−1 при оценке дисперсии и на N при измерении среднего квадрата фрагмента.
+- [JUCE 9.0.3. juce_Random.cpp](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_core/maths/juce_Random.cpp) и [Random](https://docs.juce.com/master/classjuce_1_1Random.html) — локальный исходник точного релиза: 48-битный LCG, seed, `nextFloat`, ограничение верхней границы и `getSeed` как текущее состояние.
+- [Robin Whittle. DSP Generation of Pink Noise](https://www.firstpr.com.au/dsp/pink-noise/) — характеристики белого и розового шума, сообщения James McCartney 1999 года, выбор ряда по нулям справа, дополнительный белый компонент, ограничения полосы и анализ Allan Herriman. Учебный код собственный, исторические листинги не копируются.
+- [Рабочий текст стандарта C++. Counting functions](https://eel.is/c++draft/bit.count) — `std::countr_zero` и случай нулевого аргумента.
+- [SciPy. Welch](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.welch.html) — перекрывающиеся сегменты, Hann, усреднение периодограмм, единицы PSD, одностороннее нормирование.
+- [Julius O. Smith III. Spectral Audio Signal Processing, Welch's Method](https://www.dsprelated.com/freebooks/sasp/Welch_s_Method.html) — прочитаны разбиение на блоки, усреднение периодограмм и компромисс между разрешением и разбросом оценки.
+- [Ross Bencina. Real-time audio programming 101: time waits for nothing](http://www.rossbencina.com/code/real-time-audio-programming-101-time-waits-for-nothing) — прочитаны причины задержек аудиопотока: мьютексы, выделение памяти в `push_back`, обращения к диску и другие блокирующие операции.
+- [Robert A. Wannamaker, Stanley P. Lipshitz, John Vanderkooy, J. Nelson Wright. A Theory of Non-Subtractive Dither, IEEE Transactions on Signal Processing 48(2), 2000, с. 499–516](https://www.researchgate.net/publication/3317523_A_theory_of_nonsubtractive_dither) — авторская копия, Practical Dither Signals: сумма двух равномерных распределений, TPDF с размахом два LSB, независимость первого и второго моментов полной ошибки и ограничения полной статистической независимости. Ссылка проверена по [списку публикаций автора](https://robertwannamaker.com/writings.html); прежний PDF на его сайте недоступен.
+
+- [Barbara Illowsky, Susan Dean. OpenStax, Introductory Statistics 2e, §4.2: Mean or Expected Value and Standard Deviation](https://openstax.org/books/introductory-statistics-2e/pages/4-2-mean-or-expected-value-and-standard-deviation) — прочитано объяснение вероятности на длинной серии опытов, формула математического ожидания дискретного распределения и примеры.
+
+- [Julius O. Smith III. Spectral Audio Signal Processing, White Noise](https://www.dsprelated.com/freebooks/sasp/White_Noise.html) — прочитаны определение белого шума через некоррелированность, отличие от распределения амплитуд и усреднение спектральных оценок.
+- [OpenStax. Introductory Statistics 2e, §3.2: Independent and Mutually Exclusive Events](https://openstax.org/books/introductory-statistics-2e/pages/3-2-independent-and-mutually-exclusive-events) — прочитаны определение независимости и примеры повторных испытаний.

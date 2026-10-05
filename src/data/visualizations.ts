@@ -89,4 +89,12 @@ export const visualizations: readonly Visualization[] = [
     sound: false,
     preview: 'mixing',
   },
+  {
+    id: 'noise-demo',
+    slug: 'noise',
+    name: 'Белый и розовый шум: спектр и звучание',
+    what: 'Seed, выбор шума для прослушивания, PSD и мощность октав при одинаковом RMS.',
+    sound: true,
+    preview: 'noise',
+  },
 ];

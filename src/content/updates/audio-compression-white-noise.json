@@ -1,0 +1,16 @@
+{
+  "id": "audio-compression-white-noise",
+  "date": "2026-10-05",
+  "order": 7,
+  "type": "updated",
+  "article": "audio-compression",
+  "items": [
+    {
+      "text": "Уточнение примера несжимаемого шума: белый и розовый",
+      "target": {
+        "article": "audio-compression",
+        "anchor": "self-check"
+      }
+    }
+  ]
+}
