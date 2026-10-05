@@ -1,0 +1,13 @@
+{
+  "id": "track-musician-limiter",
+  "date": "2026-10-05",
+  "order": 16,
+  "type": "updated",
+  "track": "musician",
+  "items": [
+    {
+      "text": "Этап «Запись и динамика»: статья о лимитере по желанию",
+      "target": { "track": "musician", "anchor": "stage-recording" }
+    }
+  ]
+}

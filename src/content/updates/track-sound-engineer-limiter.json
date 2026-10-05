@@ -1,0 +1,13 @@
+{
+  "id": "track-sound-engineer-limiter",
+  "date": "2026-10-05",
+  "order": 15,
+  "type": "updated",
+  "track": "sound-engineer",
+  "items": [
+    {
+      "text": "Этап «Динамика и сравнение обработки»: статья о лимитере",
+      "target": { "track": "sound-engineer", "anchor": "stage-processing" }
+    }
+  ]
+}

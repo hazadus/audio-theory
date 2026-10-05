@@ -22,6 +22,7 @@ const slugs = [
   'mixing',
   'noise',
   'synth-oscillators',
+  'limiter',
 ];
 
 const entry = {

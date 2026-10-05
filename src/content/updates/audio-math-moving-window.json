@@ -1,0 +1,13 @@
+{
+  "id": "audio-math-moving-window",
+  "date": "2026-10-05",
+  "order": 14,
+  "type": "updated",
+  "article": "audio-math",
+  "items": [
+    {
+      "text": "Скользящее окно: минимум и среднее",
+      "target": { "article": "audio-math", "anchor": "moving-window" }
+    }
+  ]
+}

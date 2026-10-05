@@ -216,9 +216,7 @@ $$
 
 ## Лимитер {#limiter}
 
-При бесконечной степени сжатия выход выше порога равен порогу; такой компрессор — <Term id="limiter" define /> ([MATLAB, limiter](https://www.mathworks.com/help/audio/ref/limiter-system-object.html)). Его ставят, чтобы сигнал гарантированно не превышал заданный уровень, например перед записью в файл, где выше 0 dBFS начинается <Term id="clipping" firstMention>клиппинг</Term>.
-
-«Гарантированно» верно только для мгновенной атаки. Со сглаживанием по формуле (2) самое начало резкого удара успевает пройти выше порога. Поэтому лимитеры часто используют <Term id="lookahead" firstMention define>предварительный анализ</Term>: сигнал задерживают на несколько миллисекунд, а уровень измеряют без задержки, и усиление снижается заранее. Например, `DynamicsCompressorNode` в Web Audio задерживает сигнал на 6 мс ([W3C, Web Audio API](https://webaudio.github.io/web-audio-api/#DynamicsCompressorNode)).
+При бесконечной степени сжатия выход выше порога равен порогу; такой компрессор — <Term id="limiter" define /> ([MATLAB, limiter](https://www.mathworks.com/help/audio/ref/limiter-system-object.html)). Его ставят, чтобы сигнал не превышал заданный уровень, например перед записью в файл, где выше 0 dBFS начинается <Term id="clipping" firstMention>клиппинг</Term>. Почему для этого мало поставить сжатие ∞:1, как лимитер снижает усиление заранее и почему пики бывают между отсчётами, разобрано в [статье о лимитере](/limiter/).
 
 ## Экспандер и гейт {#expander-gate}
 
@@ -336,7 +334,7 @@ $$
 - [MathWorks. Audio Toolbox: limiter](https://www.mathworks.com/help/audio/ref/limiter-system-object.html) — выход выше порога равен порогу.
 - [MathWorks. Audio Toolbox: expander](https://www.mathworks.com/help/audio/ref/expander-system-object.html) — характеристика экспандера ниже порога.
 - [MathWorks. Audio Toolbox: noiseGate](https://www.mathworks.com/help/audio/ref/noisegate-system-object.html) — нулевое усиление ниже порога, время удержания.
-- [W3C. Web Audio API: DynamicsCompressorNode](https://webaudio.github.io/web-audio-api/#DynamicsCompressorNode) — параметры порога, колена, степени сжатия, атаки и восстановления, задержка 6 мс для взгляда вперёд.
+- [W3C. Web Audio API: DynamicsCompressorNode](https://webaudio.github.io/web-audio-api/#DynamicsCompressorNode) — параметры порога, колена, степени сжатия, атаки и восстановления.
 - [Wikipedia. Компрессор аудиосигнала](https://ru.wikipedia.org/wiki/Компрессор_аудиосигнала) — русские названия параметров, пример сжатия 2:1.
 - [Wikipedia. Dynamic range compression, раздел Side-chaining](https://en.wikipedia.org/wiki/Dynamic_range_compression#Side-chaining) — приглушение музыки голосом ведущего, деэссер и диапазон сибилянтов 6–9 кГц.
 - Roey Izhaki. Mixing Audio: Concepts, Practices and Tools. 2nd ed. Focal Press, 2012. ISBN 978-0-240-52222-7 — гл. 16, с. 288–289: внешний вход и фильтр боковой цепи; с. 306–308: почему низкие частоты сильнее запускают сжатие, фильтр верхних частот в боковой цепи; с. 316: деэссер на компрессоре; с. 317: сжатие по бочке и отличие компрессора от дакера; гл. 20, с. 371–372: дакер, приглушение музыки голосом.
