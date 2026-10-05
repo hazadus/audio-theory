@@ -63,99 +63,89 @@ async function checkLayout(page: Page, onMargin: boolean) {
 }
 
 test.describe('Заметки «Подробнее»', { tag: '@margin-notes' }, () => {
-  test(
-    'сетка, соседние заметки и широкий блок в обеих темах',
-    { tag: ['@ci', '@ci-cross-browser'] },
-    async ({ page }) => {
-      await page.goto(url);
-      await page.evaluate(() => document.fonts.ready);
-      for (const theme of ['light', 'dark']) {
-        await page.evaluate((value) => {
-          document.documentElement.dataset.theme = value;
-        }, theme);
-        for (const width of [320, 390, 599, 600, 1023, 1024, 1279, 1280, 1440]) {
-          await page.setViewportSize({ width, height: 900 });
-          await checkLayout(page, width >= 1280);
-          const { notes } = await geometry(page);
-          for (const note of notes) {
-            expect(note.background === 'rgba(0, 0, 0, 0)').toBe(width >= 1280);
-          }
+  test('сетка, соседние заметки и широкий блок в обеих темах', async ({ page }) => {
+    await page.goto(url);
+    await page.evaluate(() => document.fonts.ready);
+    for (const theme of ['light', 'dark']) {
+      await page.evaluate((value) => {
+        document.documentElement.dataset.theme = value;
+      }, theme);
+      for (const width of [320, 390, 599, 600, 1023, 1024, 1279, 1280, 1440]) {
+        await page.setViewportSize({ width, height: 900 });
+        await checkLayout(page, width >= 1280);
+        const { notes } = await geometry(page);
+        for (const note of notes) {
+          expect(note.background === 'rgba(0, 0, 0, 0)').toBe(width >= 1280);
         }
       }
-    },
-  );
+    }
+  });
 
-  test(
-    'печать и увеличенный текст сохраняют порядок и свободное место',
-    { tag: '@ci' },
-    async ({ page }) => {
+  test('печать и увеличенный текст сохраняют порядок и свободное место', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(url);
+    for (const theme of ['light', 'dark']) {
+      await page.evaluate((value) => {
+        document.documentElement.dataset.theme = value;
+      }, theme);
+      await page.emulateMedia({ media: 'print' });
+      await checkLayout(page, false);
+      await page.emulateMedia({ media: 'screen' });
+    }
+    await page.addStyleTag({
+      content:
+        'html { font-size: 32px; } .margin-note-label { font-size: 24px !important; } .margin-note-title { font-size: 28px !important; } .margin-note-description { font-size: 26px !important; }',
+    });
+    await checkLayout(page, true);
+    await page.setViewportSize({ width: 320, height: 900 });
+    await checkLayout(page, false);
+    const longFormula = page.locator('.margin-note-block').last().locator('p > .katex');
+    const longSize = await longFormula.evaluate((element) => ({
+      client: element.clientWidth,
+      scroll: element.scrollWidth,
+    }));
+    // Реальное переполнение длинной формулы прокручивается внутри неё.
+    expect(longSize.scroll).toBeGreaterThan(longSize.client);
+    // 200 % масштаба сужает CSS-окно 1440 px до 720 px: заметки возвращаются в поток.
+    await page.setViewportSize({ width: 720, height: 450 });
+    await checkLayout(page, false);
+  });
+
+  test('без JS ссылки доступны клавиатурой и ведут на статью и её раздел', async ({
+    browser,
+  }, testInfo) => {
+    const context = await browser.newContext({
+      javaScriptEnabled: false,
+      baseURL: testInfo.project.use.baseURL,
+    });
+    const page = await context.newPage();
+    try {
       await page.setViewportSize({ width: 1440, height: 900 });
       await page.goto(url);
-      for (const theme of ['light', 'dark']) {
-        await page.evaluate((value) => {
-          document.documentElement.dataset.theme = value;
-        }, theme);
-        await page.emulateMedia({ media: 'print' });
-        await checkLayout(page, false);
-        await page.emulateMedia({ media: 'screen' });
-      }
-      await page.addStyleTag({
-        content:
-          'html { font-size: 32px; } .margin-note-label { font-size: 24px !important; } .margin-note-title { font-size: 28px !important; } .margin-note-description { font-size: 26px !important; }',
-      });
       await checkLayout(page, true);
-      await page.setViewportSize({ width: 320, height: 900 });
+      const first = page.getByRole('complementary', { name: 'Подробнее', exact: true }).first();
+      await expect(first.getByRole('link')).toHaveCount(3);
+      const link = first.getByRole('link').first();
+      await link.focus();
+      await expect(link).toBeFocused();
+      await page.keyboard.press(browser.browserType().name() === 'webkit' ? 'Alt+Tab' : 'Tab');
+      await expect(first.getByRole('link').nth(1)).toBeFocused();
+      await page.keyboard.press(
+        browser.browserType().name() === 'webkit' ? 'Alt+Shift+Tab' : 'Shift+Tab',
+      );
+      await page.keyboard.press('Enter');
+      await expect(page).toHaveURL(/\/audio-theory\/sampling\/#sampling-period$/);
+      await expect(page.locator('#sampling-period')).toBeVisible();
+      await page.goto(url);
+      const article = page.locator('.margin-note').nth(1).getByRole('link');
+      await article.focus();
+      await page.keyboard.press('Enter');
+      await expect(page).toHaveURL(/\/audio-theory\/sampling\/$/);
+      await page.goto(url);
+      await page.setViewportSize({ width: 390, height: 844 });
       await checkLayout(page, false);
-      const longFormula = page.locator('.margin-note-block').last().locator('p > .katex');
-      const longSize = await longFormula.evaluate((element) => ({
-        client: element.clientWidth,
-        scroll: element.scrollWidth,
-      }));
-      // Реальное переполнение длинной формулы прокручивается внутри неё.
-      expect(longSize.scroll).toBeGreaterThan(longSize.client);
-      // 200 % масштаба сужает CSS-окно 1440 px до 720 px: заметки возвращаются в поток.
-      await page.setViewportSize({ width: 720, height: 450 });
-      await checkLayout(page, false);
-    },
-  );
-
-  test(
-    'без JS ссылки доступны клавиатурой и ведут на статью и её раздел',
-    { tag: '@ci' },
-    async ({ browser }, testInfo) => {
-      const context = await browser.newContext({
-        javaScriptEnabled: false,
-        baseURL: testInfo.project.use.baseURL,
-      });
-      const page = await context.newPage();
-      try {
-        await page.setViewportSize({ width: 1440, height: 900 });
-        await page.goto(url);
-        await checkLayout(page, true);
-        const first = page.getByRole('complementary', { name: 'Подробнее', exact: true }).first();
-        await expect(first.getByRole('link')).toHaveCount(3);
-        const link = first.getByRole('link').first();
-        await link.focus();
-        await expect(link).toBeFocused();
-        await page.keyboard.press(browser.browserType().name() === 'webkit' ? 'Alt+Tab' : 'Tab');
-        await expect(first.getByRole('link').nth(1)).toBeFocused();
-        await page.keyboard.press(
-          browser.browserType().name() === 'webkit' ? 'Alt+Shift+Tab' : 'Shift+Tab',
-        );
-        await page.keyboard.press('Enter');
-        await expect(page).toHaveURL(/\/audio-theory\/sampling\/#sampling-period$/);
-        await expect(page.locator('#sampling-period')).toBeVisible();
-        await page.goto(url);
-        const article = page.locator('.margin-note').nth(1).getByRole('link');
-        await article.focus();
-        await page.keyboard.press('Enter');
-        await expect(page).toHaveURL(/\/audio-theory\/sampling\/$/);
-        await page.goto(url);
-        await page.setViewportSize({ width: 390, height: 844 });
-        await checkLayout(page, false);
-      } finally {
-        await context.close();
-      }
-    },
-  );
+    } finally {
+      await context.close();
+    }
+  });
 });

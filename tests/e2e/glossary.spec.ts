@@ -20,7 +20,7 @@ test(
   },
 );
 
-test('определения совпадают с подсказками в статье', { tag: ['@ci'] }, async ({ page }) => {
+test('определения совпадают с подсказками в статье', async ({ page }) => {
   await page.goto('glossary/');
   const onPage = await page
     .locator('dl > .term')
@@ -89,7 +89,7 @@ test('«Найти статью или термин» открывает пои�
   await expect(page.getByRole('dialog', { name: 'Поиск' })).toBeVisible();
 });
 
-test('термин находится глобальным поиском', { tag: ['@ci'] }, async ({ page }, testInfo) => {
+test('термин находится глобальным поиском', async ({ page }, testInfo) => {
   const base = testInfo.project.metadata.base as string;
   await page.goto('./');
   const result = await page.evaluate(async (base) => {

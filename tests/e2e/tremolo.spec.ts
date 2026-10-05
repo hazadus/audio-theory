@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 
 test(
   'тремоло: графики доступны без JS, подписи читаются, прежние якоря LFO сохранены',
-  { tag: ['@ci', '@placement'] },
+  { tag: ['@placement'] },
   async ({ browser }, testInfo) => {
     const base = testInfo.project.metadata.base as string;
     for (const colorScheme of ['light', 'dark'] as const) {

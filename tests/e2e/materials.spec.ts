@@ -8,43 +8,39 @@ const chip = (page: Page, id: string) => page.locator(`[data-topic-chip="${id}"]
 const sortOption = (page: Page, id: string) => page.locator(`[data-sort-option="${id}"]`);
 const search = (page: Page) => new URL(page.url()).search;
 
-test(
-  'по умолчанию все статьи по дате, счётчики и состояние элементов',
-  { tag: ['@ci'] },
-  async ({ page }) => {
-    await page.goto('materials/');
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Все материалы');
-    expect((await slugs(page)).sort()).toEqual([
-      'adc-dac',
-      'audio-compression',
-      'audio-data',
-      'audio-math',
-      'compressor',
-      'equal-loudness',
-      'integer-pcm',
-      'lfo',
-      'limiter',
-      'mixing',
-      'noise',
-      'psychoacoustics',
-      'sampling',
-      'signal-level',
-      'sound-wave',
-      'synth-oscillators',
-      'tremolo',
-      'wav-file',
-    ]);
-    await expect(page.locator('[data-count]')).toHaveText('18 статей');
-    await expect(chip(page, 'all')).toHaveAttribute('aria-pressed', 'true');
-    await expect(chip(page, 'all')).toContainText('18');
-    await expect(chip(page, 'processing')).toContainText('6');
-    await expect(chip(page, 'conv')).not.toHaveAttribute('aria-disabled', 'true');
-    await expect(chip(page, 'conv')).toContainText('1');
-    await expect(chip(page, 'data')).toContainText('4');
-    await expect(sortOption(page, 'date')).toHaveAttribute('aria-checked', 'true');
-    expect(search(page)).toBe('');
-  },
-);
+test('по умолчанию все статьи по дате, счётчики и состояние элементов', async ({ page }) => {
+  await page.goto('materials/');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Все материалы');
+  expect((await slugs(page)).sort()).toEqual([
+    'adc-dac',
+    'audio-compression',
+    'audio-data',
+    'audio-math',
+    'compressor',
+    'equal-loudness',
+    'integer-pcm',
+    'lfo',
+    'limiter',
+    'mixing',
+    'noise',
+    'psychoacoustics',
+    'sampling',
+    'signal-level',
+    'sound-wave',
+    'synth-oscillators',
+    'tremolo',
+    'wav-file',
+  ]);
+  await expect(page.locator('[data-count]')).toHaveText('18 статей');
+  await expect(chip(page, 'all')).toHaveAttribute('aria-pressed', 'true');
+  await expect(chip(page, 'all')).toContainText('18');
+  await expect(chip(page, 'processing')).toContainText('6');
+  await expect(chip(page, 'conv')).not.toHaveAttribute('aria-disabled', 'true');
+  await expect(chip(page, 'conv')).toContainText('1');
+  await expect(chip(page, 'data')).toContainText('4');
+  await expect(sortOption(page, 'date')).toHaveAttribute('aria-checked', 'true');
+  expect(search(page)).toBe('');
+});
 
 test(
   'фильтр и сортировка пишутся в адрес, назад и вперёд восстанавливают состояние',
@@ -89,69 +85,65 @@ test(
   },
 );
 
-test(
-  'сортировки «А–Я» и «По темам» дают ожидаемый порядок и группы',
-  { tag: ['@ci'] },
-  async ({ page }) => {
-    await page.goto('materials/?sort=alpha');
-    await expect(sortOption(page, 'alpha')).toHaveAttribute('aria-checked', 'true');
-    // Кириллические названия от «Аудиоданные…» до «Устройство…», затем латинское «LFO…».
-    expect(await slugs(page)).toEqual([
-      'audio-data',
-      'adc-dac',
-      'noise',
-      'sampling',
-      'sound-wave',
-      'equal-loudness',
-      'audio-math',
-      'mixing',
-      'synth-oscillators',
-      'compressor',
-      'limiter',
-      'psychoacoustics',
-      'tremolo',
-      'signal-level',
-      'wav-file',
-      'audio-compression',
-      'integer-pcm',
-      'lfo',
-    ]);
+test('сортировки «А–Я» и «По темам» дают ожидаемый порядок и группы', async ({ page }) => {
+  await page.goto('materials/?sort=alpha');
+  await expect(sortOption(page, 'alpha')).toHaveAttribute('aria-checked', 'true');
+  // Кириллические названия от «Аудиоданные…» до «Устройство…», затем латинское «LFO…».
+  expect(await slugs(page)).toEqual([
+    'audio-data',
+    'adc-dac',
+    'noise',
+    'sampling',
+    'sound-wave',
+    'equal-loudness',
+    'audio-math',
+    'mixing',
+    'synth-oscillators',
+    'compressor',
+    'limiter',
+    'psychoacoustics',
+    'tremolo',
+    'signal-level',
+    'wav-file',
+    'audio-compression',
+    'integer-pcm',
+    'lfo',
+  ]);
 
-    await page.goto('materials/?sort=topic');
-    const headings = page.locator('[data-list] h2');
-    await expect(headings).toHaveCount(6);
-    await expect(headings.nth(0)).toContainText('Основы звука');
-    await expect(headings.nth(1)).toContainText('Цифровой сигнал');
-    await expect(headings.nth(2)).toContainText('АЦП и ЦАП');
-    await expect(headings.nth(3)).toContainText('Аудиоданные в программах');
-    await expect(headings.nth(4)).toContainText('Обработка звука');
-    await expect(headings.nth(5)).toContainText('Синтез');
-    const order = await slugs(page);
-    expect(order.slice(0, 4).sort()).toEqual([
-      'audio-math',
-      'equal-loudness',
-      'psychoacoustics',
-      'sound-wave',
-    ]);
-    expect(order.slice(4, 6).sort()).toEqual(['sampling', 'signal-level']);
-    expect(order.slice(6)).toEqual([
-      'adc-dac',
-      'audio-data',
-      'wav-file',
-      'audio-compression',
-      'integer-pcm',
-      'noise',
-      'mixing',
-      'compressor',
-      'limiter',
-      'tremolo',
-      'lfo',
-      'synth-oscillators',
-    ]);
-    // Название группы стоит в заголовке, поэтому метка в строке скрыта.
-    await expect(rows(page).first().locator('.overline')).toBeHidden();
-  },
-);
+  await page.goto('materials/?sort=topic');
+  const headings = page.locator('[data-list] h2');
+  await expect(headings).toHaveCount(6);
+  await expect(headings.nth(0)).toContainText('Основы звука');
+  await expect(headings.nth(1)).toContainText('Цифровой сигнал');
+  await expect(headings.nth(2)).toContainText('АЦП и ЦАП');
+  await expect(headings.nth(3)).toContainText('Аудиоданные в программах');
+  await expect(headings.nth(4)).toContainText('Обработка звука');
+  await expect(headings.nth(5)).toContainText('Синтез');
+  const order = await slugs(page);
+  expect(order.slice(0, 4).sort()).toEqual([
+    'audio-math',
+    'equal-loudness',
+    'psychoacoustics',
+    'sound-wave',
+  ]);
+  expect(order.slice(4, 6).sort()).toEqual(['sampling', 'signal-level']);
+  expect(order.slice(6)).toEqual([
+    'adc-dac',
+    'audio-data',
+    'wav-file',
+    'audio-compression',
+    'integer-pcm',
+    'noise',
+    'mixing',
+    'compressor',
+    'limiter',
+    'tremolo',
+    'lfo',
+    'synth-oscillators',
+  ]);
+  // Название группы стоит в заголовке, поэтому метка в строке скрыта.
+  await expect(rows(page).first().locator('.overline')).toBeHidden();
+});
 
 test('неверные значения query заменяются умолчанием в адресе без новой записи истории', async ({
   page,
@@ -224,7 +216,7 @@ test(
 
 test(
   'главная, шапка, крошки статьи и поиск ведут на список под префиксом',
-  { tag: ['@ci', '@placement'] },
+  { tag: ['@placement'] },
   async ({ page }, testInfo) => {
     const base = testInfo.project.metadata.base as string;
     await page.goto('./');

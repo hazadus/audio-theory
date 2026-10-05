@@ -1,9 +1,15 @@
 // Прежняя полная матрица для диагностики: все сценарии в трёх браузерах под двумя базовыми путями.
 import { defineConfig } from '@playwright/test';
-import config, { fixtureProjects, updatesProjects, updatesServer } from './playwright.config';
+import config, {
+  fixtureProjects,
+  fixtureServer,
+  placementProjects,
+  updatesProjects,
+  updatesServer,
+} from './playwright.config';
 
-const root = config.projects!.find((project) => project.name === 'root-chromium')!;
-const prefixed = config.projects!.filter((project) => project.name!.startsWith('prefixed-'));
+const root = placementProjects.find((project) => project.name === 'root-chromium')!;
+const prefixed = placementProjects.filter((project) => project.name!.startsWith('prefixed-'));
 const allScenarios = {
   grep: undefined,
   grepInvert: /@(?:sampling|margin-notes|updates|track-updates|tracks)/,
@@ -19,8 +25,8 @@ export default defineConfig(config, {
       use: { ...project.use, baseURL: root.use!.baseURL },
       ...allScenarios,
     })),
-    ...fixtureProjects(false),
+    ...fixtureProjects(),
     ...updatesProjects(),
   ],
-  webServer: [updatesServer],
+  webServer: [fixtureServer, updatesServer],
 });

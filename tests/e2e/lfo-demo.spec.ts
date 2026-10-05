@@ -39,7 +39,7 @@ async function dragTo(page: Page, from: number, to: number) {
 test.describe('Визуализация форм LFO', () => {
   test(
     'окружность, ползунок, графики и расчёты меняются согласованно; анимация и сброс',
-    { tag: ['@ci', '@cross-browser'] },
+    { tag: ['@cross-browser'] },
     async ({ page }) => {
       await open(page);
       await expect(phase(page)).toHaveValue('-45');

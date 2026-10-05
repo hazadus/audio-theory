@@ -203,24 +203,22 @@ const expectations = [
   { query: 'Nyquist frequency', slug: 'sampling', title: sampling, anchor: 'how-fast' },
 ];
 
-test(
-  'поиск находит русские словоформы и английские термины в нужных разделах',
-  { tag: ['@ci'] },
-  async ({ page }, testInfo) => {
-    const base = testInfo.project.metadata.base as string;
-    await page.goto('./');
-    for (const { query, slug, title, anchor } of expectations) {
-      const results = await guardedSearch(page, base, query);
-      const article = results.find((item) => item.url === `${base}${slug}/`);
-      expect(article, `${query}: статья ${slug}`).toBeDefined();
-      expect(article!.title).toBe(title);
-      expect(
-        article!.sections.map((section) => section.url),
-        `${query}: раздел ${anchor}`,
-      ).toContain(`${base}${slug}/#${anchor}`);
-    }
-  },
-);
+test('поиск находит русские словоформы и английские термины в нужных разделах', async ({
+  page,
+}, testInfo) => {
+  const base = testInfo.project.metadata.base as string;
+  await page.goto('./');
+  for (const { query, slug, title, anchor } of expectations) {
+    const results = await guardedSearch(page, base, query);
+    const article = results.find((item) => item.url === `${base}${slug}/`);
+    expect(article, `${query}: статья ${slug}`).toBeDefined();
+    expect(article!.title).toBe(title);
+    expect(
+      article!.sections.map((section) => section.url),
+      `${query}: раздел ${anchor}`,
+    ).toContain(`${base}${slug}/#${anchor}`);
+  }
+});
 
 test('поиск по запросу без слов в статьях ничего не возвращает', async ({ page }, testInfo) => {
   const base = testInfo.project.metadata.base as string;
@@ -233,7 +231,7 @@ test('поиск по запросу без слов в статьях ниче�
 
 test(
   'адреса разделов из выдачи открываются под префиксом на нужном якоре',
-  { tag: ['@ci', '@placement'] },
+  { tag: ['@placement'] },
   async ({ page }, testInfo) => {
     const base = testInfo.project.metadata.base as string;
     await page.goto('./');

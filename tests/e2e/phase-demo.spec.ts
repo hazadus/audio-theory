@@ -18,7 +18,7 @@ async function open(page: Page) {
 test.describe('Визуализация фазы', () => {
   test(
     'параметр, окружность, график, статус и подпись меняются согласованно',
-    { tag: ['@ci', '@ci-cross-browser', '@cross-browser'] },
+    { tag: ['@cross-browser'] },
     async ({ page }) => {
       await open(page);
       await expect(phase(page)).toHaveValue('90');

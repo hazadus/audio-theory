@@ -1,6 +1,6 @@
-// Явный набор CI в WebKit, ключевые браузерные сценарии и проверка корневого размещения.
-// Сценарии `@sampling` идут на отдельной сборке служебной страницы MDX с `SamplingDemo`:
-// эксперимент ещё не встроен в статьи, а публичные сборки не должны содержать служебных страниц.
+// Обязательный набор CI: не более 12 сценариев `@ci` в WebKit под префиксом и один в корне (Chromium).
+// Остальные сценарии и браузеры — только в `playwright.full.config.ts` (диагностика).
+// Служебная страница MDX (`@sampling`, `@margin-notes`) собирается только для полной матрицы.
 import { defineConfig, devices } from '@playwright/test';
 
 const placements = [
@@ -27,19 +27,11 @@ const browserDevice = (browserName: string) =>
         : 'Desktop Safari'
   ];
 
-/** Служебная сборка: выбранные сценарии CI либо все сценарии с метками `tags` для диагностики. */
-const servedProjects = (
-  server: { name: string; base: string; port: number },
-  tags: string,
-  ciOnly: boolean,
-) =>
+/** Служебная сборка для диагностики: все сценарии с метками `tags` в трёх браузерах. */
+const servedProjects = (server: { name: string; base: string; port: number }, tags: string) =>
   ['chromium', 'firefox', 'webkit'].map((browserName) => ({
     name: `${server.name}-${browserName}`,
-    grep: ciOnly
-      ? browserName === 'webkit'
-        ? new RegExp(`(?=.*@(?:${tags}))(?=.*@ci(?:\\s|$))`)
-        : new RegExp(`(?=.*@(?:${tags}))(?=.*@ci-cross-browser)`)
-      : new RegExp(`@(?:${tags})`),
+    grep: new RegExp(`@(?:${tags})`),
     metadata: { base: server.base },
     use: {
       ...browserDevice(browserName),
@@ -47,12 +39,11 @@ const servedProjects = (
     },
   }));
 
-export const fixtureProjects = (ciOnly: boolean) =>
-  servedProjects(fixture, 'sampling|margin-notes', ciOnly);
+export const fixtureProjects = () => servedProjects(fixture, 'sampling|margin-notes');
 
-// Сценарии журнала не входят в обязательный набор CI (он ограничен 88 проверками): их запускает
-// `playwright.full.config.ts` вместе с этим сервером.
-export const updatesProjects = () => servedProjects(updates, 'updates', false);
+// Сценарии журнала и служебной страницы не входят в обязательный набор CI: их запускает
+// `playwright.full.config.ts` вместе с этими серверами.
+export const updatesProjects = () => servedProjects(updates, 'updates');
 
 export const updatesServer = {
   command: `npm run preview -- --ignore-lock --host 127.0.0.1 --port ${updates.port} --base ${updates.base} --outDir .e2e/${updates.name}`,
@@ -61,48 +52,41 @@ export const updatesServer = {
   timeout: 30_000,
 };
 
+export const fixtureServer = {
+  command: `npm run preview -- --config ${fixture.config} --ignore-lock --host 127.0.0.1 --port ${fixture.port} --base ${fixture.base} --outDir .e2e/${fixture.name}`,
+  url: `http://127.0.0.1:${fixture.port}${fixture.base}__test/mdx/`,
+  reuseExistingServer: false,
+  timeout: 30_000,
+};
+
+export const placementProjects = placements.flatMap(({ name, base, port }) =>
+  ['chromium', 'firefox', 'webkit'].map((browserName) => ({
+    name: `${name}-${browserName}`,
+    // Обязательный набор CI: WebKit под префиксом и один сценарий размещения в корне (Chromium).
+    grep: name === 'root' ? /@ci-root/ : browserName === 'webkit' ? /@ci(?:\s|$)/ : /(?!)/,
+    grepInvert: /@(?:sampling|margin-notes|updates|track-updates|tracks)/,
+    metadata: { base },
+    use: {
+      ...browserDevice(browserName),
+      baseURL: `http://127.0.0.1:${port}${base}`,
+    },
+  })),
+);
+
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
   forbidOnly: true,
   reporter: 'list',
   use: { trace: 'retain-on-failure' },
-  projects: [
-    ...placements
-      .flatMap(({ name, base, port }) =>
-        ['chromium', 'firefox', 'webkit'].map((browserName) => ({
-          name: `${name}-${browserName}`,
-          // Базовый путь не требует повторять все сценарии во всех браузерах.
-          grep:
-            name === 'root'
-              ? /@placement/
-              : browserName === 'webkit'
-                ? /@ci(?:\s|$)/
-                : /@ci-cross-browser/,
-          grepInvert: /@(?:sampling|margin-notes|updates|track-updates|tracks)/,
-          metadata: { base },
-          use: {
-            ...browserDevice(browserName),
-            baseURL: `http://127.0.0.1:${port}${base}`,
-          },
-        })),
-      )
-      .filter((project) => project.name !== 'root-firefox' && project.name !== 'root-webkit'),
-    ...fixtureProjects(true),
-  ],
+  projects: placementProjects.filter((project) =>
+    ['root-chromium', 'prefixed-webkit'].includes(project.name),
+  ),
   // Сборки выполняются последовательно до старта серверов: Astro использует общий кеш.
-  webServer: [
-    ...placements.map(({ name, base, port }) => ({
-      command: `npm run preview -- --ignore-lock --host 127.0.0.1 --port ${port} --base ${base} --outDir .e2e/${name}`,
-      url: `http://127.0.0.1:${port}${base}`,
-      reuseExistingServer: false,
-      timeout: 30_000,
-    })),
-    {
-      command: `npm run preview -- --config ${fixture.config} --ignore-lock --host 127.0.0.1 --port ${fixture.port} --base ${fixture.base} --outDir .e2e/${fixture.name}`,
-      url: `http://127.0.0.1:${fixture.port}${fixture.base}__test/mdx/`,
-      reuseExistingServer: false,
-      timeout: 30_000,
-    },
-  ],
+  webServer: placements.map(({ name, base, port }) => ({
+    command: `npm run preview -- --ignore-lock --host 127.0.0.1 --port ${port} --base ${base} --outDir .e2e/${name}`,
+    url: `http://127.0.0.1:${port}${base}`,
+    reuseExistingServer: false,
+    timeout: 30_000,
+  })),
 });

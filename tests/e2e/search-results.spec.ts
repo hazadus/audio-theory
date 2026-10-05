@@ -93,7 +93,7 @@ test('нет результатов', async ({ page }, testInfo) => {
   await expect(page.locator(results)).toBeHidden();
 });
 
-test('устаревший ответ не подменяет новый', { tag: ['@ci'] }, async ({ page }, testInfo) => {
+test('устаревший ответ не подменяет новый', async ({ page }, testInfo) => {
   await useStub(page, testInfo.project.metadata.base as string);
   await open(page);
   await page.locator(input).fill('first');
@@ -107,7 +107,7 @@ test('устаревший ответ не подменяет новый', { tag
   await expect(page.locator(status)).toHaveText('Найдено: 1');
 });
 
-test('фрагменты не исполняют HTML', { tag: ['@ci'] }, async ({ page }, testInfo) => {
+test('фрагменты не исполняют HTML', async ({ page }, testInfo) => {
   await useStub(page, testInfo.project.metadata.base as string);
   await open(page);
   await page.locator(input).fill('fast');
@@ -117,7 +117,7 @@ test('фрагменты не исполняют HTML', { tag: ['@ci'] }, async 
   expect(await page.evaluate(() => (window as { __xss?: number }).__xss)).toBeUndefined();
 });
 
-test('ошибка индекса и повтор', { tag: ['@ci', '@cross-browser'] }, async ({ page }, testInfo) => {
+test('ошибка индекса и повтор', { tag: ['@cross-browser'] }, async ({ page }, testInfo) => {
   const base = testInfo.project.metadata.base as string;
   let fail = true;
   await page.route(`**${base}pagefind/pagefind.js*`, (route) =>
@@ -150,7 +150,7 @@ test('результат открывает раздел и закрывает �
 
 test(
   'настоящий индекс: запрос находит раздел статьи, переход закрывает диалог',
-  { tag: ['@ci', '@cross-browser', '@placement'] },
+  { tag: ['@cross-browser', '@placement'] },
   async ({ page }) => {
     await open(page);
     await page.locator(input).fill('дискретизации');
@@ -194,7 +194,7 @@ test('роли combobox, listbox и option согласованы', async ({ pag
 
 test(
   'стрелки двигают выбор, фокус остаётся в поле, на границах выбор останавливается',
-  { tag: ['@ci', '@ci-cross-browser', '@cross-browser'] },
+  { tag: ['@cross-browser'] },
   async ({ page }, testInfo) => {
     await searchMany(page, testInfo.project.metadata.base as string);
     const field = page.locator(input);
@@ -244,7 +244,7 @@ test(
 
 test(
   'Enter открывает выбранный результат и закрывает диалог',
-  { tag: ['@ci', '@cross-browser'] },
+  { tag: ['@cross-browser'] },
   async ({ page }, testInfo) => {
     await searchMany(page, testInfo.project.metadata.base as string);
     await page.keyboard.press('ArrowDown');

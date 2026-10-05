@@ -4,7 +4,7 @@ import { siteConfig } from '@/site.config';
 
 test(
   'начальная страница, навигация и локальные ресурсы',
-  { tag: ['@ci', '@cross-browser', '@placement'] },
+  { tag: ['@ci', '@ci-root', '@cross-browser', '@placement'] },
   async ({ page }, testInfo) => {
     const base = testInfo.project.metadata.base as string;
     const response = await page.goto('./');
@@ -48,7 +48,7 @@ test(
 
 test(
   'шрифты, токены тем и иконки загружаются локально под префиксом',
-  { tag: ['@ci', '@cross-browser', '@placement'] },
+  { tag: ['@cross-browser', '@placement'] },
   async ({ browser, request }, testInfo) => {
     const base = testInfo.project.metadata.base as string;
     for (const colorScheme of ['light', 'dark'] as const) {
@@ -114,7 +114,7 @@ test(
 
 test(
   'страница читается без JavaScript на узком экране',
-  { tag: ['@ci', '@cross-browser'] },
+  { tag: ['@cross-browser'] },
   async ({ browser }, testInfo) => {
     const context = await browser.newContext({
       baseURL: testInfo.project.use.baseURL,
@@ -149,7 +149,7 @@ const backgroundLightness = (page: import('@playwright/test').Page) =>
 
 test(
   'тема переключается по кругу и сохраняется после перезагрузки без вспышки',
-  { tag: ['@ci', '@ci-cross-browser', '@cross-browser'] },
+  { tag: ['@ci', '@cross-browser'] },
   async ({ browser }, testInfo) => {
     const context = await browser.newContext({
       baseURL: testInfo.project.use.baseURL,
@@ -206,7 +206,7 @@ test(
 
 test(
   'в режиме авто тема следует за системой без перезагрузки',
-  { tag: ['@ci', '@cross-browser'] },
+  { tag: ['@cross-browser'] },
   async ({ browser }, testInfo) => {
     const context = await browser.newContext({
       baseURL: testInfo.project.use.baseURL,
@@ -228,34 +228,30 @@ test(
   },
 );
 
-test(
-  'отказ localStorage не ломает управление темой',
-  { tag: ['@ci'] },
-  async ({ browser }, testInfo) => {
-    const context = await browser.newContext({ baseURL: testInfo.project.use.baseURL });
-    try {
-      const page = await context.newPage();
-      await page.addInitScript(() => {
-        const fail = () => {
-          throw new DOMException('denied', 'SecurityError');
-        };
-        Object.defineProperty(window, 'localStorage', { get: fail });
-      });
-      const errors: string[] = [];
-      page.on('pageerror', (error) => errors.push(error.message));
-      await page.goto('./');
-      const button = page.locator(themeButton);
-      await expect(button).toBeVisible();
-      await button.click();
-      await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-      await button.click();
-      await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-      expect(errors).toEqual([]);
-    } finally {
-      await context.close();
-    }
-  },
-);
+test('отказ localStorage не ломает управление темой', async ({ browser }, testInfo) => {
+  const context = await browser.newContext({ baseURL: testInfo.project.use.baseURL });
+  try {
+    const page = await context.newPage();
+    await page.addInitScript(() => {
+      const fail = () => {
+        throw new DOMException('denied', 'SecurityError');
+      };
+      Object.defineProperty(window, 'localStorage', { get: fail });
+    });
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto('./');
+    const button = page.locator(themeButton);
+    await expect(button).toBeVisible();
+    await button.click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    await button.click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    expect(errors).toEqual([]);
+  } finally {
+    await context.close();
+  }
+});
 
 test('отказ только записи в localStorage не ломает переключение', async ({ browser }, testInfo) => {
   const context = await browser.newContext({ baseURL: testInfo.project.use.baseURL });
@@ -351,7 +347,7 @@ test('кнопка поиска на главной открывает диал�
 
 test(
   'главная: карточки визуализаций ведут на якоря, звуковая метка, раскладка и «Все N»',
-  { tag: ['@ci', '@placement'] },
+  { tag: ['@placement'] },
   async ({ browser }, testInfo) => {
     const base = testInfo.project.metadata.base as string;
     const expected = [
