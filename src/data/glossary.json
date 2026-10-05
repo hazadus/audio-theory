@@ -1638,5 +1638,35 @@
       "article": "psychoacoustics",
       "anchor": "fluctuation-and-roughness"
     }
+  },
+  {
+    "id": "mixing",
+    "ru": "микширование",
+    "en": "mixing",
+    "definition": "Суммирование аудиосигналов с независимо выбранными коэффициентами усиления источников.",
+    "target": {
+      "article": "mixing",
+      "anchor": "summing"
+    }
+  },
+  {
+    "id": "headroom",
+    "ru": "запас уровня",
+    "en": "headroom",
+    "definition": "Расстояние от текущего или ожидаемого пикового уровня до предела выбранного участка аудиотракта. Обычно выражается в децибелах.",
+    "target": {
+      "article": "mixing",
+      "anchor": "headroom"
+    }
+  },
+  {
+    "id": "gain-staging",
+    "ru": "распределение усиления по тракту",
+    "en": "gain staging",
+    "definition": "Выбор уровней на отдельных этапах аудиотракта с учётом пиков, запаса и допустимого диапазона каждого этапа.",
+    "target": {
+      "article": "mixing",
+      "anchor": "headroom"
+    }
   }
 ]

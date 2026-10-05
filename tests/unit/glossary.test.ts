@@ -19,6 +19,7 @@ const slugs = [
   'wav-file',
   'integer-pcm',
   'audio-compression',
+  'mixing',
 ];
 
 const entry = {

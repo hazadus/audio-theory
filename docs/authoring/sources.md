@@ -258,3 +258,14 @@
 - [RFC 6716. Definition of the Opus Audio Codec, IETF, 2012](https://www.rfc-editor.org/rfc/rfc6716) — разд. 2: битрейты, полосы, слои SILK и CELT, длительности кадров.
 - [Apple. ALAC, ReadMe исходных текстов](https://github.com/macosforge/alac) — разрядность, частоты, каналы и размер пакета Apple Lossless.
 - [Wikipedia. Finite difference](https://en.wikipedia.org/wiki/Finite_difference) — разности назад и высших порядков, постоянная разность многочлена; для математической справки.
+
+## Микширование сигналов
+
+Прочитаны при подготовке `/mixing/`:
+
+- [Steven W. Smith. Requirements for Linearity, глава 5.2](https://www.dspguide.com/ch5/2.htm) и [Static Linearity and Sinusoidal Fidelity, глава 5.3](https://www.dspguide.com/ch5/3.htm) — масштабирование, сложение, сохранение частоты синусоиды при линейной обработке.
+- [Julius O. Smith III. Sinusoids at the Same Frequency](https://www.dsprelated.com/freebooks/mdft/Sinusoids_Same_Frequency.html) — представление суммы через синус и косинус; использована авторская версия на DSPRelated, страница Stanford недоступна.
+- [OpenStax. Precalculus 2e, §7.2](https://openstax.org/books/precalculus-2e/pages/7-2-sum-and-difference-identities) — формула синуса суммы углов для вычисления амплитуды.
+- [JUCE 9.0.3. AudioSampleBuffer](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_basics/buffers/juce_AudioSampleBuffer.h) — локальные исходники `clear`, `addFrom`, `applyGain`, условия размеров и отсутствие ограничения до ±1.
+
+- [Julius O. Smith III. Clipping Nonlinearity](https://www.dsprelated.com/freebooks/pasp/Clipping_Nonlinearity.html) — прочитаны определение жёсткого ограничения и объяснение необратимости.

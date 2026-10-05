@@ -1,0 +1,24 @@
+{
+  "id": "mixing-published",
+  "date": "2026-10-05",
+  "order": 2,
+  "type": "new",
+  "article": "mixing",
+  "summary": "Как управлять усилением источников, складывать отсчёты с учётом фазы и оставлять запас до перегрузки. Примеры C++/JUCE и график суммы двух синусоид.",
+  "items": [
+    {
+      "text": "Два источника: усиление, фаза и сумма",
+      "target": {
+        "article": "mixing",
+        "anchor": "mixing-demo"
+      }
+    },
+    {
+      "text": "Микширование буферов на C++/JUCE",
+      "target": {
+        "article": "mixing",
+        "anchor": "juce"
+      }
+    }
+  ]
+}

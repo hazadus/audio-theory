@@ -8,6 +8,7 @@ export interface DemoCaption {
 
 export const demoCaptions = {
   ToneDemo: { defaultId: 'tone-demo', name: 'Генератор чистого тона' },
+  MixingDemo: { defaultId: 'mixing-demo', name: 'Два источника: усиление, фаза и сумма' },
   PhaseDemo: { defaultId: 'phase-demo', name: 'Начальная фаза и сдвиг во времени' },
   SamplingDemo: {
     defaultId: 'sampling-demo',

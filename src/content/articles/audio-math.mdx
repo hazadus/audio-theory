@@ -429,6 +429,21 @@ $$
 
 </SelfCheck>
 
+
+## Модуль суммы и верхняя граница {#sum-bound}
+
+Модуль суммы двух действительных чисел не больше суммы их модулей: $|a+b| \le |a|+|b|$. Это неравенство треугольника (triangle inequality). При одинаковых знаках модули складываются; при разных один вклад частично или полностью компенсирует другой. Для $a=0{,}8$, $b=-0{,}5$ имеем $|a+b|=0{,}3$, тогда как $|a|+|b|=1{,}3$. Верхняя граница может быть намного больше результата.
+
+Для произведения $|gx|=|g||x|$. Если два входа удовлетворяют $|x_1[n]|\le1$ и $|x_2[n]|\le1$, то $|g_1x_1[n]+g_2x_2[n]|\le|g_1|+|g_2|$. Например, коэффициенты 0,4 и 0,3 ограничивают модуль суммы сверху значением 0,7 при любых сочетаниях таких входов. Условие $|g_1|+|g_2|\le1$ даёт достаточную гарантию для идеальной арифметики, но его нарушение не доказывает перегрузку: результат может быть меньше из-за компенсации. Оценка применяется в [микшировании](/mixing/#headroom).
+
+## Амплитуда суммы синусоид {#sinusoid-sum}
+
+Пусть $y(t)=a\sin\theta+b\sin(\theta+\varphi)$, где $\theta=2\pi ft$, $f$ — общая частота в Гц, $t$ — время в секундах, $\varphi$ — разность фаз в радианах, $a$ и $b$ — амплитудные коэффициенты. Формула сложения $\sin(\theta+\varphi)=\sin\theta\cos\varphi+\cos\theta\sin\varphi$ позволяет собрать члены: $y(t)=(a+b\cos\varphi)\sin\theta+(b\sin\varphi)\cos\theta$ ([OpenStax, §7.2](https://openstax.org/books/precalculus-2e/pages/7-2-sum-and-difference-identities)).
+
+Обозначим коэффициенты при синусе и косинусе как $u=a+b\cos\varphi$ и $v=b\sin\varphi$. Это две перпендикулярные составляющие: по теореме Пифагора длина соответствующего вектора $R=\sqrt{u^2+v^2}$. Его вращение даёт синусоиду с амплитудой $R$. Такое представление суммы разобрано у [Julius O. Smith](https://www.dsprelated.com/freebooks/mdft/Sinusoids_Same_Frequency.html).
+
+При $a=b=0{,}5$ и $\varphi=\pi/2$ получаем $u=v=0{,}5$, поэтому $R=\sqrt{0{,}25+0{,}25}\approx0{,}7071$. При нулевой фазе $R=1$, при $\pi$ — 0. Формула относится к синусоидам одной частоты с постоянными коэффициентами; она даёт амплитуду всей волны. Максимум конечного набора отсчётов может быть ниже. Визуализация [суммы источников](/mixing/#mixing-demo) использует именно $R$.
+
 ## Математика в статьях сайта {#applications}
 
 - [Звуковая волна](/sound-wave/#frequency): обратная величина $1/f$, единицы, синус и перевод углов в сдвиг по времени.
@@ -453,3 +468,6 @@ $$
 - [Stephen Davies. A Cool Brisk Walk Through Discrete Mathematics, §7.3: Hexadecimal (base 16)](https://math.libretexts.org/Bookshelves/Combinatorics_and_Discrete_Mathematics/A_Cool_Brisk_Walk_Through_Discrete_Mathematics_(Davies)/07:_Counting/7.3:_Hexadecimal_(base_16)) и [§7.4: Binary (base 2)](https://math.libretexts.org/Bookshelves/Combinatorics_and_Discrete_Mathematics/A_Cool_Brisk_Walk_Through_Discrete_Mathematics_(Davies)/07:_Counting/7.4:_Binary_(base_2)) — позиционная запись, биты, байт из 8 бит, шестнадцатеричная цифра как 4 бита, дополнительный код.
 - [Julius O. Smith III. Mathematics of the DFT: Decibels](https://ccrma.stanford.edu/~jos/mdft/Decibels.html), [Signal Metrics](https://ccrma.stanford.edu/~jos/mdft/Signal_Metrics.html) и [Sampling Theorem](https://ccrma.stanford.edu/~jos/mdft/Sampling_Theorem.html) — децибелы, RMS и идеальная интерполяция через sinc.
 - [MathWorks. compressor, Algorithms](https://www.mathworks.com/help/audio/ref/compressor-system-object.html) — статическая характеристика и коэффициенты сглаживания атаки и восстановления.
+
+- [OpenStax. Precalculus 2e, §7.2: Sum and Difference Identities](https://openstax.org/books/precalculus-2e/pages/7-2-sum-and-difference-identities) — формулы сложения углов.
+- [Julius O. Smith III. Sinusoids at the Same Frequency](https://www.dsprelated.com/freebooks/mdft/Sinusoids_Same_Frequency.html) — сумма синусоид через две перпендикулярные составляющие.

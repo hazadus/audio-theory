@@ -1,0 +1,16 @@
+{
+  "id": "track-programmer-mixing",
+  "date": "2026-10-05",
+  "order": 4,
+  "type": "updated",
+  "track": "programmer",
+  "items": [
+    {
+      "text": "Микширование перед LFO и тремоло",
+      "target": {
+        "track": "programmer",
+        "anchor": "stage-processing"
+      }
+    }
+  ]
+}

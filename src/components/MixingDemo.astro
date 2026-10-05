@@ -1,0 +1,277 @@
+---
+// Суммирование двух синусоид без звука; начальный график доступен без JavaScript.
+import { demoCaptions } from '@/lib/demo-captions';
+import { defaultMix, mixingSvg, mixStatus, mixCaption } from '@/lib/mixing';
+interface Props {
+  figure: number;
+  id?: string;
+}
+const { figure, id = 'mixing-demo' } = Astro.props;
+const parameters = [
+  { key: 'gain1', label: 'Усиление первого источника g₁', min: 0, max: 1, step: 0.05 },
+  { key: 'gain2', label: 'Усиление второго источника g₂', min: 0, max: 1, step: 0.05 },
+  { key: 'phase', label: 'Разность фаз φ, градусы', min: 0, max: 360, step: 15 },
+] as const;
+---
+
+<figure
+  id={id}
+  class="mixing-demo"
+  data-mixing-demo
+  data-state="static"
+  aria-labelledby={`${id}-name`}
+>
+  <div class="head">
+    <span>Визуализация {figure}</span>
+    <b id={`${id}-name`}>{demoCaptions.MixingDemo.name}</b>
+  </div>
+  <div
+    class="chart"
+    role="region"
+    aria-label="График суммы; на узком экране можно прокрутить по горизонтали"
+    tabindex="0"
+    data-chart
+    set:html={mixingSvg(defaultMix, id)}
+  />
+  <ul class="legend" aria-label="Легенда">
+    <li>
+      <i class="first"></i>g₁x₁
+    </li>
+    <li>
+      <i class="second"></i>g₂x₂
+    </li>
+    <li>
+      <i class="sum"></i>сумма
+    </li>
+    <li>
+      <i class="clipped"></i>после ограничения
+    </li>
+    <li>
+      <i class="limit"></i>полная шкала ±1
+    </li>
+  </ul>
+  <p class="status" data-status>
+    {mixStatus(defaultMix)}
+  </p>
+  <fieldset disabled data-controls>
+    <legend class="sr-only">Параметры сложения</legend>
+    {parameters.map((p) => (
+      <div class="param">
+        <label for={`${id}-${p.key}`}>{p.label}</label>
+        <output for={`${id}-${p.key}`} data-output={p.key}>
+          {String(defaultMix[p.key]).replace('.', ',')}
+        </output>
+        <input
+          id={`${id}-${p.key}`}
+          type="range"
+          min={p.min}
+          max={p.max}
+          step={p.step}
+          value={defaultMix[p.key]}
+          data-param={p.key}
+        />
+      </div>
+    ))}
+    <div class="actions">
+      <button type="button" data-preset="overload">
+        Перегрузка
+      </button>
+      <button type="button" data-preset="cancel">
+        Противофаза
+      </button>
+      <button type="button" data-reset>
+        Сбросить
+      </button>
+    </div>
+  </fieldset>
+  <p class="note" data-note>
+    Параметры работают с включённым JavaScript. Показано начальное состояние.
+  </p>
+  <p class="sr-only" aria-live="polite" data-announce></p>
+  <figcaption>
+    <b>Рис. {figure}.</b> <span data-caption>{mixCaption(defaultMix)}</span>
+  </figcaption>
+</figure>
+<script>
+  import { initMixingDemos } from '@/lib/mixing-demo-controller';
+  initMixingDemos();
+</script>
+<style is:global>
+  .mixing-demo {
+    margin: var(--space-6) 0;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    overflow: hidden;
+    font-family: var(--font-ui);
+    scroll-margin-top: 88px;
+  }
+  .mixing-demo .head {
+    display: grid;
+    gap: 3px;
+    padding: 14px 16px;
+  }
+  .mixing-demo .head span {
+    font-size: 12px;
+    color: var(--color-text-muted);
+  }
+  .mixing-demo .head b {
+    font-size: 17px;
+  }
+  .mixing-demo .chart {
+    background: var(--chart-bg);
+    overflow-x: auto;
+  }
+  .mixing-demo svg {
+    display: block;
+    width: 100%;
+    min-width: 440px;
+    font-size: 12px;
+  }
+  .mixing-demo svg path {
+    fill: none;
+    vector-effect: non-scaling-stroke;
+  }
+  .mixing-demo .ticks {
+    fill: var(--chart-label);
+  }
+  .mixing-demo .grid {
+    stroke: var(--chart-grid);
+    stroke-width: 1;
+  }
+  .mixing-demo .first {
+    stroke: var(--chart-signal);
+    stroke-width: 1.8;
+  }
+  .mixing-demo .second {
+    stroke: var(--chart-series-3);
+    stroke-width: 1.8;
+    stroke-dasharray: 7 4;
+  }
+  .mixing-demo .sum {
+    stroke: var(--chart-result);
+    stroke-width: 3;
+  }
+  .mixing-demo .clipped {
+    stroke: var(--chart-series-5);
+    stroke-width: 2;
+    stroke-dasharray: 2 5;
+    stroke-linecap: round;
+  }
+  .mixing-demo .limit {
+    stroke: var(--chart-label);
+    stroke-width: 1;
+    stroke-dasharray: 9 5;
+  }
+  .mixing-demo .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    padding: 12px 16px;
+    margin: 0;
+    list-style: none;
+    font-size: 14px;
+  }
+  .mixing-demo .legend li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .mixing-demo .legend i {
+    width: 18px;
+    height: 0;
+    border-top: 2px solid var(--chart-signal);
+  }
+  .mixing-demo .legend .second {
+    border-color: var(--chart-series-3);
+    border-top-style: dashed;
+  }
+  .mixing-demo .legend .sum {
+    border-color: var(--chart-result);
+    border-top-width: 3px;
+  }
+  .mixing-demo .legend .clipped {
+    border-color: var(--chart-series-5);
+    border-top-style: dotted;
+  }
+  .mixing-demo .legend .limit {
+    border-color: var(--chart-label);
+    border-top-style: dashed;
+  }
+  .mixing-demo .status,
+  .mixing-demo .note {
+    margin: 0;
+    padding: 0 16px 12px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .mixing-demo fieldset {
+    display: grid;
+    gap: 16px;
+    min-width: 0;
+    margin: 0;
+    border: 0;
+    border-block: var(--border-width) solid var(--color-border);
+    padding: 16px;
+  }
+  .mixing-demo .param {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px;
+    font-size: 14px;
+  }
+  .mixing-demo output {
+    font-variant-numeric: tabular-nums;
+  }
+  .mixing-demo input {
+    grid-column: 1 / -1;
+    width: 100%;
+    margin: 0;
+    min-height: 32px;
+    accent-color: var(--color-accent);
+    touch-action: pan-y;
+  }
+  .mixing-demo .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .mixing-demo button {
+    min-height: 36px;
+    padding: 6px 12px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .mixing-demo :is(button, input, .chart):focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+  .mixing-demo fieldset:disabled {
+    opacity: 0.5;
+  }
+  .mixing-demo[data-state='ready'] .note {
+    display: none;
+  }
+  .mixing-demo .note {
+    padding-top: 12px;
+    color: var(--color-text-muted);
+  }
+  .mixing-demo figcaption {
+    padding: 12px 16px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--color-text-muted);
+  }
+  .mixing-demo .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+</style>

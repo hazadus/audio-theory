@@ -1,6 +1,6 @@
 // Геометрия статичных превью карточек визуализаций: область 280 × 150, без осей и подписей.
 export type PreviewKind =
-  'tone' | 'phase' | 'sampling' | 'compressor' | 'lfo' | 'bytes' | 'pcm' | 'prediction';
+  'tone' | 'phase' | 'sampling' | 'compressor' | 'lfo' | 'bytes' | 'pcm' | 'prediction' | 'mixing';
 export const previewKinds: readonly PreviewKind[] = [
   'tone',
   'phase',
@@ -10,6 +10,7 @@ export const previewKinds: readonly PreviewKind[] = [
   'bytes',
   'pcm',
   'prediction',
+  'mixing',
 ];
 
 /** Роль цвета; в разметке превращается в `var(--chart-<роль>)`. */
@@ -214,6 +215,14 @@ const builders: Record<PreviewKind, () => Preview> = {
     };
   },
   prediction: predictionPreview,
+  mixing: () => ({
+    paths: [
+      { d: wave(16, 264, 75, 22, 2), color: 'signal', width: 1.5 },
+      { d: wave(16, 264, 75, 22, 2, Math.PI / 2), color: 'sample', width: 1.5, dash: '5 4' },
+      { d: wave(16, 264, 75, Math.sqrt(2) * 22, 2, Math.PI / 4), color: 'result', width: 2.5 },
+    ],
+    dots: [],
+  }),
 };
 
 function predictionPreview(): Preview {

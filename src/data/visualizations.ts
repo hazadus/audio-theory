@@ -81,4 +81,12 @@ export const visualizations: readonly Visualization[] = [
     sound: false,
     preview: 'prediction',
   },
+  {
+    id: 'mixing-demo',
+    slug: 'mixing',
+    name: 'Два источника: усиление, фаза и сумма',
+    what: 'Усиление каждого источника, разность фаз, сумма и срезание вершин.',
+    sound: false,
+    preview: 'mixing',
+  },
 ];

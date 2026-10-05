@@ -1,0 +1,23 @@
+{
+  "id": "audio-math-signal-sums",
+  "date": "2026-10-05",
+  "order": 3,
+  "type": "updated",
+  "article": "audio-math",
+  "items": [
+    {
+      "text": "Модуль суммы и верхняя граница",
+      "target": {
+        "article": "audio-math",
+        "anchor": "sum-bound"
+      }
+    },
+    {
+      "text": "Амплитуда суммы синусоид",
+      "target": {
+        "article": "audio-math",
+        "anchor": "sinusoid-sum"
+      }
+    }
+  ]
+}
