@@ -1,0 +1,16 @@
+{
+  "id": "track-dj-loudness",
+  "date": "2026-10-05",
+  "order": 19,
+  "type": "updated",
+  "track": "dj",
+  "items": [
+    {
+      "text": "Этап «Сигнал и уровень»: раздел о громкости в LUFS по желанию",
+      "target": {
+        "track": "dj",
+        "anchor": "stage-levels"
+      }
+    }
+  ]
+}

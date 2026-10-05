@@ -150,6 +150,76 @@
     }
   },
   {
+    "id": "lufs",
+    "ru": "LUFS",
+    "en": "loudness units relative to full scale",
+    "definition": "Единица громкости программы по ITU-R BS.1770 относительно полной шкалы: уровень среднего квадрата после взвешивания K в децибелах. В BS.1770 та же единица называется LKFS; разность значений записывают в LU.",
+    "target": {
+      "article": "signal-level",
+      "anchor": "loudness"
+    }
+  },
+  {
+    "id": "k-weighting",
+    "ru": "взвешивание K",
+    "en": "K-weighting",
+    "definition": "Частотная коррекция из ITU-R BS.1770 перед измерением громкости: полочный фильтр поднимает высокие частоты примерно на 4 дБ, фильтр верхних частот ослабляет низкие.",
+    "target": {
+      "article": "signal-level",
+      "anchor": "k-weighting"
+    }
+  },
+  {
+    "id": "loudness-gating",
+    "ru": "стробирование",
+    "en": "gating",
+    "definition": "Отбрасывание тихих блоков при измерении громкости по ITU-R BS.1770: сначала ниже абсолютного порога −70 LUFS, затем ниже относительного порога, на 10 LU ниже громкости оставшихся блоков.",
+    "target": {
+      "article": "signal-level",
+      "anchor": "integrated-loudness"
+    }
+  },
+  {
+    "id": "integrated-loudness",
+    "ru": "интегральная громкость",
+    "en": "integrated loudness",
+    "definition": "Громкость всей программы или фрагмента в LUFS, вычисленная по блокам 400 мс со стробированием. Основное число для сравнения громкости разных записей.",
+    "target": {
+      "article": "signal-level",
+      "anchor": "integrated-loudness"
+    }
+  },
+  {
+    "id": "loudness-range",
+    "ru": "диапазон громкости",
+    "en": "loudness range, LRA",
+    "definition": "Мера изменения громкости внутри программы в LU по EBU Tech 3342: разность значений кратковременной громкости после стробирования без 10 % самых тихих и 5 % самых громких.",
+    "target": {
+      "article": "signal-level",
+      "anchor": "loudness-range"
+    }
+  },
+  {
+    "id": "vu-meter",
+    "ru": "VU-метр",
+    "en": "VU meter, volume unit meter",
+    "definition": "Усредняющий измеритель уровня: стрелка доходит до 99 % показания за 300 мс. Показывает уровень, близкий к RMS, и не отображает короткие пики.",
+    "target": {
+      "article": "signal-level",
+      "anchor": "meters"
+    }
+  },
+  {
+    "id": "ppm",
+    "ru": "квазипиковый измеритель",
+    "en": "peak programme meter, PPM",
+    "definition": "Измеритель пикового уровня программы с временем интеграции 5–10 мс и медленным возвратом показания. Пики короче времени интеграции занижает.",
+    "target": {
+      "article": "signal-level",
+      "anchor": "meters"
+    }
+  },
+  {
     "id": "compressor",
     "ru": "компрессор",
     "en": "dynamic range compressor",

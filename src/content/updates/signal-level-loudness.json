@@ -1,0 +1,22 @@
+{
+  "id": "signal-level-loudness",
+  "date": "2026-10-05",
+  "order": 17,
+  "type": "updated",
+  "article": "signal-level",
+  "items": [
+    {
+      "text": "Новый раздел о громкости программы в LUFS: взвешивание K, стробирование, шкалы M, S, I и диапазон громкости",
+      "target": { "article": "signal-level", "anchor": "loudness" }
+    },
+    {
+      "text": "Истинный пик и единица dBTP",
+      "target": { "article": "signal-level", "anchor": "true-peak" }
+    },
+    {
+      "text": "Обзор измерителей уровня: пиковый, PPM, VU-метр и измеритель громкости",
+      "target": { "article": "signal-level", "anchor": "meters" }
+    },
+    { "text": "Термин «LUFS»", "target": { "glossary": "lufs" } }
+  ]
+}

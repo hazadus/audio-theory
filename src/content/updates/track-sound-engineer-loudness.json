@@ -1,0 +1,16 @@
+{
+  "id": "track-sound-engineer-loudness",
+  "date": "2026-10-05",
+  "order": 18,
+  "type": "updated",
+  "track": "sound-engineer",
+  "items": [
+    {
+      "text": "Этап «Цифровая запись и уровни»: истинный пик, громкость в LUFS и измерители уровня",
+      "target": {
+        "track": "sound-engineer",
+        "anchor": "stage-recording"
+      }
+    }
+  ]
+}
