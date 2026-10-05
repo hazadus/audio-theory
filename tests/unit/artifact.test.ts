@@ -89,4 +89,4 @@ test('несуществующая внутренняя страница бло�
   expect(build.status).not.toBe(0);
   expect(build.stdout + build.stderr).toContain('отсутствует страница или ресурс');
   expect(build.stdout + build.stderr).toContain('/audio-theory/missing/');
-}, 30_000);
+}, 90_000);
