@@ -1,6 +1,6 @@
 ---
 slug: compressor
-title: Как работает компрессор
+title: Принцип работы компрессора
 question: Как устройство само уменьшает разницу между громкими и тихими местами и что задают его параметры?
 topic: processing
 tags: [компрессор, динамика]
@@ -85,7 +85,7 @@ $$
   name="Порог и степень сжатия на статической характеристике"
   alt="График: по горизонтали вход от −40 до 0 dBFS, по вертикали выход от −40 до 0 dBFS. Пунктирная диагональ — выход без обработки. Сплошная линия совпадает с ней до порога −20 dBFS, отмеченного вертикальной точечной линией, затем идёт положе и приходит в −15 dBFS при входе 0. Точка при входе −8 dBFS имеет выход −17 dBFS; стрелки показывают превышение порога на 12 дБ по входу и на 3 дБ по выходу."
 >
-  <svg viewBox="0 0 400 340" xmlns="http://www.w3.org/2000/svg">
+  <svg viewBox="0 0 400 340" style="max-width: 356px; margin-inline: auto" xmlns="http://www.w3.org/2000/svg">
     <path fill="none" stroke="var(--chart-grid)" stroke-width="1" d="M129 24V284M194 24V284M259 24V284M64 219H324M64 154H324M64 89H324" />
     <path fill="none" stroke="var(--chart-axis)" stroke-width="1.5" d="M64 24V284H324" />
     <path fill="none" stroke="var(--chart-axis)" stroke-width="1" stroke-dasharray="3 3" d="M64 284L324 24" />
@@ -102,7 +102,7 @@ $$
       <path d="M210 238H234" stroke="var(--chart-axis)" stroke-width="1" stroke-dasharray="3 3" />
       <path d="M210 262H234" stroke="var(--chart-label)" stroke-width="1.5" stroke-dasharray="1.5 3" />
     </g>
-    <g fill="var(--chart-label)" font-size="17">
+    <g fill="var(--chart-label)" font-size="18">
       <text x="56" y="30" text-anchor="end">0</text><text x="56" y="95" text-anchor="end">−10</text><text x="56" y="160" text-anchor="end">−20</text><text x="56" y="225" text-anchor="end">−30</text><text x="56" y="290" text-anchor="end">−40</text>
       <text x="64" y="306" text-anchor="middle">−40</text><text x="129" y="306" text-anchor="middle">−30</text><text x="194" y="306" text-anchor="middle">−20</text><text x="259" y="306" text-anchor="middle">−10</text><text x="324" y="306" text-anchor="middle">0</text>
       <text x="194" y="332" text-anchor="middle">вход, dBFS</text>
@@ -229,29 +229,114 @@ $$
 <Figure
   id="family-figure"
   number={3}
-  caption="Статические характеристики при пороге T = −30 dBFS. Слева устройства, которые меняют уровень выше порога: компрессор 4:1 и лимитер. Справа — ниже порога: экспандер, у которого каждый децибел входа даёт 2 дБ выхода, и гейт, который отключает сигнал. Пунктирная диагональ — выход без обработки."
+  caption="Статические характеристики при пороге T = −30 dBFS. Слева устройства, которые меняют уровень выше порога: компрессор 4:1 и лимитер. Справа — ниже порога: экспандер, у которого каждый децибел входа даёт 2 дБ выхода, и гейт, который отключает сигнал. Оси — уровни входа и выхода от −60 до 0 dBFS, пунктирная диагональ — выход без обработки."
   name="Компрессор, лимитер, экспандер и гейт"
   alt="Два графика с осями от −60 до 0 dBFS. Слева: сплошная линия компрессора 4:1 совпадает с диагональю до порога −30 dBFS, затем идёт положе до −22,5 dBFS при входе 0; штрихпунктирная линия лимитера выше порога горизонтальна на уровне −30 dBFS. Справа: сплошная линия экспандера совпадает с диагональю выше порога, а ниже идёт вдвое круче и доходит до −60 dBFS при входе −45 dBFS; штрихпунктирная линия гейта ниже порога лежит на нижней границе графика и поднимается вертикально на пороге."
 >
-  <svg viewBox="0 0 480 330" xmlns="http://www.w3.org/2000/svg">
-    <path fill="none" stroke="var(--chart-grid)" d="M137 60V230M52 145H222" /><path fill="none" stroke="var(--chart-axis)" stroke-width="1.5" d="M52 60V230H222" /><path fill="none" stroke="var(--chart-axis)" stroke-dasharray="3 3" d="M52.0 230.0L222.0 60.0" /><path fill="none" stroke="var(--chart-label)" stroke-width="1.5" stroke-dasharray="1.5 3" d="M137.0 60V230" /><path fill="none" stroke="var(--chart-result)" stroke-width="2.5" d="M52.0 230.0L137.0 145.0L222.0 123.8" /><path fill="none" stroke="var(--chart-series-4)" stroke-width="2.5" stroke-dasharray="8 3 2 3" d="M52.0 230.0L137.0 145.0L222.0 145.0" /><g fill="var(--chart-label)" font-size="17"><text x="137" y="30" text-anchor="middle" font-weight="600">Выше порога</text><text x="46" y="66" text-anchor="end">0</text><text x="222" y="252" text-anchor="end">0 dBFS</text><text x="46" y="151" text-anchor="end">−30</text><text x="137" y="252" text-anchor="middle">−30</text><text x="46" y="236" text-anchor="end">−60</text><text x="52" y="252" text-anchor="start">−60</text><text x="142.0" y="74" font-style="italic">T</text></g>
-    <path fill="none" stroke="var(--chart-grid)" d="M385 60V230M300 145H470" /><path fill="none" stroke="var(--chart-axis)" stroke-width="1.5" d="M300 60V230H470" /><path fill="none" stroke="var(--chart-axis)" stroke-dasharray="3 3" d="M300.0 230.0L470.0 60.0" /><path fill="none" stroke="var(--chart-label)" stroke-width="1.5" stroke-dasharray="1.5 3" d="M385.0 60V230" /><path fill="none" stroke="var(--chart-result)" stroke-width="2.5" d="M342.5 230.0L385.0 145.0L470.0 60.0" /><path fill="none" stroke="var(--chart-series-4)" stroke-width="2.5" stroke-dasharray="8 3 2 3" d="M300.0 230.0H385.0V145.0L470.0 60.0" /><g fill="var(--chart-label)" font-size="17"><text x="385" y="30" text-anchor="middle" font-weight="600">Ниже порога</text><text x="294" y="66" text-anchor="end">0</text><text x="470" y="252" text-anchor="end">0 dBFS</text><text x="294" y="151" text-anchor="end">−30</text><text x="385" y="252" text-anchor="middle">−30</text><text x="294" y="236" text-anchor="end">−60</text><text x="300" y="252" text-anchor="start">−60</text><text x="390.0" y="74" font-style="italic">T</text></g>
-    <path d="M52 286H76" fill="none" stroke="var(--chart-result)" stroke-width="2.5" /><path d="M52 312H76" fill="none" stroke="var(--chart-series-4)" stroke-width="2.5" stroke-dasharray="8 3 2 3" /><g fill="var(--chart-label)" font-size="17"><text x="84" y="292">компрессор 4:1</text><text x="84" y="318">лимитер</text></g>
-    <path d="M300 286H324" fill="none" stroke="var(--chart-result)" stroke-width="2.5" /><path d="M300 312H324" fill="none" stroke="var(--chart-series-4)" stroke-width="2.5" stroke-dasharray="8 3 2 3" /><g fill="var(--chart-label)" font-size="17"><text x="332" y="292">экспандер 1:2</text><text x="332" y="318">гейт</text></g>
+  <svg viewBox="0 0 480 340" style="max-width: 366px; margin-inline: auto" xmlns="http://www.w3.org/2000/svg">
+    <path fill="none" stroke="var(--chart-grid)" d="M137 60V230M52 145H222" /><path fill="none" stroke="var(--chart-axis)" stroke-width="1.5" d="M52 60V230H222" /><path fill="none" stroke="var(--chart-axis)" stroke-dasharray="3 3" d="M52.0 230.0L222.0 60.0" /><path fill="none" stroke="var(--chart-label)" stroke-width="1.5" stroke-dasharray="1.5 3" d="M137.0 60V230" /><path fill="none" stroke="var(--chart-result)" stroke-width="2.5" d="M52.0 230.0L137.0 145.0L222.0 123.8" /><path fill="none" stroke="var(--chart-series-4)" stroke-width="2.5" stroke-dasharray="8 3 2 3" d="M52.0 230.0L137.0 145.0L222.0 145.0" /><g fill="var(--chart-label)" font-size="21"><text x="137" y="30" text-anchor="middle" font-weight="600">Выше порога</text><text x="46" y="66" text-anchor="end">0</text><text x="222" y="254" text-anchor="end">0</text><text x="46" y="151" text-anchor="end">−30</text><text x="137" y="254" text-anchor="middle">−30</text><text x="46" y="236" text-anchor="end">−60</text><text x="52" y="254" text-anchor="start">−60</text><text x="142.0" y="74" font-style="italic">T</text></g>
+    <path fill="none" stroke="var(--chart-grid)" d="M385 60V230M300 145H470" /><path fill="none" stroke="var(--chart-axis)" stroke-width="1.5" d="M300 60V230H470" /><path fill="none" stroke="var(--chart-axis)" stroke-dasharray="3 3" d="M300.0 230.0L470.0 60.0" /><path fill="none" stroke="var(--chart-label)" stroke-width="1.5" stroke-dasharray="1.5 3" d="M385.0 60V230" /><path fill="none" stroke="var(--chart-result)" stroke-width="2.5" d="M342.5 230.0L385.0 145.0L470.0 60.0" /><path fill="none" stroke="var(--chart-series-4)" stroke-width="2.5" stroke-dasharray="8 3 2 3" d="M300.0 230.0H385.0V145.0L470.0 60.0" /><g fill="var(--chart-label)" font-size="21"><text x="385" y="30" text-anchor="middle" font-weight="600">Ниже порога</text><text x="294" y="66" text-anchor="end">0</text><text x="470" y="254" text-anchor="end">0</text><text x="294" y="151" text-anchor="end">−30</text><text x="385" y="254" text-anchor="middle">−30</text><text x="294" y="236" text-anchor="end">−60</text><text x="300" y="254" text-anchor="start">−60</text><text x="390.0" y="74" font-style="italic">T</text></g>
+    <path d="M52 294H74" fill="none" stroke="var(--chart-result)" stroke-width="2.5" /><path d="M52 324H74" fill="none" stroke="var(--chart-series-4)" stroke-width="2.5" stroke-dasharray="8 3 2 3" /><g fill="var(--chart-label)" font-size="21"><text x="80" y="301">компрессор 4:1</text><text x="80" y="331">лимитер</text></g>
+    <path d="M300 294H322" fill="none" stroke="var(--chart-result)" stroke-width="2.5" /><path d="M300 324H322" fill="none" stroke="var(--chart-series-4)" stroke-width="2.5" stroke-dasharray="8 3 2 3" /><g fill="var(--chart-label)" font-size="21"><text x="328" y="301">экспандер 1:2</text><text x="328" y="331">гейт</text></g>
   </svg>
 </Figure>
 
+## Боковая цепь управления {#sidechain}
+
+Детектор уровня, вычислитель усиления и сглаживание из [раздела «Устройство»](#structure) образуют отдельный тракт анализа — <Term id="sidechain" firstMention define>боковую цепь управления</Term>. Обычно в неё подаётся копия входа, и компрессор сжимает сигнал по его собственному уровню. Многие компрессоры позволяют подать в боковую цепь другой сигнал через внешний вход (key input). Тогда уровень измеряется по управляющему сигналу, а рассчитанное усиление по-прежнему применяется к основному ([рисунок 4](#sidechain-figure)) (Izhaki, «Mixing Audio», гл. 16, с. 288–289). В MATLAB такой режим включает свойство `EnableSidechain`: объект получает два входа, сжимаемый сигнал и сигнал для расчёта усиления ([MATLAB, compressor](https://www.mathworks.com/help/audio/ref/compressor-system-object.html)).
+
+<Figure
+  id="sidechain-figure"
+  number={4}
+  caption="Компрессор с боковой цепью управления. Основной сигнал идёт по верхней линии и только умножается на усиление. Уровень измеряется в боковой цепи: по копии основного сигнала (внутренняя цепь, штриховая линия) или по сигналу с внешнего входа. Фильтр в боковой цепи меняет то, на что реагирует компрессор, но не меняет основной сигнал."
+  name="Компрессор с боковой цепью управления"
+  alt="Схема. Слева сверху блок «Основной вход»; от него сплошная линия идёт вправо к кругу со знаком умножения, от круга — к выходу. Слева снизу блок «Внешний вход (key input)». От основного входа вниз идёт штриховая линия с подписью «внутренняя цепь», от внешнего входа — сплошная линия; обе сходятся в точке выбора и ведут к блоку «Фильтр» в правом нижнем углу. От фильтра стрелки идут вверх через блоки «Детектор уровня», «Вычислитель усиления: порог, сжатие, колено» и «Сглаживание: атака, восстановление» к кругу умножения; последняя стрелка подписана «усиление»."
+>
+  <svg viewBox="0 0 360 380" style="max-width: 360px; margin-inline: auto" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="sidechain-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0L10 5L0 10Z" fill="var(--chart-axis)" />
+      </marker>
+      <marker id="sidechain-arrow-signal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0L10 5L0 10Z" fill="var(--chart-signal)" />
+      </marker>
+      <marker id="sidechain-arrow-gain" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0L10 5L0 10Z" fill="var(--chart-result)" />
+      </marker>
+    </defs>
+    <g fill="var(--chart-bg)" stroke="var(--chart-axis)" stroke-width="1.5">
+      <rect x="6" y="14" width="104" height="50" rx="6" />
+      <rect x="6" y="308" width="104" height="66" rx="6" />
+      <rect x="150" y="112" width="204" height="50" rx="6" />
+      <rect x="150" y="186" width="204" height="50" rx="6" />
+      <rect x="150" y="260" width="204" height="38" rx="6" />
+      <rect x="150" y="322" width="204" height="38" rx="6" />
+    </g>
+    <g fill="none" stroke="var(--chart-signal)" stroke-width="2">
+      <path d="M110 39H231" marker-end="url(#sidechain-arrow-signal)" />
+      <path d="M270 39H354" marker-end="url(#sidechain-arrow-signal)" />
+    </g>
+    <circle cx="252" cy="39" r="18" fill="var(--chart-bg)" stroke="var(--chart-result)" stroke-width="2.5" />
+    <path d="M245 32L259 46M259 32L245 46" fill="none" stroke="var(--chart-result)" stroke-width="2" />
+    <g fill="none" stroke="var(--chart-axis)" stroke-width="1.5">
+      <path d="M58 64V294H132V337" stroke-dasharray="5 3" />
+      <path d="M110 341H128" />
+      <path d="M136 341H148" marker-end="url(#sidechain-arrow)" />
+      <path d="M252 322V300" marker-end="url(#sidechain-arrow)" />
+      <path d="M252 260V238" marker-end="url(#sidechain-arrow)" />
+      <path d="M252 186V164" marker-end="url(#sidechain-arrow)" />
+    </g>
+    <circle cx="132" cy="341" r="4" fill="var(--chart-axis)" />
+    <path d="M252 112V59" fill="none" stroke="var(--chart-result)" stroke-width="2" marker-end="url(#sidechain-arrow-gain)" />
+    <g fill="var(--color-text)" text-anchor="middle" font-size="16">
+      <text x="58" y="35">Основной</text>
+      <text x="58" y="54">вход</text>
+      <text x="58" y="329">Внешний</text>
+      <text x="58" y="348">вход</text>
+      <text x="58" y="367">(key input)</text>
+      <text x="252" y="133">Сглаживание:</text>
+      <text x="252" y="152">атака, восстановление</text>
+      <text x="252" y="207">Вычислитель усиления:</text>
+      <text x="252" y="226">порог, сжатие, колено</text>
+      <text x="252" y="285">Детектор уровня</text>
+      <text x="252" y="347">Фильтр</text>
+    </g>
+    <g fill="var(--chart-label)" font-size="16">
+      <text x="312" y="26" text-anchor="middle">выход</text>
+      <text x="244" y="92" text-anchor="end">усиление</text>
+      <text x="66" y="102">внутренняя</text>
+      <text x="66" y="121">цепь</text>
+    </g>
+  </svg>
+</Figure>
+
+С внешней боковой цепью громкость одного сигнала зависит от другого. На радио музыку подают на основной вход компрессора, а голос ведущего — на управляющий. Когда ведущий говорит, уровень голоса превышает порог, и компрессор ослабляет музыку; в паузах речи она возвращается. Такой приём называют <Term id="ducking" firstMention define>приглушением</Term>. Атака задаёт, как быстро музыка уходит вниз, восстановление — как быстро возвращается (Izhaki, гл. 20, с. 371–372; [Wikipedia, Dynamic range compression](https://en.wikipedia.org/wiki/Dynamic_range_compression#Side-chaining)). В сведении так же ослабляют орган или бас по бочке. При каждом ударе они ненадолго становятся тише и уступают бочке место, а затем возвращаются. Если восстановление успевает вернуть усиление к следующему удару, громкость начинает меняться в ритме бочки (Izhaki, гл. 16, с. 317).
+
+Компрессор приглушает не на постоянную величину: подавление зависит от того, насколько управляющий сигнал выше порога. Поэтому уровень музыки колеблется вместе с громкостью голоса. Отдельное устройство для приглушения, дакер (ducker), ослабляет сигнал выше порога на заданное число децибел независимо от превышения (Izhaki, гл. 16, с. 317; гл. 20, с. 371).
+
+<SelfCheck question="Компрессор с внешней боковой цепью: порог −30 dBFS, сжатие 4:1, атака мгновенная. На основной вход идёт музыка с уровнем −12 dBFS, на управляющий — голос с уровнем −18 dBFS. Каким будет уровень музыки на выходе? А когда голос молчит?">
+
+Подавление считается по голосу: он на 12 дБ выше порога, по характеристике выход должен быть на 12 / 4 = 3 дБ выше порога, значит подавление −9 дБ. Оно применяется к музыке: −12 − 9 = −21 dBFS. Когда голос молчит, его уровень ниже порога, подавление равно нулю, и музыка выходит с уровнем −12 dBFS, хотя сама она выше порога.
+
+</SelfCheck>
+
+Боковую цепь можно обработать, не трогая основной сигнал. Во многих компрессорах есть встроенный фильтр боковой цепи, и он действует и на внутренний, и на внешний управляющий сигнал (Izhaki, гл. 16, с. 289). Без фильтра компрессор сильнее реагирует на низкие частоты. У них длинный период, и сигнал дольше остаётся выше порога; кроме того, в миксе у них обычно больший уровень, потому что на низких частотах слух [менее чувствителен](/equal-loudness/#reading-contours). Если сжимать барабанные микрофоны над установкой, подавление запускает в основном бочка, и вместе с ней при каждом ударе тише становятся тарелки. Фильтр верхних частот (high-pass filter) в боковой цепи убирает бочку из измерения: компрессор реагирует на сигнал равномернее, а сама бочка в основном сигнале остаётся (Izhaki, гл. 16, с. 307). Фильтр меняет и тембр результата: частоты, убранные из боковой цепи, реже вызывают подавление и поэтому звучат громче (там же, с. 308).
+
+Обратный приём — усилить в боковой цепи полосу, которую нужно приглушить. Свистящие и шипящие согласные голоса, сибилянты, дают энергию на высоких частотах, примерно 6–9 кГц ([Wikipedia, Dynamic range compression](https://en.wikipedia.org/wiki/Dynamic_range_compression#Side-chaining)). Если поднять эту полосу в боковой цепи, а частоты ниже отфильтровать, компрессор срабатывает в основном на сибилянтах и в эти моменты ослабляет голос. Так устроен простейший <Term id="de-esser" firstMention define>деэссер</Term>. Он ослабляет весь голос, а не только шипящие, и пропускает сибилянты тихих фраз, которые не достигают порога; специализированные деэссеры учитывают и то и другое (Izhaki, гл. 16, с. 316).
+
 <Callout type="note" title="Что осталось за пределами статьи">
 
-Компрессор может измерять уровень не по самому сигналу, а по другому, поданному в <Term id="sidechain" firstMention define>боковую цепь управления</Term>, делить сигнал на полосы частот и сжимать каждую отдельно (многополосный компрессор) или смешивать сжатый сигнал с исходным (параллельная компрессия). Все эти варианты используют те же порог, степень сжатия, атаку и восстановление.
+Компрессор может делить сигнал на полосы частот и сжимать каждую отдельно (многополосный компрессор) или смешивать сжатый сигнал с исходным (параллельная компрессия). Оба варианта используют те же порог, степень сжатия, атаку и восстановление.
 
 </Callout>
 
 ## Источники {#sources}
 
-- [MathWorks. Audio Toolbox: compressor](https://www.mathworks.com/help/audio/ref/compressor-system-object.html) — статическая характеристика с жёстким и мягким коленом, сглаживание подавления, определение времени атаки и восстановления от 10 до 90 %, автоматическая компенсация; ссылка на Giannoulis, Massberg, Reiss, JAES 2012.
+- [MathWorks. Audio Toolbox: compressor](https://www.mathworks.com/help/audio/ref/compressor-system-object.html) — статическая характеристика с жёстким и мягким коленом, сглаживание подавления, определение времени атаки и восстановления от 10 до 90 %, автоматическая компенсация, вход боковой цепи `EnableSidechain`; ссылка на Giannoulis, Massberg, Reiss, JAES 2012.
 - [MathWorks. Audio Toolbox: limiter](https://www.mathworks.com/help/audio/ref/limiter-system-object.html) — выход выше порога равен порогу.
 - [MathWorks. Audio Toolbox: expander](https://www.mathworks.com/help/audio/ref/expander-system-object.html) — характеристика экспандера ниже порога.
 - [MathWorks. Audio Toolbox: noiseGate](https://www.mathworks.com/help/audio/ref/noisegate-system-object.html) — нулевое усиление ниже порога, время удержания.
 - [W3C. Web Audio API: DynamicsCompressorNode](https://webaudio.github.io/web-audio-api/#DynamicsCompressorNode) — параметры порога, колена, степени сжатия, атаки и восстановления, задержка 6 мс для взгляда вперёд.
 - [Wikipedia. Компрессор аудиосигнала](https://ru.wikipedia.org/wiki/Компрессор_аудиосигнала) — русские названия параметров, пример сжатия 2:1.
+- [Wikipedia. Dynamic range compression, раздел Side-chaining](https://en.wikipedia.org/wiki/Dynamic_range_compression#Side-chaining) — приглушение музыки голосом ведущего, деэссер и диапазон сибилянтов 6–9 кГц.
+- Roey Izhaki. Mixing Audio: Concepts, Practices and Tools. 2nd ed. Focal Press, 2012. ISBN 978-0-240-52222-7 — гл. 16, с. 288–289: внешний вход и фильтр боковой цепи; с. 306–308: почему низкие частоты сильнее запускают сжатие, фильтр верхних частот в боковой цепи; с. 316: деэссер на компрессоре; с. 317: сжатие по бочке и отличие компрессора от дакера; гл. 20, с. 371–372: дакер, приглушение музыки голосом.

@@ -1,0 +1,35 @@
+{
+  "id": "compressor-sidechain",
+  "date": "2026-10-05",
+  "order": 12,
+  "type": "updated",
+  "article": "compressor",
+  "items": [
+    {
+      "text": "Новый раздел о боковой цепи: приглушение, фильтр и деэссер",
+      "target": {
+        "article": "compressor",
+        "anchor": "sidechain"
+      }
+    },
+    {
+      "text": "Схема компрессора с внешним управляющим входом",
+      "target": {
+        "article": "compressor",
+        "anchor": "sidechain-figure"
+      }
+    },
+    {
+      "text": "Термин «приглушение»",
+      "target": {
+        "glossary": "ducking"
+      }
+    },
+    {
+      "text": "Термин «деэссер»",
+      "target": {
+        "glossary": "de-esser"
+      }
+    }
+  ]
+}
