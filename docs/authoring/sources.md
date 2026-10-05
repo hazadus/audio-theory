@@ -299,3 +299,7 @@
 
 - [Julius O. Smith III. Spectral Audio Signal Processing, White Noise](https://www.dsprelated.com/freebooks/sasp/White_Noise.html) — прочитаны определение белого шума через некоррелированность, отличие от распределения амплитуд и усреднение спектральных оценок.
 - [OpenStax. Introductory Statistics 2e, §3.2: Independent and Mutually Exclusive Events](https://openstax.org/books/introductory-statistics-2e/pages/3-2-independent-and-mutually-exclusive-events) — прочитаны определение независимости и примеры повторных испытаний.
+
+## Нормы громкости вещания
+
+- [Приказ Минкомсвязи России от 21.05.2015 № 171 «Об утверждении стандартов и параметров громкости звукового сопровождения видеопрограмм и радиопрограмм»](https://www.garant.ru/products/ipo/prime/doc/70951794/) — российская норма громкости программы −23,0 LUFS с допустимым отклонением, опора на ITU-R BS.1770 и EBU R 128. Страница прочитана по краткому изложению; перед ссылкой на конкретные значения и допуски сверить текст приказа. Темы: LUFS, нормализация громкости, измерение громкости программы.
