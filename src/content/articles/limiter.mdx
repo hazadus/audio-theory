@@ -34,6 +34,7 @@ related:
 
 import Callout from '@/components/Callout.astro';
 import CalloutCase from '@/components/CalloutCase.astro';
+import DataTable from '@/components/DataTable.astro';
 import Equation from '@/components/Equation.astro';
 import Figure from '@/components/Figure.astro';
 import MarginNote from '@/components/MarginNote.astro';
@@ -305,6 +306,44 @@ $$
 
 Лимитер не заменяет компрессор. У компрессора можно выбрать атаку, степень сжатия, колено и детектор, и с их помощью менять характер звука. Лимитер скрывает большинство этих параметров, потому что их изменение помешало бы держать границу ([Izhaki, гл. 17, с. 332](#sources)). Часто их ставят друг за другом: компрессор выравнивает уровни, а лимитер после него ловит оставшиеся пики.
 
+## Примеры приборов {#devices}
+
+В рабочей станции (digital audio workstation, DAW) лимитер — программный модуль, плагин (plug-in). [Таблица 1](#devices-table) перечисляет несколько лимитеров: встроенные в DAW, бесплатный и коммерческие. У всех есть входное усиление или порог и потолок, а различаются они устройством восстановления и защиты от пиков между отсчётами. Описания взяты из руководств производителей; версии и состав функций со временем меняются.
+
+<DataTable
+  id="devices-table"
+  number={1}
+  caption="Программные лимитеры и их параметры по руководствам производителей"
+  columns={[
+    { label: 'Прибор и вид', width: '9rem' },
+    { label: 'Что связано со статьёй' },
+  ]}
+  rows={[
+    [
+      '<a href="https://support.apple.com/guide/logicpro/adaptive-limiter-controls-lgcef1becbb8/mac">Adaptive Limiter</a><br>Apple Logic Pro<br>встроенный в DAW',
+      'Gain — входное усиление, Out Ceiling — <a href="#what-it-does">потолок</a>. Lookahead задаёт длину <a href="#lookahead">предварительного анализа</a> и вносит задержку, кнопка Optimal Lookahead подбирает её автоматически. True Peak Detection включает учёт <a href="#true-peak">пиков между отсчётами</a>. По описанию Apple, прибор скругляет вершины и может слегка окрасить звук.',
+    ],
+    [
+      '<a href="https://www.ableton.com/en/manual/live-audio-effect-reference/">Limiter</a><br>Ableton Live<br>встроенный в DAW',
+      'Входное усиление и потолок Ceiling; в режиме Maximize вместо потолка регулируется порог с автоматической компенсацией. Предварительный анализ 1,5, 3 или 6 мс: короткий, по описанию Ableton, сильнее искажает бас. Восстановление ручное или автоматическое. Режимы потолка: Standard, Soft Clip с <a href="#clipper">мягким клиппером</a> и True Peak.',
+    ],
+    [
+      '<a href="https://loudmax.blogspot.com/">LoudMax</a><br>бесплатный',
+      'Два регулятора: порог и выходной уровень. Предварительный анализ и атака постоянны, 1,25 мс; при 48 кГц это 60 отсчётов. Восстановление только автоматическое. Режим ISP ограничивает истинный пик и добавляет к задержке 6 отсчётов.',
+    ],
+    [
+      '<a href="https://www.fabfilter.com/products/pro-l-2-limiter-plug-in">Pro-L 2</a><br>FabFilter<br>коммерческий',
+      'Две ступени: быстрая с предварительным анализом ловит пики, медленная с ручками Attack и Release следит за средним уровнем. Предварительный анализ короче 0,1 мс, по описанию производителя, приближает работу к <a href="#detector-attack">жёсткому клиппингу</a>. Восемь алгоритмов, ограничение истинного пика, передискретизация до 32 раз.',
+    ],
+    [
+      '<a href="https://www.tokyodawn.net/tdr-limiter6-ge/">Limiter 6 GE</a><br>Tokyo Dawn Labs<br>коммерческий',
+      'Модули компрессора, пикового лимитера, лимитера высоких частот и клиппера переставляются; последним всегда стоит защитный лимитер выхода. Руководство предлагает порядок по скорости реакции: компрессор, лимитер, клиппер, чтобы каждый модуль обрабатывал только прорывы предыдущего. Это то же <a href="#release">ограничение в две ступени</a>, только ступеней больше. Потолок выхода задаётся по отсчётам (PCM) или по истинному пику.',
+    ],
+  ]}
+/>
+
+Все приборы из таблицы используют предварительный анализ и поэтому задерживают сигнал, у всех есть режим учёта истинного пика. Руководство Limiter 6 GE предупреждает, что потолок по отсчётам может давать заметное наложение спектров и пики между отсчётами. Для записи, которая пойдёт в эфир или на площадку с нормой −1 dBTP, нужен потолок по истинному пику, как в [разделе о пиках между отсчётами](#true-peak).
+
 ## Источники {#sources}
 
 - Roey Izhaki. Mixing Audio: Concepts, Practices and Tools. 2nd ed. Focal Press, 2012. ISBN 978-0-240-52222-7 — гл. 15, с. 264–265 (характеристика лимитера, накачка); гл. 16, с. 279 (автоматическое восстановление), с. 294 (компрессор 10:1 и ∞:1 против лимитера), с. 301–303 (искажение низких частот при коротком восстановлении, удержание, накачка, очень длинное восстановление); гл. 17, с. 331–333 (пиковый детектор, жёсткое колено и нулевая атака, предварительный анализ, две ступени, потолок и запас на ЦАП, применение, сравнение при одинаковой громкости).
@@ -314,5 +353,10 @@ $$
 - [EBU R 128-2023. Loudness normalisation and permitted maximum level of audio signals](https://tech.ebu.ch/docs/r/r128.pdf) — пункт m: истинный пик не выше −1 dBTP при производстве, допуск ±0,3 дБ, более низкие пределы для систем распространения.
 - [Приказ Минкомсвязи России от 21.05.2015 № 171 «Об утверждении Рекомендаций в области нормирования звуковых сигналов в телерадиовещании»](https://www.garant.ru/products/ipo/prime/doc/70951794/) — п. 1.3–1.4 (добровольное применение, основа EBU R 128-2011), п. 3.7–3.8 (−1 dBTP в тракте формирования программы, −3 dBTP для программ короче 30 с).
 - [W3C. Web Audio API: DynamicsCompressorNode](https://webaudio.github.io/web-audio-api/#DynamicsCompressorNode) — фиксированная задержка 6 мс для предварительного анализа.
+- [Apple. Logic Pro User Guide: Adaptive Limiter](https://support.apple.com/guide/logicpro/adaptive-limiter-controls-lgcef1becbb8/mac) — входное усиление, потолок, предварительный анализ и его задержка, учёт пиков между отсчётами.
+- [Ableton. Live 12 Reference Manual: Live Audio Effect Reference, Limiter](https://www.ableton.com/en/manual/live-audio-effect-reference/) — потолок и режим Maximize, предварительный анализ 1,5, 3 и 6 мс, автоматическое восстановление, режимы Standard, Soft Clip и True Peak.
+- [LoudMax](https://loudmax.blogspot.com/) — два регулятора, постоянные предварительный анализ и атака 1,25 мс, автоматическое восстановление, режим ISP.
+- [FabFilter. Pro-L 2 Help: Advanced settings](https://www.fabfilter.com/help/pro-l/using/advancedsettings) и [Input and output options](https://www.fabfilter.com/help/pro-l/using/outputoptions) — алгоритмы, быстрая ступень с предварительным анализом и медленная ступень восстановления, приближение к клиппингу при анализе короче 0,1 мс, ограничение истинного пика.
+- [Tokyo Dawn Labs. Limiter 6 GE Manual](https://docs.tokyodawn.net/limiter-6-ge-manual/) — модули и их порядок, защитный лимитер выхода, потолок по отсчётам и по истинному пику.
 - [Julius O. Smith III. Physical Audio Signal Processing: Clipping Nonlinearity](https://www.dsprelated.com/freebooks/pasp/Clipping_Nonlinearity.html) и [Soft Clipping](https://ccrma.stanford.edu/~jos/pasp/Soft_Clipping.html) — необратимость жёсткого ограничения, наложение спектров, кубический мягкий клиппер.
 - [Wikipedia. Dynamic range compression](https://en.wikipedia.org/wiki/Dynamic_range_compression) — разделы Look-ahead (две ветви, задержка звука, цена в виде задержки) и Limiting (сравнение лимитера и клиппера).

@@ -1,0 +1,13 @@
+{
+  "id": "compressor-devices",
+  "date": "2026-10-05",
+  "order": 20,
+  "type": "updated",
+  "article": "compressor",
+  "items": [
+    {
+      "text": "Примеры программных компрессоров: встроенные в DAW, бесплатный и модели 1176 и LA-2A",
+      "target": { "article": "compressor", "anchor": "devices" }
+    }
+  ]
+}

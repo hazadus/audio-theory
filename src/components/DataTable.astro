@@ -5,6 +5,8 @@ interface Column {
   label: string;
   /** `end` — числа: выравнивание вправо и табличные цифры. */
   align?: 'start' | 'end';
+  /** Ширина столбца в CSS, например `9rem`: не даёт длинному тексту соседнего столбца сжать этот. */
+  width?: string;
 }
 
 interface Props {
@@ -49,7 +51,12 @@ for (const [index, row] of rows.entries()) {
         <thead>
           <tr>
             {columns.map((column) => (
-              <th scope="col" data-align={column.align ?? 'start'} set:html={column.label} />
+              <th
+                scope="col"
+                data-align={column.align ?? 'start'}
+                style={column.width ? `width: ${column.width}` : undefined}
+                set:html={column.label}
+              />
             ))}
           </tr>
         </thead>

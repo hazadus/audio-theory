@@ -32,6 +32,7 @@ related:
 import Callout from '@/components/Callout.astro';
 import CalloutCase from '@/components/CalloutCase.astro';
 import CompressorDemo from '@/components/CompressorDemo.astro';
+import DataTable from '@/components/DataTable.astro';
 import Equation from '@/components/Equation.astro';
 import Figure from '@/components/Figure.astro';
 import MarginNote from '@/components/MarginNote.astro';
@@ -328,6 +329,48 @@ $$
 
 </Callout>
 
+## Примеры приборов {#devices}
+
+В рабочей станции (digital audio workstation, DAW) компрессор — это программный модуль, плагин (plug-in). Параметры из этой статьи есть у большинства таких модулей, но набор ручек и их названия различаются. [Таблица 1](#devices-table) перечисляет несколько распространённых компрессоров: встроенные в DAW, бесплатный и коммерческие. Два последних в таблице — цифровые модели (эмуляции) аналоговых приборов, они повторяют органы управления оригиналов. Описания взяты из руководств производителей; версии и состав функций со временем меняются.
+
+<DataTable
+  id="devices-table"
+  number={1}
+  caption="Программные компрессоры и их параметры по руководствам производителей"
+  columns={[
+    { label: 'Прибор и вид', width: '9rem' },
+    { label: 'Что связано со статьёй' },
+  ]}
+  rows={[
+    [
+      '<a href="https://support.apple.com/guide/logicpro/compressor-main-parameters-lgcead9636ef/mac">Compressor</a><br>Apple Logic Pro<br>встроенный в DAW',
+      'Переключатель Circuit Type выбирает одну из семи моделей: цифровую Platinum Digital и модели схем VCA, FET и Opto. Knee задаёт <a href="#knee">колено</a> от жёсткого до мягкого, Auto Release подстраивает <a href="#attack-release">восстановление</a> под материал, Auto Gain включает <a href="#makeup">компенсацию</a>.',
+    ],
+    [
+      '<a href="https://www.ableton.com/en/manual/live-audio-effect-reference/">Compressor</a><br>Ableton Live<br>встроенный в DAW',
+      'Детектор переключается между пиковым (Peak) и среднеквадратичным (RMS) уровнем, предварительный анализ — 0, 1 или 10 мс. Режим Expand поднимает уровень выше порога: при 1:2 каждый децибел входа над порогом даёт 2 дБ выхода. Это не <a href="#expander-gate">экспандер</a> из статьи, который работает ниже порога. Есть внешний вход и эквалайзер <a href="#sidechain">боковой цепи</a>.',
+    ],
+    [
+      '<a href="https://www.reaper.fm/reaplugs/">ReaComp</a><br>Cockos<br>бесплатный, в наборе ReaPlugs',
+      'Мягкое колено, настраиваемая длина окна RMS, автоматическое восстановление, предварительный анализ, фильтры и внешний вход боковой цепи, режим обратной связи (feedback), в котором уровень измеряется после ослабления.',
+    ],
+    [
+      '<a href="https://www.fabfilter.com/products/pro-c-3-compressor-plug-in">Pro-C 3</a><br>FabFilter<br>коммерческий',
+      'Колено от жёсткого до мягкого шириной 72 дБ, предварительный анализ до 20 мс, удержание до 500 мс, до шести полос эквалайзера в боковой цепи, регулятор Mix для параллельной компрессии и 14 стилей сжатия.',
+    ],
+    [
+      '<a href="https://www.uaudio.com/products/1176-collection">1176 Classic Limiter Collection</a><br>Universal Audio<br>коммерческий, модель транзисторного компрессора 1176LN',
+      'Ручка Input поднимает вход и тем самым увеличивает сжатие: порог не настраивается отдельно. Степень сжатия выбирается кнопками 4:1, 8:1, 12:1 и 20:1, атака 20–800 мкс, восстановление 50–1100 мс. Уровень измеряется после ослабления, по схеме с обратной связью, а не на входе, как в <a href="#structure">разделе «Устройство»</a>.',
+    ],
+    [
+      '<a href="https://www.uaudio.com/products/teletronix-la-2a-collection">Teletronix LA-2A Leveler Collection</a><br>Universal Audio<br>коммерческий, модель лампового оптического компрессора LA-2A',
+      'Ручка Peak Reduction одновременно задаёт порог и величину сжатия, Gain — выходной уровень, то есть компенсацию. Переключатель Compress/Limit выбирает мягкую или более крутую характеристику. В боковой цепи стоит фильтр предыскажений (pre-emphasis), который меняет чувствительность к разным частотам.',
+    ],
+  ]}
+/>
+
+У моделей аналоговых приборов нет отдельной ручки порога: одна ручка задаёт и превышение порога, и величину сжатия. У LA-2A нет и ручек атаки и восстановления. Как и с [коленом](#knee), одно и то же название на разных приборах может означать разное: режим Expand в Ableton Live расширяет диапазон над порогом, а экспандер из этой статьи работает под порогом.
+
 ## Источники {#sources}
 
 - [MathWorks. Audio Toolbox: compressor](https://www.mathworks.com/help/audio/ref/compressor-system-object.html) — статическая характеристика с жёстким и мягким коленом, сглаживание подавления, определение времени атаки и восстановления от 10 до 90 %, автоматическая компенсация, вход боковой цепи `EnableSidechain`; ссылка на Giannoulis, Massberg, Reiss, JAES 2012.
@@ -337,4 +380,9 @@ $$
 - [W3C. Web Audio API: DynamicsCompressorNode](https://webaudio.github.io/web-audio-api/#DynamicsCompressorNode) — параметры порога, колена, степени сжатия, атаки и восстановления.
 - [Wikipedia. Компрессор аудиосигнала](https://ru.wikipedia.org/wiki/Компрессор_аудиосигнала) — русские названия параметров, пример сжатия 2:1.
 - [Wikipedia. Dynamic range compression, раздел Side-chaining](https://en.wikipedia.org/wiki/Dynamic_range_compression#Side-chaining) — приглушение музыки голосом ведущего, деэссер и диапазон сибилянтов 6–9 кГц.
+- [Apple. Logic Pro User Guide: Compressor main parameters](https://support.apple.com/guide/logicpro/compressor-main-parameters-lgcead9636ef/mac) — модели схем Circuit Type, колено, автоматическое восстановление и компенсация.
+- [Ableton. Live 12 Reference Manual: Live Audio Effect Reference, Compressor](https://www.ableton.com/en/manual/live-audio-effect-reference/) — режимы Peak, RMS и Expand, предварительный анализ 0, 1 и 10 мс, внешний вход и эквалайзер боковой цепи.
+- [Cockos. ReaPlugs](https://www.reaper.fm/reaplugs/) — состав бесплатного набора и возможности ReaComp.
+- [FabFilter. Pro-C 3](https://www.fabfilter.com/products/pro-c-3-compressor-plug-in) — ширина колена, предварительный анализ, удержание, эквалайзер боковой цепи, стили.
+- Universal Audio. UAD Powered Plug-Ins Manual, software version 6.1, 2011, гл. 25 «LA-2A and 1176LN», с. 283–287 ([PDF](https://media.uaudio.com/support/downloads/UADManual_61.pdf)) — органы управления моделей 1176LN и LA-2A, диапазоны атаки и восстановления 1176LN, схема с обратной связью, фильтр предыскажений в боковой цепи LA-2A.
 - Roey Izhaki. Mixing Audio: Concepts, Practices and Tools. 2nd ed. Focal Press, 2012. ISBN 978-0-240-52222-7 — гл. 16, с. 288–289: внешний вход и фильтр боковой цепи; с. 306–308: почему низкие частоты сильнее запускают сжатие, фильтр верхних частот в боковой цепи; с. 316: деэссер на компрессоре; с. 317: сжатие по бочке и отличие компрессора от дакера; гл. 20, с. 371–372: дакер, приглушение музыки голосом.

@@ -1,0 +1,13 @@
+{
+  "id": "limiter-devices",
+  "date": "2026-10-05",
+  "order": 21,
+  "type": "updated",
+  "article": "limiter",
+  "items": [
+    {
+      "text": "Примеры программных лимитеров: предварительный анализ, ступени и режим истинного пика",
+      "target": { "article": "limiter", "anchor": "devices" }
+    }
+  ]
+}
