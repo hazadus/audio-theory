@@ -21,6 +21,7 @@ const slugs = [
   'audio-compression',
   'mixing',
   'noise',
+  'synth-oscillators',
 ];
 
 const entry = {

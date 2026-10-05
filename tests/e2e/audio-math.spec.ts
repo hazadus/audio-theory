@@ -16,7 +16,7 @@ test(
         const page = await context.newPage();
         await page.goto('audio-math/');
         await expect(page.getByRole('heading', { level: 1 })).toHaveText('Математика для аудио');
-        await expect(page.locator('.equation-math math')).toHaveCount(8);
+        await expect(page.locator('.equation-math math')).toHaveCount(10);
         await expect(
           page.getByRole('img', { name: 'Синус и косинус на единичной окружности' }),
         ).toBeVisible();

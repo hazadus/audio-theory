@@ -17,6 +17,11 @@ export const topics = [
     title: 'Обработка звука',
     description: 'Динамика, эффекты и их параметры',
   },
+  {
+    id: 'synthesis',
+    title: 'Синтез',
+    description: 'Осцилляторы, огибающие и фильтры синтезатора',
+  },
 ] as const;
 
 export type TopicId = (typeof topics)[number]['id'];

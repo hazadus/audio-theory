@@ -106,7 +106,7 @@ export function matchNoiseRms(samples: Float32Array): Float32Array {
 }
 
 /** FFT по основанию 2; вход и результат изменяются на месте, без нормирования. */
-function fft(real: Float64Array, imaginary: Float64Array): void {
+export function fft(real: Float64Array, imaginary: Float64Array): void {
   const n = real.length;
   for (let i = 1, j = 0; i < n; i++) {
     let bit = n >> 1;

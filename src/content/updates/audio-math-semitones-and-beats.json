@@ -1,0 +1,17 @@
+{
+  "id": "audio-math-semitones-and-beats",
+  "date": "2026-10-05",
+  "order": 10,
+  "type": "updated",
+  "article": "audio-math",
+  "items": [
+    {
+      "text": "Полутоны и центы",
+      "target": { "article": "audio-math", "anchor": "semitones-and-cents" }
+    },
+    {
+      "text": "Сумма синусоид близких частот и биения",
+      "target": { "article": "audio-math", "anchor": "beats" }
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "id": "synth-oscillators-published",
+  "date": "2026-10-05",
+  "order": 9,
+  "type": "new",
+  "article": "synth-oscillators",
+  "summary": "Первая статья серии о простом синтезаторе: отдельная фаза каждого осциллятора, алиасинг пилы и прямоугольника, поправка PolyBLEP, частота ноты MIDI, интервалы и расстройка в центах, саб-осциллятор, шум и микшер с запасом до 0 dBFS. Примеры на C++20 и JUCE.",
+  "items": [
+    {
+      "text": "Источники голоса: сумма, спектр и пик со звуком",
+      "target": { "article": "synth-oscillators", "anchor": "voice-sources" }
+    },
+    {
+      "text": "PolyBLEP: поправка у скачка",
+      "target": { "article": "synth-oscillators", "anchor": "polyblep" }
+    },
+    {
+      "text": "Интервалы, расстройка и биения",
+      "target": { "article": "synth-oscillators", "anchor": "detune" }
+    },
+    {
+      "text": "Класс Oscillator на C++",
+      "target": { "article": "synth-oscillators", "anchor": "cpp-oscillator" }
+    }
+  ]
+}

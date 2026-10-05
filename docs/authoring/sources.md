@@ -270,6 +270,18 @@
 
 - [Julius O. Smith III. Clipping Nonlinearity](https://www.dsprelated.com/freebooks/pasp/Clipping_Nonlinearity.html) — прочитаны определение жёсткого ограничения и объяснение необратимости.
 
+## Осцилляторы синтезатора
+
+Прочитаны при подготовке `/synth-oscillators/` по [issue #15](https://github.com/hazadus/audio-theory/issues/15):
+
+- [Vesa Välimäki, Jussi Pekonen, Juhan Nam. Perceptually informed synthesis of bandlimited classical waveforms using integrated polynomial interpolation. JASA 131(1), 2012](https://doi.org/10.1121/1.3651227) — локальная копия в [каталоге](books.md#синтез). Прочитаны разд. I–III, табл. I–III и разд. IV.A–B с табл. VIII: BLEP-остаток, двухточечная поправка из интеграла линейной интерполяции, условия применения, граница слышимости алиасинга 2,1 кГц для двухточечного и 7,8 кГц для четырёхточечного B-сплайна при 44,1 кГц, замена излома треугольника.
+- Vesa Välimäki, Antti Huovilainen. Antialiasing Oscillators in Subtractive Synthesis. IEEE Signal Processing Magazine 24(2), 2007 — первоисточник двухточечного PolyBLEP; полный текст за платным доступом не прочитан, метод сверен по изложению в статье 2012 года.
+- [Miller Puckette. The Theory and Technique of Electronic Music, гл. 10](http://msp.ucsd.edu/techniques/latest/book-html/node184.html) — прочитаны Fourier series of the elementary waveforms, Sawtooth wave, Square and symmetric triangle waves, Predicting and controlling foldover, Transition splicing: ряды Фурье пилы, прямоугольника и треугольника, отражения около −32 дБ для пилы 440 Гц при 44,1 кГц, невозможность убрать их фильтром, вставка ступеньки с ограниченной полосой.
+- [Roland. SH-101 PLUG-OUT Owner’s Manual, 2017](https://www.rolandcloud.com/getmedia/1e415fd4-c8ca-4719-80ba-ca90b94f98ce/SH-101-Manual-E.pdf?ext=.pdf) — цепочка VCO, микшер источников с саб-осциллятором и шумом, VCF, VCA, огибающая; саб на одну или две октавы ниже.
+- [JUCE 9.0.3. juce_MidiMessage.cpp](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_basics/midi/juce_MidiMessage.cpp) — `getMidiNoteInHertz`: $440\cdot2^{(m-69)/12}$ с параметром частоты A. [juce_Oscillator.h](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_dsp/widgets/juce_Oscillator.h) — функция формы получает только фазу, частота сглаживается внутри блока.
+- [Carl R. Nave. HyperPhysics, Cents](https://hyperphysics.gsu.edu/hbase/Music/cents.html) и [Beats](https://hyperphysics.gsu.edu/hbase/Sound/beat.html) — цент как сотая доля темперированного полутона, частота биений как модуль разности частот.
+- [OpenStax. Precalculus 2e, §7.4: Sum-to-Product and Product-to-Sum Formulas](https://openstax.org/books/precalculus-2e/pages/7-4-sum-to-product-and-product-to-sum-formulas) — сумма синусов как произведение для объяснения биений.
+
 ## Белый и розовый шум
 
 Прочитаны при подготовке `/noise/`:

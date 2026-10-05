@@ -1,0 +1,870 @@
+---
+// Источники голоса синтезатора: сумма во времени, спектр с отражёнными составляющими, пик в dBFS
+// и непрерывный звук тем же алгоритмом. Начальный рисунок и подпись создаются при сборке;
+// без JavaScript, во время загрузки и при ошибке параметры неактивны.
+import Icon from '@/components/Icon.astro';
+import { demoCaptions } from '@/lib/demo-captions';
+import { initialVolume } from '@/lib/sampling-audio';
+import { volumeStep, volumeText } from '@/lib/sampling-player';
+import {
+  analyzeVoice,
+  defaultVoice,
+  intervals,
+  levelStep,
+  maxDetune,
+  maxNote,
+  minDetune,
+  minNote,
+  noiseColors,
+  subWaveforms,
+  waveforms,
+} from '@/lib/synth-oscillators';
+import {
+  centsText,
+  intervalNames,
+  levelText,
+  noiseColorNames,
+  noteText,
+  subWaveformNames,
+  voiceCaption,
+  voiceStatus,
+  voiceSvg,
+  waveformNames,
+} from '@/lib/voice-sources-view';
+
+interface Props {
+  /** Номер рисунка: визуализации и рисунки нумеруются одной последовательностью. */
+  figure: number;
+  /** Якорь для ссылок `#id`; английский kebab-case. */
+  id?: string;
+}
+
+const { figure, id = demoCaptions.VoiceSourcesDemo.defaultId } = Astro.props;
+const p = defaultVoice;
+const analysis = analyzeVoice(p);
+const status = voiceStatus(analysis);
+
+const groups = [
+  {
+    title: 'Осциллятор 1',
+    selects: [{ key: 'shape1', label: 'Форма', options: waveforms, names: waveformNames }],
+    ranges: [{ key: 'level1', label: 'Уровень g₁', min: 0, max: 1, step: levelStep }],
+  },
+  {
+    title: 'Осциллятор 2',
+    selects: [
+      { key: 'shape2', label: 'Форма', options: waveforms, names: waveformNames },
+      { key: 'interval', label: 'Интервал', options: intervals, names: intervalNames },
+    ],
+    ranges: [
+      { key: 'level2', label: 'Уровень g₂', min: 0, max: 1, step: levelStep },
+      { key: 'detune', label: 'Расстройка', min: minDetune, max: maxDetune, step: 1 },
+    ],
+  },
+  {
+    title: 'Саб-осциллятор',
+    selects: [{ key: 'subShape', label: 'Форма', options: subWaveforms, names: subWaveformNames }],
+    ranges: [{ key: 'subLevel', label: 'Уровень g₃', min: 0, max: 1, step: levelStep }],
+  },
+  {
+    title: 'Шум',
+    selects: [{ key: 'noiseColor', label: 'Цвет', options: noiseColors, names: noiseColorNames }],
+    ranges: [{ key: 'noiseLevel', label: 'Уровень g₄', min: 0, max: 1, step: levelStep }],
+  },
+] as const;
+
+const rangeText = (key: string, value: number) =>
+  key === 'detune' ? centsText(value) : levelText(value);
+const presets = [
+  { key: 'high', label: 'A6 без PolyBLEP' },
+  { key: 'fifth', label: 'Квинта без расстройки' },
+  { key: 'overload', label: 'Перегрузка' },
+] as const;
+---
+
+<figure
+  id={id}
+  class="voice-demo"
+  aria-labelledby={`${id}-name`}
+  data-voice-demo
+  data-state="static"
+  data-sources="hidden"
+>
+  <div class="voice-demo-head">
+    <span class="voice-demo-label">Визуализация {figure}</span>
+    <span class="voice-demo-name" id={`${id}-name`}>
+      {demoCaptions.VoiceSourcesDemo.name}
+    </span>
+  </div>
+  <div
+    class="voice-demo-chart"
+    role="region"
+    aria-label="Графики суммы и спектра; на узком экране без JavaScript можно прокрутить по горизонтали"
+    tabindex="0"
+    data-chart
+    set:html={voiceSvg(analysis, id)}
+  />
+  <ul class="voice-demo-legend" aria-label="Легенда">
+    <li>
+      <i class="sum"></i>сумма
+    </li>
+    <li class="source-item">
+      <i class="osc1"></i>g₁·осциллятор 1
+    </li>
+    <li class="source-item">
+      <i class="osc2"></i>g₂·осциллятор 2
+    </li>
+    <li class="source-item">
+      <i class="sub"></i>g₃·саб
+    </li>
+    <li class="source-item">
+      <i class="noise"></i>g₄·шум
+    </li>
+    <li>
+      <i class="limit"></i>полная шкала ±1
+    </li>
+    <li>
+      <i class="spectrum"></i>спектр суммы
+    </li>
+    <li>
+      <i class="alias"></i>отражённая составляющая
+    </li>
+  </ul>
+  <div class="voice-demo-status" data-status-box data-overload={status.overload ? 'true' : 'false'}>
+    <p data-status-pitch>{status.pitch}</p>
+    <p data-status-level>{status.level}</p>
+    <p class="voice-demo-overload">
+      <Icon name="info" size={16} />
+      <span data-status-warning>{status.warning}</span>
+    </p>
+    <p data-status-aliasing>{status.aliasing}</p>
+  </div>
+  <p class="visually-hidden" aria-live="polite" data-announce></p>
+  <fieldset class="voice-demo-controls" data-controls disabled>
+    <legend class="visually-hidden">Параметры источников голоса</legend>
+    <div class="voice-demo-param voice-demo-note">
+      <div class="voice-demo-param-head">
+        <label for={`${id}-note`}>Нота</label>
+        <output for={`${id}-note`} data-output="note">
+          {noteText(p.note, analysis.frequencies.osc1)}
+        </output>
+      </div>
+      <input
+        id={`${id}-note`}
+        class="voice-demo-range"
+        type="range"
+        min={minNote}
+        max={maxNote}
+        step="1"
+        value={p.note}
+        aria-valuetext={noteText(p.note, analysis.frequencies.osc1)}
+        data-range="note"
+      />
+    </div>
+    <div class="voice-demo-groups">
+      {groups.map((group) => (
+        <fieldset class="voice-demo-group">
+          <legend>{group.title}</legend>
+          {group.selects.map((s) => (
+            <div class="voice-demo-select">
+              <label for={`${id}-${s.key}`}>{s.label}</label>
+              <select id={`${id}-${s.key}`} data-select={s.key}>
+                {s.options.map((option) => (
+                  <option value={String(option)} selected={option === p[s.key]}>
+                    {(s.names as Record<string, string>)[String(option)]}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ))}
+          {group.ranges.map((r) => (
+            <div class="voice-demo-param">
+              <div class="voice-demo-param-head">
+                <label for={`${id}-${r.key}`}>{r.label}</label>
+                <output for={`${id}-${r.key}`} data-output={r.key}>
+                  {rangeText(r.key, p[r.key])}
+                </output>
+              </div>
+              <input
+                id={`${id}-${r.key}`}
+                class="voice-demo-range"
+                type="range"
+                min={r.min}
+                max={r.max}
+                step={r.step}
+                value={p[r.key]}
+                aria-valuetext={rangeText(r.key, p[r.key])}
+                data-range={r.key}
+              />
+            </div>
+          ))}
+        </fieldset>
+      ))}
+    </div>
+    <div class="voice-demo-checks">
+      <label>
+        <input type="checkbox" checked={p.polyBlep} data-check="polyBlep" />
+        PolyBLEP для пилы и прямоугольника
+      </label>
+      <label>
+        <input type="checkbox" data-show-sources />
+        Показать вклады источников
+      </label>
+    </div>
+    <div class="voice-demo-actions">
+      <div class="voice-demo-presets" role="group" aria-label="Примеры">
+        <span class="voice-demo-presets-label" aria-hidden="true">
+          Примеры:
+        </span>
+        {presets.map((preset) => (
+          <button type="button" class="voice-demo-preset" data-preset={preset.key}>
+            {preset.label}
+          </button>
+        ))}
+      </div>
+      <button type="button" class="voice-demo-reset" data-reset>
+        <Icon name="rotate-ccw" size={16} />
+        Сбросить
+      </button>
+    </div>
+    <div class="voice-demo-audio">
+      <p class="voice-demo-warning" role="note">
+        <Icon name="volume-2" size={18} />
+        <span>
+          <b>Громкость.</b> Голос звучит непрерывно, пока его не остановить. Высокие ноты, пила и
+          прямоугольник без PolyBLEP дают резкие высокие составляющие: перед запуском убавьте
+          громкость, особенно в наушниках.
+        </span>
+      </p>
+      <div
+        class="voice-demo-player"
+        role="group"
+        aria-label="Аудиопример: источники голоса"
+        data-player-group
+        data-mode="ready"
+      >
+        <button type="button" class="voice-demo-play" aria-label="Воспроизвести" data-play>
+          <span class="voice-demo-play-icon start">
+            <Icon name="play" size={18} />
+          </span>
+          <span class="voice-demo-play-icon stop">
+            <Icon name="square" size={16} />
+          </span>
+        </button>
+        <div class="voice-demo-volume">
+          <button type="button" class="voice-demo-mute" aria-label="Выключить звук" data-mute>
+            <span class="voice-demo-mute-icon on">
+              <Icon name="volume-2" size={18} />
+            </span>
+            <span class="voice-demo-mute-icon off">
+              <Icon name="volume-x" size={18} />
+            </span>
+          </button>
+          <input
+            class="voice-demo-range compact"
+            type="range"
+            min="0"
+            max="100"
+            step={volumeStep}
+            value={initialVolume * 100}
+            aria-label="Громкость"
+            aria-valuetext={volumeText(initialVolume * 100)}
+            data-volume
+          />
+          <span class="voice-demo-volume-text" data-volume-text>
+            {volumeText(initialVolume * 100)}
+          </span>
+        </div>
+      </div>
+      <p class="voice-demo-player-state" role="status" data-player-state>
+        Остановлен
+      </p>
+    </div>
+    <p class="voice-demo-note-text" data-controls-note>
+      Параметры и звук работают с включённым JavaScript. Показано начальное состояние.
+    </p>
+  </fieldset>
+  <figcaption class="voice-demo-caption">
+    <b>Рис. {figure}.</b> <span data-caption>{voiceCaption(p)}</span>
+  </figcaption>
+</figure>
+
+<script>
+  import { initVoiceSourcesDemos } from '@/lib/voice-sources-controller';
+
+  initVoiceSourcesDemos();
+</script>
+
+<style is:global>
+  .voice-demo {
+    container-type: inline-size;
+    margin: var(--space-6) 0;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    overflow: hidden;
+    font-family: var(--font-ui);
+    scroll-margin-top: 88px;
+  }
+
+  .voice-demo-head {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 14px 20px;
+  }
+
+  .voice-demo-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  .voice-demo-name {
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .voice-demo-chart {
+    border-block: var(--border-width) solid var(--color-border);
+    background: var(--chart-bg);
+    overflow-x: auto;
+  }
+
+  .voice-demo-chart:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: -2px;
+  }
+
+  .voice-demo svg {
+    display: block;
+    font-size: 12px;
+  }
+
+  .voice-demo svg path {
+    fill: none;
+  }
+
+  .voice-demo svg .label {
+    fill: var(--color-text);
+    font-weight: 600;
+  }
+
+  .voice-demo svg .tick {
+    fill: var(--chart-label);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .voice-demo svg .grid {
+    stroke: var(--chart-grid);
+    stroke-width: 1;
+  }
+
+  .voice-demo svg .zero {
+    stroke: var(--chart-axis);
+    stroke-width: 1;
+  }
+
+  .voice-demo svg .limit {
+    stroke: var(--chart-label);
+    stroke-width: 1;
+    stroke-dasharray: 9 5;
+  }
+
+  .voice-demo svg .sum {
+    stroke: var(--chart-series-1);
+    stroke-width: 2.2;
+    stroke-linejoin: round;
+  }
+
+  .voice-demo svg .source {
+    stroke-width: 1.2;
+  }
+
+  .voice-demo svg .source.osc1 {
+    stroke: var(--chart-series-2);
+    stroke-dasharray: 6 4;
+  }
+
+  .voice-demo svg .source.osc2 {
+    stroke: var(--chart-series-3);
+    stroke-dasharray: 8 3 2 3;
+  }
+
+  .voice-demo svg .source.sub {
+    stroke: var(--chart-series-4);
+    stroke-dasharray: 12 4;
+  }
+
+  .voice-demo svg .source.noise {
+    stroke: var(--chart-series-5);
+    stroke-dasharray: 1.5 3;
+  }
+
+  .voice-demo svg .spectrum {
+    stroke: var(--chart-spectrum);
+    stroke-width: 1.2;
+  }
+
+  .voice-demo svg .alias {
+    fill: none;
+    stroke: var(--chart-series-2);
+    stroke-width: 2;
+  }
+
+  .voice-demo-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    margin: 0;
+    padding: 12px 20px 0;
+    list-style: none;
+    font-size: 14px;
+  }
+
+  .voice-demo-legend li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .voice-demo[data-sources='hidden'] .voice-demo-legend .source-item {
+    display: none;
+  }
+
+  .voice-demo-legend i {
+    width: 18px;
+    height: 0;
+    border-top: 2px solid var(--chart-series-1);
+  }
+
+  .voice-demo-legend .sum {
+    border-top-width: 3px;
+  }
+
+  .voice-demo-legend .osc1 {
+    border-color: var(--chart-series-2);
+    border-top-style: dashed;
+  }
+
+  .voice-demo-legend .osc2 {
+    border-color: var(--chart-series-3);
+    border-top-style: dashed;
+  }
+
+  .voice-demo-legend .sub {
+    border-color: var(--chart-series-4);
+    border-top-style: dashed;
+    width: 24px;
+  }
+
+  .voice-demo-legend .noise {
+    border-color: var(--chart-series-5);
+    border-top-style: dotted;
+  }
+
+  .voice-demo-legend .limit {
+    border-color: var(--chart-label);
+    border-top: 1px dashed var(--chart-label);
+  }
+
+  .voice-demo-legend .spectrum {
+    border-top-width: 1px;
+  }
+
+  .voice-demo-legend .alias {
+    width: 10px;
+    height: 10px;
+    border: 2px solid var(--chart-series-2);
+    border-radius: 50%;
+  }
+
+  .voice-demo-status {
+    display: grid;
+    gap: 6px;
+    margin: 12px 20px;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    box-shadow: inset 0 0 0 1px var(--color-border-strong);
+    font-size: 14px;
+    line-height: 1.45;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .voice-demo-status p {
+    margin: 0;
+  }
+
+  .voice-demo-overload {
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+  }
+
+  .voice-demo-overload > svg {
+    flex: none;
+    margin-top: 2px;
+    color: var(--color-text-muted);
+  }
+
+  .voice-demo-status[data-overload='true'] {
+    background: var(--color-warning-bg);
+  }
+
+  .voice-demo-status[data-overload='true'] .voice-demo-overload {
+    font-weight: 600;
+    color: var(--color-warning);
+  }
+
+  .voice-demo-status[data-overload='true'] .voice-demo-overload > svg {
+    color: var(--color-warning);
+  }
+
+  .voice-demo .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .voice-demo-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+    margin: 0;
+    padding: 14px 20px 16px;
+    border: 0;
+    border-top: var(--border-width) solid var(--color-border);
+  }
+
+  .voice-demo-groups {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .voice-demo-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+    margin: 0;
+    padding: 10px 12px 12px;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+  }
+
+  .voice-demo-group legend {
+    padding: 0 4px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .voice-demo-select {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+  }
+
+  .voice-demo-select select {
+    min-width: 0;
+    min-height: 36px;
+    padding: 4px 8px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font: 16px var(--font-ui);
+  }
+
+  .voice-demo-param {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .voice-demo-param-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 14px;
+  }
+
+  .voice-demo-param-head output {
+    font-size: 15px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .voice-demo-range {
+    width: 100%;
+    min-height: 32px;
+    margin: 0;
+    accent-color: var(--color-accent);
+    touch-action: pan-y;
+  }
+
+  .voice-demo-checks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    font-size: 14px;
+  }
+
+  .voice-demo-checks label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 32px;
+  }
+
+  .voice-demo-checks input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: var(--color-accent);
+  }
+
+  .voice-demo-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .voice-demo-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .voice-demo-presets-label {
+    margin-right: 2px;
+    font-size: 13px;
+    color: var(--color-text-muted);
+  }
+
+  .voice-demo-preset {
+    min-height: 32px;
+    padding: 0 12px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-full);
+    background: transparent;
+    color: var(--color-text);
+    font: 500 14px var(--font-ui);
+    cursor: pointer;
+  }
+
+  .voice-demo-reset {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    height: 36px;
+    padding: 0 12px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text);
+    font: 500 14px var(--font-ui);
+    cursor: pointer;
+  }
+
+  .voice-demo :is(button, select, input):focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .voice-demo-audio {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .voice-demo-warning {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin: 0 0 4px;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    background: var(--color-warning-bg);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .voice-demo-warning > svg {
+    flex: none;
+    margin-top: 1px;
+    color: var(--color-warning);
+  }
+
+  .voice-demo-warning b {
+    color: var(--color-warning);
+  }
+
+  .voice-demo-player {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 14px 8px 8px;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+  }
+
+  .voice-demo-play {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+    cursor: pointer;
+  }
+
+  .voice-demo-mute {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+  }
+
+  .voice-demo-play-icon,
+  .voice-demo-mute-icon {
+    display: flex;
+  }
+
+  .voice-demo-play:not([data-playing]) .voice-demo-play-icon.stop,
+  .voice-demo-play[data-playing] .voice-demo-play-icon.start,
+  .voice-demo-mute:not([data-muted]) .voice-demo-mute-icon.off,
+  .voice-demo-mute[data-muted] .voice-demo-mute-icon.on {
+    display: none;
+  }
+
+  .voice-demo-volume {
+    display: flex;
+    flex: 1 1 140px;
+    gap: 6px;
+    align-items: center;
+    max-width: 280px;
+  }
+
+  .voice-demo-range.compact {
+    flex: 1;
+    min-width: 0;
+    min-height: 24px;
+  }
+
+  .voice-demo-volume-text {
+    width: 36px;
+    font-size: 13px;
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .voice-demo-player-state {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+  }
+
+  .voice-demo-player[data-mode='error'] + .voice-demo-player-state,
+  .voice-demo-player[data-mode='unavailable'] + .voice-demo-player-state {
+    color: var(--color-error);
+  }
+
+  .voice-demo-player :disabled {
+    opacity: 0.45;
+  }
+
+  @media (hover: hover) {
+    .voice-demo-preset:hover,
+    .voice-demo-reset:hover,
+    .voice-demo-mute:not(:disabled):hover {
+      background: var(--color-bg);
+    }
+  }
+
+  .voice-demo-controls:disabled > :not(.voice-demo-note-text) {
+    opacity: 0.5;
+  }
+
+  .voice-demo-controls:disabled * {
+    cursor: not-allowed;
+  }
+
+  .voice-demo-note-text {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+  }
+
+  .voice-demo[data-state='ready'] .voice-demo-note-text {
+    display: none;
+  }
+
+  .voice-demo[data-state='error'] .voice-demo-note-text {
+    color: var(--color-error);
+  }
+
+  .voice-demo-caption {
+    padding: 10px 20px 14px;
+    border-top: var(--border-width) solid var(--color-border);
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+  }
+
+  .voice-demo-caption b {
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  @container (max-width: 559px) {
+    .voice-demo-head,
+    .voice-demo-controls,
+    .voice-demo-caption {
+      padding-inline: 16px;
+    }
+
+    .voice-demo-legend {
+      padding-inline: 16px;
+    }
+
+    .voice-demo-status {
+      margin-inline: 16px;
+    }
+
+    .voice-demo-groups {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

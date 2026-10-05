@@ -1848,5 +1848,65 @@
       "article": "audio-math",
       "anchor": "probability-and-expectation"
     }
+  },
+  {
+    "id": "cent",
+    "ru": "цент",
+    "en": "cent",
+    "definition": "Сотая часть равномерно темперированного полутона; в октаве 1200 центов. Интервал в c центов умножает частоту на 2 в степени c/1200.",
+    "target": {
+      "article": "audio-math",
+      "anchor": "semitones-and-cents"
+    }
+  },
+  {
+    "id": "beats",
+    "ru": "биения",
+    "en": "beats",
+    "definition": "Периодическое нарастание и спад громкости суммы двух тонов близких частот. Частота биений равна модулю разности частот.",
+    "target": {
+      "article": "audio-math",
+      "anchor": "beats"
+    }
+  },
+  {
+    "id": "synth-voice",
+    "ru": "голос синтезатора",
+    "en": "synth voice",
+    "definition": "Набор генераторов и обработки, который звучит одной нотой: источники, микшер, фильтр, усилитель и огибающая. Одноголосный синтезатор играет одну ноту одновременно.",
+    "target": {
+      "article": "synth-oscillators",
+      "anchor": "voice"
+    }
+  },
+  {
+    "id": "detune",
+    "ru": "расстройка",
+    "en": "detune",
+    "definition": "Небольшое отклонение частоты одного генератора от другого или от точного интервала, обычно в центах. При одновременном звучании даёт биения.",
+    "target": {
+      "article": "synth-oscillators",
+      "anchor": "detune"
+    }
+  },
+  {
+    "id": "sub-oscillator",
+    "ru": "саб-осциллятор",
+    "en": "sub-oscillator",
+    "definition": "Дополнительный генератор голоса, звучащий на октаву или две ниже основной ноты. Обычно даёт синус или прямоугольник.",
+    "target": {
+      "article": "synth-oscillators",
+      "anchor": "sub-oscillator"
+    }
+  },
+  {
+    "id": "polyblep",
+    "ru": "PolyBLEP",
+    "en": "polynomial bandlimited step",
+    "definition": "Способ ослабить алиасинг генератора со скачками: к отсчётам рядом со скачком прибавляется полиномиальная поправка к ступеньке с ограниченной полосой.",
+    "target": {
+      "article": "synth-oscillators",
+      "anchor": "polyblep"
+    }
   }
 ]

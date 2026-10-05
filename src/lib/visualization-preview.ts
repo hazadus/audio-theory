@@ -9,7 +9,8 @@ export type PreviewKind =
   | 'pcm'
   | 'prediction'
   | 'mixing'
-  | 'noise';
+  | 'noise'
+  | 'voice';
 export const previewKinds: readonly PreviewKind[] = [
   'noise',
   'tone',
@@ -21,6 +22,7 @@ export const previewKinds: readonly PreviewKind[] = [
   'pcm',
   'prediction',
   'mixing',
+  'voice',
 ];
 
 /** Роль цвета; в разметке превращается в `var(--chart-<роль>)`. */
@@ -243,6 +245,7 @@ const builders: Record<PreviewKind, () => Preview> = {
     };
   },
   prediction: predictionPreview,
+  voice: voicePreview,
   mixing: () => ({
     paths: [
       { d: wave(16, 264, 75, 22, 2), color: 'signal', width: 1.5 },
@@ -252,6 +255,34 @@ const builders: Record<PreviewKind, () => Preview> = {
     dots: [],
   }),
 };
+
+function voicePreview(): Preview {
+  // Сверху сумма двух пил с небольшой расстройкой, снизу гармоники 1/k и отражения кольцами.
+  let sum = '';
+  for (let i = 0; i <= 160; i += 1) {
+    const t = i / 160;
+    const saw = (cycles: number) => 2 * ((cycles * t) % 1) - 1;
+    const y = 44 - 13 * (saw(3) + saw(3.08));
+    sum += `${i ? 'L' : 'M'}${f1(16 + 248 * t)} ${f1(y)}`;
+  }
+  let stems = '';
+  for (let k = 1; k <= 9; k += 1) {
+    const x = 24 + 26 * (k - 1);
+    stems += `M${x} 136V${f1(136 - 44 / k)}`;
+  }
+  return {
+    paths: [
+      { d: sum, color: 'signal', width: 2 },
+      { d: 'M16 136H264', color: 'axis', width: 1 },
+      { d: stems, color: 'signal', width: 3 },
+    ],
+    dots: [
+      { x: 63, y: 124, color: 'sample' },
+      { x: 141, y: 127, color: 'sample' },
+      { x: 219, y: 129, color: 'sample' },
+    ],
+  };
+}
 
 function predictionPreview(): Preview {
   // Сверху отсчёты плавного сигнала, снизу — малый остаток предсказания в тех же моментах.

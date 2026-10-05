@@ -124,6 +124,19 @@
           "optional": true
         }
       ]
+    },
+    {
+      "id": "synthesizer",
+      "title": "Синтезатор",
+      "description": "Соберите источники одного голоса: два осциллятора с отдельными фазами, PolyBLEP против алиасинга, расстройку в центах, саб-осциллятор, шум и микшер с запасом до 0 dBFS.",
+      "items": [
+        {
+          "id": "synth-oscillators",
+          "target": {
+            "article": "synth-oscillators"
+          }
+        }
+      ]
     }
   ],
   "related": [

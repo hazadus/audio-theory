@@ -395,7 +395,7 @@ test(
         }
         if (viewport.width === 1440) {
           // Визуализаций больше четырёх: «Все N» ведёт на страницу со всеми карточками.
-          const all = page.getByRole('link', { name: /^Все 10/ });
+          const all = page.getByRole('link', { name: /^Все 11/ });
           await expect(all).toHaveAttribute('href', `${base}visualizations/`);
           const tops = await cards.evaluateAll((els) =>
             els.map((el) => el.getBoundingClientRect().top),
@@ -406,7 +406,7 @@ test(
           await expect(page.locator('#sampling-demo')).toBeVisible();
           await page.goto('visualizations/');
           const allCards = page.locator('a.viz-card');
-          await expect(allCards).toHaveCount(10);
+          await expect(allCards).toHaveCount(11);
           await expect(allCards.nth(4)).toHaveAttribute('href', `${base}lfo/#lfo-waveforms`);
           await expect(allCards.nth(4).getByText('Со звуком')).toHaveCount(0);
           await allCards.nth(4).click();
@@ -423,6 +423,11 @@ test(
           await expect(allCards.nth(8).getByText('Со звуком')).toHaveCount(0);
           await expect(allCards.nth(9)).toHaveAttribute('href', `${base}noise/#noise-demo`);
           await expect(allCards.nth(9).getByText('Со звуком')).toHaveCount(1);
+          await expect(allCards.nth(10)).toHaveAttribute(
+            'href',
+            `${base}synth-oscillators/#voice-sources`,
+          );
+          await expect(allCards.nth(10).getByText('Со звуком')).toHaveCount(1);
         }
       } finally {
         await context.close();

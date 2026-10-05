@@ -22,6 +22,10 @@ export const demoCaptions = {
   LfoDemo: { defaultId: 'lfo-waveforms', name: 'Четыре формы LFO из одной фазы' },
   WavDumpDemo: { defaultId: 'wav-dump', name: 'Байты WAV-файла по полям' },
   PcmSampleDemo: { defaultId: 'pcm-sample', name: '24-битный отсчёт: байты, знак и float' },
+  VoiceSourcesDemo: {
+    defaultId: 'voice-sources',
+    name: 'Источники голоса: сумма, спектр и пик',
+  },
   FlacPredictionDemo: {
     defaultId: 'flac-prediction',
     name: 'Предсказание FLAC: остаток и коды Райса',

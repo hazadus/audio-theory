@@ -97,4 +97,12 @@ export const visualizations: readonly Visualization[] = [
     sound: true,
     preview: 'noise',
   },
+  {
+    id: 'voice-sources',
+    slug: 'synth-oscillators',
+    name: 'Источники голоса: сумма, спектр и пик',
+    what: 'Нота, формы и уровни двух осцилляторов, интервал и расстройка, саб-осциллятор, шум и PolyBLEP.',
+    sound: true,
+    preview: 'voice',
+  },
 ];
