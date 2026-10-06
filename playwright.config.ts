@@ -79,14 +79,19 @@ export default defineConfig({
   forbidOnly: true,
   reporter: 'list',
   use: { trace: 'retain-on-failure' },
-  projects: placementProjects.filter((project) =>
-    ['root-chromium', 'prefixed-webkit'].includes(project.name),
+  projects: placementProjects.filter(
+    (project) =>
+      ['root-chromium', 'prefixed-webkit'].includes(project.name) &&
+      (!process.env.PLACEMENT || project.name.startsWith(`${process.env.PLACEMENT}-`)),
   ),
-  // Сборки выполняются последовательно до старта серверов: Astro использует общий кеш.
-  webServer: placements.map(({ name, base, port }) => ({
-    command: `npm run preview -- --ignore-lock --host 127.0.0.1 --port ${port} --base ${base} --outDir .e2e/${name}`,
-    url: `http://127.0.0.1:${port}${base}`,
-    reuseExistingServer: false,
-    timeout: 30_000,
-  })),
+  // Сборки выполняются до старта серверов. `PLACEMENT=root|prefixed` оставляет одно размещение
+  // (параллельные задания CI); без неё запускаются оба.
+  webServer: placements
+    .filter(({ name }) => !process.env.PLACEMENT || name === process.env.PLACEMENT)
+    .map(({ name, base, port }) => ({
+      command: `npm run preview -- --ignore-lock --host 127.0.0.1 --port ${port} --base ${base} --outDir .e2e/${name}`,
+      url: `http://127.0.0.1:${port}${base}`,
+      reuseExistingServer: false,
+      timeout: 30_000,
+    })),
 });

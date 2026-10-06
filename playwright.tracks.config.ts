@@ -1,9 +1,10 @@
 // Журнал и страницы треков на изолированных сборках: Chromium в корне и WebKit под префиксом.
 import { defineConfig, devices } from '@playwright/test';
+// `PLACEMENT=root|prefixed` запускает одно размещение (параллельные задания CI); без неё — оба.
 const placements = [
   { name: 'root', base: '/', port: 4395, device: 'Desktop Chrome' },
   { name: 'prefixed', base: '/audio-theory/', port: 4396, device: 'Desktop Safari' },
-];
+].filter(({ name }) => !process.env.PLACEMENT || name === process.env.PLACEMENT);
 export default defineConfig({
   testDir: './tests/e2e',
   testMatch: ['track-updates.spec.ts', 'tracks.spec.ts', 'track-navigation.spec.ts'],

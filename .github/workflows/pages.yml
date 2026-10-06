@@ -78,10 +78,14 @@ jobs:
 
   # Этап 2: долгие проверки идут параллельно после успеха `static`.
   mdx:
-    name: MDX и формулы
+    name: MDX и формулы (${{ matrix.part }})
     runs-on: ubuntu-24.04
     needs: static
     timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        part: [root, prefixed]
     steps:
       - name: Получить полную Git-историю
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -100,7 +104,7 @@ jobs:
         run: npm ci
 
       - name: Проверить MDX, формулы и изоляцию тестовых материалов
-        run: npm run test:mdx
+        run: npm run test:mdx -- --part=${{ matrix.part }}
 
   articles:
     name: Материалы и ссылки
@@ -153,10 +157,14 @@ jobs:
         run: npm run test:tracks
 
   track-updates:
-    name: Журнал и страницы треков в браузере
+    name: Журнал и страницы треков в браузере (${{ matrix.placement }})
     runs-on: ubuntu-24.04
     needs: static
     timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        placement: [root, prefixed]
     # Playwright 1.63.0-noble: браузеры и библиотеки уже установлены в образе.
     container:
       image: mcr.microsoft.com/playwright@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27
@@ -179,13 +187,19 @@ jobs:
         run: npm ci
 
       - name: Проверить страницы и журнал треков на служебных маршрутах
+        env:
+          PLACEMENT: ${{ matrix.placement }}
         run: npm run test:track-updates
 
   build:
-    name: Сборка и браузерные проверки
+    name: Сборка и браузерные проверки (${{ matrix.placement }})
     runs-on: ubuntu-24.04
     needs: static
     timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        placement: [root, prefixed]
     # Playwright 1.63.0-noble: браузеры и библиотеки уже установлены в образе.
     container:
       image: mcr.microsoft.com/playwright@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27
@@ -207,16 +221,22 @@ jobs:
       - name: Установить зафиксированные зависимости
         run: npm ci
 
-      - name: Собрать и проверить сайт в корне и под префиксом
-        run: npm run test:e2e:ci
+      - name: Собрать и проверить сайт (${{ matrix.placement }})
+        env:
+          PLACEMENT: ${{ matrix.placement }}
+        run: npm run test:e2e:ci:${{ matrix.placement }}
 
       - name: Настроить GitHub Pages
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        if: matrix.placement == 'prefixed' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+
+      - name: Проверить публичную сборку без служебных материалов
+        if: matrix.placement == 'prefixed'
+        run: npm run test:published
 
       # Публикуется именно артефакт, проверенный Playwright; повторной сборки нет.
       - name: Загрузить проверенный артефакт
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        if: matrix.placement == 'prefixed' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: .e2e/prefixed
