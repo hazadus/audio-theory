@@ -218,8 +218,13 @@ for (const [index, row] of rows.entries()) {
     background: var(--color-surface);
   }
 
+  /* Переносы по слогам и `anywhere` сводят минимальную ширину столбца к одному символу, и на узком экране
+     соседние столбцы вытесняют заголовки строк: слово рвётся посимвольно. `break-word` на минимальную ширину
+     не влияет — переносится только слово, которое не помещается в 7rem. */
   .data-table tbody th {
+    min-width: 7rem;
     font-weight: 500;
-    overflow-wrap: anywhere;
+    hyphens: manual;
+    overflow-wrap: break-word;
   }
 </style>

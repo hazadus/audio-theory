@@ -40,3 +40,19 @@ test('подписи графиков сохраняют размер 12–16 px
     }
   }
 });
+
+test('первый столбец таблицы на узком экране не рвёт слова посимвольно', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto('lfo/');
+  const heads = page.locator('#lfo-destinations tbody th');
+  await expect(heads).toHaveCount(5);
+  const widths = await heads.evaluateAll((cells) =>
+    cells.map((cell) => cell.getBoundingClientRect().width),
+  );
+  for (const width of widths) expect(width).toBeGreaterThanOrEqual(112);
+  const lines = await heads.nth(1).evaluate((cell) => {
+    const style = getComputedStyle(cell);
+    return cell.getBoundingClientRect().height / parseFloat(style.lineHeight);
+  });
+  expect(lines).toBeLessThanOrEqual(6);
+});
