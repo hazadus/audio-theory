@@ -1,0 +1,13 @@
+{
+  "id": "track-sound-engineer-loudness-standards",
+  "date": "2026-10-06",
+  "order": 12,
+  "type": "updated",
+  "track": "sound-engineer",
+  "items": [
+    {
+      "text": "Этап «Форматы и объём записи»: нормы громкости вещания и стриминга",
+      "target": { "track": "sound-engineer", "anchor": "stage-delivery" }
+    }
+  ]
+}

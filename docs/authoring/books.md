@@ -215,7 +215,7 @@ HTML, английский. Побитовая схема 32-битного за
 
 ## Стандарты громкости и пиков
 
-Скачаны при подготовке [статьи о лимитере](../../src/content/articles/limiter.mdx) (issue #22). Ссылки на оригиналы — в [sources.md](sources.md#нормы-громкости-вещания).
+Скачаны при подготовке [статьи о лимитере](../../src/content/articles/limiter.mdx) (issue #22) и [статьи о нормах громкости](../../src/content/articles/loudness-standards.mdx) (issue #24). Ссылки на оригиналы — в [sources.md](sources.md#нормы-громкости-вещания).
 
 ### `ITU-R-BS.1770-5-Loudness-and-true-peak-2023.pdf` — ITU-R, Recommendation BS.1770-5 «Algorithms to measure audio programme loudness and true-peak audio level» (11/2023)
 
@@ -291,3 +291,21 @@ HTML, английский. Побитовая схема 32-битного за
 
 - Меерзон, PDF в `scratch/books/` — скан без текстового слоя. Страницы читаются визуально; полный текст есть в `ocr/` (djvu-версии).
 - Ньюэлл «Маленькие студии для великих записей» в `Mixing Pack 1.rar` — скан PDF без текстового слоя. Не распознавал.
+
+### `EBU-Tech3343-Production-Guidelines-2023.pdf` — EBU, Tech 3343 «Guidelines for Production of Programmes in accordance with EBU R 128» (ноябрь 2023)
+
+46 стр., текст, английский. Нормализация по пику и по громкости, допуски ±0,2 и ±1,0 LU, метаданные, жанры: реклама (R 128 s1) и стриминг (R 128 s2).
+
+Взять: пояснения к нормам вещания, параметры коротких форм; использован в статье [о нормах громкости](../../src/content/articles/loudness-standards.mdx).
+
+### `ATSC-A85-2013-Audio-loudness-for-DTV.pdf` — ATSC, A/85:2013 «Techniques for Establishing and Maintaining Audio Loudness for Digital Television» (12 марта 2013)
+
+72 стр., текст, английский. Рекомендуемая практика США: опорный элемент (диалог), цель −24 LKFS, истинный пик ниже −2 dB TP, dialnorm и метаданные AC-3, методы измерения.
+
+Взять: нормы США и закон CALM; использован в статье о нормах громкости. Правило FCC обязывает соблюдать A/85 только в части рекламы.
+
+### `AES-TD1004-Streaming-loudness-2015.pdf` — AES, TD1004.1.15-10 «Recommendation for Loudness of Audio Streaming and Network File Playback» (19 октября 2015)
+
+10 стр., текст, английский. Рекомендации для потоков: цель от −20 до −16 LUFS, короткие формы, предел −1,0 dB TP, алгоритмы нормализации. Заменена более поздними TD1008 и AES77-2023, которые не скачивались.
+
+Взять: исторический ориентир для стриминга; для актуальных значений искать AES77-2023.

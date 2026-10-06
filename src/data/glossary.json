@@ -2058,5 +2058,25 @@
       "article": "synth-oscillators",
       "anchor": "polyblep"
     }
+  },
+  {
+    "id": "loudness-normalization",
+    "ru": "нормализация громкости",
+    "en": "loudness normalization",
+    "definition": "Приведение громкости программы или трека к целевому значению в LUFS изменением усиления. Динамика внутри материала не меняется, меняется общий уровень.",
+    "target": {
+      "article": "loudness-standards",
+      "anchor": "why"
+    }
+  },
+  {
+    "id": "peak-normalization",
+    "ru": "нормализация по пику",
+    "en": "peak normalization",
+    "definition": "Приведение наибольшего пика материала к заданному уровню. Пики совпадают, а громкость при разной степени сжатия различается.",
+    "target": {
+      "article": "loudness-standards",
+      "anchor": "why"
+    }
   }
 ]

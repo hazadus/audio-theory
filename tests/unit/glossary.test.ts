@@ -23,6 +23,7 @@ const slugs = [
   'noise',
   'synth-oscillators',
   'limiter',
+  'loudness-standards',
 ];
 
 const entry = {

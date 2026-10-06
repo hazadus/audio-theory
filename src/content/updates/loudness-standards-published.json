@@ -1,0 +1,26 @@
+{
+  "id": "loudness-standards-published",
+  "date": "2026-10-06",
+  "order": 11,
+  "type": "new",
+  "article": "loudness-standards",
+  "summary": "Какую громкость и какой предел истинных пиков требуют вещание в России, Европе и США и стриминговые площадки, чем различаются цели −23 LUFS и −24 LKFS, что делают Spotify, Apple Music, YouTube и Apple Podcasts с громкими и тихими треками и как это влияет на мастеринг.",
+  "items": [
+    {
+      "text": "Сравнение норм России, EBU и США",
+      "target": { "article": "loudness-standards", "anchor": "loudness-norms-table" }
+    },
+    {
+      "text": "Стриминговые площадки и их документация",
+      "target": { "article": "loudness-standards", "anchor": "streaming" }
+    },
+    {
+      "text": "Усиление при нормализации и запас по пику",
+      "target": { "article": "loudness-standards", "anchor": "mastering" }
+    },
+    {
+      "text": "Термин «нормализация громкости»",
+      "target": { "glossary": "loudness-normalization" }
+    }
+  ]
+}
