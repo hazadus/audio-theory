@@ -1,0 +1,159 @@
+/* Печатная вёрстка: только содержимое страницы, светлая палитра, мелкий шрифт, целые рисунки. */
+@page {
+  margin: 18mm 16mm;
+}
+
+@media print {
+  :root,
+  :root[data-theme] {
+    color-scheme: light;
+  }
+
+  /* Служебные элементы интерфейса: на бумаге не работают. */
+  .skip-link,
+  .site-header,
+  .site-footer,
+  .search-dialog,
+  .breadcrumbs,
+  .toc-cell,
+  .progress,
+  .to-top,
+  .copy-status,
+  .track-nav,
+  .code-copy,
+  .heading-link {
+    display: none !important;
+  }
+
+  html {
+    font-size: 10pt;
+  }
+
+  body {
+    display: block;
+    min-height: 0;
+    background: #fff;
+    color: #000;
+    font-size: 10pt;
+    line-height: 1.5;
+    /* Переносы слов по слогам в печати не нужны: ширина колонки задана страницей. */
+    hyphens: manual;
+  }
+
+  h1 {
+    font-size: 20pt;
+  }
+
+  h2 {
+    font-size: 14pt;
+  }
+
+  h3 {
+    font-size: 12pt;
+  }
+
+  h4 {
+    font-size: 10pt;
+  }
+
+  main {
+    width: 100%;
+  }
+
+  .page {
+    width: 100% !important;
+    max-width: none !important;
+    padding-top: 0 !important;
+  }
+
+  .page > *,
+  .body,
+  .prose > * {
+    max-width: none !important;
+  }
+
+  /* Flex-контейнер плохо делится по страницам: break-inside у его детей игнорируется. */
+  .prose,
+  .body,
+  .figure {
+    display: block !important;
+  }
+
+  .prose > * + * {
+    margin-top: 14pt !important;
+  }
+
+  .figure-caption {
+    margin-top: 6pt;
+  }
+
+  /* Заголовок не остаётся один в конце страницы. */
+  h1,
+  h2,
+  h3,
+  h4 {
+    break-after: avoid-page;
+  }
+
+  /* Рисунки, таблицы, формулы, врезки, код и демонстрации переносятся на следующую страницу целиком. */
+  figure,
+  .figure,
+  .data-table,
+  .equation,
+  .callout,
+  .self-check,
+  .margin-note-block,
+  .code-block,
+  .viz-card,
+  .prerequisites,
+  .related li,
+  blockquote,
+  .prose > :not(p, ul, ol, dl, h2, h3, h4, section, hr) {
+    break-inside: avoid-page;
+  }
+
+  /* Подпись остаётся на одной странице с рисунком. */
+  .figure-caption,
+  .data-table-caption {
+    break-before: avoid-page;
+  }
+
+  p,
+  li {
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* Интерактивные демонстрации без звука бесполезны: оставляем рисунок, убираем кнопки и ползунки. */
+  .prose :is(button, input, select, textarea, audio) {
+    display: none !important;
+  }
+
+  /* Длинные строки кода переносятся, а не обрезаются полем страницы. */
+  .code-block,
+  .code-block pre,
+  .data-table-frame,
+  .data-table-scroll {
+    overflow: visible !important;
+  }
+
+  .code-block pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-size: 8.5pt;
+  }
+
+  .data-table table {
+    font-size: 9pt;
+  }
+
+  a,
+  a:visited {
+    color: inherit;
+  }
+
+  .figure-caption,
+  .data-table-caption {
+    font-size: 9.5pt;
+  }
+}

@@ -1,6 +1,7 @@
 /* Базовые стили страницы: фон, шрифты, заголовки, выделение и фокус. */
 @import './fonts.css';
 @import './tokens.css';
+@import './print.css';
 
 html {
   scroll-behavior: smooth;
