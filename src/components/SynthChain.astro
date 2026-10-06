@@ -53,6 +53,12 @@ const arrows = [
   `M176 ${264 + h}V334`,
   'M266 282H248',
 ];
+const titles: Record<Part, string> = {
+  sources: 'источники и микшер',
+  envelope: 'огибающая и VCA',
+  filter: 'фильтр НЧ',
+  render: 'запись в WAV',
+};
 const descriptions: Record<Part, string> = {
   sources: 'источники и микшер',
   envelope: 'огибающая ADSR и усилитель VCA',
@@ -65,7 +71,7 @@ const alt = `Цепочка сигнала одного голоса сверх�
 <Figure id={id} number={number} caption={caption} alt={alt} name="Цепочка сигнала голоса">
   <svg
     viewBox="0 0 352 388"
-    style="max-width: 520px; margin-inline: auto"
+    style="max-width: 352px; margin-inline: auto"
     xmlns="http://www.w3.org/2000/svg"
   >
     <defs>
@@ -92,8 +98,8 @@ const alt = `Цепочка сигнала одного голоса сверх�
       stroke-width="1.5"
       stroke-dasharray="6 4"
     ></rect>
-    <text x="8" y="20" fill="currentColor" font-weight="600">
-      Выделено: {descriptions[highlight]}
+    <text x="8" y="21" fill="currentColor" font-weight="600" font-size="16">
+      Выделено: {titles[highlight]}
     </text>
     {arrows.map((d) => (
       <path
@@ -122,7 +128,7 @@ const alt = `Цепочка сигнала одного голоса сверх�
           text-anchor="middle"
           fill="var(--color-text)"
           font-weight={b.part === highlight ? 600 : 400}
-          font-size="13"
+          font-size="16"
         >
           {b.label}
         </text>

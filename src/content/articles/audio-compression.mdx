@@ -258,7 +258,7 @@ MD5 считается по всем отсчётам, чередующимся 
   caption="Упрощённая схема кодера MPEG-1 Layer III по Brandenburg (рис. 2). Сплошные стрелки — путь сигнала, штриховые — управление от психоакустической модели: тип окна MDCT и допустимый шум в каждой полосе."
   alt="Сверху блок PCM: кадр из 1152 отсчётов на канал. Слева вниз идут банк фильтров на 32 равные полосы, MDCT на 576 линий, квантование и коды Хаффмана в двух циклах, внизу — кадр MP3. Справа сигнал идёт в БПФ, затем в психоакустическую модель. От модели штриховая стрелка ведёт к MDCT с подписью «тип окна» и к квантованию с подписью «допустимый шум в каждой полосе»."
 >
-  <svg viewBox="0 0 360 400" xmlns="http://www.w3.org/2000/svg" font-size="14">
+  <svg viewBox="0 0 530 508" style="max-width: 368px; margin-inline: auto" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <marker id="mp3-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
         <path d="M0 0L10 5L0 10Z" fill="var(--chart-axis)" />
@@ -268,48 +268,48 @@ MD5 считается по всем отсчётам, чередующимся 
       </marker>
     </defs>
     <g fill="var(--chart-bg)" stroke="var(--chart-axis)" stroke-width="1.5">
-      <rect x="90" y="8" width="180" height="40" rx="6" />
-      <rect x="10" y="78" width="150" height="50" rx="6" />
-      <rect x="200" y="78" width="150" height="50" rx="6" />
-      <rect x="10" y="158" width="150" height="50" rx="6" />
-      <rect x="10" y="244" width="150" height="66" rx="6" />
-      <rect x="10" y="342" width="340" height="50" rx="6" />
+      <rect x="145" y="8" width="240" height="44" rx="6" />
+      <rect x="8" y="86" width="228" height="72" rx="6" />
+      <rect x="294" y="86" width="228" height="72" rx="6" />
+      <rect x="8" y="186" width="228" height="72" rx="6" />
+      <rect x="8" y="296" width="228" height="100" rx="6" />
+      <rect x="8" y="428" width="514" height="72" rx="6" />
     </g>
-    <rect x="200" y="158" width="150" height="66" rx="6" fill="var(--chart-bg)" stroke="var(--chart-result)" stroke-width="2.5" />
+    <rect x="294" y="186" width="228" height="100" rx="6" fill="var(--chart-bg)" stroke="var(--chart-result)" stroke-width="2.5" />
     <g fill="none" stroke="var(--chart-axis)" stroke-width="1.5">
-      <path d="M180 48V62M85 62H275" />
-      <path d="M85 62V76" marker-end="url(#mp3-arrow)" />
-      <path d="M275 62V76" marker-end="url(#mp3-arrow)" />
-      <path d="M85 128V156" marker-end="url(#mp3-arrow)" />
-      <path d="M275 128V156" marker-end="url(#mp3-arrow)" />
-      <path d="M85 208V242" marker-end="url(#mp3-arrow)" />
-      <path d="M85 310V340" marker-end="url(#mp3-arrow)" />
+      <path d="M265 52V68M122 68H408" />
+      <path d="M122 68V84" marker-end="url(#mp3-arrow)" />
+      <path d="M408 68V84" marker-end="url(#mp3-arrow)" />
+      <path d="M122 158V184" marker-end="url(#mp3-arrow)" />
+      <path d="M408 158V184" marker-end="url(#mp3-arrow)" />
+      <path d="M122 258V294" marker-end="url(#mp3-arrow)" />
+      <path d="M122 396V426" marker-end="url(#mp3-arrow)" />
     </g>
     <g fill="none" stroke="var(--chart-result)" stroke-width="1.75" stroke-dasharray="5 3">
-      <path d="M200 183H164" marker-end="url(#mp3-arrow-control)" />
-      <path d="M275 224V277H164" marker-end="url(#mp3-arrow-control)" />
+      <path d="M294 222H240" marker-end="url(#mp3-arrow-control)" />
+      <path d="M408 286V346H240" marker-end="url(#mp3-arrow-control)" />
     </g>
-    <g fill="var(--color-text)" text-anchor="middle">
-      <text x="180" y="33">PCM: 1152 отсчёта</text>
-      <text x="85" y="99">Банк фильтров:</text>
-      <text x="85" y="117">32 равные полосы</text>
-      <text x="275" y="99">БПФ на 1024</text>
-      <text x="275" y="117">точки</text>
-      <text x="85" y="179">MDCT: по 18 линий</text>
-      <text x="85" y="197">в полосе, всего 576</text>
-      <text x="275" y="181">Психоакустическая</text>
-      <text x="275" y="199">модель: порог</text>
-      <text x="275" y="217">маскировки</text>
-      <text x="85" y="266">Квантование и</text>
-      <text x="85" y="284">коды Хаффмана:</text>
-      <text x="85" y="302">два цикла</text>
-      <text x="180" y="363">Кадр MP3: заголовок, побочная</text>
-      <text x="180" y="381">информация, коды спектра</text>
+    <g fill="var(--color-text)" text-anchor="middle" font-size="23">
+      <text x="265" y="38">PCM: 1152 отсчёта</text>
+      <text x="122" y="116">Банк фильтров:</text>
+      <text x="122" y="143">32 равные полосы</text>
+      <text x="408" y="116">БПФ на 1024</text>
+      <text x="408" y="143">точки</text>
+      <text x="122" y="216">MDCT: по 18 линий</text>
+      <text x="122" y="243">в полосе, всего 576</text>
+      <text x="408" y="216">Психоакустическая</text>
+      <text x="408" y="243">модель: порог</text>
+      <text x="408" y="270">маскировки</text>
+      <text x="122" y="326">Квантование и</text>
+      <text x="122" y="353">коды Хаффмана:</text>
+      <text x="122" y="380">два цикла</text>
+      <text x="265" y="458">Кадр MP3: заголовок, побочная</text>
+      <text x="265" y="485">информация, коды спектра</text>
     </g>
-    <g fill="var(--chart-label)" text-anchor="middle" font-size="13">
-      <text x="181" y="175">окно</text>
-      <text x="225" y="298">допустимый шум</text>
-      <text x="225" y="314">в каждой полосе</text>
+    <g fill="var(--chart-label)" text-anchor="middle" font-size="23">
+      <text x="265" y="212">окно</text>
+      <text x="408" y="378">допустимый шум</text>
+      <text x="408" y="405">в каждой полосе</text>
     </g>
   </svg>
 </Figure>

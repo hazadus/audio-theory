@@ -159,7 +159,8 @@ export const spectrumBottom = -100;
 
 /** Два графика: четыре периода суммы (и вкладов по выбору) и спектр суммы с отражениями. */
 export function voiceSvg(a: VoiceAnalysis, id: string, width = 680, showSources = false): string {
-  const w = Math.max(320, Math.round(width));
+  // Рисунок строится в пикселях контейнера: масштаб 1, подписи остаются 12 px и на 320 px.
+  const w = Math.max(240, Math.round(width));
   const left = 46;
   const right = w - 16;
   const area = right - left;
@@ -246,7 +247,7 @@ export function voiceSvg(a: VoiceAnalysis, id: string, width = 680, showSources 
 ${timeGrid}${sources}${sum}
 <text class="tick" x="${left}" y="${timeTop + timeHeight + 18}">0</text>
 <text class="tick" x="${right}" y="${timeTop + timeHeight + 18}" text-anchor="end">${fixed(durationMs, durationMs < 10 ? 2 : 1)}\u00a0мс</text>
-<text class="label" x="${left}" y="258">Спектр суммы, дБ относительно амплитуды 1</text>
+<text class="label" x="${left}" y="258">${narrow ? 'Спектр суммы, дБ' : 'Спектр суммы, дБ относительно амплитуды 1'}</text>
 ${specGrid}${freqLabels}
 <path class="spectrum" d="${line}"/>${rings}
 <text class="tick" x="${right}" y="${specTop + specHeight + 38}" text-anchor="end">Частота, Гц</text>

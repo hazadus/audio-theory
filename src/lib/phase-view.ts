@@ -317,8 +317,8 @@ export function phaseCircleSvg(phaseDegrees: number, id: string): string {
     `<line class="phase-demo-shifted" x1="0" y1="0" x2="${tip.x}" y2="${tip.y}"/>` +
     `<circle class="phase-demo-dot reference" cx="1" cy="0" r="0.055"/>` +
     `<circle class="phase-demo-dot shifted" cx="${tip.x}" cy="${tip.y}" r="0.055"/>` +
-    // Размер шрифта — в единицах viewBox: при высоте 186–256 px это 13–18 px.
-    `<g class="phase-demo-ticks" font-size="0.2" aria-hidden="true">${angleLabel}<text x="1.06" y="0.32" text-anchor="middle">0°</text></g>` +
+    // Размер шрифта — в единицах viewBox: при высоте 192–256 px это 12–16 px.
+    `<g class="phase-demo-ticks" font-size="0.176" aria-hidden="true">${angleLabel}<text x="1.06" y="0.32" text-anchor="middle">0°</text></g>` +
     `</svg>`
   );
 }

@@ -122,10 +122,13 @@ const parameters = [
     background: var(--chart-bg);
     overflow-x: auto;
   }
-  .mixing-demo svg {
+  .mixing-demo .chart svg {
     display: block;
     width: 100%;
     min-width: 440px;
+    /* Подписи 12 единиц viewBox: на ширине 586 px и больше они вышли бы за 16 px. */
+    max-width: 586px;
+    margin-inline: auto;
     font-size: 12px;
   }
   .mixing-demo svg path {
