@@ -355,3 +355,16 @@
 [SANDYNE Learn](https://sandyne.com/learn#pitch) прочитан как ориентир музыкальных опытов. Универсальные утверждения о настроении, правильных нотах и натуральных квинтах из него не переносить; для темперации используется также [HyperPhysics: Cents](https://hyperphysics.gsu.edu/hbase/Music/cents.html).
 
 Для музыкального обзора также проверены Hutchinson §1.3 (C4 и смена номера на C) и §4.4 (метр, простой и составной размер). [Open Music Theory: Minor Scales](https://viva.pressbooks.pub/openmusictheory/chapter/minor-scales/) — прочитан раздел The Parallel and Relative Relationships: общая тоника и общий набор ключевых знаков.
+
+## DAW — руководства и страницы программ
+
+Для вводного обзора «Первое знакомство с DAW» прочитаны:
+
+- [Cockos. REAPER](https://www.reaper.fm/) и [Purchase](https://www.reaper.fm/purchase.php) — назначение, платформы Windows, macOS и Linux, 60 дней полной ознакомительной версии, лицензии 60 и 225 долларов и условия скидочной лицензии. REAPER не бесплатен.
+- [Apple. GarageBand для Mac](https://www.apple.com/mac/garageband/) и [Mac App Store](https://apps.apple.com/us/app/garageband/id682658836?mt=12) — платформы, возможности и бесплатное распространение.
+- [LMMS](https://lmms.io/) — бесплатная программа с открытым кодом, платформы, piano roll, встроенные синтезаторы и эффекты; сведений о записи аудио на главной странице нет.
+- [MIDI Association. Summary of MIDI 1.0 Messages](https://midi.org/summary-of-midi-1-0-messages) — Note On и Note Off, номер ноты и сила нажатия 0–127, Note On с силой 0.
+- [Ableton Live 12 Manual](https://www.ableton.com/en/live-manual/12/): Editing MIDI (содержимое MIDI-клипа, редактор нот), Mixing (Track Activator, Solo и Exclusive Solo, Arm, Volume и Pan, Main), Routing and I/O (мониторинг In, Auto, Off, задержка), Automation and Editing Envelopes (автоматизация, ручная отмена), Audio Clips, Tempo, and Warping (режимы Beats, Tones, Texture, Re-Pitch, Complex), Converting Audio to MIDI (условия точности), Managing Files and Sets (экспорт, ссылки клипов на файлы).
+- [W3C. Web Audio API: StereoPannerNode](https://www.w3.org/TR/webaudio/#stereopanner-algorithm) — равномощная панорама для моно.
+
+[SANDYNE Learn](https://sandyne.com/learn#track-controls) просмотрен как ориентир компоновки опытов DAW (шапка дорожки, piano roll, сравнение клипов, цепочка); технические утверждения проверены по руководствам выше.

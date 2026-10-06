@@ -91,6 +91,21 @@ describe('assertValidArticles', () => {
     ]);
   });
 
+  it('опыты DAW входят в реестр блоков и общую нумерацию', () => {
+    const body =
+      '<DawProjectDemo figure={1} />\n\n<DawPianoRollDemo figure={2} />\n\n<DawClipsDemo figure={3} />\n\n<DawSignalChainDemo figure={4} />';
+    expect(check(article(body))).not.toThrow();
+    expect(check(article(body.replace('figure={4}', 'figure={5}')))).toThrow(
+      /рисунков ожидался номер 4/,
+    );
+    expect(findDemos(body).map((demo) => demo.id)).toEqual([
+      'daw-project',
+      'daw-piano-roll',
+      'daw-clips',
+      'daw-signal-chain',
+    ]);
+  });
+
   it('рисунки и визуализации образуют одну последовательность', () => {
     const ok = '<Figure id="f" number={1} />\n\n<SamplingDemo figure={2} />';
     expect(check(article(ok))).not.toThrow();

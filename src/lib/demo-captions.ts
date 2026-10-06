@@ -7,6 +7,14 @@ export interface DemoCaption {
 }
 
 export const demoCaptions = {
+  DawProjectDemo: { defaultId: 'daw-project', name: 'Учебный проект: дорожки, клипы и микшер' },
+  DawPianoRollDemo: { defaultId: 'daw-piano-roll', name: 'Piano roll: ноты MIDI-клипа' },
+  DawClipsDemo: { defaultId: 'daw-clips', name: 'Одна фраза: MIDI-клип и аудиоклип' },
+  DawSignalChainDemo: {
+    defaultId: 'daw-signal-chain',
+    name: 'Путь сигнала: от нот до общего выхода',
+  },
+
   MusicNotesDemo: { defaultId: 'music-notes', name: 'Ноты на клавиатуре и октавы' },
   MusicIntervalsDemo: { defaultId: 'music-intervals', name: 'Две лестницы внутри октавы' },
   MusicRhythmDemo: { defaultId: 'music-rhythm', name: 'Темп, такт и сетка ударов' },

@@ -30,6 +30,14 @@ test(
     );
     await expect(page.locator('[data-music-demo]')).toHaveCount(8);
     await page.goto('./');
+    const daw = page.getByRole('link', { name: /Первое знакомство Первое знакомство с DAW/ });
+    await expect(daw).toHaveAttribute('href', `${base}daw-intro/`);
+    await daw.click();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+      'Первое знакомство с DAW: дорожки, MIDI и звук',
+    );
+    await expect(page.locator('[data-daw-demo]')).toHaveCount(4);
+    await page.goto('./');
     await expect(page.locator('footer').getByRole('link', { name: 'GitHub' })).toHaveAttribute(
       'href',
       siteConfig.repository,

@@ -2,6 +2,10 @@
 import { ladderFrequency } from '@/lib/music-theory';
 
 export type PreviewKind =
+  | 'daw-project'
+  | 'daw-roll'
+  | 'daw-clips'
+  | 'daw-chain'
   | 'music-ladder'
   | 'music-keys'
   | 'music-rhythm'
@@ -21,6 +25,10 @@ export type PreviewKind =
   | 'intro-envelope'
   | 'intro-lfo';
 export const previewKinds: readonly PreviewKind[] = [
+  'daw-project',
+  'daw-roll',
+  'daw-clips',
+  'daw-chain',
   'music-ladder',
   'music-keys',
   'music-rhythm',
@@ -217,6 +225,48 @@ function bytesPreview(): Preview {
 }
 
 const builders: Record<PreviewKind, () => Preview> = {
+  // Четыре дорожки с клипами и курсор воспроизведения.
+  'daw-project': () => ({
+    paths: [
+      { d: 'M16 24H264M16 56H264M16 88H264M16 120H264', color: 'grid', width: 1 },
+      { d: 'M20 40H260M20 72H260M20 104H260M140 136H260', color: 'signal', width: 18 },
+      { d: 'M112 14V146', color: 'result', width: 2.5 },
+    ],
+    dots: [],
+  }),
+  // Сетка piano roll: ноты разной длины на ступенях.
+  'daw-roll': () => ({
+    paths: [
+      {
+        d: 'M16 22H264M16 52H264M16 82H264M16 112H264M78 14V136M140 14V136M202 14V136',
+        color: 'grid',
+        width: 1,
+      },
+      { d: 'M20 127H74M82 97H105M113 67H136M144 37H258', color: 'signal', width: 16 },
+    ],
+    dots: [],
+  }),
+  // Ноты MIDI-клипа над формой волны аудиоклипа.
+  'daw-clips': () => ({
+    paths: [
+      { d: 'M20 30H60M66 46H106M112 22H192M198 38H258', color: 'signal', width: 10 },
+      { d: wave(20, 258, 108, 26, 14), color: 'result', width: 1.5 },
+    ],
+    dots: [],
+  }),
+  // Пять блоков цепочки со стрелками, выбран третий.
+  'daw-chain': () => ({
+    paths: [
+      {
+        d: 'M18 58h36v34h-36ZM70 58h36v34h-36ZM174 58h36v34h-36ZM226 58h36v34h-36Z',
+        color: 'axis',
+        width: 1.5,
+      },
+      { d: 'M122 58h36v34h-36Z', color: 'signal', width: 3 },
+      { d: 'M56 75H68M108 75H120M160 75H172M212 75H224', color: 'axis', width: 1.5 },
+    ],
+    dots: [],
+  }),
   'music-ladder': () => ({
     paths: [
       { d: 'M16 132H264', color: 'axis', width: 1 },

@@ -1,0 +1,993 @@
+---
+// Общая панель опытов DAW: статичный проект, piano roll, клипы или цепочка, параметры и плеер.
+// Без JS остаются начальный рисунок и подпись; контролы включает контроллер после готовности.
+import {
+  chainBlocks,
+  chainDefaults,
+  chainNames,
+  chainSeconds,
+  clipDefaults,
+  effectNames,
+  instrumentNames,
+  levelRange,
+  levelText,
+  noteAt,
+  panText,
+  projectBars,
+  projectDefaults,
+  projectSeconds,
+  projectTracks,
+  renderAudioClip,
+  renderChain,
+  rollDefaults,
+  rollPitches,
+  rollSteps,
+  stepOf,
+  clipBeats,
+  beatSeconds,
+  automationPoints,
+  audibleTracks,
+  trackStatus,
+  type DawMode,
+} from '@/lib/daw-intro';
+import {
+  chainBlockText,
+  chainCaption,
+  chainChart,
+  clipsCaption,
+  clipsChart,
+  dawIds,
+  dawNames,
+  notesPath,
+  projectCaption,
+  rollCaption,
+} from '@/lib/daw-intro-view';
+import { noteName } from '@/lib/music-theory';
+interface Props {
+  mode: DawMode;
+  figure: number;
+  id?: string;
+}
+const { mode, figure, id = dawIds[Astro.props.mode] } = Astro.props;
+const name = dawNames[mode];
+const project = projectDefaults();
+const roll = rollDefaults();
+const clips = clipDefaults();
+const chain = chainDefaults();
+const staticRate = 16000;
+const caption =
+  mode === 'project'
+    ? projectCaption(project, audibleTracks(project))
+    : mode === 'roll'
+      ? rollCaption(roll)
+      : mode === 'clips'
+        ? clipsCaption(clips)
+        : chainCaption(chain);
+const duration =
+  mode === 'project'
+    ? projectSeconds
+    : mode === 'roll'
+      ? 4 * beatSeconds + 0.3
+      : mode === 'clips'
+        ? clipBeats * beatSeconds + 0.3
+        : chainSeconds;
+const stepLabels = ['1', 'и', '2', 'и', '3', 'и', '4', 'и'];
+const percent = (value: number) => `${(value * 100).toFixed(3)}%`;
+const automationPath = (() => {
+  const [a, b] = automationPoints;
+  const x = (t: number) => ((t / projectSeconds) * 100).toFixed(2);
+  const y = (db: number) => ((-db / 30) * 100).toFixed(2);
+  return `M${x(0)} ${y(a.level)}H${x(a.time)}L${x(b.time)} ${y(b.level)}H100`;
+})();
+const sliderId = (track: string, key: string) => `${id}-${track}-${key}`;
+---
+
+<figure
+  id={id}
+  class="daw-demo"
+  data-daw-demo={mode}
+  data-state="static"
+  aria-labelledby={`${id}-title`}
+>
+  <div class="daw-heading">
+    <span>Визуализация {figure}</span>
+    <b id={`${id}-title`}>{name}</b>
+  </div>
+
+  {mode === 'project' && (
+    <fieldset disabled data-controls class="daw-controls daw-project" style="--pos:0">
+      <legend class="sr-only">Дорожки учебного проекта</legend>
+      <div class="daw-row daw-ruler" aria-hidden="true">
+        <div class="daw-head daw-ruler-head">Такты</div>
+        <div class="daw-lane">
+          <span class="daw-loop" data-loop hidden />
+          {Array.from({ length: projectBars }, (_, bar) => (
+            <span class="daw-bar" style={`left:${percent(bar / projectBars)}`}>
+              {bar + 1}
+            </span>
+          ))}
+          <span class="daw-playhead" />
+        </div>
+      </div>
+      {projectTracks.map((track) => {
+        const mix = project.tracks[track.id];
+        return (
+          <div class="daw-row" data-track={track.id}>
+            <div class="daw-head" role="group" aria-label={`Дорожка «${track.name}»`}>
+              <div class="daw-track-title">
+                <b>{track.name}</b>
+                <span>{track.kind === 'midi' ? 'MIDI' : 'Аудио'}</span>
+              </div>
+              <div class="daw-buttons">
+                {track.kind === 'midi' ? (
+                  <>
+                    <button
+                      type="button"
+                      data-mix="mute"
+                      aria-pressed="false"
+                      aria-label={`Mute: ${track.name}`}
+                      title="Mute — выключить дорожку"
+                    >
+                      M
+                    </button>
+                    <button
+                      type="button"
+                      data-mix="solo"
+                      aria-pressed="false"
+                      aria-label={`Solo: ${track.name}`}
+                      title="Solo — слушать только отмеченные дорожки"
+                    >
+                      S
+                    </button>
+                    {track.id === 'melody' && (
+                      <button
+                        type="button"
+                        data-mix="automation"
+                        aria-pressed="false"
+                        aria-label={`Автоматизация громкости: ${track.name}`}
+                        title="Автоматизация громкости"
+                      >
+                        A
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      data-mix="arm"
+                      class="daw-arm"
+                      aria-pressed="false"
+                      aria-label={`Подготовить к записи: ${track.name}`}
+                      title="Подготовка к записи"
+                    >
+                      R
+                    </button>
+                    <label for={sliderId(track.id, 'monitor')} class="daw-inline">
+                      Мониторинг
+                      <select id={sliderId(track.id, 'monitor')} data-mix="monitor">
+                        <option value="auto" selected>
+                          Авто
+                        </option>
+                        <option value="in">Вход</option>
+                        <option value="off">Выкл.</option>
+                      </select>
+                    </label>
+                  </>
+                )}
+              </div>
+              {track.kind === 'midi' && (
+                <div class="daw-sliders">
+                  <label for={sliderId(track.id, 'level')}>
+                    Уровень <output data-mix-output="level">{levelText(mix.level)}</output>
+                    <input
+                      type="range"
+                      id={sliderId(track.id, 'level')}
+                      data-mix="level"
+                      min={levelRange.min}
+                      max={levelRange.max}
+                      step="1"
+                      value={mix.level}
+                      aria-valuetext={levelText(mix.level)}
+                    />
+                  </label>
+                  <label for={sliderId(track.id, 'pan')}>
+                    Панорама <output data-mix-output="pan">{panText(mix.pan)}</output>
+                    <input
+                      type="range"
+                      id={sliderId(track.id, 'pan')}
+                      data-mix="pan"
+                      min="-100"
+                      max="100"
+                      step="10"
+                      value={mix.pan}
+                      aria-valuetext={panText(mix.pan)}
+                    />
+                  </label>
+                </div>
+              )}
+              <p class="daw-track-status" data-track-status>
+                {trackStatus(track.id, project)}
+              </p>
+            </div>
+            <div class="daw-lane" data-lane>
+              {track.clips.map((clip) => {
+                const notes = track.notes.filter(
+                  (n) => n.start >= clip.bar * 4 && n.start < (clip.bar + clip.bars) * 4,
+                );
+                const shifted = notes.map((n) => ({ ...n, start: n.start - clip.bar * 4 }));
+                return (
+                  <div
+                    class="daw-clip"
+                    style={`left:${percent(clip.bar / projectBars)};width:${percent(clip.bars / projectBars)}`}
+                  >
+                    <span>
+                      {track.name} · такты {clip.bar + 1}–{clip.bar + clip.bars}
+                    </span>
+                    <svg viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
+                      <path d={notesPath(shifted, clip.bars * 4, 100, 36, 0, 2)} />
+                    </svg>
+                  </div>
+                );
+              })}
+              {track.id === 'melody' && (
+                <div class="daw-automation" data-automation hidden>
+                  <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                    <path d={automationPath} vector-effect="non-scaling-stroke" />
+                  </svg>
+                </div>
+              )}
+              {track.clips.length === 0 && <span class="daw-empty">Пустая дорожка для записи</span>}
+              <span class="daw-playhead" />
+            </div>
+          </div>
+        );
+      })}
+      <label for={`${id}-loop`} class="daw-loop-choice">
+        Повтор фрагмента
+        <select id={`${id}-loop`} data-loop-choice>
+          <option value="off" selected>
+            Без повтора
+          </option>
+          <option value="0-2">Такты 1–2</option>
+          <option value="2-4">Такты 3–4</option>
+          <option value="0-4">Такты 1–4</option>
+        </select>
+      </label>
+    </fieldset>
+  )}
+
+  {mode === 'roll' && (
+    <fieldset disabled data-controls class="daw-controls">
+      <legend class="sr-only">Ноты такта</legend>
+      <div class="daw-roll-scroll">
+        <div
+          class="daw-roll"
+          role="grid"
+          aria-label="Piano roll: строки — высота нот, столбцы — восьмые такта"
+          data-roll
+        >
+          <div role="row" class="daw-roll-row daw-roll-header">
+            <span role="columnheader" class="daw-roll-pitch">
+              <span class="sr-only">Нота</span>
+            </span>
+            {stepLabels.map((label, step) => (
+              <span role="columnheader" aria-label={`Восьмая ${step + 1}`}>
+                {label}
+              </span>
+            ))}
+          </div>
+          {[...rollPitches].reverse().map((pitch) => (
+            <div role="row" class="daw-roll-row">
+              <span role="rowheader" class="daw-roll-pitch">
+                {noteName(pitch)}
+              </span>
+              {Array.from({ length: rollSteps }, (_, step) => {
+                const note = noteAt(roll, pitch, step);
+                return (
+                  <span role="gridcell">
+                    <button
+                      type="button"
+                      data-cell
+                      data-pitch={pitch}
+                      data-step={step}
+                      tabindex={pitch === 72 && step === 0 ? 0 : -1}
+                      data-note={note ? '' : undefined}
+                      data-start={note && stepOf(note) === step ? '' : undefined}
+                      style={note ? `--v:${note.velocity}` : undefined}
+                      aria-label={`${noteName(pitch)}, восьмая ${step + 1}: ${note ? (stepOf(note) === step ? 'начало ноты' : 'продолжение ноты') : 'пусто'}`}
+                    />
+                  </span>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+      <div class="daw-note-editor">
+        <p data-selected-text>Выберите ноту, чтобы изменить длину и силу нажатия.</p>
+        <div class="daw-params">
+          <label for={`${id}-length`}>
+            Длина
+            <select id={`${id}-length`} data-note-length disabled>
+              {['1/8', '1/4', '3/8', '1/2', '5/8', '3/4', '7/8', '1'].map((label, i) => (
+                <option value={i + 1}>{label}</option>
+              ))}
+            </select>
+          </label>
+          <label for={`${id}-velocity`}>
+            Сила нажатия <output data-velocity-text>—</output>
+            <input
+              type="range"
+              id={`${id}-velocity`}
+              data-note-velocity
+              min="1"
+              max="127"
+              step="1"
+              value="96"
+              disabled
+            />
+          </label>
+        </div>
+        <div class="daw-buttons">
+          <button type="button" data-delete-note disabled>
+            Удалить ноту
+          </button>
+          <button type="button" data-clear>
+            Очистить такт
+          </button>
+        </div>
+      </div>
+    </fieldset>
+  )}
+
+  {mode === 'clips' && (
+    <fieldset disabled data-controls class="daw-controls">
+      <legend class="sr-only">Изменения клипов</legend>
+      <div class="daw-params">
+        <label for={`${id}-transpose`}>
+          Высота обоих клипов
+          <select id={`${id}-transpose`} data-param="transpose">
+            <option value="0" selected>
+              Исходная
+            </option>
+            <option value="2">+2 полутона</option>
+          </select>
+        </label>
+        <label for={`${id}-tempo`}>
+          Темп проекта
+          <select id={`${id}-tempo`} data-param="tempo">
+            <option value="100" selected>
+              100 BPM, как при записи
+            </option>
+            <option value="125">125 BPM</option>
+          </select>
+        </label>
+        <label for={`${id}-instrument`}>
+          Инструмент MIDI-клипа
+          <select id={`${id}-instrument`} data-param="instrument">
+            <option value="pluck" selected>
+              {instrumentNames.pluck}
+            </option>
+            <option value="bright">{instrumentNames.bright}</option>
+          </select>
+        </label>
+        <label for={`${id}-audio-mode`}>
+          Изменение аудиоклипа
+          <select id={`${id}-audio-mode`} data-param="audioMode">
+            <option value="tape" selected>
+              Как плёнка
+            </option>
+            <option value="stretch">С растяжением</option>
+          </select>
+        </label>
+      </div>
+      <p class="daw-note">
+        Инструмент аудиоклипа уже записан в звуке: выбор инструмента меняет только MIDI-клип.
+      </p>
+    </fieldset>
+  )}
+
+  {mode === 'chain' && (
+    <fieldset disabled data-controls class="daw-controls">
+      <legend class="sr-only">Блоки и параметры цепочки</legend>
+      <ol class="daw-chain" aria-label="Путь сигнала">
+        {chainBlocks.map((block) => (
+          <li>
+            <button type="button" data-block={block} aria-pressed={block === chain.block}>
+              {chainNames[block]}
+            </button>
+          </li>
+        ))}
+      </ol>
+      <div class="daw-params">
+        <label for={`${id}-instrument`}>
+          Инструмент
+          <select id={`${id}-instrument`} data-param="instrument">
+            {(['soft', 'bright', 'pluck'] as const).map((value) => (
+              <option value={value} selected={value === chain.instrument}>
+                {instrumentNames[value]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label for={`${id}-effect`}>
+          Эффект
+          <select id={`${id}-effect`} data-param="effect">
+            {(['none', 'echo', 'drive'] as const).map((value) => (
+              <option value={value} selected={value === chain.effect}>
+                {effectNames[value]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label for={`${id}-level`}>
+          Уровень дорожки <output data-output="level">{levelText(chain.level)}</output>
+          <input
+            type="range"
+            id={`${id}-level`}
+            data-param="level"
+            min={levelRange.min}
+            max={levelRange.max}
+            step="1"
+            value={chain.level}
+            aria-valuetext={levelText(chain.level)}
+          />
+        </label>
+      </div>
+      <p class="daw-block-text" data-block-text>
+        {chainBlockText(chain)}
+      </p>
+    </fieldset>
+  )}
+
+  {mode === 'clips' && (
+    <div
+      class="daw-chart"
+      data-chart
+      set:html={clipsChart(clips, renderAudioClip(clips, staticRate), staticRate)}
+    />
+  )}
+  {mode === 'chain' && (
+    <div
+      class="daw-chart"
+      data-chart
+      set:html={chainChart(chain, renderChain(chain, staticRate))}
+    />
+  )}
+
+  <fieldset disabled data-controls class="daw-controls daw-audio">
+    <legend class="sr-only">Прослушивание: {name}</legend>
+    <p class="daw-warning">
+      Начните с небольшой громкости устройства. Звук синтезирован в браузере.
+    </p>
+    <div class="daw-player" role="group" aria-label={`Прослушивание: ${name}`}>
+      {mode === 'clips' ? (
+        <>
+          <button type="button" data-play="midi">
+            <span data-play-label>MIDI-клип</span>
+          </button>
+          <button type="button" data-play="audio">
+            <span data-play-label>Аудиоклип</span>
+          </button>
+        </>
+      ) : (
+        <button type="button" data-play>
+          <span data-play-label>{mode === 'project' ? 'Пуск' : 'Послушать'}</span>
+        </button>
+      )}
+      <button type="button" data-stop>
+        Стоп
+      </button>
+      <button type="button" data-reset>
+        Сбросить опыт
+      </button>
+      <button type="button" data-mute aria-label="Выключить звук" aria-pressed="false">
+        Звук
+      </button>
+      <label for={`${id}-volume`}>
+        Громкость <output data-volume-text>30 %</output>
+        <input
+          id={`${id}-volume`}
+          type="range"
+          min="0"
+          max="100"
+          step="5"
+          value="30"
+          data-volume
+          aria-valuetext="30 %"
+        />
+      </label>
+    </div>
+    <label for={`${id}-position`} class="daw-position">
+      {mode === 'project' ? 'Курсор' : 'Позиция'} <output data-time>0 с</output>
+      <input
+        id={`${id}-position`}
+        type="range"
+        min="0"
+        max={duration.toFixed(2)}
+        step="0.05"
+        value="0"
+        data-position
+      />
+    </label>
+  </fieldset>
+  <p class="daw-status" role="status" data-status>
+    Для изменения параметров и прослушивания нужен JavaScript.
+  </p>
+  <figcaption>
+    <b>Рис. {figure}.</b> <span data-caption>{caption}</span>
+  </figcaption>
+</figure>
+<script>
+  import { initDawDemos } from '@/lib/daw-intro-controller';
+  initDawDemos();
+</script>
+<style>
+  .daw-demo {
+    margin: 0;
+    min-width: 0;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    font: var(--text-sm) / 1.5 var(--font-ui);
+    overflow: hidden;
+  }
+  .daw-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 20px;
+  }
+  .daw-heading span {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+  .daw-heading b {
+    font-size: 1.0625rem;
+    font-weight: 500;
+  }
+  .daw-controls {
+    border: 0;
+    padding: 0 20px;
+    margin: 0;
+    min-width: 0;
+  }
+  .daw-params {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 16px;
+    margin-bottom: 12px;
+  }
+  label {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 4px;
+    min-width: 0;
+  }
+  select,
+  input {
+    width: 100%;
+    min-width: 0;
+    accent-color: var(--color-accent);
+  }
+  select {
+    border: var(--border-width) solid var(--color-border-strong);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font: inherit;
+    min-height: 44px;
+    border-radius: var(--radius-sm);
+    padding: 4px;
+  }
+  input[type='range'] {
+    height: 30px;
+  }
+  output {
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  button {
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg);
+    color: var(--color-text);
+    min-height: 44px;
+    padding: 6px 10px;
+    font: inherit;
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: default;
+    opacity: 0.55;
+  }
+  button[aria-pressed='true'],
+  [data-play] {
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+    border-color: var(--color-accent);
+  }
+  .daw-demo button:focus-visible,
+  .daw-demo select:focus-visible,
+  .daw-demo input:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 3px;
+    box-shadow: var(--focus-ring);
+  }
+  .daw-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: end;
+  }
+  .daw-buttons button {
+    min-width: 44px;
+  }
+  .daw-inline {
+    flex: 1 1 140px;
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+  .daw-inline select {
+    width: auto;
+    flex: 1;
+  }
+
+  /* Проект: шапка дорожки слева, полоса клипов справа; на узком экране шапка над полосой. */
+  .daw-project {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .daw-row {
+    display: grid;
+    grid-template-columns: minmax(260px, 300px) minmax(0, 1fr);
+    gap: 8px;
+  }
+  .daw-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 4px 8px;
+    padding: 8px;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-raised);
+    min-width: 0;
+  }
+  .daw-head > .daw-sliders,
+  .daw-head > .daw-track-status,
+  .daw-head > .daw-buttons:has(select) {
+    grid-column: 1 / -1;
+  }
+  .daw-ruler-head {
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    border: 0;
+    background: none;
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+  }
+  .daw-track-title {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .daw-track-title span {
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+  }
+  .daw-sliders {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 12px;
+  }
+  .daw-track-status {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+  }
+  .daw-lane {
+    position: relative;
+    min-height: 64px;
+    border-radius: var(--radius-sm);
+    background:
+      repeating-linear-gradient(to right, var(--chart-grid) 0 1px, transparent 1px 25%),
+      var(--chart-bg);
+    overflow: hidden;
+  }
+  .daw-ruler .daw-lane {
+    min-height: 28px;
+    background: none;
+  }
+  .daw-bar {
+    position: absolute;
+    top: 4px;
+    padding-left: 4px;
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    border-left: 1px solid var(--chart-axis);
+  }
+  .daw-loop {
+    position: absolute;
+    inset: 0 auto 0 var(--loop-start, 0%);
+    width: var(--loop-width, 0%);
+    background: var(--color-accent-soft);
+    border-inline: 2px solid var(--color-accent);
+  }
+  .daw-loop[hidden] {
+    display: none;
+  }
+  .daw-clip {
+    position: absolute;
+    top: 6px;
+    bottom: 6px;
+    display: flex;
+    flex-direction: column;
+    padding: 2px 6px 4px;
+    border: 1px solid var(--chart-series-1);
+    border-radius: var(--radius-sm);
+    background: var(--color-accent-soft);
+    overflow: hidden;
+  }
+  .daw-clip span {
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .daw-clip svg {
+    flex: 1;
+    width: 100%;
+    min-height: 20px;
+    fill: var(--chart-series-1);
+  }
+  [data-track][data-silent] .daw-clip {
+    opacity: 0.4;
+    border-style: dashed;
+  }
+  .daw-automation {
+    position: absolute;
+    inset: 6px 0;
+    pointer-events: none;
+  }
+  .daw-automation svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke: var(--chart-series-2);
+    stroke-width: 2.5;
+  }
+  .daw-automation[hidden] {
+    display: none;
+  }
+  .daw-empty {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+  }
+  .daw-playhead {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(var(--pos) * 100%);
+    width: 2px;
+    background: var(--chart-result);
+    pointer-events: none;
+  }
+  .daw-arm[aria-pressed='true'] {
+    background: var(--color-error);
+    border-color: var(--color-error);
+    color: var(--color-on-accent);
+  }
+  .daw-loop-choice {
+    max-width: 320px;
+    margin-bottom: 12px;
+  }
+
+  /* Piano roll: клетка не уже 32 px, на узком экране сетка прокручивается внутри блока. */
+  .daw-roll-scroll {
+    overflow-x: auto;
+    margin-bottom: 12px;
+  }
+  .daw-roll {
+    display: grid;
+    gap: 2px;
+    min-width: 300px;
+  }
+  .daw-roll-row {
+    display: grid;
+    grid-template-columns: 36px repeat(8, minmax(32px, 1fr));
+    gap: 2px;
+  }
+  .daw-roll-header span {
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+  }
+  .daw-roll-header span:nth-child(odd):not(:first-child) {
+    color: var(--color-text);
+  }
+  .daw-roll-pitch {
+    display: grid;
+    align-items: center;
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+  .daw-roll [role='gridcell'] {
+    display: grid;
+  }
+  [data-cell] {
+    min-height: 32px;
+    padding: 0;
+    border-color: var(--color-border);
+    background: var(--chart-bg);
+  }
+  .daw-roll [role='gridcell']:nth-child(4n + 2) [data-cell] {
+    border-left: 2px solid var(--chart-axis);
+  }
+  [data-cell][data-note] {
+    border-radius: 0;
+    border-color: var(--color-accent);
+    background: color-mix(
+      in srgb,
+      var(--color-accent) calc(25% + var(--v, 96) * 0.6%),
+      var(--chart-bg)
+    );
+  }
+  [data-cell][data-start] {
+    border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+    border-left-width: 4px;
+  }
+  [data-cell][data-selected] {
+    outline: 3px solid var(--color-text);
+    outline-offset: -3px;
+  }
+  [data-cell][data-active] {
+    box-shadow: inset 0 -6px var(--chart-result);
+  }
+  .daw-note-editor p {
+    margin: 0 0 8px;
+  }
+  .daw-note-editor .daw-buttons {
+    margin-bottom: 12px;
+  }
+
+  /* Цепочка: блоки по порядку со стрелками; на узком экране переносятся. */
+  .daw-chain {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 4px;
+    padding: 0;
+    margin: 0 0 12px;
+    list-style: none;
+    counter-reset: block;
+  }
+  .daw-chain li {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .daw-chain li + li::before {
+    content: '→';
+    color: var(--color-text-muted);
+  }
+  .daw-chain button {
+    background: var(--color-bg);
+    color: var(--color-text);
+    border-color: var(--color-border-strong);
+  }
+  .daw-chain button[aria-pressed='true'] {
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+    border-color: var(--color-accent);
+  }
+  .daw-chain button[data-active-flow] {
+    box-shadow: inset 0 -4px var(--chart-result);
+  }
+  .daw-block-text,
+  .daw-note {
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+  }
+
+  .daw-chart {
+    margin: 12px auto;
+    width: min(calc(100% - 24px), 360px);
+    padding: 8px;
+    background: var(--chart-bg);
+    border-radius: var(--radius-sm);
+  }
+  .daw-chart :global(svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+    fill: none;
+  }
+  .daw-chart :global(text) {
+    stroke: none;
+  }
+
+  .daw-warning {
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+  }
+  .daw-player {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+  .daw-player label {
+    width: 100%;
+    margin-top: 8px;
+  }
+  .daw-player [data-play][data-current='false'] {
+    background: var(--color-bg);
+    color: var(--color-text);
+    border-color: var(--color-border-strong);
+  }
+  .daw-position {
+    margin-top: 12px;
+  }
+  .daw-status {
+    padding: 0 20px;
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+  }
+  figcaption {
+    padding: 12px 20px;
+    border-top: var(--border-width) solid var(--color-border);
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  @media (width < 600px) {
+    .daw-heading {
+      padding: 16px 12px;
+    }
+    .daw-controls,
+    .daw-status,
+    figcaption {
+      padding-inline: 12px;
+    }
+    .daw-params {
+      grid-template-columns: 1fr;
+    }
+    .daw-row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 4px;
+    }
+    .daw-row + .daw-row:not(.daw-ruler + .daw-row) {
+      margin-top: 8px;
+    }
+    .daw-ruler-head {
+      display: none;
+    }
+  }
+  @media print {
+    .daw-audio,
+    .daw-status,
+    .daw-note-editor,
+    .daw-loop-choice {
+      display: none;
+    }
+    .daw-roll-scroll {
+      overflow: visible;
+    }
+  }
+</style>

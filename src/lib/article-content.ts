@@ -24,6 +24,30 @@ interface BlockRule {
 
 /** Учебные блоки с нумерацией: рисунки и визуализации — одна последовательность, таблицы и формулы — свои. */
 const blockRules: Record<string, BlockRule> = {
+  DawProjectDemo: {
+    sequence: 'figure',
+    numberAttribute: 'figure',
+    idRequired: false,
+    numberRequired: true,
+  },
+  DawPianoRollDemo: {
+    sequence: 'figure',
+    numberAttribute: 'figure',
+    idRequired: false,
+    numberRequired: true,
+  },
+  DawClipsDemo: {
+    sequence: 'figure',
+    numberAttribute: 'figure',
+    idRequired: false,
+    numberRequired: true,
+  },
+  DawSignalChainDemo: {
+    sequence: 'figure',
+    numberAttribute: 'figure',
+    idRequired: false,
+    numberRequired: true,
+  },
   MusicNotesDemo: {
     sequence: 'figure',
     numberAttribute: 'figure',

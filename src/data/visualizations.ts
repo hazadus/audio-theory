@@ -18,6 +18,38 @@ export interface Visualization {
 
 export const visualizations: readonly Visualization[] = [
   {
+    id: 'daw-project',
+    slug: 'daw-intro',
+    name: 'Учебный проект: дорожки, клипы и микшер',
+    what: 'Пуск и повтор тактов, уровень, панорама, Mute, Solo, автоматизация и подготовка записи.',
+    sound: true,
+    preview: 'daw-project',
+  },
+  {
+    id: 'daw-piano-roll',
+    slug: 'daw-intro',
+    name: 'Piano roll: ноты MIDI-клипа',
+    what: 'Добавление и удаление нот, длина и сила нажатия в такте восьмыми.',
+    sound: true,
+    preview: 'daw-roll',
+  },
+  {
+    id: 'daw-clips',
+    slug: 'daw-intro',
+    name: 'Одна фраза: MIDI-клип и аудиоклип',
+    what: 'Перенос на 2 полутона, темп 125 BPM, инструмент, растяжение аудио или «как плёнка».',
+    sound: true,
+    preview: 'daw-clips',
+  },
+  {
+    id: 'daw-signal-chain',
+    slug: 'daw-intro',
+    name: 'Путь сигнала: от нот до общего выхода',
+    what: 'Блоки от MIDI до выхода, инструмент, эффект и уровень дорожки.',
+    sound: true,
+    preview: 'daw-chain',
+  },
+  {
     id: 'tone-demo',
     slug: 'sound-wave',
     name: 'Генератор чистого тона',

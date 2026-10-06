@@ -1,0 +1,10 @@
+---
+// Опыт DAW «roll»: точка входа реестра и общей нумерации рисунков.
+import DawIntroDemo from '@/components/DawIntroDemo.astro';
+interface Props {
+  figure: number;
+  id?: string;
+}
+---
+
+<DawIntroDemo mode="roll" {...Astro.props} />

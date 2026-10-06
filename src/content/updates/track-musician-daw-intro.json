@@ -1,0 +1,16 @@
+{
+  "id": "track-musician-daw-intro",
+  "date": "2026-10-06",
+  "order": 9,
+  "type": "updated",
+  "track": "musician",
+  "items": [
+    {
+      "text": "Новый этап: первое знакомство с музыкальной программой.",
+      "target": {
+        "track": "musician",
+        "anchor": "stage-daw"
+      }
+    }
+  ]
+}

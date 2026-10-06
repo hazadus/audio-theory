@@ -1,0 +1,10 @@
+---
+// Опыт DAW «project»: точка входа реестра и общей нумерации рисунков.
+import DawIntroDemo from '@/components/DawIntroDemo.astro';
+interface Props {
+  figure: number;
+  id?: string;
+}
+---
+
+<DawIntroDemo mode="project" {...Astro.props} />

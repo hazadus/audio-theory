@@ -1,0 +1,38 @@
+{
+  "id": "daw-intro-published",
+  "date": "2026-10-06",
+  "order": 8,
+  "type": "new",
+  "article": "daw-intro",
+  "summary": "Проект, дорожки и клипы, Mute и Solo, MIDI и piano roll, разница между аудио- и MIDI-клипом, путь сигнала и экспорт. Примеры программ, включая REAPER и бесплатные GarageBand и LMMS; четыре опыта со звуком.",
+  "items": [
+    {
+      "text": "Учебный проект с дорожками и микшером",
+      "target": {
+        "article": "daw-intro",
+        "anchor": "daw-project"
+      }
+    },
+    {
+      "text": "Piano roll",
+      "target": {
+        "article": "daw-intro",
+        "anchor": "daw-piano-roll"
+      }
+    },
+    {
+      "text": "MIDI-клип и аудиоклип",
+      "target": {
+        "article": "daw-intro",
+        "anchor": "daw-clips"
+      }
+    },
+    {
+      "text": "Путь сигнала до общего выхода",
+      "target": {
+        "article": "daw-intro",
+        "anchor": "daw-signal-chain"
+      }
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 # Целевая структура проекта
 
+Обзор DAW — `src/content/articles/daw-intro.mdx`; четыре `Daw*Demo.astro` используют общую панель `DawIntroDemo.astro`, модель `daw-intro.ts`, рисунки `daw-intro-view.ts`, плеер `daw-intro-player.ts` и контроллер `daw-intro-controller.ts`. Проверки — `tests/unit/daw-intro.test.ts` и `tests/e2e/daw-intro.spec.ts`; устройство описано в [обзоре](overview.md#опыты-вводного-обзора-daw).
+
 Музыкальный обзор — `src/content/articles/music-theory-intro.mdx`; восемь `Music*Demo.astro` используют общую панель `MusicTheoryDemo.astro`, модель `music-theory.ts`, рисунок `music-theory-view.ts`, контроллер и плеер в `src/lib/`. Проверки — `tests/unit/music-theory.test.ts` и `tests/e2e/music-theory.spec.ts`; устройство описано в [обзоре](overview.md#музыкальные-опыты-вводного-обзора).
 
 Вводный обзор находится в `src/content/articles/audio-intro.mdx`. Его панель — `src/components/IntroSoundDemo.astro`, точки входа реестра — `IntroToneDemo.astro`, `IntroOscillatorDemo.astro`, `IntroEnvelopeDemo.astro`, `IntroLfoDemo.astro`. Модель, SVG, контроллер и плеер — `src/lib/intro-sound.ts`, `intro-sound-view.ts`, `intro-sound-controller.ts`, `intro-audio-player.ts`; проверки — `tests/unit/intro-sound.test.ts` и `tests/e2e/intro-sound.spec.ts`. Устройство описано в [обзоре](overview.md#общие-правила-подготовки-материалов).

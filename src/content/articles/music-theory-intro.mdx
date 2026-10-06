@@ -24,6 +24,7 @@ import MusicTriadsDemo from '@/components/MusicTriadsDemo.astro';
 import MusicProgressionDemo from '@/components/MusicProgressionDemo.astro';
 import MusicCircleDemo from '@/components/MusicCircleDemo.astro';
 import MusicArpeggioDemo from '@/components/MusicArpeggioDemo.astro';
+import MarginNote from '@/components/MarginNote.astro';
 import SelfCheck from '@/components/SelfCheck.astro';
 
 Напойте короткую фразу и отстучите её на столе. В голосе есть движение по высоте; в стуке остаются моменты начала и паузы. **Мелодия (melody)** — последовательность музыкальных звуков, которую мы воспринимаем как связную линию. **Ритм (rhythm)** описывает их размещение и длительности во времени. **Гармония (harmony)** связана с сочетаниями высот и их сменой. Эти стороны музыки можно менять по отдельности, а слушать вместе.
@@ -143,7 +144,13 @@ import SelfCheck from '@/components/SelfCheck.astro';
 3. В последовательности аккордов начните с I–V–vi–IV в C мажоре. Сыграйте или прослушайте C–G–Am–F и решите, какое окончание хотите повторить.
 4. Сравните последний F как аккорд и как арпеджио. Подберите направление и скорость, чтобы различать движение сопровождения и свою мелодию.
 
+<MarginNote items={[
+  { label: 'Первое знакомство с DAW → Первый фрагмент', description: 'Как собрать мелодию и бас на дорожках музыкальной программы и сохранить результат.', target: { article: 'daw-intro', anchor: 'practice' } },
+]}>
+
 Панели независимы: они помогают проверить части наброска отдельно. Чтобы услышать мелодию, ритм и гармонию вместе, сыграйте их на инструменте или перенесите в музыкальную программу. При сравнении меняйте один параметр: так легче услышать, какой результат дал выбранный шаг.
+
+</MarginNote>
 
 <SelfCheck question="Что изменится, если заменить восьмые шестнадцатыми при тех же 100 BPM, но сохранить ноты аккорда?">
 
