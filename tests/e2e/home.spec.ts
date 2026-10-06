@@ -14,13 +14,21 @@ test(
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Теория аудио');
     await expect(page.getByRole('main')).toContainText('Личный учебник по теории аудио');
     await expect(page.locator('main section.group a.card').first()).toBeVisible();
-    const intro = page.locator('.start-intro');
+    const intro = page.locator('.start-intro[href$="/audio-intro/"]');
     await expect(intro).toHaveAttribute('href', `${base}audio-intro/`);
     await intro.click();
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
       'Как устроен звук: первый обзор',
     );
     await expect(page.locator('[data-intro-demo]')).toHaveCount(4);
+    await page.goto('./');
+    const music = page.getByRole('link', { name: /Первое знакомство Теория музыки/ });
+    await expect(music).toHaveAttribute('href', `${base}music-theory-intro/`);
+    await music.click();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+      'Теория музыки: ноты, ритм и гармония',
+    );
+    await expect(page.locator('[data-music-demo]')).toHaveCount(8);
     await page.goto('./');
     await expect(page.locator('footer').getByRole('link', { name: 'GitHub' })).toHaveAttribute(
       'href',

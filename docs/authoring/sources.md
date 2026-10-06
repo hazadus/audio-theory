@@ -339,3 +339,19 @@
 - Universal Audio. UAD Powered Plug-Ins Manual, software version 6.1, 2011 ([PDF](https://media.uaudio.com/support/downloads/UADManual_61.pdf)) — прочитана гл. 25, с. 283–287: органы управления моделей LA-2A (Peak Reduction, Gain, Compress/Limit, фильтр предыскажений в боковой цепи) и 1176LN (Input как порог, атака 20–800 мкс, восстановление 50–1100 мс, кнопки 4:1–20:1 и режим всех кнопок, схема с обратной связью). Современные руководства на help.uaudio.com при подготовке не открывались (сайт не отвечал), страницы продуктов отдавали 429.
 - [Tokyo Dawn Labs. Limiter 6 GE Manual](https://docs.tokyodawn.net/limiter-6-ge-manual/) — прочитаны концепция, порядок модулей по скорости, модуль Peak Limiter (Recovery, Ahead), модуль Output (защитный лимитер, потолок PCM и True Peak).
 - [LoudMax](https://loudmax.blogspot.com/) — страница бесплатного лимитера: два регулятора, предварительный анализ и атака 1,25 мс, автоматическое восстановление, режим ISP с дополнительной задержкой 6 отсчётов.
+
+## Музыкальная теория — Open Music Theory и Ableton
+
+Для вводного обзора «Теория музыки: ноты, ритм и гармония» прочитаны:
+
+- [Chelsey Hamm. Half Steps, Whole Steps, and Accidentals](https://viva.pressbooks.pub/openmusictheory/chapter/half-and-whole-steps/) — соседние клавиши, диезы, бемоли, энгармоническое равенство.
+- [Mark Gotham, Chelsey Hamm, Bryn Hughes. Notating Rhythm](https://viva.pressbooks.pub/openmusictheory/chapter/notating-rhythm/) — относительные длительности нот и пауз.
+- [Chelsey Hamm. Triads](https://viva.pressbooks.pub/openmusictheory/chapter/triads/) — четыре типа трезвучий, основной тон, терция и квинта, буквенные обозначения.
+- [Samuel Brady, Chelsey Hamm, Megan Lavengood, Kris Shaffer. Roman Numerals](https://viva.pressbooks.pub/openmusictheory/chapter/roman-numerals/) — ступени и типы аккордов, перенос между тональностями.
+- [Chelsey Hamm, Bryn Hughes. Major Scales, Scale Degrees, and Key Signatures](https://viva.pressbooks.pub/openmusictheory/chapter/major-scales/) — шаги мажора, ключевые знаки и круг.
+- [Ableton Learning Music: Beat and tempo](https://learningmusic.ableton.com/make-beats/beat-and-tempo.html), [Bars](https://learningmusic.ableton.com/make-beats/bars.html), [Keys and scales](https://learningmusic.ableton.com/notes-and-scales/keys-and-scales.html), [Major triads](https://learningmusic.ableton.com/chords/major-triads.html), [1-5-6-4](https://learningmusic.ableton.com/chords/1-5-6-4.html) — темп, группировка долей, тоника и первые аккорды.
+- [Ableton Live 12 Manual: Arpeggiator](https://www.ableton.com/en/live-manual/12/live-midi-effect-reference/#arpeggiator) — порядок и скорость исполнения нот аккорда, направления и синхронизация с темпом.
+
+[SANDYNE Learn](https://sandyne.com/learn#pitch) прочитан как ориентир музыкальных опытов. Универсальные утверждения о настроении, правильных нотах и натуральных квинтах из него не переносить; для темперации используется также [HyperPhysics: Cents](https://hyperphysics.gsu.edu/hbase/Music/cents.html).
+
+Для музыкального обзора также проверены Hutchinson §1.3 (C4 и смена номера на C) и §4.4 (метр, простой и составной размер). [Open Music Theory: Minor Scales](https://viva.pressbooks.pub/openmusictheory/chapter/minor-scales/) — прочитан раздел The Parallel and Relative Relationships: общая тоника и общий набор ключевых знаков.

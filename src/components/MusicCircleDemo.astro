@@ -1,0 +1,10 @@
+---
+// Музыкальный опыт «circle»: точка входа реестра и общей нумерации рисунков.
+import MusicTheoryDemo from '@/components/MusicTheoryDemo.astro';
+interface Props {
+  figure: number;
+  id?: string;
+}
+---
+
+<MusicTheoryDemo mode="circle" {...Astro.props} />

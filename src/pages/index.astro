@@ -15,7 +15,24 @@ import { withBase } from '@/lib/urls';
 
 const articles = await loadArticleList();
 const groups = buildHomeGroups(articles, topics);
-const intro = articles.find((article) => article.slug === 'audio-intro');
+const introductions = [
+  {
+    slug: 'audio-intro',
+    description:
+      'Измените высоту и громкость, соберите ноту синтезатора и узнайте, как звук записывают в файл.',
+  },
+  {
+    slug: 'music-theory-intro',
+    description: 'Выберите ноты, соберите ритм и последовательность аккордов, попробуйте арпеджио.',
+  },
+  {
+    slug: 'daw-intro',
+    description: 'Познакомьтесь с музыкальной программой: дорожками, записью и первым проектом.',
+  },
+].flatMap((entry) => {
+  const article = articles.find((article) => article.slug === entry.slug);
+  return article ? [{ ...article, description: entry.description }] : [];
+});
 const tracks = await loadTracks();
 const visualizations = await loadVisualizationSection();
 ---
@@ -44,19 +61,18 @@ const visualizations = await loadVisualizationSection();
           <h2 id="start-title">С чего начать</h2>
           <p>Треки: материалы сайта в порядке чтения под вашу задачу.</p>
         </div>
-        {intro && (
-          <a class="start-intro" href={withBase(`/${intro.slug}/`)}>
-            <div>
-              <span class="start-intro-label">Первое знакомство</span>
-              <b>{intro.title}</b>
-              <p>
-                Измените высоту и громкость, соберите ноту синтезатора и узнайте, как звук
-                записывают в файл.
-              </p>
-            </div>
-            <Icon name="arrow-right" size={22} />
-          </a>
-        )}
+        <div class="start-overviews">
+          {introductions.map((intro) => (
+            <a class="start-intro" href={withBase(`/${intro.slug}/`)}>
+              <div>
+                <span class="start-intro-label">Первое знакомство</span>
+                <b>{intro.title}</b>
+                <p>{intro.description}</p>
+              </div>
+              <Icon name="arrow-right" size={22} />
+            </a>
+          ))}
+        </div>
         <ul class="start-grid">
           {tracks.map((track) => (
             <li>
@@ -253,6 +269,10 @@ const visualizations = await loadVisualizationSection();
     color: var(--color-text-muted);
   }
 
+  .start-overviews {
+    display: grid;
+    gap: var(--space-3);
+  }
   .start-intro {
     display: flex;
     align-items: center;

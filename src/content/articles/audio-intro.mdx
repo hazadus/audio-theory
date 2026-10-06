@@ -27,6 +27,7 @@ import IntroOscillatorDemo from '@/components/IntroOscillatorDemo.astro';
 import IntroEnvelopeDemo from '@/components/IntroEnvelopeDemo.astro';
 import IntroLfoDemo from '@/components/IntroLfoDemo.astro';
 import ReadingTrackLinks from '@/components/ReadingTrackLinks.astro';
+import MarginNote from '@/components/MarginNote.astro';
 import SelfCheck from '@/components/SelfCheck.astro';
 
 Поставьте рядом два знакомых звука: басовую ноту и удар по тарелке. Один можно напеть, другой больше похож на шорох. Один тянется ровно, другой начинается резко и затихает. Теория аудио помогает описать эти отличия, изменить звук и сохранить результат в файле.
@@ -43,7 +44,13 @@ import SelfCheck from '@/components/SelfCheck.astro';
 
 **Попробуйте.** Нажмите «Послушать». Поднимите частоту примерно с 220 до 440 Гц: тон станет на октаву выше. Теперь уменьшите амплитуду. Волна станет ниже, а звук — тише; число повторений останется прежним. Полосы над кривой условно показывают более плотный и разреженный воздух, без масштаба расстояний.
 
+<MarginNote items={[
+  { label: 'Теория музыки → Ноты и октавы', description: 'Клавиатура, русские и буквенные названия нот, одноимённые ноты в разных октавах.', target: { article: 'music-theory-intro', anchor: 'notes' } },
+]}>
+
 Октава (octave) — знакомое музыкальное расстояние между нотами с удвоенной частотой. Оно пригодится и при настройке синтезатора. Подробности о давлении и частоте — в [статье «Звуковая волна»](/sound-wave/); обозначения и числовые отношения — в [математической справке](/audio-math/#units-and-ratios).
+
+</MarginNote>
 
 ## Что добавляет наш слух {#hearing}
 

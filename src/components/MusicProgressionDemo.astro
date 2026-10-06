@@ -1,0 +1,10 @@
+---
+// Музыкальный опыт «progression»: точка входа реестра и общей нумерации рисунков.
+import MusicTheoryDemo from '@/components/MusicTheoryDemo.astro';
+interface Props {
+  figure: number;
+  id?: string;
+}
+---
+
+<MusicTheoryDemo mode="progression" {...Astro.props} />

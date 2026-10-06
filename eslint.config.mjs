@@ -9,6 +9,7 @@ export default [
       'dist/**',
       '.astro/**',
       '.e2e/**',
+      '.tmp/**',
       'test-results/**',
       'playwright-report/**',
       'docs/**',

@@ -7,6 +7,15 @@ export interface DemoCaption {
 }
 
 export const demoCaptions = {
+  MusicNotesDemo: { defaultId: 'music-notes', name: 'Ноты на клавиатуре и октавы' },
+  MusicIntervalsDemo: { defaultId: 'music-intervals', name: 'Две лестницы внутри октавы' },
+  MusicRhythmDemo: { defaultId: 'music-rhythm', name: 'Темп, такт и сетка ударов' },
+  MusicSwingDemo: { defaultId: 'music-swing', name: 'Ровные восьмые и свинг' },
+  MusicTriadsDemo: { defaultId: 'music-triads', name: 'Трезвучие на клавишах' },
+  MusicProgressionDemo: { defaultId: 'music-progression', name: 'Четыре аккорда по ступеням' },
+  MusicCircleDemo: { defaultId: 'music-circle', name: 'Тональности на квинтовом круге' },
+  MusicArpeggioDemo: { defaultId: 'music-arpeggio', name: 'Аккорд вместе и по нотам' },
+
   IntroToneDemo: { defaultId: 'intro-tone', name: 'Звук: выше, ниже, громче, тише' },
   IntroOscillatorDemo: { defaultId: 'intro-oscillator', name: 'Осциллятор: форма и звучание' },
   IntroEnvelopeDemo: { defaultId: 'intro-envelope', name: 'ADSR: начало и конец ноты' },

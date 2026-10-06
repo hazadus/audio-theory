@@ -1,5 +1,11 @@
 // Геометрия статичных превью карточек визуализаций: область 280 × 150, без осей и подписей.
+import { ladderFrequency } from '@/lib/music-theory';
+
 export type PreviewKind =
+  | 'music-ladder'
+  | 'music-keys'
+  | 'music-rhythm'
+  | 'music-circle'
   | 'tone'
   | 'phase'
   | 'sampling'
@@ -15,6 +21,10 @@ export type PreviewKind =
   | 'intro-envelope'
   | 'intro-lfo';
 export const previewKinds: readonly PreviewKind[] = [
+  'music-ladder',
+  'music-keys',
+  'music-rhythm',
+  'music-circle',
   'noise',
   'tone',
   'phase',
@@ -207,6 +217,54 @@ function bytesPreview(): Preview {
 }
 
 const builders: Record<PreviewKind, () => Preview> = {
+  'music-ladder': () => ({
+    paths: [
+      { d: 'M16 132H264', color: 'axis', width: 1 },
+      { d: 'M16 132L264 24', color: 'result', width: 2, dash: '4 4' },
+    ],
+    dots: Array.from({ length: 13 }, (_, i) => ({
+      x: 16 + ((ladderFrequency(i, 'equal') - 220) / 220) * 248,
+      y: 132 - i * 9,
+      color: 'signal' as const,
+    })),
+    // Пунктирная линия равных прибавок герц даёт ориентир для сравнения двух лестниц.
+  }),
+  'music-keys': () => ({
+    paths: [
+      {
+        d: 'M24 28H256V126H24ZM57 28V126M90 28V126M123 28V126M156 28V126M189 28V126M222 28V126',
+        color: 'axis',
+        width: 1.5,
+      },
+      { d: 'M57 28V84M90 28V84M156 28V84M189 28V84M222 28V84', color: 'axis', width: 18 },
+      { d: 'M40 94V120M106 94V120M172 94V120', color: 'signal', width: 22 },
+    ],
+    dots: [],
+  }),
+  'music-rhythm': () => ({
+    paths: [
+      { d: 'M16 42H264M16 78H264M16 114H264', color: 'grid', width: 1 },
+      {
+        d: 'M28 28V55M90 28V55M152 28V55M214 28V55M28 64V92M59 64V92M90 64V92M137 64V92M214 64V92',
+        color: 'signal',
+        width: 10,
+      },
+      {
+        d: 'M28 102V126M75 102V126M90 102V126M137 102V126M152 102V126M199 102V126M214 102V126M261 102V126',
+        color: 'result',
+        width: 8,
+      },
+    ],
+    dots: [],
+  }),
+  'music-circle': () => ({
+    paths: [{ d: 'M140 20a55 55 0 1 1 0 110a55 55 0 1 1 0-110', color: 'axis', width: 1.5 }],
+    dots: Array.from({ length: 12 }, (_, i) => ({
+      x: 140 + 55 * Math.sin((i * Math.PI) / 6),
+      y: 75 - 55 * Math.cos((i * Math.PI) / 6),
+      color: i === 0 ? ('signal' as const) : ('axis' as const),
+    })),
+  }),
   'intro-oscillator': () => ({
     paths: [{ d: 'M16 75L78 28L140 122L202 28L264 75', color: 'signal', width: 2.5 }],
     dots: [],

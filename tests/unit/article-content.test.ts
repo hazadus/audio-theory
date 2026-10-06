@@ -1,6 +1,6 @@
 // Проверяет правила содержимого статьи: источники, ссылки, язык листингов, идентификаторы и нумерацию.
 import { describe, expect, it } from 'vitest';
-import { assertValidArticles, type ArticleForCheck } from '@/lib/article-content';
+import { findDemos, assertValidArticles, type ArticleForCheck } from '@/lib/article-content';
 
 const sources = '\n## Источники {#sources}\n\n- [Книга](https://example.com/book)\n';
 
@@ -77,6 +77,18 @@ describe('assertValidArticles', () => {
     expect(check(article(body.replace('figure={4}', 'figure={3}')))).toThrow(
       /рисунков ожидался номер 4/,
     );
+  });
+
+  it('музыкальные опыты входят в реестр блоков и общую нумерацию', () => {
+    const body = '<MusicNotesDemo figure={1} />\n\n<MusicRhythmDemo figure={2} />';
+    expect(check(article(body))).not.toThrow();
+    expect(check(article(body.replace('figure={2}', 'figure={3}')))).toThrow(
+      /рисунков ожидался номер 2/,
+    );
+    expect(findDemos(body)).toEqual([
+      { component: 'MusicNotesDemo', id: 'music-notes' },
+      { component: 'MusicRhythmDemo', id: 'music-rhythm' },
+    ]);
   });
 
   it('рисунки и визуализации образуют одну последовательность', () => {

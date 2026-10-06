@@ -1,0 +1,38 @@
+{
+  "id": "music-theory-intro-published",
+  "date": "2026-10-06",
+  "order": 7,
+  "type": "new",
+  "article": "music-theory-intro",
+  "summary": "Ноты и октавы, темп, ритм, аккорды, тональности и арпеджио для первого музыкального наброска. Восемь коротких опытов с прослушиванием.",
+  "items": [
+    {
+      "text": "Ноты на клавиатуре",
+      "target": {
+        "article": "music-theory-intro",
+        "anchor": "music-notes"
+      }
+    },
+    {
+      "text": "Темп и ритмическая сетка",
+      "target": {
+        "article": "music-theory-intro",
+        "anchor": "music-rhythm"
+      }
+    },
+    {
+      "text": "Четыре аккорда по ступеням",
+      "target": {
+        "article": "music-theory-intro",
+        "anchor": "music-progression"
+      }
+    },
+    {
+      "text": "Квинтовый круг",
+      "target": {
+        "article": "music-theory-intro",
+        "anchor": "music-circle"
+      }
+    }
+  ]
+}

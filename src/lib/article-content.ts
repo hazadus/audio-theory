@@ -24,6 +24,55 @@ interface BlockRule {
 
 /** Учебные блоки с нумерацией: рисунки и визуализации — одна последовательность, таблицы и формулы — свои. */
 const blockRules: Record<string, BlockRule> = {
+  MusicNotesDemo: {
+    sequence: 'figure',
+    numberAttribute: 'figure',
+    idRequired: false,
+    numberRequired: true,
+  },
+  MusicIntervalsDemo: {
+    sequence: 'figure',
+    numberAttribute: 'figure',
+    idRequired: false,
+    numberRequired: true,
+  },
+  MusicRhythmDemo: {
+    sequence: 'figure',
+    numberAttribute: 'figure',
+    idRequired: false,
+    numberRequired: true,
+  },
+  MusicSwingDemo: {
+    sequence: 'figure',
+    numberAttribute: 'figure',
+    idRequired: false,
+    numberRequired: true,
+  },
+  MusicTriadsDemo: {
+    sequence: 'figure',
+    numberAttribute: 'figure',
+    idRequired: false,
+    numberRequired: true,
+  },
+  MusicProgressionDemo: {
+    sequence: 'figure',
+    numberAttribute: 'figure',
+    idRequired: false,
+    numberRequired: true,
+  },
+  MusicCircleDemo: {
+    sequence: 'figure',
+    numberAttribute: 'figure',
+    idRequired: false,
+    numberRequired: true,
+  },
+  MusicArpeggioDemo: {
+    sequence: 'figure',
+    numberAttribute: 'figure',
+    idRequired: false,
+    numberRequired: true,
+  },
+
   IntroToneDemo: {
     sequence: 'figure',
     numberAttribute: 'figure',

@@ -1,0 +1,618 @@
+---
+// Общая небольшая панель музыкальных опытов: статичный рисунок, доступные параметры и конечный плеер.
+import {
+  circleKeys,
+  chordTypes,
+  degreeNames,
+  musicDefaults,
+  musicSequence,
+  noteName,
+  pitchNames,
+  russianNotes,
+  type MusicMode,
+} from '@/lib/music-theory';
+import {
+  blackKey,
+  keyLeft,
+  musicCaption,
+  musicChart,
+  musicIds,
+  musicNames,
+  selectedNotes,
+} from '@/lib/music-theory-view';
+interface Props {
+  mode: MusicMode;
+  figure: number;
+  id?: string;
+}
+const { mode, figure, id = musicIds[Astro.props.mode] } = Astro.props;
+const p = musicDefaults();
+const keyboard = mode === 'notes' || mode === 'triads' || mode === 'arpeggio';
+const rootOptions = pitchNames.map((name, value) => ({
+  value,
+  label: `${name} · ${russianNotes[value]}`,
+}));
+const selects = [
+  ...(['triads', 'progression', 'arpeggio'].includes(mode)
+    ? [
+        {
+          key: 'root',
+          label: mode === 'progression' ? 'Мажорная тональность' : 'Основной тон',
+          options: rootOptions,
+        },
+      ]
+    : []),
+  ...(['triads', 'arpeggio'].includes(mode)
+    ? [
+        {
+          key: 'chord',
+          label: 'Тип трезвучия',
+          options: Object.entries(chordTypes).map(([value, label]) => ({ value, label })),
+        },
+        {
+          key: 'together',
+          label: 'Звучание',
+          options: [
+            { value: 'true', label: 'Вместе' },
+            { value: 'false', label: 'По нотам' },
+          ],
+        },
+      ]
+    : []),
+  ...(mode === 'intervals'
+    ? [
+        {
+          key: 'tuning',
+          label: 'Лестница',
+          options: [
+            { value: 'equal', label: 'Равные отношения частот' },
+            { value: 'linear', label: 'Равные прибавки герц' },
+          ],
+        },
+        {
+          key: 'ladder',
+          label: 'Прослушать',
+          options: [
+            { value: 'true', label: 'Всю лестницу' },
+            { value: 'false', label: 'Выбранную ступень' },
+          ],
+        },
+      ]
+    : []),
+  ...(mode === 'rhythm'
+    ? [
+        {
+          key: 'beats',
+          label: 'Размер',
+          options: [
+            { value: 3, label: '3/4' },
+            { value: 4, label: '4/4' },
+          ],
+        },
+        {
+          key: 'subdivision',
+          label: 'Сетка',
+          options: [
+            { value: 1, label: 'Четверти · 1/4' },
+            { value: 2, label: 'Восьмые · 1/8' },
+            { value: 4, label: 'Шестнадцатые · 1/16' },
+          ],
+        },
+        {
+          key: 'metronome',
+          label: 'Метроном',
+          options: [
+            { value: 'true', label: 'Включён' },
+            { value: 'false', label: 'Выключен' },
+          ],
+        },
+      ]
+    : []),
+  ...(mode === 'arpeggio'
+    ? [
+        {
+          key: 'direction',
+          label: 'Направление',
+          options: [
+            { value: 'up', label: 'Вверх' },
+            { value: 'down', label: 'Вниз' },
+            { value: 'updown', label: 'Вверх и вниз' },
+          ],
+        },
+        {
+          key: 'rate',
+          label: 'Скорость арпеджио',
+          options: [
+            { value: 1, label: 'Четверти · 1/4' },
+            { value: 2, label: 'Восьмые · 1/8' },
+            { value: 4, label: 'Шестнадцатые · 1/16' },
+          ],
+        },
+      ]
+    : []),
+];
+const ranges = [
+  ...(['rhythm', 'swing', 'progression', 'arpeggio'].includes(mode)
+    ? [{ key: 'bpm', label: 'Темп · BPM', min: 40, max: 200, value: p.bpm }]
+    : []),
+  ...(mode === 'swing'
+    ? [{ key: 'swing', label: 'Свинг · % пары до второй ноты', min: 50, max: 75, value: p.swing }]
+    : []),
+  ...(mode === 'intervals'
+    ? [{ key: 'step', label: 'Ступень лестницы', min: 0, max: 12, value: p.step }]
+    : []),
+];
+---
+
+<figure
+  id={id}
+  class="music-demo"
+  data-music-demo={mode}
+  data-state="static"
+  aria-labelledby={`${id}-title`}
+>
+  <div class="music-heading">
+    <span>Визуализация {figure}</span>
+    <b id={`${id}-title`}>{musicNames[mode]}</b>
+  </div>
+  <fieldset disabled data-controls class="music-controls">
+    <legend class="sr-only">Параметры: {musicNames[mode]}</legend>
+    <div class="music-params">
+      {selects.map((control) => (
+        <label for={`${id}-${control.key}`}>
+          {control.label}
+          <select id={`${id}-${control.key}`} data-param={control.key}>
+            {control.options.map((option) => (
+              <option
+                value={String(option.value)}
+                selected={String(p[control.key as keyof typeof p]) === String(option.value)}
+              >
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      ))}
+      {ranges.map((control) => (
+        <label for={`${id}-${control.key}`}>
+          {control.label}
+          <output data-output={control.key}>{control.value}</output>
+          <input
+            type="range"
+            id={`${id}-${control.key}`}
+            data-param={control.key}
+            min={control.min}
+            max={control.max}
+            step="1"
+            value={control.value}
+            aria-valuetext={String(control.value)}
+          />
+        </label>
+      ))}
+      {mode === 'progression' &&
+        p.degrees.map((degree, i) => (
+          <label for={`${id}-chord-${i}`}>
+            Аккорд {i + 1}
+            <select id={`${id}-chord-${i}`} data-degree={i}>
+              {degreeNames.map((name, d) => (
+                <option value={d} selected={d === degree}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
+        ))}
+    </div>
+    {mode === 'rhythm' && (
+      <div class="music-steps" role="group" aria-label="Удары в такте">
+        {p.steps.map((on, i) => (
+          <button
+            type="button"
+            data-step={i}
+            aria-pressed={on}
+            hidden={i >= p.beats * p.subdivision}
+            aria-label={`Удар ${i + 1}`}
+          >
+            {i + 1}
+          </button>
+        ))}
+      </div>
+    )}
+    {mode === 'swing' && (
+      <button type="button" data-straight>
+        Ровно · 50 %
+      </button>
+    )}
+  </fieldset>
+  {keyboard && (
+    <div
+      class="music-keyboard-scroll"
+      tabindex="0"
+      role="region"
+      aria-label="Клавиатура, при необходимости прокрутите по горизонтали"
+    >
+      <div class="music-keyboard">
+        {(mode === 'notes' ? [3, 4, 5] : [4, 5]).map((octave) => (
+          <div class="music-octave">
+            <span class="music-octave-label">
+              C{octave}–B{octave}
+            </span>
+            <div class="music-keys">
+              {pitchNames.map((name, pc) => {
+                const note = (octave + 1) * 12 + pc;
+                const selected = selectedNotes(mode, p).includes(note);
+                const family = mode === 'notes' && pc === p.note % 12;
+                const common = {
+                  class: `music-key ${blackKey(pc) ? 'black' : 'white'}`,
+                  style: `left:${keyLeft(pc)}px`,
+                  'data-key': note,
+                  'data-selected': selected ? '' : undefined,
+                  'data-family': family ? '' : undefined,
+                };
+                return mode === 'notes' ? (
+                  <button
+                    {...common}
+                    type="button"
+                    data-note={note}
+                    disabled
+                    aria-pressed={selected}
+                    aria-label={`${russianNotes[pc]} ${octave} · ${noteName(note)}`}
+                  >
+                    {name}
+                  </button>
+                ) : (
+                  <span {...common}>{name}</span>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+  {mode === 'circle' && (
+    <fieldset disabled data-controls class="music-circle-controls">
+      <legend class="sr-only">Выберите мажорную тональность</legend>
+      <div class="music-circle" role="group" aria-label="Квинтовый круг">
+        {circleKeys.map((key, i) => (
+          <button
+            type="button"
+            data-key-choice={i}
+            aria-pressed={i === p.key}
+            aria-label={`${key.name} мажор`}
+            style={`--x:${50 + 38 * Math.sin((i * Math.PI) / 6)}%;--y:${50 - 38 * Math.cos((i * Math.PI) / 6)}%`}
+          >
+            {key.name}
+          </button>
+        ))}
+      </div>
+      <p data-key-details>
+        {circleKeys[p.key].signature}; параллельный минор {circleKeys[p.key].minor}.
+      </p>
+    </fieldset>
+  )}
+  <div class="music-chart" data-chart set:html={musicChart(mode, p)} />
+  <fieldset disabled data-controls class="music-controls music-audio">
+    <legend class="sr-only">Прослушивание: {musicNames[mode]}</legend>
+    <p class="music-warning">
+      Начните с небольшой громкости устройства. Здесь звучат синтетические тоны и щелчки.
+    </p>
+    <div class="music-player" role="group" aria-label={`Прослушивание: ${musicNames[mode]}`}>
+      <button type="button" data-play>
+        <span data-play-label>Послушать</span>
+      </button>
+      <button type="button" data-stop>
+        Стоп
+      </button>
+      <button type="button" data-reset>
+        Сбросить опыт
+      </button>
+      <button type="button" data-mute aria-label="Выключить звук" aria-pressed="false">
+        Звук
+      </button>
+      <label for={`${id}-volume`}>
+        Громкость <output data-volume-text>30 %</output>
+        <input
+          id={`${id}-volume`}
+          type="range"
+          min="0"
+          max="100"
+          step="5"
+          value="30"
+          data-volume
+          aria-valuetext="30 %"
+        />
+      </label>
+    </div>
+    <label for={`${id}-position`} class="music-position">
+      Позиция{' '}
+      <output data-time>0 с из {musicSequence(mode, p).duration.toLocaleString('ru-RU')} с</output>
+      <input
+        id={`${id}-position`}
+        type="range"
+        min="0"
+        max={musicSequence(mode, p).duration}
+        step="0.05"
+        value="0"
+        data-position
+      />
+    </label>
+  </fieldset>
+  <p class="music-status" role="status" data-status>
+    Для изменения параметров и прослушивания нужен JavaScript.
+  </p>
+  <figcaption>
+    <b>Рис. {figure}.</b> <span data-caption>{musicCaption(mode, p)}</span>
+  </figcaption>
+</figure>
+<script>
+  import { initMusicDemos } from '@/lib/music-theory-controller';
+  initMusicDemos();
+</script>
+<style>
+  .music-demo {
+    margin: 0;
+    min-width: 0;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    font: var(--text-sm)/1.5 var(--font-ui);
+    overflow: hidden;
+  }
+  .music-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 20px;
+  }
+  .music-heading span {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+  .music-heading b {
+    font-size: 1.0625rem;
+    font-weight: 500;
+  }
+  .music-controls,
+  .music-circle-controls {
+    border: 0;
+    padding: 0 20px;
+    margin: 0;
+    min-width: 0;
+  }
+  .music-params {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 16px;
+    margin-bottom: 16px;
+  }
+  label {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 4px;
+    min-width: 0;
+  }
+  select,
+  input {
+    width: 100%;
+    min-width: 0;
+    accent-color: var(--color-accent);
+  }
+  select {
+    border: var(--border-width) solid var(--color-border-strong);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font: inherit;
+    min-height: 44px;
+    border-radius: var(--radius-sm);
+    padding: 4px;
+  }
+  input[type='range'] {
+    height: 30px;
+  }
+  output {
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  button {
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg);
+    color: var(--color-text);
+    min-height: 44px;
+    padding: 6px 10px;
+    font: inherit;
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: default;
+    opacity: 0.55;
+  }
+  button[aria-pressed='true'],
+  [data-play] {
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+    border-color: var(--color-accent);
+  }
+  .music-steps {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .music-steps button[data-active] {
+    outline: 3px solid var(--color-text);
+    outline-offset: -4px;
+  }
+  .music-chart {
+    margin: 16px auto;
+    width: min(calc(100% - 24px), 320px);
+    background: var(--chart-bg);
+    border-radius: var(--radius-sm);
+  }
+  .music-chart :global(svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .music-keyboard-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+    margin: 12px;
+    padding: 6px;
+  }
+  .music-keyboard {
+    width: 336px;
+    margin: auto;
+  }
+  .music-octave-label {
+    display: block;
+    color: var(--color-text-muted);
+    font-size: 12px;
+    padding: 4px 0;
+  }
+  .music-keys {
+    height: 112px;
+    position: relative;
+  }
+  .music-key {
+    box-sizing: border-box;
+    position: absolute;
+    top: 0;
+    height: 112px;
+    width: 48px;
+    border: 1px solid var(--chart-axis);
+    border-radius: 0 0 4px 4px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 4px;
+    font-size: 13px;
+  }
+  .music-key.white {
+    background: var(--color-bg);
+    color: var(--color-text);
+  }
+  .music-key.black {
+    height: 70px;
+    width: 44px;
+    background: var(--color-text);
+    color: var(--color-bg);
+    z-index: 1;
+  }
+  .music-key[data-family] {
+    outline: 2px dashed var(--color-accent);
+    outline-offset: -4px;
+  }
+  .music-key[data-selected] {
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+    outline: 3px solid var(--color-text);
+    outline-offset: -4px;
+  }
+  .music-key[data-active] {
+    box-shadow: inset 0 -10px var(--chart-result);
+  }
+  .music-circle {
+    width: 280px;
+    height: 280px;
+    position: relative;
+    margin: auto;
+    max-width: 100%;
+    border-radius: 50%;
+    background: var(--chart-bg);
+  }
+  .music-circle button {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    transform: translate(-50%, -50%);
+    width: 44px;
+    height: 44px;
+    padding: 0;
+  }
+  .music-circle button[data-neighbor] {
+    outline: 2px dashed var(--color-accent);
+    outline-offset: 2px;
+  }
+  [data-key-details] {
+    color: var(--color-text-muted);
+    overflow-wrap: anywhere;
+  }
+  .music-demo button:focus-visible,
+  .music-demo select:focus-visible,
+  .music-demo input:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 3px;
+    box-shadow: var(--focus-ring);
+  }
+  .music-warning {
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+  }
+  .music-player {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+  .music-player label {
+    width: 100%;
+    margin-top: 8px;
+  }
+  .music-position {
+    margin-top: 12px;
+  }
+  .music-status {
+    padding: 0 20px;
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+  }
+  figcaption {
+    padding: 12px 20px;
+    border-top: var(--border-width) solid var(--color-border);
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  @media (width < 600px) {
+    .music-heading {
+      padding: 16px 12px;
+    }
+    .music-controls,
+    .music-circle-controls {
+      padding-inline: 12px;
+    }
+    .music-status,
+    figcaption {
+      padding-inline: 12px;
+    }
+    .music-params {
+      grid-template-columns: 1fr;
+    }
+    .music-keyboard {
+      margin-left: 0;
+    }
+  }
+  @media print {
+    .music-controls,
+    .music-status {
+      display: none;
+    }
+    .music-circle-controls {
+      border: 0;
+    }
+    .music-keyboard-scroll {
+      overflow: visible;
+    }
+  }
+</style>
