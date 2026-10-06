@@ -1,0 +1,38 @@
+{
+  "id": "audio-intro-published",
+  "date": "2026-10-06",
+  "order": 1,
+  "type": "new",
+  "article": "audio-intro",
+  "summary": "Первое знакомство со звуком и слухом, осциллятором, ADSR и LFO, цифровой записью и файлами. Четыре простых опыта с графиками и прослушиванием.",
+  "items": [
+    {
+      "text": "Выше, ниже, громче, тише",
+      "target": {
+        "article": "audio-intro",
+        "anchor": "intro-tone"
+      }
+    },
+    {
+      "text": "Формы осциллятора",
+      "target": {
+        "article": "audio-intro",
+        "anchor": "intro-oscillator"
+      }
+    },
+    {
+      "text": "Огибающая ADSR",
+      "target": {
+        "article": "audio-intro",
+        "anchor": "intro-envelope"
+      }
+    },
+    {
+      "text": "LFO и четыре цели модуляции",
+      "target": {
+        "article": "audio-intro",
+        "anchor": "intro-lfo"
+      }
+    }
+  ]
+}

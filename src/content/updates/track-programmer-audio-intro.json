@@ -1,0 +1,16 @@
+{
+  "id": "track-programmer-audio-intro",
+  "date": "2026-10-06",
+  "order": 5,
+  "type": "updated",
+  "track": "programmer",
+  "items": [
+    {
+      "text": "Первый этап: вводный обзор с простыми опытами со звуком.",
+      "target": {
+        "track": "programmer",
+        "anchor": "stage-intro"
+      }
+    }
+  ]
+}

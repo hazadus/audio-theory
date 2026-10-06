@@ -1,0 +1,16 @@
+{
+  "id": "track-music-lover-audio-intro",
+  "date": "2026-10-06",
+  "order": 3,
+  "type": "updated",
+  "track": "music-lover",
+  "items": [
+    {
+      "text": "Первый этап: вводный обзор с простыми опытами со звуком.",
+      "target": {
+        "track": "music-lover",
+        "anchor": "stage-intro"
+      }
+    }
+  ]
+}

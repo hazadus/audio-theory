@@ -10,7 +10,10 @@ export type PreviewKind =
   | 'prediction'
   | 'mixing'
   | 'noise'
-  | 'voice';
+  | 'voice'
+  | 'intro-oscillator'
+  | 'intro-envelope'
+  | 'intro-lfo';
 export const previewKinds: readonly PreviewKind[] = [
   'noise',
   'tone',
@@ -23,6 +26,9 @@ export const previewKinds: readonly PreviewKind[] = [
   'prediction',
   'mixing',
   'voice',
+  'intro-oscillator',
+  'intro-envelope',
+  'intro-lfo',
 ];
 
 /** Роль цвета; в разметке превращается в `var(--chart-<роль>)`. */
@@ -201,6 +207,25 @@ function bytesPreview(): Preview {
 }
 
 const builders: Record<PreviewKind, () => Preview> = {
+  'intro-oscillator': () => ({
+    paths: [{ d: 'M16 75L78 28L140 122L202 28L264 75', color: 'signal', width: 2.5 }],
+    dots: [],
+  }),
+  'intro-envelope': () => ({
+    paths: [
+      { d: 'M16 125L55 24L112 80H215L264 125', color: 'signal', width: 2.5 },
+      { d: 'M215 20V130', color: 'axis', width: 1, dash: '4 4' },
+    ],
+    dots: [
+      { x: 55, y: 24, color: 'signal' },
+      { x: 112, y: 80, color: 'signal' },
+      { x: 215, y: 80, color: 'signal' },
+    ],
+  }),
+  'intro-lfo': () => ({
+    paths: [{ d: wave(16, 264, 75, 44, 2), color: 'signal', width: 2.5 }],
+    dots: [{ x: 47, y: 31, color: 'result' }],
+  }),
   noise: () => ({
     paths: [
       { d: 'M18 40H262', color: 'signal', width: 2 },

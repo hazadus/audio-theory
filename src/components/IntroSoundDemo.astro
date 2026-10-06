@@ -1,0 +1,414 @@
+---
+// Компактная панель вводных опытов: выбор формы/цели, один график, параметры и прослушивание.
+import Icon from '@/components/Icon.astro';
+import {
+  defaultsFor,
+  envelopePresets,
+  introDuration,
+  introShapes,
+  introShapeNames,
+  introTargets,
+  type IntroMode,
+} from '@/lib/intro-sound';
+import {
+  introCaption,
+  introChart,
+  introIds,
+  introNames,
+  parameterText,
+} from '@/lib/intro-sound-view';
+
+interface Props {
+  mode: IntroMode;
+  figure: number;
+  id?: string;
+}
+const { mode, figure, id = introIds[Astro.props.mode] } = Astro.props;
+const p = defaultsFor(mode);
+const controls = {
+  tone: [
+    { key: 'frequency', label: 'Высота · частота', min: 110, max: 880, step: 10 },
+    { key: 'amplitude', label: 'Громче / тише · амплитуда', min: 0, max: 1, step: 0.05 },
+  ],
+  oscillator: [
+    { key: 'octave', label: 'Октава', min: -1, max: 1, step: 1 },
+    { key: 'detune', label: 'Расстройка семи пил', min: 0, max: 40, step: 1 },
+    { key: 'width', label: 'Заполнение импульса', min: 0.1, max: 0.9, step: 0.05 },
+  ],
+  envelope: [
+    { key: 'attack', label: 'A · Атака', min: 0.01, max: 1.5, step: 0.01 },
+    { key: 'decay', label: 'D · Спад', min: 0.01, max: 1.5, step: 0.01 },
+    { key: 'sustain', label: 'S · Удержание', min: 0, max: 1, step: 0.05 },
+    { key: 'release', label: 'R · Затухание', min: 0.01, max: 2, step: 0.01 },
+  ],
+  lfo: [
+    { key: 'rate', label: 'Скорость', min: 0.25, max: 8, step: 0.25 },
+    { key: 'depth', label: 'Глубина', min: 0, max: 1, step: 0.05 },
+  ],
+}[mode];
+const shapes = mode === 'lfo' ? introShapes.filter((s) => s !== 'supersaw') : introShapes;
+---
+
+<figure
+  id={id}
+  class="intro-demo"
+  data-intro-demo={mode}
+  data-state="static"
+  aria-labelledby={`${id}-title`}
+>
+  <div class="intro-heading">
+    <span class="intro-eyebrow">Визуализация {figure}</span>
+    <b id={`${id}-title`}>{introNames[mode]}</b>
+  </div>
+  <fieldset class="intro-controls" disabled data-controls>
+    <legend class="visually-hidden">Параметры: {introNames[mode]}</legend>
+    <div class="intro-toolbar">
+      {(mode === 'oscillator' || mode === 'lfo') && (
+        <div class="intro-choice" role="group" aria-label="Форма волны">
+          {shapes.map((shape) => (
+            <button type="button" data-shape={shape} aria-pressed={shape === p.shape}>
+              {introShapeNames[shape]}
+            </button>
+          ))}
+        </div>
+      )}
+      {mode === 'lfo' && (
+        <div class="intro-choice" role="group" aria-label="Что меняет LFO">
+          {Object.entries(introTargets).map(([target, name]) => (
+            <button type="button" data-target={target} aria-pressed={target === p.target}>
+              {name}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  </fieldset>
+  <div class="intro-chart" data-chart set:html={introChart(mode, p, 240)} />
+  {mode === 'envelope' && (
+    <div class="intro-stages" aria-hidden="true">
+      <span>Атака</span>
+      <span>Спад</span>
+      <span>Удержание</span>
+      <span>Затухание</span>
+    </div>
+  )}
+  {mode === 'lfo' && (
+    <p class="intro-readout" data-target-value>
+      Усиление: 68 %
+    </p>
+  )}
+  <fieldset class="intro-controls" disabled data-controls>
+    <legend class="visually-hidden">Регуляторы и звук: {introNames[mode]}</legend>
+    <div class="intro-params">
+      {controls.map((control) => {
+        const value = p[control.key as keyof typeof p] as number;
+        return (
+          <div class="intro-param" data-param-box={control.key}>
+            <label for={`${id}-${control.key}`}>
+              <span>{control.label}</span>
+              <output for={`${id}-${control.key}`} data-output={control.key}>
+                {parameterText(control.key, value)}
+              </output>
+            </label>
+            <input
+              type="range"
+              id={`${id}-${control.key}`}
+              min={control.min}
+              max={control.max}
+              step={control.step}
+              value={value}
+              data-param={control.key}
+              aria-valuetext={parameterText(control.key, value)}
+            />
+          </div>
+        );
+      })}
+    </div>
+    {mode === 'oscillator' && (
+      <button class="intro-pwm" type="button" data-pwm aria-pressed="false" disabled>
+        Менять заполнение автоматически
+      </button>
+    )}
+    {mode === 'envelope' && (
+      <div class="intro-choice intro-presets" role="group" aria-label="Характер ноты">
+        {Object.entries(envelopePresets).map(([key, preset]) => (
+          <button type="button" data-preset={key} aria-pressed="false">
+            {preset.label}
+          </button>
+        ))}
+      </div>
+    )}
+    <p class="intro-warning">
+      <Icon name="volume-2" size={16} />
+      Начните с небольшой громкости устройства. Здесь звучат синтетические тоны.
+    </p>
+    <div class="intro-player" role="group" aria-label={`Прослушивание: ${introNames[mode]}`}>
+      <button type="button" class="intro-play" data-play>
+        <Icon name="play" size={16} />
+        <span data-play-label>Послушать</span>
+      </button>
+      <button type="button" data-stop>
+        Стоп
+      </button>
+      <button type="button" data-reset aria-label="Сбросить опыт">
+        <Icon name="rotate-ccw" size={16} />
+        Сбросить
+      </button>
+      <button type="button" data-mute aria-label="Выключить звук" aria-pressed="false">
+        <Icon name="volume-2" size={16} />
+      </button>
+      <label class="intro-volume" for={`${id}-volume`}>
+        Громкость <output data-volume-text>30 %</output>
+        <input
+          type="range"
+          id={`${id}-volume`}
+          min="0"
+          max="100"
+          step="5"
+          value="30"
+          data-volume
+          aria-valuetext="30 %"
+        />
+      </label>
+    </div>
+    <label class="intro-position" for={`${id}-position`}>
+      Позиция <output data-time>0,0 с из {introDuration(mode, p).toLocaleString('ru-RU')} с</output>
+      <input
+        type="range"
+        id={`${id}-position`}
+        min="0"
+        max={introDuration(mode, p)}
+        step="0.1"
+        value="0"
+        data-position
+      />
+    </label>
+  </fieldset>
+  <p class="intro-status" role="status" data-status>
+    Для изменения параметров и прослушивания нужен JavaScript.
+  </p>
+  <figcaption>
+    <b>Рис. {figure}.</b> <span data-caption>{introCaption(mode, p)}</span>
+  </figcaption>
+</figure>
+
+<script>
+  import { initIntroDemos } from '@/lib/intro-sound-controller';
+  initIntroDemos();
+</script>
+
+<style>
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+  .intro-demo {
+    margin: 0;
+    overflow: hidden;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    font-family: var(--font-ui);
+    font-size: var(--text-sm);
+    line-height: 1.5;
+  }
+  .intro-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 20px 20px 12px;
+  }
+  .intro-eyebrow {
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+  }
+  .intro-heading b {
+    font-size: 1.0625rem;
+    font-weight: 500;
+  }
+  .intro-controls {
+    min-width: 0;
+    margin: 0;
+    padding: 0 20px;
+    border: 0;
+  }
+  .intro-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .intro-choice {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 38px;
+    padding: 6px 10px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font: inherit;
+    cursor: pointer;
+  }
+  button:hover {
+    background: var(--color-surface-raised);
+  }
+  button[aria-pressed='true'],
+  .intro-play {
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+  }
+  button:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+  .intro-chart {
+    margin: 14px 12px 6px;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--chart-bg);
+  }
+  .intro-chart :global(svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .intro-demo[data-state='static'] .intro-chart {
+    width: 240px;
+    margin-inline: auto;
+  }
+  .intro-stages {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    margin: 0 20px 12px;
+    gap: 4px;
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+  .intro-readout {
+    margin: 0 20px 12px;
+    font-variant-numeric: tabular-nums;
+  }
+  .intro-params {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 20px;
+    margin-block: 14px;
+  }
+  label {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 3px 8px;
+  }
+  output {
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text-muted);
+  }
+  input[type='range'] {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    height: 26px;
+    margin: 5px 0 0;
+    accent-color: var(--color-accent);
+    cursor: pointer;
+  }
+  .intro-param[data-inactive] {
+    opacity: 0.5;
+  }
+  .intro-pwm {
+    margin-bottom: 10px;
+  }
+  .intro-presets {
+    margin-block: 8px 16px;
+  }
+  .intro-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 16px 0 12px;
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+  }
+  .intro-warning :global(svg) {
+    flex: none;
+    margin-top: 2px;
+  }
+  .intro-player {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+  .intro-volume {
+    width: 150px;
+    margin-left: auto;
+    font-size: var(--text-xs);
+  }
+  .intro-position {
+    margin-top: 12px;
+    font-size: var(--text-xs);
+  }
+  .intro-status {
+    margin: 8px 20px 16px;
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+  }
+  figcaption {
+    padding: 12px 20px;
+    border-top: var(--border-width) solid var(--color-border);
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+  }
+  figcaption b {
+    color: var(--color-text);
+    font-weight: 500;
+  }
+  @media (width < 600px) {
+    .intro-heading {
+      padding: 16px 12px 8px;
+    }
+    .intro-controls {
+      padding-inline: 12px;
+    }
+    .intro-chart {
+      margin-inline: 8px;
+    }
+    .intro-status,
+    .intro-readout {
+      margin-inline: 12px;
+    }
+    .intro-volume {
+      width: 100%;
+      margin: 6px 0 0;
+    }
+    figcaption {
+      padding-inline: 12px;
+    }
+    .intro-params {
+      gap: 12px;
+    }
+  }
+  @media print {
+    .intro-controls,
+    .intro-status,
+    .intro-stages {
+      display: none;
+    }
+  }
+</style>

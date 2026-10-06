@@ -14,6 +14,14 @@ test(
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Теория аудио');
     await expect(page.getByRole('main')).toContainText('Личный учебник по теории аудио');
     await expect(page.locator('main section.group a.card').first()).toBeVisible();
+    const intro = page.locator('.start-intro');
+    await expect(intro).toHaveAttribute('href', `${base}audio-intro/`);
+    await intro.click();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+      'Как устроен звук: первый обзор',
+    );
+    await expect(page.locator('[data-intro-demo]')).toHaveCount(4);
+    await page.goto('./');
     await expect(page.locator('footer').getByRole('link', { name: 'GitHub' })).toHaveAttribute(
       'href',
       siteConfig.repository,

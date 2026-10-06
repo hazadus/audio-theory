@@ -1,0 +1,21 @@
+---
+// Ссылки на доступные маршруты: служебная сборка может содержать другой набор треков.
+import { getCollection } from 'astro:content';
+import { withBase } from '@/lib/urls';
+
+interface Props {
+  items: { slug: string; label: string; description: string }[];
+}
+
+const tracks = await getCollection('tracks');
+const slugs = new Set(tracks.map((track) => track.data.slug));
+const items = Astro.props.items.filter((item) => slugs.has(item.slug));
+---
+
+<ul data-reading-track-links>
+  {items.map((item) => (
+    <li>
+      <a href={withBase(`/tracks/${item.slug}/`)}>{item.label}</a> — {item.description}
+    </li>
+  ))}
+</ul>

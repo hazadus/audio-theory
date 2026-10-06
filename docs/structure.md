@@ -1,5 +1,7 @@
 # Целевая структура проекта
 
+Вводный обзор находится в `src/content/articles/audio-intro.mdx`. Его панель — `src/components/IntroSoundDemo.astro`, точки входа реестра — `IntroToneDemo.astro`, `IntroOscillatorDemo.astro`, `IntroEnvelopeDemo.astro`, `IntroLfoDemo.astro`. Модель, SVG, контроллер и плеер — `src/lib/intro-sound.ts`, `intro-sound-view.ts`, `intro-sound-controller.ts`, `intro-audio-player.ts`; проверки — `tests/unit/intro-sound.test.ts` и `tests/e2e/intro-sound.spec.ts`. Устройство описано в [обзоре](overview.md#общие-правила-подготовки-материалов).
+
 Файлы и каталоги добавляются по мере выполнения [плана реализации](plan.md), без пустых заготовок. ✅ отмечает то, что уже есть; остальные пути — целевые. Контракты данных и учебных компонентов описаны в [спецификации](spec.md#данные-материалов-и-учебные-компоненты).
 
 Коллекция `src/content/updates/<id>.json` — единый источник журнала, архива, главной, дат материалов и RSS; имя файла совпадает с неизменяемым `id`. Схема `{ id, date, order, type, article?, track?, summary?, items: [{ text, target }] }` требует ровно одно из `article` или `track`, а в пунктах допускает статью, термин или трек/этап; `summary` обязателен для `new`. Названия и метаданные вычисляются из соответствующего материала, не копируются в запись. Контракт — в [спецификации](spec.md#журнал-обновлений-и-rss). Журнал, RSS и связи с главной, статьями и подвалом реализованы (задачи 57–62); поддержка треков реализована (задача 65).

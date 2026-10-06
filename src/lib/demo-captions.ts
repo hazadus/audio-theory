@@ -7,6 +7,10 @@ export interface DemoCaption {
 }
 
 export const demoCaptions = {
+  IntroToneDemo: { defaultId: 'intro-tone', name: 'Звук: выше, ниже, громче, тише' },
+  IntroOscillatorDemo: { defaultId: 'intro-oscillator', name: 'Осциллятор: форма и звучание' },
+  IntroEnvelopeDemo: { defaultId: 'intro-envelope', name: 'ADSR: начало и конец ноты' },
+  IntroLfoDemo: { defaultId: 'intro-lfo', name: 'LFO: движение звука' },
   NoiseDemo: { defaultId: 'noise-demo', name: 'Белый и розовый шум: спектр и звучание' },
   ToneDemo: { defaultId: 'tone-demo', name: 'Генератор чистого тона' },
   MixingDemo: { defaultId: 'mixing-demo', name: 'Два источника: усиление, фаза и сумма' },

@@ -24,6 +24,30 @@ interface BlockRule {
 
 /** Учебные блоки с нумерацией: рисунки и визуализации — одна последовательность, таблицы и формулы — свои. */
 const blockRules: Record<string, BlockRule> = {
+  IntroToneDemo: {
+    sequence: 'figure',
+    numberAttribute: 'figure',
+    idRequired: false,
+    numberRequired: true,
+  },
+  IntroOscillatorDemo: {
+    sequence: 'figure',
+    numberAttribute: 'figure',
+    idRequired: false,
+    numberRequired: true,
+  },
+  IntroEnvelopeDemo: {
+    sequence: 'figure',
+    numberAttribute: 'figure',
+    idRequired: false,
+    numberRequired: true,
+  },
+  IntroLfoDemo: {
+    sequence: 'figure',
+    numberAttribute: 'figure',
+    idRequired: false,
+    numberRequired: true,
+  },
   NoiseDemo: {
     sequence: 'figure',
     numberAttribute: 'figure',
@@ -291,6 +315,9 @@ function internalTarget(url: string): { slug?: string; hash?: string } | undefin
   if (url.startsWith('#')) return { hash: decodeURIComponent(url.slice(1)) };
   if (!url.startsWith('/') || url.startsWith('//')) return undefined;
   const { pathname, hash } = new URL(url, 'http://localhost');
+  // Треки — страницы другой коллекции. Их маршруты и якоря проверяет готовый HTML при сборке.
+  if (pathname === '/tracks/' || /^\/tracks\/[a-z0-9]+(?:-[a-z0-9]+)*\/$/.test(pathname))
+    return undefined;
   const slug = pathname.split('/').filter(Boolean)[0];
   return { slug, hash: hash ? decodeURIComponent(hash.slice(1)) : undefined };
 }

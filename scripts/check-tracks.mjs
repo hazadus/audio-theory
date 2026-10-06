@@ -42,7 +42,10 @@ function build(name, base, fixture, draft = false, trackUpdates = true) {
     env.TRACKS_DIR = `./tests/fixtures/tracks/${fixture}`;
     env.UPDATES_DIR = trackUpdates ? updatesDir : articleUpdatesDir;
   }
-  if (draft) env.ALLOW_DRAFT_ARTICLES = '1';
+  // Браузерные фикстуры допускают проверку новой статьи до её первого коммита.
+  // Контрольные ошибки публикации по-прежнему проверяются без режима черновика.
+  if (draft || (browserFixture && process.env.ALLOW_DRAFT_ARTICLES === '1'))
+    env.ALLOW_DRAFT_ARTICLES = '1';
   const result = spawnSync(
     process.execPath,
     [

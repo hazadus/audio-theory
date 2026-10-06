@@ -1,0 +1,10 @@
+---
+// Вводный опыт «envelope»: отдельный компонент для реестра визуализаций и нумерации статьи.
+import IntroSoundDemo from '@/components/IntroSoundDemo.astro';
+interface Props {
+  figure: number;
+  id?: string;
+}
+---
+
+<IntroSoundDemo mode="envelope" {...Astro.props} />

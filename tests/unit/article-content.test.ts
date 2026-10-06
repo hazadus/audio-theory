@@ -63,6 +63,22 @@ describe('assertValidArticles', () => {
     expect(check(article('[x](/b/#nope)'), other)).toThrow(/b#nope/);
   });
 
+  it('передаёт проверку страниц треков готовому HTML, сохраняя проверку ссылок статей', () => {
+    expect(
+      check(article('[Треки](/tracks/) [Музыкант](/tracks/musician/#stage-intro)')),
+    ).not.toThrow();
+    expect(check(article('[Ошибка](/tracks/musician/extra/)'))).toThrow(/неизвестную статью/);
+  });
+
+  it('вводные опыты участвуют в общей нумерации и проверке якорей', () => {
+    const body =
+      '<IntroToneDemo id="tone" figure={1} />\n\n<IntroOscillatorDemo id="osc" figure={2} />\n\n<IntroEnvelopeDemo id="adsr" figure={3} />\n\n<IntroLfoDemo id="lfo" figure={4} />\n\n[x](#adsr)';
+    expect(check(article(body))).not.toThrow();
+    expect(check(article(body.replace('figure={4}', 'figure={3}')))).toThrow(
+      /рисунков ожидался номер 4/,
+    );
+  });
+
   it('рисунки и визуализации образуют одну последовательность', () => {
     const ok = '<Figure id="f" number={1} />\n\n<SamplingDemo figure={2} />';
     expect(check(article(ok))).not.toThrow();

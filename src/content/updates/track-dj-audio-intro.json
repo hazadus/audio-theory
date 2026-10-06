@@ -1,0 +1,16 @@
+{
+  "id": "track-dj-audio-intro",
+  "date": "2026-10-06",
+  "order": 2,
+  "type": "updated",
+  "track": "dj",
+  "items": [
+    {
+      "text": "Первый этап: вводный обзор с простыми опытами со звуком.",
+      "target": {
+        "track": "dj",
+        "anchor": "stage-intro"
+      }
+    }
+  ]
+}

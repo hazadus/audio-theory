@@ -1,0 +1,16 @@
+{
+  "id": "track-sound-engineer-audio-intro",
+  "date": "2026-10-06",
+  "order": 6,
+  "type": "updated",
+  "track": "sound-engineer",
+  "items": [
+    {
+      "text": "Первый этап: вводный обзор с простыми опытами со звуком.",
+      "target": {
+        "track": "sound-engineer",
+        "anchor": "stage-intro"
+      }
+    }
+  ]
+}

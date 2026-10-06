@@ -67,7 +67,13 @@ import VoiceSourcesDemo from '@/components/VoiceSourcesDemo.astro';
 
 ## Голос и его источники {#voice}
 
+<MarginNote items={[
+  { label: 'Первый обзор → ADSR', description: 'Что означают четыре регулятора огибающей и как послушать разные начала и окончания ноты.', target: { article: 'audio-intro', anchor: 'adsr' } },
+]}>
+
 <Term id="synth-voice" firstMention define>Голос синтезатора</Term> — всё, что звучит одной нотой: источники, микшер, фильтр, усилитель и огибающая. Одноголосный (monophonic) синтезатор играет одну ноту одновременно. В аналоговых инструментах блоки называли по способу управления напряжением: VCO (voltage-controlled oscillator) — генератор, VCF — фильтр, VCA — усилитель. Например, у Roland SH-101 генератор, саб-осциллятор и шум сводятся в микшере источников, затем идут фильтр, усилитель и огибающая ([Roland, SH-101 PLUG-OUT Owner’s Manual](https://www.rolandcloud.com/getmedia/1e415fd4-c8ca-4719-80ba-ca90b94f98ce/SH-101-Manual-E.pdf?ext=.pdf)). Цифровой голос повторяет эту схему, хотя напряжения в нём нет.
+
+</MarginNote>
 
 <SynthChain
   id="voice-chain"
