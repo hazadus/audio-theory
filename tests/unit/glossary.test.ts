@@ -24,6 +24,7 @@ const slugs = [
   'synth-oscillators',
   'limiter',
   'loudness-standards',
+  'spatial-audio',
 ];
 
 const entry = {

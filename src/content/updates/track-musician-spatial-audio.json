@@ -1,0 +1,16 @@
+{
+  "id": "track-musician-spatial-audio",
+  "date": "2026-10-06",
+  "order": 15,
+  "type": "updated",
+  "track": "musician",
+  "items": [
+    {
+      "text": "После знакомства с DAW добавлено необязательное чтение о пространстве и стереоэффектах.",
+      "target": {
+        "track": "musician",
+        "anchor": "stage-daw"
+      }
+    }
+  ]
+}

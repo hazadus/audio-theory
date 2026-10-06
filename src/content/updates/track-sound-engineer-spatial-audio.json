@@ -1,0 +1,16 @@
+{
+  "id": "track-sound-engineer-spatial-audio",
+  "date": "2026-10-06",
+  "order": 14,
+  "type": "updated",
+  "track": "sound-engineer",
+  "items": [
+    {
+      "text": "В этап обработки добавлен обзор панорамы, задержки, реверберации и мид-сайд.",
+      "target": {
+        "track": "sound-engineer",
+        "anchor": "stage-processing"
+      }
+    }
+  ]
+}

@@ -1671,12 +1671,12 @@
   },
   {
     "id": "mid-side-stereo",
-    "ru": "стерео «середина и разность»",
+    "ru": "мид-сайд",
     "en": "mid-side stereo",
-    "definition": "Замена левого и правого каналов на их среднее и разность. Для похожих каналов разность мала и кодируется короче.",
+    "definition": "Представление двух стереоканалов через их сумму и разность с выбранной нормировкой. Позволяет отдельно обрабатывать общую и разностную составляющие, а в кодеках — уменьшать избыточность похожих каналов.",
     "target": {
-      "article": "audio-compression",
-      "anchor": "stereo-decorrelation"
+      "article": "spatial-audio",
+      "anchor": "mid-side"
     }
   },
   {
@@ -2077,6 +2077,406 @@
     "target": {
       "article": "loudness-standards",
       "anchor": "why"
+    }
+  },
+  {
+    "id": "pan",
+    "ru": "панорама",
+    "en": "pan",
+    "definition": "Положение слухового образа слева направо в стереополе.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "position-width-depth"
+    }
+  },
+  {
+    "id": "stereo-width",
+    "ru": "стереоширина",
+    "en": "stereo width",
+    "definition": "Воспринимаемая протяжённость звукового образа по горизонтали в стереополе.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "position-width-depth"
+    }
+  },
+  {
+    "id": "spatial-depth",
+    "ru": "глубина",
+    "en": "depth",
+    "definition": "Впечатление расстояния до слухового образа; в миксе позволяет различать более близкие и более далёкие источники.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "position-width-depth"
+    }
+  },
+  {
+    "id": "dual-mono",
+    "ru": "двойное моно",
+    "en": "dual mono",
+    "definition": "Два отдельных моноканала. При копировании одного сигнала в оба канала различий между левым и правым сигналами нет.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "channels"
+    }
+  },
+  {
+    "id": "channel-layout",
+    "ru": "раскладка каналов",
+    "en": "channel layout",
+    "definition": "Назначения и порядок аудиоканалов, например левый, центральный, правый и каналы окружения в многоканальной записи.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "channels"
+    }
+  },
+  {
+    "id": "lfe",
+    "ru": "канал низкочастотных эффектов",
+    "en": "low-frequency effects, LFE",
+    "definition": "Отдельный канал ограниченной полосы для низкочастотных эффектов в многоканальном звуке. Не равен всему басу записи или сигналу, поступающему на сабвуфер.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "channels"
+    }
+  },
+  {
+    "id": "panning",
+    "ru": "панорамирование",
+    "en": "panning",
+    "definition": "Распределение сигнала между каналами воспроизведения для изменения положения слухового образа. В обычном стерео меняет вклад в L и R.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "panning"
+    }
+  },
+  {
+    "id": "phantom-center",
+    "ru": "фантомный центр",
+    "en": "phantom centre",
+    "definition": "Слуховой образ между левым и правым громкоговорителями без отдельного центрального громкоговорителя; положение зависит от сигналов и места слушателя.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "panning"
+    }
+  },
+  {
+    "id": "pan-law",
+    "ru": "закон панорамирования",
+    "en": "pan law",
+    "definition": "Правило изменения коэффициентов усиления каналов при перемещении регулятора панорамы.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "panning"
+    }
+  },
+  {
+    "id": "equal-power-panning",
+    "ru": "равномощное панорамирование",
+    "en": "equal-power panning",
+    "definition": "Закон панорамирования, при котором сумма квадратов коэффициентов L и R остаётся постоянной. Это условие для мощности каналов, а не гарантия неизменной воспринимаемой громкости.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "panning"
+    }
+  },
+  {
+    "id": "stereo-balance",
+    "ru": "стереобаланс",
+    "en": "balance",
+    "definition": "Изменение относительных уровней уже существующих L и R. Ослабляет один канал относительно другого, не переносит его содержимое в противоположный канал.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "panning"
+    }
+  },
+  {
+    "id": "delay-effect",
+    "ru": "эффект задержки",
+    "en": "delay",
+    "definition": "Эффект, воспроизводящий входной звук позже и обычно смешивающий задержанную копию с исходным сигналом.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "delay"
+    }
+  },
+  {
+    "id": "dry-signal",
+    "ru": "исходный сигнал",
+    "en": "dry",
+    "definition": "Сигнал до рассматриваемой обработки; сухая ветвь при смешивании dry/wet.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "delay"
+    }
+  },
+  {
+    "id": "wet-signal",
+    "ru": "обработанный сигнал",
+    "en": "wet",
+    "definition": "Выход рассматриваемой обработки; в реверберации — созданные отражения, в задержке — задержанные копии.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "delay"
+    }
+  },
+  {
+    "id": "feedback",
+    "ru": "обратная связь",
+    "en": "feedback",
+    "definition": "Возврат части выходного сигнала на вход обработки. В delay повторно направляет копию через линию задержки и создаёт цепочку повторений.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "delay"
+    }
+  },
+  {
+    "id": "ping-pong-delay",
+    "ru": "задержка пинг-понг",
+    "en": "ping-pong delay",
+    "definition": "Задержка с повторениями, поочерёдно звучащими в левом и правом каналах.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "delay"
+    }
+  },
+  {
+    "id": "tempo-bpm",
+    "ru": "темп в BPM",
+    "en": "beats per minute, BPM",
+    "definition": "Число метрических долей в минуту. При расчёте задержки нужно знать, какую длительность ноты считают одной долей.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "tempo-delay"
+    }
+  },
+  {
+    "id": "reverberation",
+    "ru": "реверберация",
+    "en": "reverberation",
+    "definition": "Звук множества отражений, сохраняющийся после прекращения звучания источника.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "reverb"
+    }
+  },
+  {
+    "id": "direct-sound",
+    "ru": "прямой звук",
+    "en": "direct sound",
+    "definition": "Звук, приходящий от источника к слушателю без отражений от поверхностей.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "reverb"
+    }
+  },
+  {
+    "id": "early-reflections",
+    "ru": "ранние отражения",
+    "en": "early reflections",
+    "definition": "Первые отражённые приходы после прямого звука, до плотного реверберационного хвоста. Их времена, уровни и направления зависят от помещения и положения источника и слушателя.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "reverb"
+    }
+  },
+  {
+    "id": "reverb-tail",
+    "ru": "реверберационный хвост",
+    "en": "reverb tail",
+    "definition": "Плотная поздняя часть отражённого звука, постепенно затухающая после прекращения возбуждения.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "reverb"
+    }
+  },
+  {
+    "id": "pre-delay",
+    "ru": "предзадержка",
+    "en": "pre-delay",
+    "definition": "Промежуток между прямым сигналом и началом реверберации. В зависимости от прибора задерживает первые отражения или поздний хвост.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "reverb-parameters"
+    }
+  },
+  {
+    "id": "reverb-decay-time",
+    "ru": "время затухания реверберации",
+    "en": "decay time",
+    "definition": "Длительность спада реверберации до заданного изменения уровня. Критерий и шкалу регулятора Decay определяет конкретный прибор.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "reverb-parameters"
+    }
+  },
+  {
+    "id": "rt60",
+    "ru": "время реверберации RT60",
+    "en": "reverberation time, RT60",
+    "definition": "Время падения уровня реверберации на 60 дБ. Может различаться по частотным полосам; не означает полного исчезновения звука.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "reverb-parameters"
+    }
+  },
+  {
+    "id": "reverb-diffusion",
+    "ru": "диффузия реверберации",
+    "en": "diffusion",
+    "definition": "Рассеивание отражений, влияющее на их плотность и регулярность. Конкретное действие регулятора Diffusion зависит от ревербератора.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "reverb-parameters"
+    }
+  },
+  {
+    "id": "reverb-damping",
+    "ru": "частотное затухание реверберации",
+    "en": "damping",
+    "definition": "Зависимость скорости затухания реверберации от частоты. Фильтры внутри сети задержек могут ускорять исчезновение отдельных частотных областей.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "reverb-parameters"
+    }
+  },
+  {
+    "id": "algorithmic-reverb",
+    "ru": "алгоритмический ревербератор",
+    "en": "algorithmic reverb",
+    "definition": "Обработчик, создающий реверберационный отклик с помощью алгоритма, например сети задержек, обратных связей и фильтров.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "reverb-types"
+    }
+  },
+  {
+    "id": "convolution-reverb",
+    "ru": "свёрточный ревербератор",
+    "en": "convolution reverb",
+    "definition": "Обработчик, применяющий сохранённую импульсную характеристику к входному сигналу для воспроизведения отклика помещения или устройства.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "reverb-types"
+    }
+  },
+  {
+    "id": "impulse-response",
+    "ru": "импульсная характеристика",
+    "en": "impulse response, IR",
+    "definition": "Отклик линейной системы на единичный импульс. В свёрточной реверберации сохранённая характеристика описывает отклик для выбранного положения источника и приёмника.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "reverb-types"
+    }
+  },
+  {
+    "id": "aux-send",
+    "ru": "посыл",
+    "en": "send",
+    "definition": "Ответвление копии сигнала дорожки в отдельную шину, например для параллельной обработки эффектом.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "depth-and-routing"
+    }
+  },
+  {
+    "id": "return-channel",
+    "ru": "канал возврата",
+    "en": "return / aux",
+    "definition": "Канал, через который выход параллельного эффекта добавляют в общий микс.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "depth-and-routing"
+    }
+  },
+  {
+    "id": "insert-effect",
+    "ru": "вставка эффекта",
+    "en": "insert",
+    "definition": "Последовательное включение эффекта в путь сигнала дорожки или шины.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "depth-and-routing"
+    }
+  },
+  {
+    "id": "fader",
+    "ru": "фейдер",
+    "en": "fader",
+    "definition": "Регулятор уровня сигнала дорожки, шины или общего выхода.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "depth-and-routing"
+    }
+  },
+  {
+    "id": "post-fader-send",
+    "ru": "посыл после фейдера",
+    "en": "post-fader send",
+    "definition": "Посыл, берущий сигнал после регулятора уровня дорожки, поэтому изменение фейдера меняет и его уровень.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "depth-and-routing"
+    }
+  },
+  {
+    "id": "pre-fader-send",
+    "ru": "посыл до фейдера",
+    "en": "pre-fader send",
+    "definition": "Посыл, берущий сигнал до регулятора уровня дорожки; движение этого фейдера не меняет уровень посыла.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "depth-and-routing"
+    }
+  },
+  {
+    "id": "equalizer",
+    "ru": "эквалайзер",
+    "en": "equalizer",
+    "definition": "Обработчик, изменяющий относительные уровни частотных областей сигнала.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "mid-side"
+    }
+  },
+  {
+    "id": "mid-component",
+    "ru": "составляющая Mid",
+    "en": "Mid",
+    "definition": "Суммарная составляющая представления M/S. В нормировке статьи равна полусумме L и R и содержит также вклад источников, панорамированных на край.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "mid-side"
+    }
+  },
+  {
+    "id": "side-component",
+    "ru": "составляющая Side",
+    "en": "Side",
+    "definition": "Разностная составляющая представления M/S. В нормировке статьи равна полуразности L и R; при одинаковых каналах равна нулю.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "mid-side"
+    }
+  },
+  {
+    "id": "mono-compatibility",
+    "ru": "моносовместимость",
+    "en": "mono compatibility",
+    "definition": "Сохранность важных звуков, их баланса и тембра при сложении каналов стереозаписи в моно.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "mono-compatibility"
+    }
+  },
+  {
+    "id": "comb-filtering",
+    "ru": "гребенчатая фильтрация",
+    "en": "comb filtering",
+    "definition": "Ряд чередующихся подъёмов и провалов частотной характеристики, возникающий, например, при сложении сигнала с его задержанной копией.",
+    "target": {
+      "article": "spatial-audio",
+      "anchor": "mono-compatibility"
     }
   }
 ]
