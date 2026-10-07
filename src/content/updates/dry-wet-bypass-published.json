@@ -1,0 +1,37 @@
+{
+  "id": "dry-wet-bypass-published",
+  "date": "2026-10-07",
+  "order": 1,
+  "type": "new",
+  "article": "dry-wet-bypass",
+  "summary": "Исходный и обработанный сигнал в плагине: законы смешивания dry/wet, обход средствами DAW и самого плагина, компенсация задержки при выключении и кроссфейд против щелчка. Четыре схемы, таблица законов, пример на C++ и JUCE и самопроверка.",
+  "items": [
+    {
+      "text": "Законы смешивания dry/wet",
+      "target": {
+        "article": "dry-wet-bypass",
+        "anchor": "mix-laws"
+      }
+    },
+    {
+      "text": "Bypass в DAW и в плагине",
+      "target": {
+        "article": "dry-wet-bypass",
+        "anchor": "bypass-host-plugin"
+      }
+    },
+    {
+      "text": "Пример на C++ и JUCE с DryWetMixer",
+      "target": {
+        "article": "dry-wet-bypass",
+        "anchor": "juce-example"
+      }
+    },
+    {
+      "text": "Термины: плагин, регулятор dry/wet, обход эффекта, компенсация задержки и кроссфейд",
+      "target": {
+        "glossary": "bypass"
+      }
+    }
+  ]
+}

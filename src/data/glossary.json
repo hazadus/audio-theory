@@ -2205,8 +2205,8 @@
     "en": "dry",
     "definition": "Сигнал до рассматриваемой обработки; сухая ветвь при смешивании dry/wet.",
     "target": {
-      "article": "spatial-audio",
-      "anchor": "delay"
+      "article": "dry-wet-bypass",
+      "anchor": "dry-and-wet"
     }
   },
   {
@@ -2215,8 +2215,58 @@
     "en": "wet",
     "definition": "Выход рассматриваемой обработки; в реверберации — созданные отражения, в задержке — задержанные копии.",
     "target": {
-      "article": "spatial-audio",
-      "anchor": "delay"
+      "article": "dry-wet-bypass",
+      "anchor": "dry-and-wet"
+    }
+  },
+  {
+    "id": "plugin",
+    "ru": "плагин",
+    "en": "plug-in",
+    "definition": "Программный модуль эффекта или инструмента, который загружается в DAW или другую программу-хост и обрабатывает переданные ему аудиоблоки.",
+    "target": {
+      "article": "dry-wet-bypass",
+      "anchor": "dry-and-wet"
+    }
+  },
+  {
+    "id": "dry-wet-mix",
+    "ru": "регулятор dry/wet",
+    "en": "dry/wet, mix",
+    "definition": "Параметр эффекта, задающий соотношение исходного и обработанного сигнала на выходе: 0 % — только dry, 100 % — только wet. Коэффициенты промежуточных положений зависят от закона смешивания.",
+    "target": {
+      "article": "dry-wet-bypass",
+      "anchor": "mix"
+    }
+  },
+  {
+    "id": "bypass",
+    "ru": "обход эффекта",
+    "en": "bypass",
+    "definition": "Режим, в котором эффект не обрабатывает звук и на выход проходит исходный сигнал. Обход выполняет DAW или сам плагин; если плагин вносит задержку, исходный сигнал задерживают на ту же величину.",
+    "target": {
+      "article": "dry-wet-bypass",
+      "anchor": "bypass"
+    }
+  },
+  {
+    "id": "delay-compensation",
+    "ru": "компенсация задержки",
+    "en": "delay compensation",
+    "definition": "Выравнивание путей сигнала по времени: программа узнаёт задержку плагинов и задерживает остальные дорожки на недостающую величину.",
+    "target": {
+      "article": "dry-wet-bypass",
+      "anchor": "latency-compensation"
+    }
+  },
+  {
+    "id": "crossfade",
+    "ru": "кроссфейд",
+    "en": "crossfade",
+    "definition": "Плавная замена одного сигнала другим: коэффициент первого уменьшается, второго растёт, поэтому на выходе нет мгновенного скачка.",
+    "target": {
+      "article": "dry-wet-bypass",
+      "anchor": "clicks"
     }
   },
   {

@@ -1,0 +1,16 @@
+{
+  "id": "track-programmer-dry-wet-bypass",
+  "date": "2026-10-07",
+  "order": 2,
+  "type": "updated",
+  "track": "programmer",
+  "items": [
+    {
+      "text": "Dry/wet и bypass в плагине после шумового источника",
+      "target": {
+        "track": "programmer",
+        "anchor": "stage-processing"
+      }
+    }
+  ]
+}

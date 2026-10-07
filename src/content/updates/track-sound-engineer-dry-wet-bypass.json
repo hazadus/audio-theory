@@ -1,0 +1,16 @@
+{
+  "id": "track-sound-engineer-dry-wet-bypass",
+  "date": "2026-10-07",
+  "order": 3,
+  "type": "updated",
+  "track": "sound-engineer",
+  "items": [
+    {
+      "text": "По желанию: dry/wet и bypass после пространственной обработки",
+      "target": {
+        "track": "sound-engineer",
+        "anchor": "stage-processing"
+      }
+    }
+  ]
+}

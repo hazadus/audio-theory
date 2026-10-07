@@ -25,6 +25,7 @@ const slugs = [
   'limiter',
   'loudness-standards',
   'spatial-audio',
+  'dry-wet-bypass',
 ];
 
 const entry = {
