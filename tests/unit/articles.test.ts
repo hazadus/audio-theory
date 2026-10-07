@@ -27,6 +27,7 @@ describe('topics', () => {
       'data',
       'processing',
       'synthesis',
+      'cpp',
     ]);
   });
 });

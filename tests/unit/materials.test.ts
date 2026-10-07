@@ -127,6 +127,7 @@ describe('countByTopic и articlesLabel', () => {
       data: 0,
       processing: 0,
       synthesis: 0,
+      cpp: 0,
     });
     expect(countByTopic([]).all).toBe(0);
   });

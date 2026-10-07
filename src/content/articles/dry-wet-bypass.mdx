@@ -287,6 +287,7 @@ Ableton Live сохраняет задержку выключенных устр
 
 <MarginNote items={[
   { label: 'Аудиоданные → Примеры на C++ и JUCE', description: 'Как устроен processBlock и какие каналы буфера можно менять.', target: { article: 'audio-data', anchor: 'juce-examples' } },
+  { label: 'Кто владеет объектом → Передача владения процессору', description: 'Почему addParameter принимает объект из new и кто его удалит.', target: { article: 'cpp-ownership', anchor: 'juce-handover' } },
 ]}>
 
 Фрагмент ниже показывает эффект с задержкой 96 отсчётов, регулятором mix и собственным параметром bypass. Смешивание и задержку dry выполняет `juce::dsp::DryWetMixer`, обход сводится к плавному уводу mix в ноль. Нужны модули `juce_audio_processors` и `juce_dsp`. Объект `effect` — ваша обработка с методами `prepare` и `process`, выход которой отстаёт на `latency` отсчётов. Остальные обязательные методы `AudioProcessor` (имя, состояние, редактор) опущены. API проверено с JUCE 9.0.3.

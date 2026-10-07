@@ -2528,5 +2528,75 @@
       "article": "spatial-audio",
       "anchor": "mono-compatibility"
     }
+  },
+  {
+    "id": "object-lifetime",
+    "ru": "время жизни объекта",
+    "en": "object lifetime",
+    "definition": "Промежуток от окончания конструктора до начала деструктора, в который к объекту можно обращаться. Зависит от того, где объект создан: в блоке, внутри другого объекта или в куче.",
+    "target": {
+      "article": "cpp-ownership",
+      "anchor": "storage"
+    }
+  },
+  {
+    "id": "heap",
+    "ru": "куча",
+    "en": "heap",
+    "definition": "Динамическая память для объектов, созданных выражением new. Такой объект живёт до явного delete или до удаления его владельцем, например умным указателем.",
+    "target": {
+      "article": "cpp-ownership",
+      "anchor": "storage"
+    }
+  },
+  {
+    "id": "object-ownership",
+    "ru": "владение объектом",
+    "en": "ownership",
+    "definition": "Ответственность за удаление объекта. Владелец удаляет объект, наблюдатели только пользуются им через указатель или ссылку и должны перестать обращаться к нему до удаления.",
+    "target": {
+      "article": "cpp-ownership",
+      "anchor": "ownership"
+    }
+  },
+  {
+    "id": "memory-leak",
+    "ru": "утечка памяти",
+    "en": "memory leak",
+    "definition": "Объект в куче, который больше никто не удалит: указатель на него потерян, а delete не выполнен. Память остаётся занятой до завершения программы.",
+    "target": {
+      "article": "cpp-ownership",
+      "anchor": "raw-new-delete"
+    }
+  },
+  {
+    "id": "dangling-pointer",
+    "ru": "висячий указатель",
+    "en": "dangling pointer",
+    "definition": "Указатель или ссылка на уже удалённый объект. Обращение через него — неопределённое поведение.",
+    "target": {
+      "article": "cpp-ownership",
+      "anchor": "raw-new-delete"
+    }
+  },
+  {
+    "id": "smart-pointer",
+    "ru": "умный указатель",
+    "en": "smart pointer",
+    "definition": "Объект, который хранит адрес объекта в куче и сам удаляет его в своём деструкторе. В C++ — std::unique_ptr для единственного владельца и std::shared_ptr для общего.",
+    "target": {
+      "article": "cpp-ownership",
+      "anchor": "unique-ptr"
+    }
+  },
+  {
+    "id": "raii",
+    "ru": "RAII",
+    "en": "resource acquisition is initialization",
+    "definition": "Приём C++: ресурс принадлежит объекту, а освобождение привязано к деструктору этого объекта, который вызывается при любом выходе из области видимости.",
+    "target": {
+      "article": "cpp-ownership",
+      "anchor": "unique-ptr"
+    }
   }
 ]

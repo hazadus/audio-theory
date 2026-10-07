@@ -22,6 +22,11 @@ export const topics = [
     title: 'Синтез',
     description: 'Осцилляторы, огибающие и фильтры синтезатора',
   },
+  {
+    id: 'cpp',
+    title: 'C++ для аудио',
+    description: 'Владение объектами и время жизни в коде плагина',
+  },
 ] as const;
 
 export type TopicId = (typeof topics)[number]['id'];

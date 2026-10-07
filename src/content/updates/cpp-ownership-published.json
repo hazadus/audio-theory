@@ -1,0 +1,26 @@
+{
+  "id": "cpp-ownership-published",
+  "date": "2026-10-07",
+  "order": 4,
+  "type": "new",
+  "article": "cpp-ownership",
+  "summary": "Кто создаёт и удаляет объекты в плагине JUCE: стек, поля и куча, ошибки ручных new и delete, умный указатель с единственным владельцем и функция для его создания, передача параметров процессору, невладеющие ссылки и граница с хостом. Фрагменты кода учебного плагина тремоло, две схемы и самопроверка.",
+  "items": [
+    {
+      "text": "Схема владельцев и наблюдателей в плагине",
+      "target": { "article": "cpp-ownership", "anchor": "ownership-map" }
+    },
+    {
+      "text": "Передача параметра процессору по шагам",
+      "target": { "article": "cpp-ownership", "anchor": "juce-handover" }
+    },
+    {
+      "text": "Время жизни частей процессора",
+      "target": { "article": "cpp-ownership", "anchor": "lifetime-timeline" }
+    },
+    {
+      "text": "Термины: владение объектом, куча, утечка памяти, висячий указатель, умный указатель и RAII",
+      "target": { "glossary": "object-ownership" }
+    }
+  ]
+}
