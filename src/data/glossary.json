@@ -2598,5 +2598,65 @@
       "article": "cpp-ownership",
       "anchor": "unique-ptr"
     }
+  },
+  {
+    "id": "audio-thread",
+    "ru": "аудиопоток",
+    "en": "audio thread",
+    "definition": "Поток с повышенным приоритетом, который вызывает обработку звука для каждого блока. Каждый вызов должен закончиться до срока блока, поэтому в нём не выделяют память, не берут блокировки и не обращаются к диску.",
+    "target": {
+      "article": "cpp-audio-thread",
+      "anchor": "two-threads"
+    }
+  },
+  {
+    "id": "message-thread",
+    "ru": "поток сообщений",
+    "en": "message thread",
+    "definition": "Главный поток программы на JUCE: обрабатывает ввод, перерисовывает окна и выполняет таймеры. Срока блока у него нет, поэтому здесь создают и удаляют объекты и читают файлы.",
+    "target": {
+      "article": "cpp-audio-thread",
+      "anchor": "two-threads"
+    }
+  },
+  {
+    "id": "priority-inversion",
+    "ru": "инверсия приоритетов",
+    "en": "priority inversion",
+    "definition": "Ситуация, когда поток с высоким приоритетом ждёт ресурс, который держит поток с низким приоритетом, а того прерывают другие задачи. Срочная работа начинает зависеть от несрочной.",
+    "target": {
+      "article": "cpp-audio-thread",
+      "anchor": "no-allocation"
+    }
+  },
+  {
+    "id": "realtime-sanitizer",
+    "ru": "RealtimeSanitizer",
+    "en": "RTSan",
+    "definition": "Инструмент Clang начиная с версии 20: при сборке с -fsanitize=realtime сообщает о выделении памяти, блокировках и других небезопасных вызовах внутри функций с атрибутом [[clang::nonblocking]].",
+    "target": {
+      "article": "cpp-audio-thread",
+      "anchor": "checking"
+    }
+  },
+  {
+    "id": "lock-free",
+    "ru": "без блокировок",
+    "en": "lock-free",
+    "definition": "Свойство алгоритма или структуры данных для нескольких потоков: обращение к ним не требует ждать, пока другой поток отпустит блокировку. Так работают атомарные числа и очереди с одним писателем и одним читателем.",
+    "target": {
+      "article": "cpp-audio-thread",
+      "anchor": "ui-exchange"
+    }
+  },
+  {
+    "id": "reference-counting",
+    "ru": "подсчёт ссылок",
+    "en": "reference counting",
+    "definition": "Способ общего владения: объект хранит число владеющих им указателей и удаляется, когда последний из них исчезает. Удаление происходит в том потоке, где отпущена последняя ссылка.",
+    "target": {
+      "article": "cpp-audio-thread",
+      "anchor": "shared-ptr"
+    }
   }
 ]

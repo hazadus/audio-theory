@@ -339,7 +339,13 @@ void attenuateBlock (juce::AudioBuffer<float>& buffer)
 
 Длительность блока не равна полной <Term id="latency" firstMention define>задержке</Term> от входа до выхода. Задержка включает очереди входа и выхода, работу драйвера, преобразователей и алгоритмов; некоторые алгоритмы специально накапливают данные. Поэтому значение 10,67 мс для 512 кадров описывает одну порцию, а не гарантированное время прохождения звука через программу. PortAudio, например, отдельно сообщает фактические входную и выходную задержки потока ([Retrieving Stream Information](https://portaudio.com/docs/v19-doxydocs/api_overview.html)).
 
+<MarginNote items={[
+  { label: 'C++ в аудиопотоке → Почему в processBlock нельзя использовать new и delete', description: 'Что может заставить выделение памяти ждать и где память выделяется незаметно.', target: { article: 'cpp-audio-thread', anchor: 'no-allocation' } },
+]}>
+
 В обработчике реального времени избегают операций с непредсказуемым ожиданием: выделения памяти, чтения файлов и блокировок. Буферы для собственной работы готовят заранее. Функция `attenuateBlock()` только проходит по уже имеющимся данным; создание `AudioBuffer` в первых двух примерах относится к подготовке, а не к каждому аудиовызову ([PortAudio, Callback I/O Method](https://portaudio.com/docs/v19-doxydocs/api_overview.html)).
+
+</MarginNote>
 
 ## Самопроверка {#self-check}
 

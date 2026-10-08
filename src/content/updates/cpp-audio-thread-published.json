@@ -1,0 +1,37 @@
+{
+  "id": "cpp-audio-thread-published",
+  "date": "2026-10-08",
+  "order": 3,
+  "type": "new",
+  "article": "cpp-audio-thread",
+  "summary": "Что меняется, когда код плагина JUCE выполняется в аудиопотоке: почему в processBlock не создают и не удаляют объекты, скрытые выделения памяти, подготовка буферов в prepareToPlay, проверка RealtimeSanitizer, обмен данными с интерфейсом через атомарные значения и очереди, подмена целого объекта через очереди указателей вместо общего владения со счётчиком ссылок, классы владения JUCE и детектор утечек. Фрагменты учебного плагина тремоло, две схемы, две таблицы и самопроверка.",
+  "items": [
+    {
+      "text": "Два потока плагина на одной оси времени",
+      "target": {
+        "article": "cpp-audio-thread",
+        "anchor": "thread-timeline"
+      }
+    },
+    {
+      "text": "Проверка processBlock с RealtimeSanitizer",
+      "target": {
+        "article": "cpp-audio-thread",
+        "anchor": "checking"
+      }
+    },
+    {
+      "text": "Подмена объекта через две очереди указателей",
+      "target": {
+        "article": "cpp-audio-thread",
+        "anchor": "object-exchange"
+      }
+    },
+    {
+      "text": "Термины: аудиопоток, поток сообщений, инверсия приоритетов, RealtimeSanitizer, без блокировок и подсчёт ссылок",
+      "target": {
+        "glossary": "audio-thread"
+      }
+    }
+  ]
+}

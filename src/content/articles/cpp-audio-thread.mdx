@@ -1,0 +1,527 @@
+---
+slug: cpp-audio-thread
+title: 'C++ в аудиопотоке: выделение памяти, общие объекты и инструменты JUCE'
+question: Почему в processBlock не создают и не удаляют объекты и чем заменить std::shared_ptr при обмене данными с интерфейсом?
+topic: cpp
+tags: [C++, JUCE, многопоточность]
+prerequisites:
+  - label: 'Кто владеет объектом → std::unique_ptr'
+    description: Владелец и наблюдатель, std::make_unique, release() и reset().
+    target: { article: cpp-ownership, anchor: unique-ptr }
+  - label: 'Аудиоданные → Размер блока и задержка'
+    description: Сколько времени есть у обработчика на один блок.
+    target: { article: audio-data, anchor: block-time-and-latency }
+related:
+  - label: Кто владеет объектом → Невладеющие ссылки
+    description: Почему ссылки на параметры в Parameters не становятся висячими.
+    target: { article: cpp-ownership, anchor: non-owning-references }
+  - label: Аудиоданные → Блок и буфер
+    description: Аудиоколбэк, блоки и опустошение буфера при опоздании.
+    target: { article: audio-data, anchor: blocks-and-buffers }
+  - label: 'Шум → Шумовой источник в аудиоблоке JUCE'
+    description: Генератор, который не выделяет память в цикле обработки.
+    target: { article: noise, anchor: juce-source }
+  - label: 'Learn C++ → 22.6 std::shared_ptr'
+    description: Общее владение со счётчиком ссылок со стороны языка.
+    target: { url: 'https://www.learncpp.com/cpp-tutorial/stdshared_ptr/' }
+---
+
+import Callout from '@/components/Callout.astro';
+import CalloutCase from '@/components/CalloutCase.astro';
+import DataTable from '@/components/DataTable.astro';
+import Figure from '@/components/Figure.astro';
+import MarginNote from '@/components/MarginNote.astro';
+import SelfCheck from '@/components/SelfCheck.astro';
+import Term from '@/components/Term.astro';
+
+Хост вызывает `processBlock` плагина сотни раз в секунду, и у каждого вызова есть срок. При 48 000 Гц и блоке в 128 кадров это около 2,67 мс: к этому моменту звуковой карте нужен готовый блок. Если обработка не успела, наступает [опустошение буфера](/audio-data/#blocks-and-buffers), и слушатель слышит щелчок или короткое выпадение звука. Значение имеет худшее время выполнения: функция, которая обычно занимает 0,1 мс, но раз в несколько минут ждёт 20 мс, испортит запись. Такая ошибка редко проявляется в коротком тесте на компьютере разработчика. Она появляется в большом проекте у пользователя, когда процессор и диск заняты другими дорожками.
+
+Поэтому код, который выполняется на каждом блоке, пишут по отдельным правилам: не создают и не удаляют объекты, не ждут другие потоки и не обращаются к диску. Эта статья продолжает [«Кто владеет объектом»](/cpp-ownership/) и разбирает, какой код плагина где выполняется, почему `new` и `delete` нельзя вызывать в `processBlock`, где готовить память и как проверить, что её никто не выделяет. Затем — как передать данные интерфейсу, как подменить целый объект без `std::shared_ptr`, какие классы владения есть в JUCE и что сообщает детектор утечек. Примеры, как и в статье о владении, взяты из учебного плагина тремоло [официального курса JUCE](https://github.com/juce-framework/tremolo-juce-course) (папка `complete`, JUCE 8.0.12, C++23); API сверено с JUCE 9.0.3.
+
+## Два потока плагина {#two-threads}
+
+<Term id="audio-thread" firstMention define>Аудиопоток</Term> создаёт хост или аудиодрайвер. Он работает с повышенным приоритетом и для каждого блока вызывает `processBlock`, то есть [аудиоколбэк](/audio-data/#juce-processing) плагина. <Term id="message-thread" firstMention define>Поток сообщений</Term> — главный поток программы: он обрабатывает мышь и клавиатуру, перерисовывает окна и выполняет таймеры. Срока у него нет: если перерисовка задержится на 30 мс, пользователь увидит лёгкое подёргивание, но звук не прервётся.
+
+В курсе это видно на примере [`GuiAndAudioThreadIdPrinting`](https://github.com/juce-framework/tremolo-juce-course/blob/main/complete/examples/GuiAndAudioThreadIdPrinting/MainComponent.h): компонент печатает идентификатор текущего потока в конструкторе, в `paint`, `resized`, при нажатии кнопки и в аудиоколбэке `getNextAudioBlock`. Все вызовы, кроме аудиоколбэка, идут из одного потока, а `getNextAudioBlock` — из другого.
+
+В плагине распределение задаёт хост, и JUCE обещает не всё. `processBlock` всегда вызывается из аудиопотока; документация `AudioProcessor` прямо запрещает в нём любые обращения к интерфейсу. Редактор и все компоненты работают только в потоке сообщений. Конструктор процессора, `prepareToPlay`, `releaseResources`, сохранение и загрузка состояния обычно тоже приходят из потока сообщений, но конкретный поток не гарантирован. Зато они вызываются при подготовке, а не на каждом блоке, и срока блока у них нет. Значения параметров хост может менять из любого потока, в том числе из аудиопотока при воспроизведении автоматизации. Поэтому JUCE хранит значение параметра в `std::atomic<float>`, а документация слушателей параметров требует, чтобы обработчик был потокобезопасным и не блокировался.
+
+Отсюда правило для кода плагина: всё, что вызывается на каждом блоке, должно уложиться в срок; всё, что вызывается один раз при подготовке или по действию пользователя, может работать дольше. [Рисунок 1](#thread-timeline) показывает оба потока на одной оси времени.
+
+<Figure id="thread-timeline" number={1}
+  name="Два потока плагина"
+  caption="Поток сообщений выполняет prepareToPlay и события редактора без срока: здесь можно выделять память, читать файлы и ждать. Аудиопоток вызывает processBlock раз в блок, и каждый вызов должен закончиться до срока (пунктир). Третий вызов не уложился в срок: например, ждал аллокатор памяти. Звуковая карта не получила блок вовремя, и прозвучал щелчок."
+  alt="Две горизонтальные полосы на общей оси времени. Верхняя подписана «поток сообщений», на ней два прямоугольника с контуром: «prepareToPlay» слева и «редактор» справа. Нижняя подписана «аудиопоток»: после окончания prepareToPlay идут короткие закрашенные прямоугольники processBlock, перед каждой вертикальной пунктирной линией срока. Третий прямоугольник выделен другим цветом и заходит за свою пунктирную линию, под ним подпись «опоздание: щелчок». Внизу ось «время» и легенда: контур — можно выделять память, заливка — только готовая память, пунктир — срок блока."
+>
+  <svg viewBox="0 0 400 364" style="max-width: 355px; margin-inline: auto" xmlns="http://www.w3.org/2000/svg">
+    <g fill="none" stroke="var(--chart-result)" stroke-width="2">
+      <rect x="20" y="38" width="150" height="40" rx="5" />
+      <rect x="250" y="38" width="130" height="40" rx="5" />
+      <rect x="20" y="272" width="28" height="20" rx="3" />
+    </g>
+    <g fill="none" stroke="var(--chart-axis)" stroke-width="2" stroke-dasharray="5 4">
+      <path d="M225 132V182" />
+      <path d="M275 132V182" />
+      <path d="M325 132V182" />
+      <path d="M375 132V182" />
+      <path d="M20 346H48" />
+    </g>
+    <g stroke="none">
+      <rect x="175" y="140" width="24" height="34" rx="3" fill="var(--chart-series-1)" />
+      <rect x="225" y="140" width="24" height="34" rx="3" fill="var(--chart-series-1)" />
+      <rect x="275" y="140" width="72" height="34" rx="3" fill="var(--chart-series-2)" />
+      <rect x="20" y="304" width="28" height="16" rx="3" fill="var(--chart-series-1)" />
+    </g>
+    <g fill="none" stroke="var(--chart-axis)" stroke-width="2">
+      <path d="M20 236H380l-7 -5m7 5 -7 5" />
+    </g>
+    <g fill="var(--chart-label)" font-size="18">
+      <text x="20" y="26">поток сообщений</text>
+      <text x="95" y="64" text-anchor="middle">prepareToPlay</text>
+      <text x="315" y="64" text-anchor="middle">редактор</text>
+      <text x="20" y="124">аудиопоток</text>
+      <text x="311" y="206" text-anchor="middle">опоздание: щелчок</text>
+      <text x="380" y="258" text-anchor="end">время</text>
+      <text x="60" y="288">можно выделять память</text>
+      <text x="60" y="318">только готовая память</text>
+      <text x="60" y="352">срок блока</text>
+    </g>
+  </svg>
+</Figure>
+
+## Почему в processBlock нельзя использовать new и delete {#no-allocation}
+
+<MarginNote items={[
+  { label: 'Learn C++ → 19.1 Dynamic memory allocation', description: 'Выражения new и delete и работа с кучей.', target: { url: 'https://www.learncpp.com/cpp-tutorial/dynamic-memory-allocation-with-new-and-delete/' } },
+]}>
+
+Выражение `new` просит память у аллокатора (memory allocator) — кода стандартной библиотеки и ОС, который ведёт учёт кучи. Обычно он отвечает быстро, но верхней границы у этого времени нет. Росс Бенсина ([Real-time audio programming 101](http://www.rossbencina.com/code/real-time-audio-programming-101-time-waits-for-nothing)) перечисляет причины. Аллокатор общий для всех потоков программы и может защищать свои данные блокировкой, а значит, аудиопоток будет ждать, пока память выделяет, скажем, поток интерфейса. Когда свободная память кончается, аллокатор обращается к ОС, у которой свои блокировки; ОС может к тому же решить подгрузить страницы памяти с диска. Наконец, алгоритм поиска свободного места сам по себе работает непредсказуемое время.
+
+</MarginNote>
+
+Ожидание чужого потока осложняется приоритетами. Поток интерфейса работает с обычным приоритетом, и ОС может прервать его ради любой другой программы, пока он держит блокировку аллокатора. Аудиопоток с высоким приоритетом в это время стоит и ждёт. Эта ситуация называется <Term id="priority-inversion" firstMention define>инверсией приоритетов</Term>: срочная работа зависит от несрочной.
+
+Удаление так же опасно, как создание: `delete` возвращает память тому же аллокатору. При этом в коде слова `delete` может и не быть. `unique_ptr::reset()` удаляет объект сразу ([таблица 1 в статье «Кто владеет объектом»](/cpp-ownership/#unique-ptr-methods)), а локальный `std::unique_ptr` удаляет его при выходе из функции. Если это происходит внутри `processBlock`, память освобождается в аудиопотоке.
+
+### Скрытые выделения {#hidden-allocations}
+
+Чаще всего память выделяют удобные классы стандартной библиотеки и JUCE, внутри которых есть `new` и `delete`. [Таблица 1](#hidden-allocations-table) собирает типичные случаи. Каждое выделение в ней подтверждено проверкой из раздела [«Как проверить»](#checking).
+
+<DataTable
+  id="hidden-allocations-table"
+  number={1}
+  caption="Операции, которые выделяют или освобождают память, хотя в коде нет new и delete. Во всех случаях объект или буфер готовят заранее, при подготовке, а в processBlock только пользуются им."
+  columns={[
+    { label: 'Операция', width: '11rem' },
+    { label: 'Что происходит' },
+    { label: 'Как избежать' },
+  ]}
+  rows={[
+    ['<code>push_back</code> и <code>resize</code> у <code>std::vector</code>', 'если элементы не помещаются в <code>capacity()</code>, вектор выделяет новый блок, переносит элементы и освобождает старый', '<code>reserve</code> или <code>resize</code> до наибольшего размера в <code>prepareToPlay</code>'],
+    ['склейка <code>juce::String</code>, <code>DBG</code>', 'символы строки хранятся в куче', 'не собирать строки в аудиопотоке; для отладки передавать числа через очередь'],
+    ['<code>std::function</code> с захватом', 'захваченные данные, которые не помещаются во внутренний буфер объекта, размещаются в куче; размер буфера зависит от библиотеки', 'присвоить функцию при подготовке; вызов готовой <code>std::function</code> память не выделяет'],
+    ['<code>make_unique</code>, <code>make_shared</code>', 'создание объекта в куче', 'создать объект в потоке сообщений и передать готовым'],
+    ['<code>reset()</code>, выход из области видимости, <code>clear()</code> у контейнера с владением', 'удаление объекта и освобождение памяти', 'отложить удаление в поток сообщений'],
+    ['<code>setSize</code> у <code>AudioBuffer</code>', 'новая память, если размер больше прежнего', 'задать наибольший размер в <code>prepareToPlay</code>, в блоке использовать первые <code>getNumSamples()</code> кадров'],
+  ]}
+/>
+
+<Callout type="important" title="Блокировки тоже под запретом">
+
+Тот же довод относится к `std::mutex` и `juce::CriticalSection`: если блокировку держит поток интерфейса, аудиопоток ждёт его. Даже `try_lock` не спасает: он не ждёт, но `unlock()` при ждущем потоке обращается к планировщику ОС, а это системный вызов ([Timur Doumler, Using locks in real-time audio processing, safely, 2020](https://web.archive.org/web/20250113204348/https://timur.audio/using-locks-in-real-time-audio-processing-safely)). Обращения к диску и сети из аудиопотока исключаются по той же причине.
+
+</Callout>
+
+## Где выделять память {#preallocation}
+
+Бенсина предлагает самое простое решение: выделить всё заранее. Для этого у процессора есть `prepareToPlay(sampleRate, expectedMaxFramesPerBlock)`: хост вызывает её до начала воспроизведения и сообщает частоту дискретизации и наибольший ожидаемый размер блока. В учебном плагине `prepareToPlay` передаёт эти значения частям процессора:
+
+```cpp
+// PluginProcessor.cpp
+void PluginProcessor::prepareToPlay(double sampleRate,
+                                    int expectedMaxFramesPerBlock) {
+  currentSampleRate = sampleRate;
+
+  tremolo.prepare(sampleRate, expectedMaxFramesPerBlock);
+
+  bypassTransitionSmoother.prepare(
+      {.sampleRate = sampleRate,
+       .maximumBlockSize = static_cast<uint32_t>(expectedMaxFramesPerBlock),
+       .numChannels = static_cast<uint32_t>(juce::jmax(
+           getTotalNumInputChannels(), getTotalNumOutputChannels()))});
+}
+```
+
+`BypassTransitionSmoother::prepare` выделяет буфер для копии необработанного сигнала: `dryBuffer.setSize(numChannels, maximumBlockSize)`. При каждом блоке `setDryBuffer` только копирует в него отсчёты. Класс `Tremolo` готовит рабочий массив под значения LFO с четырёхкратным запасом:
+
+```cpp
+// Tremolo.h, Tremolo::prepare
+lfoSampleFifo.prepare(sampleRate);
+lfoTransitionSmoother.reset(sampleRate, 0.025 /* 25 milliseconds */);
+
+// allocate defensively
+lfoSamples.resize(4u * static_cast<size_t>(expectedMaxFramesPerBlock));
+```
+
+Запас нужен потому, что `expectedMaxFramesPerBlock` — только подсказка. Документация JUCE называет её «strong hint» и советует программировать с оглядкой на хост с ошибкой, который пришлёт блок больше обещанного. Вариант обработки `processChannelwise`, который пользуется этим массивом, дополнительно ограничивает число кадров размером массива и проверяет это условие через `jassert` в отладочной сборке: лучше обработать часть блока, чем писать за границу массива.
+
+Обратная пара — `releaseResources()`: хост вызывает её после остановки воспроизведения. Здесь можно освободить большие буферы. В учебном плагине она только сбрасывает состояние: `tremolo.reset()` и `bypassTransitionSmoother.reset()`. Память остаётся выделенной до следующего `prepareToPlay` или до удаления процессора.
+
+## Как проверить {#checking}
+
+Выделение памяти в аудиопотоке не видно ни по тексту программы, ни по звуку на пустом проекте. Его находит <Term id="realtime-sanitizer" firstMention define>RealtimeSanitizer</Term> — инструмент компилятора Clang, который появился в Clang 20 и работает на macOS и Linux ([документация LLVM](https://clang.llvm.org/docs/RealtimeSanitizer.html)). Функцию, которая должна уложиться в срок, помечают атрибутом `[[clang::nonblocking]]`, а программу собирают с флагом `-fsanitize=realtime`. Если во время выполнения такой функции вызывается `malloc`, `free`, `pthread_mutex_lock` или другая функция с непредсказуемым временем, санитайзер печатает стек вызовов и завершает программу.
+
+```cpp
+#include <vector>
+
+std::vector<float> history;
+
+void process(float* samples, int numSamples) [[clang::nonblocking]]
+{
+    for (int i = 0; i < numSamples; ++i)
+        history.push_back(samples[i]);  // может выделить память
+}
+
+int main()
+{
+    float block[512] {};
+    process(block, 512);
+}
+```
+
+```text
+$ clang++ -std=c++23 -fsanitize=realtime -g rt.cpp -o rt && ./rt
+==77027==ERROR: RealtimeSanitizer: unsafe-library-call
+Intercepted call to real-time unsafe function `malloc` in real-time context!
+    ...
+    #14 ... in std::vector<float>::push_back(float const&) vector.h:462
+    #15 ... in process(float*, int) rt.cpp:8
+    #16 ... in main rt.cpp:14
+```
+
+Если перед вызовом сделать `history.reserve(1024)`, сообщения нет. Так же проверены остальные строки [таблицы 1](#hidden-allocations-table): `unique_ptr::reset()` и удаление последней копии `std::shared_ptr` дают `free`, присваивание `std::function` лямбды с массивом из восьми `float` в захвате — `malloc`, `DBG` — `malloc` внутри `juce::String`. Копирование `std::shared_ptr`, у которого остаются другие владельцы, санитайзер пропускает: оно только увеличивает счётчик.
+
+<Callout type="note" title="Компилятор для проверки">
+
+Apple Clang из Xcode (проверено на версии 17) не принимает `-fsanitize=realtime`. На macOS нужен Clang из проекта LLVM, например из Homebrew: `brew install llvm`, затем указать CMake `-DCMAKE_CXX_COMPILER=$(brew --prefix llvm)/bin/clang++`. Примеры этой статьи проверены Homebrew Clang 22.1. Санитайзер нужен только в отладочной сборке; без флага атрибут `[[clang::nonblocking]]` ни на что не влияет.
+
+</Callout>
+
+В плагине атрибут ставят прямо на переопределение: `void processBlock(juce::AudioBuffer<float>&, juce::MidiBuffer&) [[clang::nonblocking]] override;`. Флаг передают и компилятору, и компоновщику:
+
+```cmake
+target_compile_options(TremoloCoursePlugin PRIVATE -fsanitize=realtime)
+target_link_options(TremoloCoursePlugin PRIVATE -fsanitize=realtime)
+```
+
+Мы не встраивали санитайзер в плагин, загруженный в DAW. Вместо этого собрали консольную программу с JUCE 8.0.12 и исходниками учебного плагина: она создаёт `PluginProcessor`, вызывает `prepareToPlay(48000, 512)`, а затем 400 раз `processBlock` из функции с атрибутом. По ходу программа включает bypass, меняет форму LFO и выключает bypass. С переменной окружения `RTSAN_OPTIONS=halt_on_error=false:print_stats_on_exit=true` санитайзер не останавливается на первой ошибке и в конце печатает их число. Сообщение было одно, при первом включении bypass: плавный переход впервые сложил два буфера, и системная библиотека Accelerate, через которую JUCE на macOS выполняет векторные операции, при первом таком вызове на потоке выделила память под свои данные. Повторных выделений не было, и сам код курса за все 400 блоков памяти не выделял.
+
+## Данные для интерфейса {#ui-exchange}
+
+Аудиопоток и интерфейс должны обмениваться данными: ручка меняет частоту LFO, а редактор рисует кривую LFO, которую только что рассчитал аудиопоток. Брать для этого блокировку нельзя, поэтому нужны средства <Term id="lock-free" firstMention define>без блокировок</Term> (lock-free): ни один поток в них не ждёт, пока другой закончит. Тимур Думлер ([Using locks in real-time audio processing, safely](https://web.archive.org/web/20250113204348/https://timur.audio/using-locks-in-real-time-audio-processing-safely)) делит задачи на три вида, и учебный плагин использует первые два.
+
+Одно число передают через `std::atomic`. Параметры JUCE так и устроены: `AudioParameterFloat`, `AudioParameterBool` и `AudioParameterChoice` хранят значение в поле `std::atomic<float>`, поэтому `processBlock` читает `parameters.rate`, пока слайдер в потоке сообщений его меняет. Частоту дискретизации для редактора процессор хранит сам:
+
+```cpp
+// PluginProcessor.h
+std::atomic<double> currentSampleRate{0.};
+
+// PluginProcessor.cpp
+double PluginProcessor::getSampleRateThreadSafe() const noexcept {
+  return currentSampleRate;
+}
+```
+
+Атомарные операции с `float`, `double` и указателями на распространённых 64-битных процессорах выполняются без блокировок. Проверить это для своей платформы можно при сборке: `static_assert(std::atomic<double>::is_always_lock_free);`.
+
+Поток значений передают через очередь с одним писателем и одним читателем (single-producer, single-consumer FIFO). Кривую на экране рисует `LfoVisualizer`, а каждое значение LFO рассчитывает аудиопоток. Класс [`SampleFifo`](https://github.com/juce-framework/tremolo-juce-course/blob/main/complete/tremolo_plugin/include/Tremolo/SampleFifo.h) связывает их: внутри у него `juce::AudioBuffer` на секунду отсчётов, выделенный в `prepare`, и `juce::AbstractFifo`, который без блокировок ведёт позиции чтения и записи в этом кольцевом буфере.
+
+```cpp
+// SampleFifo.h; push вызывает аудиопоток для каждого кадра
+void push(SampleType sample) {
+  const auto scope = fifo.write(1);
+
+  if (scope.blockSize1 > 0) {
+    buffer.setSample(0, scope.startIndex1, sample);
+  } else if (scope.blockSize2 > 0) {
+    buffer.setSample(0, scope.startIndex2, sample);
+  }
+}
+```
+
+Если очередь заполнена, `write(1)` возвращает нулевые размеры, и отсчёт пропадает: аудиопоток не ждёт читателя. Для рисунка потеря нескольких точек незаметна. Читает очередь поток сообщений: `LfoVisualizer` подключён к `juce::VBlankAttachment` и при каждом обновлении экрана вызывает `popAll`, который копирует все накопленные отсчёты в буфер визуализатора. Этот буфер выделен заранее, в конструкторе визуализатора, на секунду отсчётов, а `popAll` меняет его размер с `avoidReallocating = true`: если новый размер не больше прежнего, память не перераспределяется.
+
+Третий вид — объект целиком, например набор коэффициентов фильтра, рассчитанный после поворота ручки, или звуковой файл, загруженный с диска. В учебном плагине такого нет, и ему посвящены два следующих раздела.
+
+## std::shared_ptr и общее владение {#shared-ptr}
+
+<MarginNote items={[
+  { label: 'Learn C++ → 22.6 std::shared_ptr', description: 'Общее владение, управляющий блок и std::make_shared.', target: { url: 'https://www.learncpp.com/cpp-tutorial/stdshared_ptr/' } },
+  { label: 'Learn C++ → 22.7 Circular dependency issues', description: 'Почему два shared_ptr друг на друга не удаляются, и std::weak_ptr.', target: { url: 'https://www.learncpp.com/cpp-tutorial/circular-dependency-issues-with-stdshared_ptr-and-stdweak_ptr/' } },
+]}>
+
+Для объекта, которым пользуются два потока, напрашивается `std::shared_ptr`. Он хранит адрес объекта и адрес управляющего блока (control block), через который идёт <Term id="reference-counting" firstMention define>подсчёт ссылок</Term>: счётчик в блоке хранит число `shared_ptr`, владеющих объектом. Копия увеличивает счётчик, уничтожение копии уменьшает, и когда счётчик доходит до нуля, объект удаляется. Счётчик меняется атомарными операциями, поэтому копии одного объекта можно создавать и уничтожать в разных потоках.
+
+</MarginNote>
+
+Объект удаляется в том потоке, где исчезла последняя копия. Пусть аудиопоток в начале блока сделал локальную копию, а поток сообщений тем временем заменил общий указатель новым набором коэффициентов. Теперь единственный владелец старого набора — локальная копия, и в конце `processBlock` она вызовет `delete` в аудиопотоке.
+
+Осторожности требует и сам общий указатель. Атомарен только счётчик, объект `std::shared_ptr` — нет: если один поток копирует его, а другой одновременно присваивает новое значение, это гонка данных и неопределённое поведение ([cppreference, std::atomic&lt;std::shared_ptr&gt;](https://en.cppreference.com/w/cpp/memory/shared_ptr/atomic2)). C++20 добавил для этого `std::atomic<std::shared_ptr<T>>`, но в стандарте он не обязан работать без блокировок, а на практике так не работает. В libstdc++ (GCC) и стандартной библиотеке Microsoft `is_always_lock_free` равен `false`: внутри используется блокировка на младшем бите указателя, и аудиопоток может ждать поток сообщений. В libc++, библиотеке Clang и Xcode, этот шаблон не реализован, и `std::atomic<std::shared_ptr<T>>` не компилируется.
+
+В докладе на CppCon 2015 Тимур Думлер показал схему, которую потом часто повторяли: атомарная подмена `shared_ptr` и «пул освобождения» (release pool), который держит лишнюю копию каждого объекта, чтобы последняя ссылка исчезала в потоке сообщений. В 2019 году автор написал, что схема в корне неверна и небезопасна, а `std::shared_ptr` не подходит для обмена объектами с потоком реального времени ([форум JUCE](https://forum.juce.com/t/timur-doumler-talks-on-c-audio-sharing-data-across-threads/26311/26)). Позже он советовал неизменяемые объекты: поток сообщений не правит объект, которым пользуется аудиопоток, а готовит новую версию, и аудиопоток переходит на неё, когда закончит со старой. Следующий раздел показывает такую схему с явным владельцем на каждом шаге.
+
+## Подмена объекта через очереди {#object-exchange}
+
+Идея похожа на `SampleFifo`, только по очереди передаются указатели на готовые объекты. Нужны две очереди. По первой поток сообщений отправляет аудиопотоку новый набор, по второй аудиопоток возвращает отработавший набор, и поток сообщений его удаляет. Кода нет в учебном плагине, его мы написали для статьи. Очередь построена на том же `juce::AbstractFifo`:
+
+```cpp
+// Очередь указателей: пишет один поток, читает другой, без блокировок
+template <typename T, int Capacity>
+class PointerFifo {
+public:
+  bool push(T* object) noexcept {
+    const auto scope = fifo.write(1);
+    if (scope.blockSize1 == 0)
+      return false;  // очередь заполнена
+    slots[static_cast<size_t>(scope.startIndex1)] = object;
+    return true;
+  }
+
+  T* pop() noexcept {
+    const auto scope = fifo.read(1);
+    return scope.blockSize1 > 0 ? slots[static_cast<size_t>(scope.startIndex1)]
+                                : nullptr;
+  }
+
+  bool hasFreeSpace() const noexcept { return fifo.getFreeSpace() > 0; }
+
+private:
+  juce::AbstractFifo fifo{Capacity};
+  std::array<T*, Capacity> slots{};
+};
+```
+
+Обмен наборами коэффициентов фильтра:
+
+```cpp
+struct Coefficients {
+  float b0 = 1.f, b1 = 0.f, b2 = 0.f, a1 = 0.f, a2 = 0.f;
+};
+
+class CoefficientsExchange {
+public:
+  explicit CoefficientsExchange(std::unique_ptr<Coefficients> initial)
+      : active{initial.release()} {}
+
+  ~CoefficientsExchange() {  // аудиопоток уже остановлен
+    update();
+    while (auto* waiting = toAudio.pop())
+      delete waiting;
+    delete active;
+  }
+
+  // Поток сообщений: новый набор заменяет ещё не отправленный
+  void publish(std::unique_ptr<Coefficients> next) {
+    pending = std::move(next);
+    update();
+  }
+
+  // Поток сообщений, ещё и по таймеру: отправить набор, удалить отработавшие
+  void update() {
+    while (auto* old = toDelete.pop())
+      delete old;
+    if (pending != nullptr && toAudio.push(pending.get()))
+      pending.release();  // теперь объектом владеет очередь
+  }
+
+  // Аудиопоток, в начале processBlock
+  const Coefficients& current() noexcept {
+    if (toDelete.hasFreeSpace())
+      if (auto* next = toAudio.pop())
+        toDelete.push(std::exchange(active, next));
+    return *active;
+  }
+
+private:
+  std::unique_ptr<Coefficients> pending;
+  Coefficients* active;
+  PointerFifo<Coefficients, 8> toAudio;
+  PointerFifo<Coefficients, 8> toDelete;
+};
+```
+
+У каждого набора в любой момент один владелец, как требует [правило владения](/cpp-ownership/#ownership) из статьи «Кто владеет объектом». Пока набор не отправлен, им владеет `pending` в потоке сообщений. Когда указатель попал в очередь, `release()` снимает обязанность удалить объект с `unique_ptr`, и владельцем становится ячейка очереди, как между `release()` и `addParameter` при [передаче параметра процессору](/cpp-ownership/#juce-handover). Аудиопоток забирает указатель, делает его активным и возвращает прежний активный набор во вторую очередь. Удаляет его `update()` уже в потоке сообщений. [Рисунок 2](#exchange-path) показывает этот путь.
+
+<Figure id="exchange-path" number={2}
+  name="Путь набора коэффициентов"
+  caption="Новый набор создаётся в потоке сообщений и уходит в очередь toAudio. В начале блока аудиопоток забирает его, делает активным и отправляет прежний активный набор в очередь toDelete. Поток сообщений по таймеру удаляет отработавшие наборы. Аудиопоток только перекладывает указатели: он не создаёт, не удаляет и не ждёт."
+  alt="Схема из пяти блоков, разделённая вертикальным пунктиром на две колонки: слева «поток сообщений», справа «аудиопоток». Слева вверху блок «make_unique: новый набор», стрелка ведёт к блоку «toAudio» на пунктире. От него стрелка направо и вниз к блоку «active в processBlock» в правой колонке. От него стрелка вниз и налево к блоку «toDelete» на пунктире. От него стрелка вниз к блоку «update(): delete старого» в левой колонке."
+>
+  <svg viewBox="0 0 400 450" style="max-width: 355px; margin-inline: auto" xmlns="http://www.w3.org/2000/svg">
+    <g fill="none" stroke="var(--chart-axis)" stroke-width="2" stroke-dasharray="5 4">
+      <path d="M200 36V440" />
+    </g>
+    <g fill="var(--chart-bg)" stroke="var(--chart-axis)" stroke-width="2">
+      <rect x="15" y="44" width="170" height="56" rx="6" />
+      <rect x="115" y="134" width="170" height="44" rx="6" />
+      <rect x="215" y="212" width="170" height="56" rx="6" />
+      <rect x="115" y="302" width="170" height="44" rx="6" />
+      <rect x="15" y="380" width="170" height="56" rx="6" />
+    </g>
+    <g fill="none" stroke="var(--chart-result)" stroke-width="2">
+      <path d="M60 100V156H115l-7 -5m7 5 -7 5" />
+      <path d="M285 156H340V212l-5 -7m5 7 5 -7" />
+      <path d="M340 268V324H285l7 -5m-7 5 7 5" />
+      <path d="M115 324H60V380l-5 -7m5 7 5 -7" />
+    </g>
+    <g fill="var(--chart-label)" font-size="18" text-anchor="middle">
+      <text x="100" y="24">поток сообщений</text>
+      <text x="300" y="24">аудиопоток</text>
+      <text x="100" y="68">make_unique:</text>
+      <text x="100" y="90">новый набор</text>
+      <text x="200" y="162">toAudio</text>
+      <text x="300" y="236">active</text>
+      <text x="300" y="258">в processBlock</text>
+      <text x="200" y="330">toDelete</text>
+      <text x="100" y="404">update():</text>
+      <text x="100" y="426">delete старого</text>
+    </g>
+  </svg>
+</Figure>
+
+Почему код не теряет наборы и не удаляет их в аудиопотоке:
+
+- `current()` сначала проверяет, есть ли место в `toDelete`. Если поток сообщений давно не вызывал `update()` и очередь заполнена, аудиопоток не берёт новый набор: старый некуда деть, а удалять его самому нельзя. Звук ещё блок-другой идёт со старыми коэффициентами.
+- Если заполнена `toAudio`, `publish` оставляет набор в `pending`, и его отправит следующий вызов `update()`. Новый `publish` заменяет неотправленный набор: при быстром повороте ручки промежуточные наборы удаляются в потоке сообщений, а последний обязательно дойдёт до звука.
+- `update()` нужно вызывать регулярно, например из `juce::Timer` с периодом 50–100 мс, иначе отработавшие наборы будут копиться в `toDelete`.
+- Деструктор удаляет всё, что осталось в очередях. Он рассчитан на то, что аудиопоток уже не вызывает `current()`: так и есть, если объект обмена — поле процессора, а хост удаляет процессор после остановки обработки.
+
+Мы проверили схему программой из двух потоков: один в цикле вызывает `current()` из функции с `[[clang::nonblocking]]`, другой отправляет 20 000 наборов подряд и затем ещё 200 раз вызывает `update()`. Сборки с RealtimeSanitizer, ThreadSanitizer (ищет гонки данных) и AddressSanitizer (ищет обращения к удалённой памяти) ошибок не нашли, а последним аудиопоток увидел последний отправленный набор.
+
+## Инструменты владения JUCE {#juce-tools}
+
+У JUCE есть собственные классы владения. Они встречаются в коде фреймворка и в примерах, поэтому их полезно узнавать. [Таблица 2](#juce-tools-table) сравнивает их со стандартными аналогами.
+
+<DataTable
+  id="juce-tools-table"
+  number={2}
+  caption="Классы владения JUCE и ближайшие стандартные аналоги. Владеет — удаляет объект сам. Ни один из классов не делает удаление безопасным для аудиопотока: где исчезает последний владелец, там и вызывается delete."
+  columns={[
+    { label: 'JUCE', width: '12rem' },
+    { label: 'Стандартный аналог' },
+    { label: 'Владеет' },
+    { label: 'Потоки' },
+  ]}
+  rows={[
+    ['<code>OwnedArray&lt;T&gt;</code>', '<code>std::vector&lt;std::unique_ptr&lt;T&gt;&gt;</code>', 'да, удаляет элементы при удалении из массива и вместе с массивом', 'без внутренней блокировки, как <code>std::vector</code>'],
+    ['<code>Component::SafePointer&lt;T&gt;</code>', 'нет точного; ближе всего <code>std::weak_ptr</code>', 'нет, обнуляется при удалении компонента', 'только поток сообщений'],
+    ['<code>WeakReference&lt;T&gt;</code>', '<code>std::weak_ptr</code>, но объект не обязан жить в <code>shared_ptr</code>', 'нет, обнуляется при удалении объекта', 'не потокобезопасен'],
+    ['<code>ReferenceCountedObject</code> и <code>ReferenceCountedObjectPtr&lt;T&gt;</code>', '<code>std::shared_ptr</code>', 'да, общее владение со счётчиком внутри объекта', 'счётчик атомарный, последняя ссылка удаляет объект в своём потоке'],
+  ]}
+/>
+
+`OwnedArray` хранит указатели и удаляет объекты, когда их убирают из массива через `remove`, `clear` или вместе с самим массивом. Удобно держать в нём, например, голоса синтезатора, созданные при подготовке:
+
+```cpp
+juce::OwnedArray<Voice> voices;  // поле процессора; Voice — свой класс голоса
+
+void prepareToPlay(double sampleRate, int) override {
+  voices.clear();  // удалит прежние голоса
+  for (int i = 0; i < 8; ++i)
+    voices.add(std::make_unique<Voice>(sampleRate));
+}
+```
+
+В `processBlock` перебирать `voices` можно, а вызывать `clear` или `remove` — нет: это `delete` в аудиопотоке.
+
+`Component::SafePointer` нужен, когда компонент может исчезнуть раньше, чем к нему обратятся. Типичный случай — отложенный вызов через `juce::MessageManager::callAsync`. В примере курса [`LongRunningTask`](https://github.com/juce-framework/tremolo-juce-course/blob/main/complete/examples/LongRunningTask/MainComponent_solution.h) фоновый поток сообщает прогресс так:
+
+```cpp
+juce::MessageManager::callAsync(
+    [this, newProgress]() { progress = newProgress; });
+```
+
+Лямбда выполнится позже, в потоке сообщений. В учебном приложении компонент живёт, пока открыто окно, и это допустимо. Но редактор плагина хост закрывает когда угодно, и если он удалён раньше, чем дошла очередь сообщения, `this` станет висячим указателем. `SafePointer` обнуляется при удалении компонента, и перед обращением его проверяют:
+
+```cpp
+juce::MessageManager::callAsync(
+    [safeThis = juce::Component::SafePointer{this}, newProgress] {
+      if (safeThis != nullptr)
+        safeThis->progress = newProgress;
+    });
+```
+
+`WeakReference` делает то же для любого класса, который объявил `JUCE_DECLARE_WEAK_REFERENCEABLE`; `SafePointer` построен на нём. Документация предупреждает, что он не потокобезопасен. Кроме того, при создании первой ссылки на объект класс выделяет память под общий узел, через который ссылки узнают об удалении. Поэтому оба класса — инструменты потока сообщений.
+
+`ReferenceCountedObject` — базовый класс со встроенным атомарным счётчиком, а `ReferenceCountedObjectPtr` увеличивает и уменьшает его. Когда счётчик доходит до нуля, объект выполняет `delete this` в том потоке, где исчезла последняя ссылка. Так устроены, например, коэффициенты фильтров `juce::dsp::IIR::Coefficients`: если присвоить фильтру новые коэффициенты прямо в `processBlock`, старые могут удалиться в аудиопотоке. Правило то же, что для `shared_ptr`: последнюю ссылку отпускают в потоке сообщений.
+
+## Детектор утечек {#leak-detector}
+
+Каждый класс учебного плагина заканчивается макросом:
+
+```cpp
+// PluginProcessor.h
+JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PluginProcessor)
+```
+
+Он объединяет два макроса. `JUCE_DECLARE_NON_COPYABLE` запрещает копирование, а `JUCE_LEAK_DETECTOR` добавляет в класс поле `juce::LeakedObjectDetector`. У детектора есть общий для всего класса счётчик: конструктор поля увеличивает его, деструктор уменьшает. При завершении программы, когда уничтожаются статические объекты, детектор проверяет счётчик, и если объекты класса остались, печатает сообщение и останавливает отладчик через `jassertfalse`. Работает это только в отладочной сборке: макрос `JUCE_CHECK_MEMORY_LEAKS` включается вместе с `JUCE_DEBUG`, а в выпускной сборке поле не добавляется вовсе.
+
+Вот что напечатала отладочная сборка, когда мы создали процессор учебного плагина через `new` и не удалили:
+
+```text
+*** Leaked objects detected: 1 instance(s) of class PluginProcessor
+JUCE Assertion failure in juce_LeakedObjectDetector.h:116
+*** Leaked objects detected: 2 instance(s) of class AudioBuffer
+*** Leaked objects detected: 1 instance(s) of class AbstractFifo
+*** Leaked objects detected: 1 instance(s) of class AudioParameterChoice
+...
+*** Leaked objects detected: 4 instance(s) of class StringArray
+```
+
+Один потерянный объект дал 15 сообщений: вместе с процессором остались его поля, параметры и их внутренние объекты. Искать причину стоит с самого внешнего класса, обычно своего, а не класса JUCE. Типичные причины такие:
+
+- объект создан через `new`, и указатель потерян или не передан владельцу;
+- два объекта с подсчётом ссылок ссылаются друг на друга, и счётчики никогда не доходят до нуля;
+- объект хранится в статической или глобальной переменной и ещё жив, когда JUCE завершает работу: документация называет этот случай отдельно, хотя утечки здесь нет.
+
+Если счётчик ушёл ниже нуля, детектор печатает «Dangling pointer deletion»: объектов удалено больше, чем создано, то есть какой-то указатель удалён дважды. Ошибка могла случиться раньше, чем её заметили.
+
+## Самопроверка {#self-check}
+
+<SelfCheck question="В processBlock завели локальный std::vector<float> temp(buffer.getNumSamples()) для промежуточного результата. Что не так и как исправить?">
+
+Конструктор вектора выделяет память на каждом блоке, а деструктор в конце `processBlock` её освобождает: два обращения к аллокатору в аудиопотоке. Вектор делают полем, в `prepareToPlay` задают ему наибольший размер с запасом, а в блоке используют только первые `getNumSamples()` элементов и проверяют, что блок не длиннее вектора, как `processChannelwise` в курсе.
+
+</SelfCheck>
+
+<SelfCheck question="Аудиопоток в начале блока скопировал общий std::shared_ptr, а поток сообщений во время блока заменил общий указатель новым объектом. Где удалится старый объект?">
+
+В аудиопотоке, в конце `processBlock`: после замены единственный владелец старого объекта — локальная копия, и при её уничтожении счётчик дойдёт до нуля. Даже если общий указатель защищён `std::atomic<std::shared_ptr>`, удаление всё равно произойдёт в аудиопотоке.
+
+</SelfCheck>
+
+<SelfCheck question="Почему SampleFifo::push не ждёт, когда очередь заполнена, а теряет отсчёт?">
+
+Ожидание означало бы, что аудиопоток зависит от потока сообщений и может не успеть к сроку блока. Пропущенная точка на кривой LFO на экране не заметна. Вместимость очереди — секунда отсчётов, а читает её экран несколько десятков раз в секунду, так что при нормальной работе очередь не заполняется.
+
+</SelfCheck>
+
+<SelfCheck question="Почему CoefficientsExchange::current() не берёт новый набор, если очередь toDelete заполнена?">
+
+Прежний активный набор тогда некуда отправить на удаление, а удалить его в аудиопотоке нельзя. Аудиопоток продолжает работать со старым набором и заберёт новый, когда поток сообщений вызовет `update()` и освободит место.
+
+</SelfCheck>
+
+## Источники {#sources}
+
+- [Ross Bencina. Real-time audio programming 101: time waits for nothing, 2011](http://www.rossbencina.com/code/real-time-audio-programming-101-time-waits-for-nothing) — почему аудиоколбэк не должен выделять память, брать блокировки и ждать ОС; инверсия приоритетов; предварительное выделение.
+- [Timur Doumler. Using locks in real-time audio processing, safely, 2020](https://web.archive.org/web/20250113204348/https://timur.audio/using-locks-in-real-time-audio-processing-safely) (копия в Internet Archive) — `std::atomic` для чисел, очередь с одним писателем и читателем для потока данных, неизменяемые объекты, почему `try_lock` у `std::mutex` небезопасен.
+- [Timur Doumler. Сообщение на форуме JUCE, 12 марта 2019](https://forum.juce.com/t/timur-doumler-talks-on-c-audio-sharing-data-across-threads/26311/26) — отказ от схемы с `std::shared_ptr` и пулом освобождения из [доклада «C++ in the Audio Industry», CppCon 2015](https://www.youtube.com/watch?v=boPEO2auJj4).
+- [LLVM. RealtimeSanitizer](https://clang.llvm.org/docs/RealtimeSanitizer.html) — флаг `-fsanitize=realtime`, атрибуты `[[clang::nonblocking]]` и `[[clang::blocking]]`, параметры `RTSAN_OPTIONS`; [Clang 20.1.0 Release Notes](https://releases.llvm.org/20.1.0/tools/clang/docs/ReleaseNotes.html) — появление санитайзера.
+- [cppreference. std::atomic&lt;std::shared_ptr&gt;](https://en.cppreference.com/w/cpp/memory/shared_ptr/atomic2) — гонка данных при одновременном доступе к одному `shared_ptr`, `is_always_lock_free` определяется реализацией; [libstdc++ 14, shared_ptr_atomic.h](https://github.com/gcc-mirror/gcc/blob/releases/gcc-14.2.0/libstdc%2B%2B-v3/include/bits/shared_ptr_atomic.h) и [Microsoft STL, memory](https://github.com/microsoft/STL/blob/main/stl/inc/memory) — `is_always_lock_free = false`; [libc++ C++20 Status](https://libcxx.llvm.org/Status/Cxx20.html) — P0718R2 не реализован.
+- [Alex. Learn C++, уроки 22.6 «std::shared_ptr»](https://www.learncpp.com/cpp-tutorial/stdshared_ptr/) и [22.7 «Circular dependency issues with std::shared_ptr, and std::weak_ptr»](https://www.learncpp.com/cpp-tutorial/circular-dependency-issues-with-stdshared_ptr-and-stdweak_ptr/) — общее владение и циклические ссылки; [19.1 «Dynamic memory allocation with new and delete»](https://www.learncpp.com/cpp-tutorial/dynamic-memory-allocation-with-new-and-delete/).
+- [JUCE. tremolo-juce-course](https://github.com/juce-framework/tremolo-juce-course) — учебный плагин [официального курса JUCE](https://www.wolfsoundacademy.com/juce); фрагменты из `complete/tremolo_plugin`: `PluginProcessor.h`, `PluginProcessor.cpp`, `Tremolo.h`, `SampleFifo.h`, `BypassTransitionSmoother.h`, `LfoVisualizer.cpp`, и примеры `complete/examples/GuiAndAudioThreadIdPrinting`, `LongRunningTask`.
+- [JUCE. Заголовок AudioProcessor 9.0.3](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_processors_headless/processors/juce_AudioProcessor.h) — `processBlock` в аудиопотоке, `prepareToPlay` и подсказка о размере блока; [AudioProcessorParameter](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_processors_headless/processors/juce_AudioProcessorParameter.h) — вызовы слушателей из аудиопотока.
+- JUCE 9.0.3: [OwnedArray](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_core/containers/juce_OwnedArray.h), [WeakReference](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_core/memory/juce_WeakReference.h), [ReferenceCountedObject](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_core/memory/juce_ReferenceCountedObject.h), [LeakedObjectDetector](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_core/memory/juce_LeakedObjectDetector.h), [AbstractFifo](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_core/containers/juce_AbstractFifo.h), [Component::SafePointer](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_gui_basics/components/juce_Component.h), [AudioBuffer::setSize](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_basics/buffers/juce_AudioSampleBuffer.h).
+
+Фрагменты кода учебного плагина взяты из папки `complete` репозитория `tremolo-juce-course` (JUCE 8.0.12, C++23). Пример с `std::vector`, `PointerFifo` и `CoefficientsExchange` проверены сборкой Homebrew Clang 22.1 с RealtimeSanitizer, а обмен — также с ThreadSanitizer и AddressSanitizer; `processBlock` учебного плагина проверен под RealtimeSanitizer консольной программой с JUCE 8.0.12.

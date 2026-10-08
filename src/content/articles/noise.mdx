@@ -361,6 +361,7 @@ private:
 <MarginNote items={[
   { label: 'Аудиоданные в программах → Размер блока и задержка', description: 'Сколько времени есть у обработчика на один блок.', target: { article: 'audio-data', anchor: 'block-time-and-latency' } },
   { label: 'Ross Bencina → Real-time audio programming 101', description: 'Почему в аудиопотоке избегают блокировок, выделения памяти и обращений к диску.', target: { url: 'http://www.rossbencina.com/code/real-time-audio-programming-101-time-waits-for-nothing' } },
+  { label: 'C++ в аудиопотоке → Данные для интерфейса', description: 'Как передать изменение между интерфейсом и аудиопотоком без блокировки.', target: { article: 'cpp-audio-thread', anchor: 'ui-exchange' } },
 ]}>
 
 В классе оба цвета имеют своё состояние; при переключении ранее использованный цвет продолжает с места остановки. Вызовы смены цвета и сброса должны выполняться согласованно с аудиопотоком, а не параллельно с `process`. Сам цикл не выделяет память, не читает часы и не берёт блокировки. Выделение буфера и выбор начального seed происходят при подготовке.

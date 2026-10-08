@@ -1,0 +1,16 @@
+{
+  "id": "track-programmer-cpp",
+  "date": "2026-10-08",
+  "order": 4,
+  "type": "updated",
+  "track": "programmer",
+  "items": [
+    {
+      "text": "Новый этап «C++ для аудио»: владение объектами и код в аудиопотоке",
+      "target": {
+        "track": "programmer",
+        "anchor": "stage-cpp"
+      }
+    }
+  ]
+}

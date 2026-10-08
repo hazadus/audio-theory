@@ -453,7 +453,7 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() {
   { label: 'Learn C++ → 22.6 std::shared_ptr', description: 'Общее владение со счётчиком ссылок.', target: { url: 'https://www.learncpp.com/cpp-tutorial/stdshared_ptr/' } },
 ]}>
 
-Общее владение через `std::shared_ptr`, контейнеры владения JUCE вроде `OwnedArray` и `Component::SafePointer`, а также правила выделения памяти в аудиопотоке в этой статье не разбираются. Всё сказанное выше касается создания и удаления объектов при загрузке плагина, вне обработки звука.
+Общее владение через `std::shared_ptr`, контейнеры владения JUCE вроде `OwnedArray` и `Component::SafePointer`, а также правила выделения памяти в аудиопотоке разбирает статья [«C++ в аудиопотоке»](/cpp-audio-thread/). Всё сказанное выше касается создания и удаления объектов при загрузке плагина, вне обработки звука.
 
 </MarginNote>
 

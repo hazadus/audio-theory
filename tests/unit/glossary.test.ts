@@ -27,6 +27,7 @@ const slugs = [
   'spatial-audio',
   'dry-wet-bypass',
   'cpp-ownership',
+  'cpp-audio-thread',
 ];
 
 const entry = {
