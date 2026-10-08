@@ -1,0 +1,21 @@
+{
+  "id": "cpp-ownership-course-code",
+  "date": "2026-10-08",
+  "order": 2,
+  "type": "updated",
+  "article": "cpp-ownership",
+  "items": [
+    {
+      "text": "Разница между std::move, release(), reset() и get() с примером и таблицей",
+      "target": { "article": "cpp-ownership", "anchor": "unique-ptr-methods" }
+    },
+    {
+      "text": "Передача параметра процессору на коде официального курса JUCE: зачем она нужна и что происходит со ссылкой",
+      "target": { "article": "cpp-ownership", "anchor": "juce-handover" }
+    },
+    {
+      "text": "Обновлённая схема владельцев и наблюдателей с тремя параметрами",
+      "target": { "article": "cpp-ownership", "anchor": "ownership-map" }
+    }
+  ]
+}

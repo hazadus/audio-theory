@@ -11,9 +11,6 @@ prerequisites:
   - label: 'Learn C++ → 12.3 Lvalue references'
     description: Ссылка как другое имя уже существующего объекта.
     target: { url: 'https://www.learncpp.com/cpp-tutorial/lvalue-references/' }
-  - label: Dry/wet и bypass → Исходный и обработанный сигнал
-    description: Что такое плагин и хост, который его загружает.
-    target: { article: dry-wet-bypass, anchor: dry-and-wet }
 related:
   - label: 'Learn C++ → 22.5 std::unique_ptr'
     description: Тот же умный указатель со стороны языка, включая std::make_unique и передачу в функции.
@@ -37,9 +34,9 @@ import MarginNote from '@/components/MarginNote.astro';
 import SelfCheck from '@/components/SelfCheck.astro';
 import Term from '@/components/Term.astro';
 
-В учебном плагине тремоло `effect-plugin` параметр создаётся так: `std::make_unique` строит объект, а через строку `release()` отдаёт его процессору. Умный указатель владеет объектом всего две строки, и чтобы понять, зачем он нужен, придётся разобраться, кто и когда удаляет каждый объект программы. Со стороны языка эту тему подробно разбирает учебник Learn C++ в главе 22: [урок 22.5 о `std::unique_ptr`](https://www.learncpp.com/cpp-tutorial/stdunique_ptr/) включает раздел о `std::make_unique`. Эта статья применяет те же инструменты к плагину: в какой памяти лежат его объекты, кто ими владеет, а кто только пользуется.
+В учебном плагине тремоло из [официального курса JUCE по разработке аудиоплагинов](https://github.com/juce-framework/tremolo-juce-course) (репозиторий `tremolo-juce-course`) параметр создаётся так: `std::make_unique` строит объект, а вспомогательная функция сразу отдаёт его процессору через `release()`. Этот код решает практическую задачу: процессор должен получить параметр в собственность, чтобы показать его хосту, сохранять вместе с проектом и в конце удалить, а код плагина — оставить себе ссылку на параметр и читать через неё значение при обработке звука. Умный указатель владеет объектом только на время этой передачи, и чтобы понять, зачем он нужен, придётся разобраться, кто и когда удаляет каждый объект программы. Со стороны языка эту тему подробно разбирает учебник Learn C++ в главе 22: [урок 22.5 о `std::unique_ptr`](https://www.learncpp.com/cpp-tutorial/stdunique_ptr/) включает раздел о `std::make_unique`. Эта статья применяет те же инструменты к плагину: в какой памяти лежат его объекты, кто ими владеет, а кто только пользуется.
 
-Фрагменты взяты из `effect-plugin` на JUCE 8.0.12 и C++23. Функции JUCE, о которых идёт речь (`addParameter`, `addParameterGroup`, `createPluginFilter`, `createEditor`), с теми же сигнатурами есть и в JUCE 9.0.3.
+Фрагменты взяты из готовой версии плагина в папке [`complete`](https://github.com/juce-framework/tremolo-juce-course/tree/main/complete/tremolo_plugin) репозитория `tremolo-juce-course` (JUCE 8.0.12, C++23). Функции JUCE, о которых идёт речь (`addParameter`, `addParameterGroup`, `createPluginFilter`, `createEditor`), с теми же сигнатурами есть и в JUCE 9.0.3.
 
 ## Стек, поля и куча {#storage}
 
@@ -59,18 +56,18 @@ import Term from '@/components/Term.astro';
 
 </Callout>
 
-В процессоре `effect-plugin` большая часть объектов — поля. Класс эффекта `Effect` с массивом осцилляторов LFO лежит прямо внутри `PluginProcessor`, без кучи:
+В процессоре учебного плагина большая часть объектов — поля. Класс эффекта `Tremolo` с массивом осцилляторов LFO лежит прямо внутри `PluginProcessor`, без кучи:
 
 ```cpp
 // PluginProcessor.h, поля процессора
 private:
-  // Параметры плагина
   Parameters parameters{*this};
-
-  Effect effect;
+  Tremolo tremolo;
+  BypassTransitionSmoother bypassTransitionSmoother;
+  std::atomic<double> currentSampleRate{0.};
 ```
 
-Поле `effect` создаётся вместе с процессором и уничтожается вместе с ним. Удалять его вручную не нужно и нельзя: у него нет отдельного времени жизни.
+Поле `tremolo` создаётся вместе с процессором и уничтожается вместе с ним. Удалять его вручную не нужно и нельзя: у него нет отдельного времени жизни.
 
 ### Параметры в куче {#why-heap}
 
@@ -91,52 +88,58 @@ private:
 
 </Callout>
 
-Владение может переходить от одного владельца к другому. В `effect-plugin` есть все варианты: обёртка формата плагина владеет процессором, процессор — своими полями и объектами параметров, а структура `Parameters` только наблюдает за параметрами через ссылки. [Рисунок 1](#ownership-map) показывает эту схему.
+Владение может переходить от одного владельца к другому. Хост не работает с классами JUCE напрямую: он обращается к плагину через API своего формата: VST3, AU или другого. Переводит эти вызовы в методы `AudioProcessor` обёртка формата (plugin wrapper) — код JUCE из модуля `juce_audio_plugin_client`, который собирается внутри каждого плагина отдельно для каждого формата. Автор плагина её не пишет и не меняет. В учебном плагине есть все варианты владения: обёртка формата владеет процессором, процессор — своими полями и объектами параметров, а структура `Parameters` только наблюдает за параметрами через ссылки. [Рисунок 1](#ownership-map) показывает эту схему.
 
 <Figure id="ownership-map" number={1}
-  name="Владельцы и наблюдатели в effect-plugin"
-  caption="Сплошная стрелка — владение: владелец удалит объект. Пунктир — невладеющая ссылка. Обёртка формата хранит процессор в std::unique_ptr. Поля parameters и effect входят в объект процессора. Объекты параметров лежат в куче, ими владеет дерево параметров базового класса AudioProcessor, а parameters только ссылается на них."
-  alt="Сверху блок «обёртка плагина», от него сплошная стрелка с подписью unique_ptr ведёт в большой блок PluginProcessor. Внутри него сверху вниз три блока: parameters с подписью «rate&, outputGain&», effect и «AudioProcessor (база)» с вложенным блоком parameterTree. Ниже, вне процессора, два блока параметров в куче: Modulation rate и Output gain. От parameterTree к каждому идёт сплошная стрелка. От блока parameters к ним же идут пунктирные стрелки, обходящие процессор слева и справа. Внизу легенда: сплошная линия — владеет, пунктир — ссылается."
+  name="Владельцы и наблюдатели в учебном плагине"
+  caption="Сплошная стрелка — владение: владелец удалит объект. Пунктир — невладеющая ссылка. Обёртка формата хранит процессор в std::unique_ptr. Поля parameters и tremolo входят в объект процессора; остальные поля не показаны. Объекты трёх параметров лежат в куче, ими владеет дерево параметров базового класса AudioProcessor, а parameters только ссылается на них."
+  alt="Сверху блок «обёртка формата», от него сплошная стрелка с подписью unique_ptr ведёт в большой блок PluginProcessor. Внутри него сверху вниз три блока: parameters с подписью «rate&, bypassed&, waveform&», tremolo и «AudioProcessor (база)» с вложенным блоком parameterTree. Ниже, вне процессора, три блока параметров в куче: Modulation rate, Bypass и Modulation waveform. От parameterTree к каждому идёт сплошная стрелка. От блока parameters пунктирная линия обходит процессор слева, проходит под блоками параметров и входит в каждый из них снизу. Внизу легенда: сплошная линия — владеет, пунктир — ссылается."
 >
-  <svg viewBox="0 0 400 556" style="max-width: 355px; margin-inline: auto" xmlns="http://www.w3.org/2000/svg">
+  <svg viewBox="0 0 400 576" style="max-width: 355px; margin-inline: auto" xmlns="http://www.w3.org/2000/svg">
     <g fill="none" stroke="var(--chart-axis)" stroke-width="2">
       <rect x="60" y="8" width="280" height="44" rx="6" />
       <rect x="30" y="84" width="340" height="292" rx="8" />
       <rect x="50" y="124" width="300" height="58" rx="6" />
       <rect x="50" y="196" width="300" height="44" rx="6" />
       <rect x="50" y="254" width="300" height="108" rx="6" />
-      <rect x="80" y="294" width="240" height="52" rx="6" />
-      <rect x="30" y="424" width="160" height="64" rx="6" />
-      <rect x="210" y="424" width="160" height="64" rx="6" />
+      <rect x="70" y="294" width="260" height="52" rx="6" />
+      <rect x="25" y="424" width="110" height="64" rx="6" />
+      <rect x="145" y="424" width="110" height="64" rx="6" />
+      <rect x="265" y="424" width="110" height="64" rx="6" />
       <path d="M200 52V84l-5 -7m5 7 5 -7" />
-      <path d="M110 346V424l-5 -7m5 7 5 -7" />
-      <path d="M290 346V424l-5 -7m5 7 5 -7" />
-      <path d="M40 528H80" />
+      <path d="M80 346V424l-5 -7m5 7 5 -7" />
+      <path d="M200 346V424l-5 -7m5 7 5 -7" />
+      <path d="M320 346V424l-5 -7m5 7 5 -7" />
+      <path d="M40 552H80" />
     </g>
     <g fill="none" stroke="var(--chart-result)" stroke-width="2" stroke-dasharray="6 4">
-      <path d="M50 153H14V456H30" />
-      <path d="M350 153H386V456H370" />
-      <path d="M220 528H260" />
+      <path d="M50 153H12V512H320" />
+      <path d="M80 512V488" />
+      <path d="M200 512V488" />
+      <path d="M320 512V488" />
+      <path d="M220 552H260" />
     </g>
     <g fill="none" stroke="var(--chart-result)" stroke-width="2">
-      <path d="M30 456l-7 -5m7 5 -7 5" />
-      <path d="M370 456l7 -5m-7 5 7 5" />
+      <path d="M80 488l-5 7m5 -7 5 7" />
+      <path d="M200 488l-5 7m5 -7 5 7" />
+      <path d="M320 488l-5 7m5 -7 5 7" />
     </g>
     <g fill="var(--chart-label)" font-size="18" text-anchor="middle">
-      <text x="200" y="36">обёртка плагина</text>
+      <text x="200" y="36">обёртка формата</text>
       <text x="210" y="74" text-anchor="start">unique_ptr</text>
       <text x="200" y="110">PluginProcessor</text>
       <text x="200" y="148">parameters</text>
-      <text x="200" y="172">rate&amp;, outputGain&amp;</text>
-      <text x="200" y="224">effect</text>
+      <text x="200" y="172">rate&amp;, bypassed&amp;, waveform&amp;</text>
+      <text x="200" y="224">tremolo</text>
       <text x="200" y="280">AudioProcessor (база)</text>
       <text x="200" y="326">parameterTree</text>
-      <text x="110" y="451">Modulation</text>
-      <text x="110" y="475">rate</text>
-      <text x="290" y="451">Output</text>
-      <text x="290" y="475">gain</text>
-      <text x="88" y="534" text-anchor="start">владеет</text>
-      <text x="268" y="534" text-anchor="start">ссылается</text>
+      <text x="80" y="451">Modulation</text>
+      <text x="80" y="475">rate</text>
+      <text x="200" y="463">Bypass</text>
+      <text x="320" y="451">Modulation</text>
+      <text x="320" y="475">waveform</text>
+      <text x="88" y="558" text-anchor="start">владеет</text>
+      <text x="268" y="558" text-anchor="start">ссылается</text>
     </g>
   </svg>
 </Figure>
@@ -179,7 +182,7 @@ float dangling()
 }
 ```
 
-Все три функции компилируются без ошибок: компилятор не следит, кто отвечает за объект. Главная трудность в том, что по типу `Lfo*` нельзя понять, владеет ли его хранитель объектом. Руководство C++ Core Guidelines поэтому предлагает не передавать владение через сырой указатель или ссылку (правило I.11) и не писать `new` и `delete` явно (правило R.11).
+Все три функции компилируются без ошибок: компилятор не следит, кто отвечает за объект. Главная трудность в том, что по типу `Lfo*` нельзя понять, владеет ли его хранитель объектом. Руководство C++ Core Guidelines поэтому предлагает не передавать владение через сырой указатель или ссылку ([правило I.11](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#ri-raw)) и не писать `new` и `delete` явно ([правило R.11](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#rr-newdelete)).
 
 ## std::unique_ptr {#unique-ptr}
 
@@ -206,12 +209,41 @@ void owner()
     std::unique_ptr<Lfo> a = std::make_unique<Lfo>();
     // std::unique_ptr<Lfo> b = a;          // ошибка компиляции: копировать нельзя
     std::unique_ptr<Lfo> b = std::move(a);  // владелец теперь b, a пуст
-    Lfo* observer = b.get();                // наблюдатель: не удаляет
+    Lfo* observer = b.get();                // сырой указатель на тот же объект: наблюдатель, не удаляет
     observer->phase = 0.25f;
 }   // деструктор b удаляет Lfo, пустой a ничего не делает
 ```
 
-Метод `release()` возвращает сырой указатель и делает `unique_ptr` пустым, не удаляя объект: с этого момента за объект отвечает тот, кто получил указатель. Он нужен, чтобы отдать объект коду, который принимает владение через сырой указатель. Метод `reset()`, наоборот, удаляет текущий объект сразу.
+Кроме `std::move`, расстаться с объектом `unique_ptr` позволяют методы `release()` и `reset()`. После любого из этих вызовов исходный `unique_ptr` пуст, а различаются они судьбой объекта. `std::move` передаёт объект другому `unique_ptr`: объект остаётся на прежнем месте в куче, меняется только владелец, и удаление по-прежнему гарантирует тип. `release()` снимает с `unique_ptr` обязанность удалить объект и возвращает его адрес как сырой указатель. Объект жив, но удалить его теперь должен тот, кто получил адрес; если он этого не сделает, будет утечка. Нужен `release()`, чтобы отдать объект коду, который принимает владение через сырой указатель, как `addParameter` ниже. `reset()` удаляет объект сразу, не дожидаясь деструктора `unique_ptr`. Метод `get()` ни от чего не отказывается: он только выдаёт адрес наблюдателю. [Таблица 1](#unique-ptr-methods) сводит четыре вызова вместе.
+
+```cpp
+void handover()
+{
+    auto a = std::make_unique<Lfo>();
+    auto b = std::move(a);        // объект тот же, владелец теперь b, a пуст
+    Lfo* raw = b.release();       // b пуст, объект жив, удалить его должен владелец raw
+    std::unique_ptr<Lfo> c{raw};  // адрес снова под управлением unique_ptr: владелец c
+    c.reset();                    // объект удалён сейчас, c пуст
+}   // a, b и c пусты, их деструкторы ничего не удаляют
+```
+
+<DataTable
+  id="unique-ptr-methods"
+  number={1}
+  caption="Что делают вызовы для std::unique_ptr u. Только reset() удаляет объект; get() не меняет владельца."
+  columns={[
+    { label: 'Вызов', width: '9rem' },
+    { label: 'Объект' },
+    { label: 'u после вызова' },
+    { label: 'Кто удалит объект' },
+  ]}
+  rows={[
+    ['<code>v = std::move(u)</code>', 'жив, на прежнем месте', 'пуст', 'деструктор <code>v</code>'],
+    ['<code>raw = u.release()</code>', 'жив', 'пуст', 'тот, кто получил <code>raw</code>; если никто, это утечка'],
+    ['<code>u.reset()</code>', 'удалён сразу', 'пуст', 'никто: объекта больше нет'],
+    ['<code>p = u.get()</code>', 'жив', 'по-прежнему владеет', 'деструктор <code>u</code>; <code>p</code> только наблюдает'],
+  ]}
+/>
 
 ## std::make_unique {#make-unique}
 
@@ -222,7 +254,7 @@ std::unique_ptr<juce::AudioParameterFloat> a{new juce::AudioParameterFloat(/* �
 auto b = std::make_unique<juce::AudioParameterFloat>(/* … */);
 ```
 
-Во второй строке имя класса написано один раз, и выражения `new` в коде нет. Правило R.23 Core Guidelines советует именно эту запись. Кроме краткости, оно называет безопасность при исключениях, но оговаривает: в коде до C++17.
+Во второй строке имя класса написано один раз, и выражения `new` в коде нет. [Правило R.23](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#rr-make_unique) Core Guidelines советует именно эту запись. Кроме краткости, оно называет безопасность при исключениях, но оговаривает: в коде до C++17.
 
 ```cpp
 void use(std::unique_ptr<Lfo> lfo, int seed);
@@ -236,48 +268,60 @@ use(std::make_unique<Lfo>(), nextSeed());          // утечки нет
   { label: 'Learn C++ → 22.5 std::unique_ptr', description: 'Разделы о std::make_unique и о проблеме безопасности при исключениях.', target: { url: 'https://www.learncpp.com/cpp-tutorial/stdunique_ptr/' } },
 ]}>
 
-До C++17 компилятор мог вычислять аргументы вперемешку: сначала `new Lfo{}`, затем `nextSeed()`, и только потом создать `unique_ptr`. Если `nextSeed()` бросит исключение, объект уже создан, а владельца у него ещё нет. С C++17 каждый аргумент вычисляется целиком до начала следующего, и этой утечки больше нет. В `effect-plugin` на C++23 эта утечка невозможна при любой записи, и от `make_unique` остаются две пользы: в коде нет голого `new`, и с первой строки видно, кто владеет объектом.
+До C++17 компилятор мог вычислять аргументы вперемешку: сначала `new Lfo{}`, затем `nextSeed()`, и только потом создать `unique_ptr`. Если `nextSeed()` бросит исключение, объект уже создан, а владельца у него ещё нет. С C++17 каждый аргумент вычисляется целиком до начала следующего, и этой утечки больше нет. В учебном плагине на C++23 эта утечка невозможна при любой записи, и от `make_unique` остаются две пользы: в коде нет голого `new`, и с первой строки видно, кто владеет объектом.
 
 </MarginNote>
 
 ## Передача владения процессору {#juce-handover}
 
-Теперь фрагмент из `effect-plugin`. Функция создаёт параметр частоты LFO, отдаёт его процессору и возвращает ссылку на него:
+Процессору параметр нужен, чтобы хост видел его, мог автоматизировать и сохранял значение в проекте: для этого объект должен лежать в дереве параметров процессора, и удалять его должен процессор. Коду самого плагина параметр нужен, чтобы `processBlock` читал значение, а редактор подключал к нему слайдер, и для этого достаточно ссылки. Отсюда порядок действий: создать объект сразу с владельцем, запомнить ссылку на него и передать владение процессору. В итоге у каждого параметра один владелец, который удалит его ровно один раз и позже всех, кто им пользуется. Структура `Parameters` при этом получает ссылку точного типа, например `juce::AudioParameterFloat&`, и обращается к параметру без поиска по идентификатору.
+
+В учебном плагине это делают две функции из [`Parameters.cpp`](https://github.com/juce-framework/tremolo-juce-course/blob/main/complete/tremolo_plugin/source/Parameters.cpp). Вторая создаёт параметр частоты LFO, первая отдаёт его процессору и возвращает ссылку на него:
 
 ```cpp
-// Parameters.cpp
+// Parameters.cpp, внутри безымянного пространства имён
+auto& addParameterToProcessor(juce::AudioProcessor& processor, auto parameter) {
+  // parameter — unique_ptr, а *parameter — сам объект по его адресу;
+  // auto& делает result ссылкой на этот объект, без копии
+  auto& result = *parameter;
+  processor.addParameter(parameter.release());
+  return result;
+}
+
 juce::AudioParameterFloat& createModulationRateParameter(
     juce::AudioProcessor& processor) {
   constexpr auto versionHint = 1;
-  auto parameter = std::make_unique<juce::AudioParameterFloat>(
-      juce::ParameterID{"modulation.rate", versionHint}, "Modulation rate",
-      juce::NormalisableRange{modulationRateRangeStart, modulationRateRangeEnd,
-                              modulationRateInterval, modulationRateSkewFactor},
-      Effect::defaultModulationRate,
-      juce::AudioParameterFloatAttributes{}.withLabel("Hz"));
-  auto& parameterReference = *parameter;
-  processor.addParameter(parameter.release());
-  return parameterReference;
+  return addParameterToProcessor(
+      processor,
+      std::make_unique<juce::AudioParameterFloat>(
+          juce::ParameterID{"modulation.rate", versionHint}, "Modulation rate",
+          juce::NormalisableRange<float>{0.1f, 20.f, 0.01f, 0.4f}, 5.f,
+          juce::AudioParameterFloatAttributes{}.withLabel("Hz")));
 }
 ```
 
-`addParameter` принимает сырой указатель `AudioProcessorParameter*`. Что процессор станет владельцем, сказано только в документации: «The parameter object will be managed and deleted automatically by the AudioProcessor». Внутри JUCE первым делом заворачивает указатель обратно в `std::unique_ptr` и добавляет его в дерево параметров `parameterTree`. [Таблица 1](#handover-steps) прослеживает, кто владеет объектом после каждой строки.
+Передачу владения вынесли в отдельную функцию, потому что так же создаются параметры `bypassed` и `waveform`. Объявление `auto parameter` делает `addParameterToProcessor` шаблоном (abbreviated function template, C++20): тип параметра выводится из аргумента, и для `AudioParameterBool` функция вернёт `AudioParameterBool&`. Результат `make_unique` попадает в `parameter` без копии и без `std::move`: временный `unique_ptr` сразу становится параметром функции.
+
+В строке `auto& result = *parameter;` знак `&` в объявлении слева говорит, что `result` — ссылка, то есть другое имя уже существующего объекта. `*` справа — разыменование: `parameter` хранит адрес, а `*parameter` — объект по этому адресу. Без `*` получилась бы ссылка на сам `unique_ptr`, локальную переменную, которая исчезнет при выходе из функции.
+
+`addParameter` принимает сырой указатель `AudioProcessorParameter*`. Что процессор станет владельцем, сказано только в документации: «The parameter object will be managed and deleted automatically by the AudioProcessor». Внутри JUCE первым делом заворачивает указатель обратно в `std::unique_ptr` и добавляет его в дерево параметров `parameterTree`. [Таблица 2](#handover-steps) прослеживает, кто владеет объектом после каждого шага и что в это время происходит с `parameter` и `result`.
 
 <DataTable
   id="handover-steps"
-  number={1}
-  caption="Владение объектом параметра во время работы createModulationRateParameter. Объект создаётся один раз и не копируется; меняется только то, кто отвечает за его удаление."
+  number={2}
+  caption="Владение объектом параметра Modulation rate при вызове addParameterToProcessor. Объект создаётся один раз и не копируется; меняется только то, кто отвечает за его удаление. Ссылка result всё время указывает на этот объект и не владеет им."
   columns={[
-    { label: 'Строка', width: '8.5rem' },
+    { label: 'Шаг', width: '9rem' },
     { label: 'Владелец объекта' },
-    { label: 'Локальный parameter' },
+    { label: 'parameter' },
+    { label: 'result' },
   ]}
   rows={[
-    ['<code>make_unique</code>', 'локальный <code>parameter</code>', 'указывает на объект'],
-    ['<code>*parameter</code>', 'локальный <code>parameter</code>; появилась ссылка-наблюдатель <code>parameterReference</code>', 'указывает на объект'],
-    ['<code>release()</code>', 'никто: сырой указатель передаётся в функцию', 'пуст'],
-    ['<code>addParameter(…)</code>', '<code>parameterTree</code> процессора', 'пуст'],
-    ['<code>return</code>', '<code>parameterTree</code> процессора', 'уничтожен, ничего не удаляет'],
+    ['<code>make_unique</code>', '<code>parameter</code>', 'указывает на объект', 'ещё не объявлена'],
+    ['<code>auto&amp; result = *parameter</code>', '<code>parameter</code>', 'указывает на объект', 'ссылается на объект'],
+    ['<code>parameter.release()</code>', 'никто: сырой указатель передаётся в <code>addParameter</code>', 'пуст', 'ссылается на объект'],
+    ['<code>addParameter(…)</code>', '<code>parameterTree</code> процессора', 'пуст', 'ссылается на объект'],
+    ['<code>return result</code>', '<code>parameterTree</code> процессора', 'уничтожен, ничего не удаляет', 'возвращена вызывающему коду; её сохранит поле <code>Parameters::rate</code>'],
   ]}
 />
 
@@ -298,7 +342,7 @@ return *parameter;  // parameter уже пуст
 
 <CalloutCase kind="right">
 
-Взять ссылку до `release()`, как в `effect-plugin`. Сам объект после передачи жив: изменился только его владелец, поэтому ссылка остаётся верной.
+Взять ссылку до `release()`, как в `addParameterToProcessor`. Сам объект после передачи жив: изменился только его владелец, поэтому ссылка остаётся верной.
 
 </CalloutCase>
 
@@ -320,21 +364,26 @@ processor.addParameterGroup(std::move(group));
 
 ## Невладеющие ссылки {#non-owning-references}
 
-Функция вернула ссылку, и её сохраняет структура `Parameters`. Через неё `processBlock` читает текущие значения параметров:
+Функция вернула ссылку, и её сохраняет структура `Parameters`. Через эти ссылки `processBlock` читает текущие значения параметров, а редактор подключает к ним элементы управления:
 
 ```cpp
 // Parameters.h
 struct Parameters {
   explicit Parameters(juce::AudioProcessor&);
 
-  // Частота модуляции LFO эффекта
   juce::AudioParameterFloat& rate;
-  // Выходной gain, дБ
-  juce::AudioParameterFloat& outputGain;
+  juce::AudioParameterBool& bypassed;
+  juce::AudioParameterChoice& waveform;
 
   JUCE_DECLARE_NON_COPYABLE(Parameters)
   JUCE_DECLARE_NON_MOVEABLE(Parameters)
 };
+
+// Parameters.cpp
+Parameters::Parameters(juce::AudioProcessor& processor)
+    : rate{createModulationRateParameter(processor)},
+      bypassed{createBypassedParameter(processor)},
+      waveform{createWaveformParameter(processor)} {}
 ```
 
 Ссылка, а не указатель, сообщает две вещи: объект точно есть (ссылка не бывает нулевой) и `Parameters` его не удаляет. Но ссылка верна, только пока объект жив. Почему здесь это гарантировано, объясняет порядок создания и уничтожения частей процессора.
@@ -345,14 +394,14 @@ struct Parameters {
   { label: 'Learn C++ → 19.3 Destructors', description: 'Когда вызывается деструктор и что он делает.', target: { url: 'https://www.learncpp.com/cpp-tutorial/destructors/' } },
 ]}>
 
-При создании объекта класса сначала конструируется базовый класс, затем поля в порядке объявления. Уничтожение идёт в обратном порядке: тело деструктора, поля от последнего к первому, затем базовый класс ([cppreference, Destructors](https://en.cppreference.com/w/cpp/language/destructor)). Для `PluginProcessor` это значит: база `AudioProcessor` с пустым деревом параметров, затем `parameters`, чей конструктор создаёт параметры и добавляет их в дерево базы, затем `effect`. При удалении сначала уходит `effect`, затем `parameters`, чьи ссылки исчезают, ничего не удаляя, и только потом деструктор базы удаляет объекты параметров. [Рисунок 2](#lifetime-timeline) показывает эти отрезки.
+При создании объекта класса сначала конструируется базовый класс, затем поля в порядке объявления. Уничтожение идёт в обратном порядке: тело деструктора, поля от последнего к первому, затем базовый класс ([cppreference, Destructors](https://en.cppreference.com/w/cpp/language/destructor)). Для `PluginProcessor` это значит: база `AudioProcessor` с пустым деревом параметров, затем `parameters`, чей конструктор создаёт параметры и добавляет их в дерево базы, затем `tremolo` и остальные поля. При удалении сначала уходят поля, объявленные после `parameters`, затем само поле `parameters`, чьи ссылки исчезают, ничего не удаляя, и только потом деструктор базы удаляет объекты параметров. [Рисунок 2](#lifetime-timeline) показывает эти отрезки.
 
 </MarginNote>
 
 <Figure id="lifetime-timeline" number={2}
   name="Время жизни частей процессора"
   caption="Отрезки времени жизни от создания процессора (слева) до его удаления (справа). База создаётся первой и удаляется последней. Объекты параметров появляются в конструкторе parameters и удаляются в деструкторе базы. Отрезок ссылок parameters целиком лежит внутри отрезка объектов параметров, поэтому ссылки не становятся висячими. Редактор, если хост его открывает, живёт внутри всех этих отрезков."
-  alt="Пять горизонтальных полос на общей оси времени, ось подписана «создание» слева и «удаление» справа. Сверху вниз: «база AudioProcessor» — самая длинная полоса во всю ширину; «объекты параметров» — чуть короче с обеих сторон; «parameters: ссылки» — начинается одновременно с объектами параметров, но заканчивается раньше них; «effect» — внутри предыдущих; «редактор» — короткая полоса в середине."
+  alt="Пять горизонтальных полос на общей оси времени, ось подписана «создание» слева и «удаление» справа. Сверху вниз: «база AudioProcessor» — самая длинная полоса во всю ширину; «объекты параметров» — чуть короче с обеих сторон; «parameters: ссылки» — начинается одновременно с объектами параметров, но заканчивается раньше них; «tremolo» — внутри предыдущих; «редактор» — короткая полоса в середине."
 >
   <svg viewBox="0 0 400 330" style="max-width: 355px; margin-inline: auto" xmlns="http://www.w3.org/2000/svg">
     <g stroke="none">
@@ -369,7 +418,7 @@ struct Parameters {
       <text x="20" y="26">база AudioProcessor</text>
       <text x="60" y="80">объекты параметров</text>
       <text x="60" y="134">parameters: ссылки</text>
-      <text x="100" y="188">effect</text>
+      <text x="100" y="188">tremolo</text>
       <text x="150" y="242">редактор</text>
       <text x="20" y="318">создание</text>
       <text x="380" y="318" text-anchor="end">удаление</text>
@@ -381,24 +430,24 @@ struct Parameters {
 
 <Callout type="important" title="this в инициализаторе поля">
 
-Запись `Parameters parameters{*this};` передаёт процессор в конструктор поля, когда процессор ещё не достроен. Это допустимо, потому что конструктор `Parameters` вызывает только `addParameter`, метод уже созданной базы `AudioProcessor`. Если бы он через ту же ссылку вызвал методы самого `PluginProcessor`, они могли бы обратиться к полям, объявленным ниже, например к `effect`, а те ещё не созданы.
+Запись `Parameters parameters{*this};` передаёт процессор в конструктор поля, когда процессор ещё не достроен. Это допустимо, потому что конструктор `Parameters` вызывает только `addParameter`, метод уже созданной базы `AudioProcessor`. Если бы он через ту же ссылку вызвал методы самого `PluginProcessor`, они могли бы обратиться к полям, объявленным ниже, например к `tremolo`, а те ещё не созданы.
 
 </Callout>
 
 ## Граница с хостом {#host-boundary}
 
-Остаётся сам процессор. Хост загружает плагин, и обёртка формата (VST3, AU и другие) вызывает функцию, которую определяет плагин:
+Поля и параметры принадлежат процессору, а сам процессор создаёт и удаляет обёртка формата. Когда хост загружает плагин, обёртка вызывает функцию, которую определяет плагин:
 
 ```cpp
 // PluginProcessor.cpp
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() {
-  return new effect::PluginProcessor();
+  return new tremolo::PluginProcessor();
 }
 ```
 
 Здесь `new` и сырой указатель допустимы, потому что так задан интерфейс JUCE: фреймворк объявляет функцию, а плагин её определяет. Как и у `addParameter`, владение передаётся по документации, а не по типу. Указатель сразу забирает обёртка: вспомогательная функция `createPluginFilterOfType` вызывает `createPluginFilter()` и заворачивает результат в `std::unique_ptr<AudioProcessor>`. Дальше обёртка формата хранит процессор у себя и удаляет его, когда хост закрывает этот экземпляр плагина.
 
-С редактором то же самое. `createEditor()` возвращает `AudioProcessorEditor*`; обёртка получает его через `createEditorIfNeeded()` и кладёт в свой `std::unique_ptr<AudioProcessorEditor>`. Документация JUCE предупреждает, что редактор может быть удалён и создан заново в любой момент и что он всегда удаляется раньше процессора. Поэтому процессор не должен хранить указатель на редактор. В `effect-plugin` редактора пока нет: `createEditor()` возвращает `nullptr`, а `hasEditor()` — `false`.
+С редактором то же самое. `createEditor()` возвращает `AudioProcessorEditor*`; обёртка получает его через `createEditorIfNeeded()` и кладёт в свой `std::unique_ptr<AudioProcessorEditor>`. Документация JUCE предупреждает, что редактор может быть удалён и создан заново в любой момент и что он всегда удаляется раньше процессора. Поэтому процессор не должен хранить указатель на редактор, а ссылка в обратную сторону безопасна. В учебном плагине `createEditor()` возвращает `new PluginEditor(*this)`: редактор получает ссылку на процессор и через `getParameterRefs()` подключает слайдер, переключатель и список к параметрам из `Parameters`. Редактор здесь наблюдатель, и его ссылки не становятся висячими, потому что процессор и параметры живут дольше него.
 
 <MarginNote items={[
   { label: 'Learn C++ → 22.6 std::shared_ptr', description: 'Общее владение со счётчиком ссылок.', target: { url: 'https://www.learncpp.com/cpp-tutorial/stdshared_ptr/' } },
@@ -410,7 +459,7 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() {
 
 ## Самопроверка {#self-check}
 
-<SelfCheck question="Что случится, если в createModulationRateParameter заменить parameter.release() на parameter.get()?">
+<SelfCheck question="Что случится, если в addParameterToProcessor заменить parameter.release() на parameter.get()?">
 
 `get()` возвращает адрес, не отказываясь от владения. Процессор будет считать объект своим, но при выходе из функции локальный `parameter` его удалит. В дереве параметров останется висячий указатель, а при удалении процессора тот же объект будет удалён второй раз.
 
@@ -428,9 +477,9 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() {
 
 </SelfCheck>
 
-<SelfCheck question="Почему объект Effect хранится в процессоре по значению, а параметры — в куче?">
+<SelfCheck question="Почему объект Tremolo хранится в процессоре по значению, а параметры — в куче?">
 
-Тип `Effect` известен заранее и нужен ровно один, поэтому его можно сделать полем: он создаётся и удаляется вместе с процессором. Параметры разных классов базовый `AudioProcessor` хранит в общем списке через указатель на `AudioProcessorParameter`, а их число и типы определяет конкретный плагин. Такие объекты создаются по одному в куче, и владение ими передаётся процессору.
+Тип `Tremolo` известен заранее и нужен ровно один, поэтому его можно сделать полем: он создаётся и удаляется вместе с процессором. Параметры разных классов базовый `AudioProcessor` хранит в общем списке через указатель на `AudioProcessorParameter`, а их число и типы определяет конкретный плагин. Такие объекты создаются по одному в куче, и владение ими передаётся процессору.
 
 </SelfCheck>
 
@@ -441,9 +490,10 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() {
 - [Alex. Learn C++, уроки 14.10 «Constructor member initializer lists»](https://www.learncpp.com/cpp-tutorial/constructor-member-initializer-lists/) и [24.3 «Order of construction of derived classes»](https://www.learncpp.com/cpp-tutorial/order-of-construction-of-derived-classes/) — порядок инициализации полей и базовых классов; [25.1](https://www.learncpp.com/cpp-tutorial/pointers-and-references-to-the-base-class-of-derived-objects/) и [25.4](https://www.learncpp.com/cpp-tutorial/virtual-destructors-virtual-assignment-and-overriding-virtualization/) — указатели на базовый класс и виртуальный деструктор.
 - [Bjarne Stroustrup, Herb Sutter (ред.). C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines): [I.11](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#ri-raw) — не передавать владение через сырой указатель или ссылку; [R.1](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#rr-raii) — RAII; [R.11](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#rr-newdelete) — избегать явных `new` и `delete`; [R.23](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#rr-make_unique) — `make_unique` и безопасность при исключениях до C++17.
 - [cppreference. std::make_unique](https://en.cppreference.com/w/cpp/memory/unique_ptr/make_unique) — сигнатуры, появление в C++14; [Destructors](https://en.cppreference.com/w/cpp/language/destructor), раздел Destruction sequence — порядок уничтожения полей и базовых классов; [Storage duration](https://en.cppreference.com/w/cpp/language/storage_duration) — автоматическая и динамическая длительность хранения.
+- [JUCE. tremolo-juce-course](https://github.com/juce-framework/tremolo-juce-course) — учебный плагин тремоло [официального курса JUCE по разработке аудиоплагинов](https://www.wolfsoundacademy.com/juce); фрагменты из папки `complete/tremolo_plugin`: `Parameters.h`, `Parameters.cpp`, `PluginProcessor.h`, `PluginProcessor.cpp` и `PluginEditor.cpp`.
 - [JUCE. Заголовок AudioProcessor 9.0.3](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_processors_headless/processors/juce_AudioProcessor.h) и [реализация](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_processors_headless/processors/juce_AudioProcessor.cpp) — `addParameter` и владение параметрами, `addParameterGroup`, `createEditor` и предупреждения о времени жизни редактора.
 - [JUCE. AudioProcessorParameterGroup 9.0.3](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_processors_headless/processors/juce_AudioProcessorParameterGroup.h) и [AudioProcessorValueTreeState](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_processors/utilities/juce_AudioProcessorValueTreeState.h) — конструкторы группы и `ParameterLayout` с `std::unique_ptr`.
 - [JUCE. createPluginFilterOfType 9.0.3](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_plugin_client/detail/juce_CreatePluginFilter.h) — передача результата `createPluginFilter()` в `std::unique_ptr`.
 - [JUCE. juce_PlatformDefs.h 9.0.3](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_core/system/juce_PlatformDefs.h) — макросы `JUCE_DECLARE_NON_COPYABLE` и `JUCE_DECLARE_NON_MOVEABLE`.
 
-Фрагменты кода взяты из учебного плагина тремоло `effect-plugin` (JUCE 8.0.12, C++23); примеры с `Lfo` и с группой параметров проверены компиляцией (Apple clang 17, C++23).
+Фрагменты кода взяты из папки `complete` репозитория `tremolo-juce-course` (JUCE 8.0.12, C++23); примеры с `Lfo` и с группой параметров проверены компиляцией (Apple clang 17, C++23).
