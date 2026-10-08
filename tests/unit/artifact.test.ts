@@ -79,8 +79,10 @@ test('несуществующая внутренняя страница бло�
     [
       'node_modules/astro/bin/astro.mjs',
       'build',
+      '--root',
+      'tests/fixtures/artifact',
       '--config',
-      'tests/fixtures/artifact/astro.config.mjs',
+      'astro.config.mjs',
       '--outDir',
       directory,
     ],
@@ -89,4 +91,4 @@ test('несуществующая внутренняя страница бло�
   expect(build.status).not.toBe(0);
   expect(build.stdout + build.stderr).toContain('отсутствует страница или ресурс');
   expect(build.stdout + build.stderr).toContain('/audio-theory/missing/');
-}, 90_000);
+});

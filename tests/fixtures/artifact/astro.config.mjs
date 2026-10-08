@@ -1,22 +1,17 @@
-// Добавляет ошибочную внутреннюю ссылку только в контрольную сборку.
+// Минимальный сайт для контрольной сборки: одна верная и одна ошибочная страница, без контента проекта.
 import { defineConfig } from 'astro/config';
 import { fileURLToPath } from 'node:url';
-import config from '../../../astro.config.mjs';
+import { siteConfig } from '../../../src/site.config.ts';
+import buildArtifact from '../../../scripts/build-artifact.mjs';
 
 export default defineConfig({
-  ...config,
-  integrations: [
-    ...config.integrations,
-    {
-      name: 'broken-artifact-fixture',
-      hooks: {
-        'astro:config:setup': ({ injectRoute }) => {
-          injectRoute({
-            pattern: '/__test/broken/',
-            entrypoint: fileURLToPath(new URL('./broken.astro', import.meta.url)),
-          });
-        },
-      },
-    },
-  ],
+  root: fileURLToPath(new URL('.', import.meta.url)),
+  output: 'static',
+  site: siteConfig.site,
+  base: siteConfig.base,
+  trailingSlash: 'always',
+  integrations: [buildArtifact()],
+  vite: {
+    resolve: { alias: { '@': fileURLToPath(new URL('../../../src', import.meta.url)) } },
+  },
 });
