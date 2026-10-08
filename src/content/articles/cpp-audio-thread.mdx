@@ -207,7 +207,14 @@ Apple Clang из Xcode (проверено на версии 17) не прини
 
 </Callout>
 
+<MarginNote items={[
+  { label: 'C++ в плагине → virtual и override', description: 'Что значит override и зачем компилятор его проверяет.', target: { article: 'cpp-classes', anchor: 'virtual-override' } },
+  { label: 'Основы C++ для JUCE → noexcept и [[nodiscard]]', description: 'Синтаксис атрибутов в двойных квадратных скобках.', target: { article: 'cpp-basics', anchor: 'attributes' } },
+]}>
+
 В плагине атрибут ставят прямо на переопределение: `void processBlock(juce::AudioBuffer<float>&, juce::MidiBuffer&) [[clang::nonblocking]] override;`. Флаг передают и компилятору, и компоновщику:
+
+</MarginNote>
 
 ```cmake
 target_compile_options(TremoloCoursePlugin PRIVATE -fsanitize=realtime)

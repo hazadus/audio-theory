@@ -1,0 +1,13 @@
+{
+  "id": "track-programmer-cpp-language",
+  "date": "2026-10-08",
+  "order": 7,
+  "type": "updated",
+  "track": "programmer",
+  "items": [
+    {
+      "text": "В этап «C++ для аудио» добавлены две статьи об основах языка",
+      "target": { "track": "programmer", "anchor": "stage-cpp" }
+    }
+  ]
+}

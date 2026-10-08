@@ -364,7 +364,14 @@ processor.addParameterGroup(std::move(group));
 
 ## Невладеющие ссылки {#non-owning-references}
 
+<MarginNote items={[
+  { label: 'Основы C++ для JUCE → Ссылка T&', description: 'Чем ссылка отличается от указателя и копии.', target: { article: 'cpp-basics', anchor: 'reference' } },
+  { label: 'C++ в плагине → Конструкторы и инициализация', description: 'Список инициализации: единственный способ создать поле-ссылку.', target: { article: 'cpp-classes', anchor: 'constructors' } },
+]}>
+
 Функция вернула ссылку, и её сохраняет структура `Parameters`. Через эти ссылки `processBlock` читает текущие значения параметров, а редактор подключает к ним элементы управления:
+
+</MarginNote>
 
 ```cpp
 // Parameters.h

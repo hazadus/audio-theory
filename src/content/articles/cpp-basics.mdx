@@ -1,0 +1,535 @@
+---
+slug: cpp-basics
+title: 'Основы C++ для JUCE: сборка, типы, функции и указатели'
+question: Что нужно знать о синтаксисе C++, чтобы читать код плагина на JUCE?
+topic: cpp
+tags: [cpp-juce, plugins]
+prerequisites:
+  - label: 'Learn C++ → 1.1 Statements and the structure of a program'
+    description: Что такое инструкция, функция и точка входа программы.
+    target: { url: 'https://www.learncpp.com/cpp-tutorial/statements-and-the-structure-of-a-program/' }
+related:
+  - label: 'C++ в плагине: классы, шаблоны и время жизни'
+    description: 'Продолжение: классы, конструкторы, наследование, шаблоны, RAII и макросы JUCE.'
+    target: { article: cpp-classes }
+  - label: 'Кто владеет объектом: std::make_unique и время жизни в плагине JUCE'
+    description: Куча, new и delete, std::unique_ptr и передача владения процессору.
+    target: { article: cpp-ownership }
+  - label: 'C++ в аудиопотоке: выделение памяти, общие объекты и инструменты JUCE'
+    description: Зачем noexcept и почему в processBlock нельзя выделять память.
+    target: { article: cpp-audio-thread }
+  - label: Аудиоданные → Примеры на C++ и JUCE
+    description: Как устроены AudioProcessor, prepareToPlay и processBlock.
+    target: { article: audio-data, anchor: juce-examples }
+---
+
+import Callout from '@/components/Callout.astro';
+import DataTable from '@/components/DataTable.astro';
+import MarginNote from '@/components/MarginNote.astro';
+import SelfCheck from '@/components/SelfCheck.astro';
+
+Код учебного плагина тремоло из [официального курса JUCE](https://github.com/juce-framework/tremolo-juce-course) написан на C++23 и местами выглядит непривычно: макросы вместо констант, пустые функции для «использования» параметра, `static_cast` на каждом шагу. Эта статья разбирает язык ровно в том объёме, который нужен, чтобы читать этот код и дописывать его. Каждое понятие показано на строке из курса, а за подробностями ведут заметки на полях со ссылками на учебник [Learn C++](https://www.learncpp.com/) и справочник cppreference.
+
+Фрагменты взяты из готовой версии плагина в папке [`complete`](https://github.com/juce-framework/tremolo-juce-course/tree/main/complete) репозитория `tremolo-juce-course` (JUCE 8.0.12). Короткие учебные примеры без JUCE проверены компиляцией: Apple clang 17, режим C++23.
+
+C++ развивается стандартами: C++98, C++11, C++14, C++17, C++20, C++23. Рядом с возможностями, которые появились после 1998 года, в скобках указан стандарт. Курс собирается в режиме C++23, поэтому доступно всё перечисленное.
+
+Классы, конструкторы, наследование, шаблоны и время жизни объектов разобраны во второй части, [«C++ в плагине: классы, шаблоны и время жизни»](/cpp-classes/). Владение объектами в куче — в отдельной статье [«Кто владеет объектом»](/cpp-ownership/), а правила для аудиопотока — в [«C++ в аудиопотоке»](/cpp-audio-thread/).
+
+## Как код попадает в компилятор {#build}
+
+<MarginNote items={[
+  { label: 'Learn C++ → 2.10 Introduction to the preprocessor', description: 'Что делает препроцессор, директивы #include и #define.', target: { url: 'https://www.learncpp.com/cpp-tutorial/introduction-to-the-preprocessor/' } },
+  { label: 'Learn C++ → 2.11 Header files', description: 'Зачем нужны заголовки и как подключать их в разные файлы.', target: { url: 'https://www.learncpp.com/cpp-tutorial/header-files/' } },
+]}>
+
+Перед компиляцией каждый файл проходит через препроцессор (preprocessor). Он обрабатывает строки, которые начинаются с `#`, и работает с текстом: типов и областей видимости он не знает. Директива `#include` вставляет содержимое другого файла на место директивы, как копирование текста. Модулей в духе Python или Go здесь нет.
+
+</MarginNote>
+
+```cpp
+#include <juce_core/juce_core.h>   // угловые скобки: системные пути и пути библиотек
+#include "tremolo_plugin.h"        // кавычки: сначала рядом с текущим файлом
+```
+
+Файлы стандартной библиотеки подключаются без расширения: `<vector>`, `<memory>`, `<ranges>`, `<cmath>`. Заголовок, который может попасть в одну единицу компиляции дважды, начинается с `#pragma once`. Строка гарантирует, что файл будет вставлен один раз. Раньше для этого писали «стражи включения» `#ifndef`, `#define`, `#endif`; `#pragma once` в стандарт не входит, но поддерживается всеми основными компиляторами.
+
+<MarginNote items={[
+  { label: 'Learn C++ → 2.8 Programs with multiple code files', description: 'Как несколько .cpp-файлов собираются в одну программу.', target: { url: 'https://www.learncpp.com/cpp-tutorial/programs-with-multiple-code-files/' } },
+  { label: 'Learn C++ → 2.7 Forward declarations and definitions', description: 'Объявление и определение функции.', target: { url: 'https://www.learncpp.com/cpp-tutorial/forward-declarations/' } },
+]}>
+
+Объявления («что существует») принято писать в заголовок `.h`, определения («как работает») — в файл реализации `.cpp`. В `PluginProcessor.h` объявлен метод `getName()`, а его тело находится в `PluginProcessor.cpp`. Каждый `.cpp` вместе со всем, что он подключил, компилируется отдельно и называется единицей трансляции (translation unit). Затем компоновщик (linker) собирает единицы в один бинарный файл.
+
+</MarginNote>
+
+### Модуль JUCE и «unity build» {#unity-build}
+
+В курсе есть странность: заголовки из `include/Tremolo/` не подключают JUCE, а файлы из `source/` не подключают свои заголовки. Это работает благодаря формату модуля JUCE. Заголовок `tremolo_plugin.h` подключает JUCE, стандартную библиотеку и все заголовки проекта в нужном порядке:
+
+```cpp
+// tremolo_plugin.h
+#include <juce_dsp/juce_dsp.h>
+#include <vector>
+#include <memory>
+// ...
+#include "include/Tremolo/Parameters.h"
+#include "include/Tremolo/Tremolo.h"
+#include "include/Tremolo/PluginProcessor.h"
+```
+
+А `tremolo_plugin.cpp` подключает этот заголовок и затем вставляет через `#include` все файлы реализации:
+
+```cpp
+// tremolo_plugin.cpp
+#include "tremolo_plugin.h"
+#include <TremoloPluginAssets.h>
+#include "source/LfoVisualizer.cpp"
+#include "source/Parameters.cpp"
+#include "source/PluginProcessor.cpp"
+```
+
+В итоге весь плагин компилируется как одна единица трансляции. Такой приём называют unity build. Из него следуют два правила. Порядок `#include` в `tremolo_plugin.h` важен: класс должен быть объявлен выше места, где его используют, поэтому `Tremolo.h` стоит раньше `PluginProcessor.h`, который хранит поле типа `Tremolo`. А новый заголовок или `.cpp` нужно добавить в `tremolo_plugin.h` или `tremolo_plugin.cpp`, иначе компилятор его не увидит.
+
+<Callout type="note" title="Блок BEGIN_JUCE_MODULE_DECLARATION">
+
+В начале `tremolo_plugin.h` стоит комментарий с полями `ID`, `version`, `dependencies` и другими. Это не синтаксис C++, а формат модуля JUCE. При настройке сборки команда `juce_add_module` в CMake читает заголовок как текст и разбирает строки `ключ: значение`. Компилятор потом видит просто комментарий.
+
+</Callout>
+
+### Макросы из CMake {#cmake-macros}
+
+```cpp
+const juce::String PluginProcessor::getName() const {
+  return TREMOLO_PLUGIN_NAME;
+}
+```
+
+`TREMOLO_PLUGIN_NAME` нигде в C++ не определён. Его передаёт компилятору CMake: в `CMakeLists.txt` курса стоит `TREMOLO_PLUGIN_NAME="${TREMOLO_PLUGIN_NAME}"` в `target_compile_definitions`, что равносильно флагу `-DTREMOLO_PLUGIN_NAME="Tremolo"`. Препроцессор заменит имя строкой `"Tremolo"`.
+
+## Комментарии {#comments}
+
+```cpp
+// однострочный комментарий
+
+/* многострочный
+   комментарий */
+
+/** Комментарий документации (Doxygen).
+ *  @code ... @endcode — пример кода внутри документации
+ */
+```
+
+Стандарт языка знает только `//` и `/* */`. Форма `/** */` обычный комментарий для компилятора, но генератор документации Doxygen и среды разработки считают её описанием следующего объявления. Команды `@param`, `@return`, `@code` относятся к разметке Doxygen. Так устроено описание класса `BypassTransitionSmoother` в курсе. Комментарий после закрывающей скобки, например `}  // namespace tremolo`, подсказывает, какой блок закрыт; это соглашение стиля, и `clang-format` умеет его проверять.
+
+## Типы и литералы {#types}
+
+<MarginNote items={[
+  { label: 'Learn C++ → 4.1 Introduction to fundamental data types', description: 'Встроенные типы: целые, вещественные, bool, char.', target: { url: 'https://www.learncpp.com/cpp-tutorial/introduction-to-fundamental-data-types/' } },
+  { label: 'Learn C++ → 4.8 Floating point numbers', description: 'Точность float и double и ошибки округления.', target: { url: 'https://www.learncpp.com/cpp-tutorial/floating-point-numbers/' } },
+]}>
+
+[Таблица 1](#builtin-types) показывает встроенные типы, которые чаще всего встречаются в курсе. Отсчёты аудио хранятся во `float`: для звука хватает точности, а данных вдвое меньше, чем с `double`. Частота дискретизации и время — в `double`. Подробнее о представлении отсчётов — в статье [«Аудиоданные»](/audio-data/).
+
+</MarginNote>
+
+<DataTable
+  id="builtin-types"
+  number={1}
+  caption="Встроенные типы в коде курса. Размеры int, float и double указаны для типичных платформ: стандарт задаёт только минимальные диапазоны."
+  columns={[
+    { label: 'Тип', width: '5rem' },
+    { label: 'Что это' },
+    { label: 'Пример из курса' },
+  ]}
+  rows={[
+    ['<code>int</code>', 'целое со знаком, обычно 32 бита', '<code>int expectedMaxFramesPerBlock</code>'],
+    ['<code>float</code>', 'число с плавающей точкой, обычно 32 бита', '<code>juce::AudioBuffer&lt;float&gt;</code>'],
+    ['<code>double</code>', 'число с плавающей точкой, обычно 64 бита', '<code>double sampleRate</code>'],
+    ['<code>bool</code>', '<code>true</code> или <code>false</code>', '<code>bool acceptsMidi() const</code>'],
+    ['<code>void</code>', 'значения нет', '<code>void releaseResources()</code>'],
+  ]}
+/>
+
+### std::size_t {#size-t}
+
+`size_t` не встроенный тип и не ключевое слово. Это имя беззнакового целого типа, выбранного реализацией. Полное имя `std::size_t` объявлено в заголовке `<cstddef>`. Тип предназначен для размеров объектов и индексов контейнеров стандартной библиотеки. В курсе он нужен на границе с JUCE: библиотека возвращает количество отсчётов как `int`, а `std::vector` и `std::span` ждут `size_t`.
+
+```cpp
+lfoSamples.resize(4u * static_cast<size_t>(expectedMaxFramesPerBlock));
+```
+
+Преобразование само знак не проверяет: отрицательное число, превращённое в `size_t`, станет огромным положительным. Поэтому оно записано явно, о чём подробнее в разделе про [`static_cast`](#static-cast).
+
+### Литералы {#literals}
+
+<MarginNote items={[
+  { label: 'Learn C++ → 5.2 Literals', description: 'Типы числовых и строковых литералов и суффиксы.', target: { url: 'https://www.learncpp.com/cpp-tutorial/literals/' } },
+]}>
+
+Тип числового литерала задаёт его запись: `10` — `int`, `1.0` — `double`, `1.0f` и `0.4f` — `float`, `4u` — `unsigned int`, `1uz` (C++23) — `size_t`; последний встречается в `StridedQueue.h`. Суффикс `f` важен: без него литерал `0.4` имеет тип `double`, и при передаче в `float` компилятор предупредит о сужении. В курсе его пишут даже у нуля: `0.f` — то же, что `0.0f`.
+
+</MarginNote>
+
+Строка в кавычках, например `"Tremolo"`, не объект-строка, как в Python, а массив `char` с нулевым байтом на конце. Объекты строк — это классы `std::string` и `juce::String`; из литерала они создаются неявно. Сырой литерал `R"(...)"` (C++11) отключает экранирование и сохраняет переносы строк, с префиксом `u8` — в кодировке UTF-8. Так в тестах курса записан ожидаемый JSON:
+
+```cpp
+const juce::String expectedOutput =
+    u8R"({
+  "__version__": 1,
+  "pluginName": "Tremolo",
+  "modulationRateHz": 10.0,
+  "bypassed": true,
+  "modulationWaveform": "Triangle"
+})";
+```
+
+Нулевой указатель обозначает `nullptr` (C++11). Раньше писали `NULL` или `0`, но это целое число, и оно путалось с перегрузками функций. У `nullptr` собственный тип, и приводится он только к указателям: `setLookAndFeel(nullptr)` в деструкторе редактора.
+
+## auto, const и constexpr {#variables}
+
+<MarginNote items={[
+  { label: 'Learn C++ → 10.8 Type deduction for objects using the auto keyword', description: 'Как компилятор выводит тип и что отбрасывает auto.', target: { url: 'https://www.learncpp.com/cpp-tutorial/type-deduction-for-objects-using-the-auto-keyword/' } },
+]}>
+
+`auto` (C++11) просит компилятор вывести тип переменной из выражения справа. Это не динамическая типизация: тип остаётся статическим и фиксируется при компиляции. Особенность в том, что `auto` отбрасывает ссылку и `const` верхнего уровня. Чтобы получить ссылку, пишут `auto&`; без амперсанда будет копия.
+
+</MarginNote>
+
+```cpp
+for (auto& lfo : lfos) {   // ссылка на каждый осциллятор в массиве
+  lfo.reset();
+}
+```
+
+Если в этом цикле написать `auto lfo`, `reset()` сработает на копии осциллятора, а исходный не изменится.
+
+`const` запрещает менять объект после инициализации. В курсе почти всё неизменяемое помечено `const`:
+
+```cpp
+const auto inputSample = buffer.getSample(channelIndex, frameIndex);
+const auto outputSample = modulationValue * inputSample;
+```
+
+<MarginNote items={[
+  { label: 'Learn C++ → 12.9 Pointers and const', description: 'Указатель на константу и константный указатель.', target: { url: 'https://www.learncpp.com/cpp-tutorial/pointers-and-const/' } },
+]}>
+
+С указателями `const` читают справа налево. `const auto* const name = "text";` означает: `name` — константный указатель (второй `const`) на константные символы (первый). Первый `const` запрещает менять символы через указатель, второй — перенаправлять сам указатель.
+
+</MarginNote>
+
+<MarginNote items={[
+  { label: 'Learn C++ → 5.6 Constexpr variables', description: 'Константы времени компиляции и отличие от const.', target: { url: 'https://www.learncpp.com/cpp-tutorial/constexpr-variables/' } },
+]}>
+
+`constexpr` (C++11) требует, чтобы значение было известно во время компиляции. Его можно использовать там, где нужна константа: размер массива, параметр шаблона. `constexpr` подразумевает `const`. В курсе так записаны, например, `static constexpr auto modulationDepth = 0.4f;` в `Tremolo` и `constexpr auto versionHint = 1;` при создании параметров.
+
+</MarginNote>
+
+## Операторы и приведение типов {#operators}
+
+Условный оператор `условие ? значение_если_да : значение_если_нет` — выражение, а не инструкция. В курсе так выбирают целевое значение:
+
+```cpp
+const auto target = bypass ? 1.0f : 0.0f;
+bypassButton.setButtonText(bypassButton.getToggleState() ? "Bypassed" : "Bypass");
+```
+
+<MarginNote items={[
+  { label: 'Learn C++ → 6.8 Logical operators', description: 'Операторы &&, || и !, ленивое вычисление.', target: { url: 'https://www.learncpp.com/cpp-tutorial/logical-operators/' } },
+]}>
+
+Логические операторы `&&` («и»), `||` («или») и `!` («не») вычисляются лениво: если результат ясен по левой части, правая не выполняется. В `isBusesLayoutSupported` оператор `!=` сравнивает два объекта `juce::AudioChannelSet`; он работает потому, что класс сам определил этот оператор (см. [перегрузку операторов](/cpp-classes/#operator-overloading)).
+
+</MarginNote>
+
+### static_cast {#static-cast}
+
+<MarginNote items={[
+  { label: 'Learn C++ → 10.6 Explicit type conversion (casting) and static_cast', description: 'Явное преобразование типов и его риски.', target: { url: 'https://www.learncpp.com/cpp-tutorial/explicit-type-conversion-casting-and-static-cast/' } },
+  { label: 'cppreference → static_cast', description: 'Все допустимые преобразования static_cast.', target: { url: 'https://en.cppreference.com/w/cpp/language/static_cast' } },
+]}>
+
+`static_cast<T>(x)` — ключевое слово C++: явное преобразование выражения `x` к типу `T`. Угловые скобки похожи на шаблон, но это встроенная операция языка, и подключать для неё ничего не нужно. Компилятор проверяет, что такой переход между типами разрешён: `static_cast<int>(3.7)` допустим и даёт `3`, а превратить указатель в несвязанный тип указателя нельзя. Сохранение значения при этом не гарантируется: возможна потеря дробной части, сужение или превращение отрицательного числа в беззнаковое.
+
+</MarginNote>
+
+```cpp
+dryBuffer.setSize(static_cast<int>(spec.numChannels),
+                  static_cast<int>(spec.maximumBlockSize));
+```
+
+В курсе `static_cast` встречается часто, потому что строгие предупреждения (см. [раздел о предупреждениях](#warnings)) запрещают молча смешивать знаковые и беззнаковые числа. JUCE хранит размеры как `int`, а стандартная библиотека ждёт `size_t`. Приведение в стиле C, `(int)x`, допускает более широкий набор преобразований и хуже показывает намерение, поэтому в современном коде его избегают. Другие виды приведений в курсе не используются: `const_cast` снимает `const`, `reinterpret_cast` переинтерпретирует биты, `dynamic_cast` проверяет тип в иерархии классов во время выполнения.
+
+## Пространства имён {#namespaces}
+
+<MarginNote items={[
+  { label: 'Learn C++ → 7.2 User-defined namespaces and the scope resolution operator', description: 'Объявление пространств имён и оператор ::.', target: { url: 'https://www.learncpp.com/cpp-tutorial/user-defined-namespaces-and-the-scope-resolution-operator/' } },
+]}>
+
+Пространство имён (namespace) группирует имена, чтобы они не конфликтовали с чужими. Код курса лежит в `tremolo`, JUCE — в `juce`, стандартная библиотека — в `std`. Оператор разрешения области `::` отделяет имя от области, где оно объявлено. В отличие от пакетов Go, пространство имён не связано с файлами: его можно открывать в любом числе файлов, содержимое объединяется.
+
+</MarginNote>
+
+```cpp
+juce::AudioBuffer<float>          // класс AudioBuffer из пространства juce
+juce::dsp::AudioBlock<float>      // вложенное пространство juce::dsp
+std::views::iota(0, n)            // функция из std::views
+Tremolo::LfoWaveform::sine        // значение перечисления внутри класса
+PluginProcessor::getName()        // метод класса в определении вне класса
+```
+
+Пространство имён можно вложить в другое: `juce::dsp` — часть `juce`. Запись `namespace tremolo::assets { ... }` (C++17) равна двум вложенным блокам. Поиск имени идёт изнутри наружу: в `PluginEditor.cpp` написано `assets::Background_png`, хотя сгенерированные данные лежат в `tremolo::assets`. Код редактора находится внутри `namespace tremolo`, поэтому `assets` находится относительно него.
+
+### Анонимное пространство имён {#unnamed-namespace}
+
+<MarginNote items={[
+  { label: 'Learn C++ → 7.14 Unnamed and inline namespaces', description: 'Внутренняя связь и анонимные пространства имён.', target: { url: 'https://www.learncpp.com/cpp-tutorial/unnamed-and-inline-namespaces/' } },
+  { label: 'Learn C++ → 7.6 Internal linkage', description: 'Что значит «имя видно только в этом файле».', target: { url: 'https://www.learncpp.com/cpp-tutorial/internal-linkage/' } },
+]}>
+
+Блок `namespace { ... }` без имени прячет объявления внутри единицы трансляции. В курсе так устроены вспомогательные функции в `Parameters.cpp`: `addParameterToProcessor` и три функции `create…Parameter` нужны только этому файлу. У таких имён внутренняя связь (internal linkage): другой `.cpp` может объявить собственную функцию с тем же именем, и компоновщик их не спутает.
+
+</MarginNote>
+
+В этом проекте нужна оговорка. Из-за unity build все файлы `source/*.cpp` составляют одну единицу трансляции, поэтому анонимные пространства из разных файлов объединяются. Две вспомогательные функции с одинаковым именем в разных файлах всё равно будут конфликтовать. В заголовке такое пространство создаёт отдельные копии в каждой единице, поэтому для общего интерфейса оно не подходит.
+
+## Функции {#functions}
+
+Тип результата пишется перед именем. В определении вне класса имя метода уточняют именем класса. Компилятор должен увидеть объявление функции до её вызова, поэтому и нужны заголовки:
+
+```cpp
+// PluginProcessor.h — объявление (сигнатура)
+bool acceptsMidi() const override;
+
+// PluginProcessor.cpp — определение (тело)
+bool PluginProcessor::acceptsMidi() const {
+  return false;
+}
+```
+
+В объявлении имена параметров можно опустить, важны только типы: `void processBlock(juce::AudioBuffer<float>&, juce::MidiBuffer&);`. Если параметр в теле не нужен, имя можно опустить и в определении. Для заготовок курса, где код пока не написан, JUCE предлагает вызвать `juce::ignoreUnused(index);`: пустая функция «использует» аргумент, и компилятор не предупреждает о неиспользуемой переменной. Стандартная альтернатива (C++17) — атрибут `[[maybe_unused]] int index`.
+
+<MarginNote items={[
+  { label: 'Learn C++ → 11.5 Default arguments', description: 'Значения параметров по умолчанию и правила их указания.', target: { url: 'https://www.learncpp.com/cpp-tutorial/default-arguments/' } },
+]}>
+
+Параметр может иметь значение по умолчанию: `explicit BypassTransitionSmoother(double crossfadeLengthSecondsValue = 0.01)`. Если аргумент не передан, подставится `0.01`. В отличие от Python значение вычисляется при каждом вызове, поэтому ловушки с изменяемым значением по умолчанию нет. Задают его только в объявлении.
+
+</MarginNote>
+
+### Перегрузка {#overloading}
+
+<MarginNote items={[
+  { label: 'Learn C++ → 11.1 Introduction to function overloading', description: 'Функции с одним именем и разными параметрами.', target: { url: 'https://www.learncpp.com/cpp-tutorial/introduction-to-function-overloading/' } },
+]}>
+
+В C++ несколько функций могут иметь одно имя и разные списки параметров; компилятор выбирает подходящую по типам аргументов. У каждой перегрузки своё тело. У `juce::AudioProcessor` два метода `processBlock`: для `AudioBuffer<float>&` и для `AudioBuffer<double>&`.
+
+</MarginNote>
+
+```cpp
+int twice(int value) { return value * 2; }
+double twice(double value) { return value * 2.0; }
+
+// twice(3) вызовет первое тело, twice(3.5) — второе.
+```
+
+В TypeScript перегрузка сигнатур устроена иначе: несколько записей описывают допустимые вызовы, а реализация одна и разветвляется внутри. В C++ ветвление выполняет компилятор при выборе функции.
+
+### inline и цепочки вызовов {#inline-chaining}
+
+<MarginNote items={[
+  { label: 'Learn C++ → 7.9 Inline functions and variables', description: 'Почему inline разрешает определения в заголовках.', target: { url: 'https://www.learncpp.com/cpp-tutorial/inline-functions-and-variables/' } },
+]}>
+
+В тестах курса функция `getFileOutputPath` определена в заголовке `TestUtils.h` со словом `inline`. Заголовок подключается в несколько `.cpp`, и без `inline` в каждой единице трансляции появилось бы своё определение: компоновщик выдал бы ошибку «multiple definition». `inline` разрешает одинаковые определения в разных единицах и велит оставить одно. Исторически слово означало совет «встроить тело в место вызова», но сейчас главный смысл именно такой. Методы, тело которых написано прямо в классе, как в `Tremolo.h`, неявно `inline`.
+
+</MarginNote>
+
+Та же функция показывает цепочку вызовов: каждый метод возвращает объект, у которого вызывается следующий.
+
+```cpp
+return juce::File::getSpecialLocation(
+           juce::File::SpecialLocationType::currentExecutableFile)
+    .getParentDirectory()
+    .getChildFile(fileName)
+    .getFullPathName()
+    .toStdString();
+```
+
+Так же построены `BusesProperties().withInput(...).withOutput(...)` в конструкторе процессора. Шаблон называют «строитель» (builder).
+
+## Значение, ссылка и указатель {#references-pointers}
+
+Это главное отличие C++ от Python, Go и TypeScript: автор кода выбирает, как передаётся объект. В Python и TypeScript объект всегда передаётся по ссылке на него. В Go структура по умолчанию копируется целиком. В C++ копируется любой объект, даже большой класс, если не сказано иное.
+
+<MarginNote items={[
+  { label: 'Learn C++ → 12.5 Pass by lvalue reference', description: 'Передача по ссылке и её отличия от копирования.', target: { url: 'https://www.learncpp.com/cpp-tutorial/pass-by-lvalue-reference/' } },
+  { label: 'Learn C++ → 12.6 Pass by const lvalue reference', description: 'Передача только для чтения без копии.', target: { url: 'https://www.learncpp.com/cpp-tutorial/pass-by-const-lvalue-reference/' } },
+]}>
+
+[Таблица 2](#passing-ways) сводит способы передачи с примерами из курса. Правило большого пальца: маленький тип (`int`, `double`, `bool`) передают по значению; входной объект — как `const T&`; объект, который функция меняет, — как `T&`.
+
+</MarginNote>
+
+<DataTable
+  id="passing-ways"
+  number={2}
+  caption="Способы передачи параметров в коде курса. Копия большого объекта, например аудиобуфера, расходует время и память, поэтому буфер передают по ссылке."
+  columns={[
+    { label: 'Способ', width: '8rem' },
+    { label: 'Что получает функция' },
+    { label: 'Пример из курса' },
+  ]}
+  rows={[
+    ['по значению', 'копию аргумента', '<code>void setBypass(bool bypass) noexcept</code>'],
+    ['<code>T&amp;</code>', 'другое имя того же объекта, его можно менять', '<code>void process(juce::AudioBuffer&lt;float&gt;&amp; buffer) noexcept</code>'],
+    ['<code>const T&amp;</code>', 'другое имя объекта, менять нельзя', '<code>void prepare(const juce::dsp::ProcessSpec&amp; spec)</code>'],
+    ['<code>T*</code>', 'адрес объекта, может быть пустым', '<code>juce::AudioProcessorEditor* createEditor() override</code>'],
+  ]}
+/>
+
+### Ссылка T& {#reference}
+
+Ссылка — другое имя существующего объекта, изменения через неё меняют оригинал. В отличие от указателя, ссылка обязана быть инициализирована при объявлении, не бывает пустой, не может быть перенаправлена на другой объект и используется как обычная переменная: `buffer.getNumSamples()`, а не `buffer->getNumSamples()`. Структура `Parameters` в курсе хранит параметры как ссылки: `juce::AudioParameterFloat& rate;`.
+
+### Указатель T* {#pointer}
+
+<MarginNote items={[
+  { label: 'Learn C++ → 12.7 Introduction to pointers', description: 'Адрес объекта, разыменование и указатель как переменная.', target: { url: 'https://www.learncpp.com/cpp-tutorial/introduction-to-pointers/' } },
+  { label: 'Learn C++ → 12.8 Null pointers', description: 'nullptr и проверки перед разыменованием.', target: { url: 'https://www.learncpp.com/cpp-tutorial/null-pointers/' } },
+]}>
+
+Указатель хранит адрес объекта. Он может быть `nullptr` и может указывать на другой объект после переприсваивания. Доступ к члену через указатель записывают `->`, разыменование — `*p`. Тип `const void*` — указатель на байты неизвестного типа, которые нельзя менять. Так JUCE передаёт плагину сохранённое состояние: `void setStateInformation(const void* data, int sizeInBytes)`. Объекта «массив с длиной» здесь нет, поэтому размер идёт отдельным параметром.
+
+</MarginNote>
+
+Метод `buffer.getReadPointer(0)` возвращает `const float*` — адрес первого отсчёта канала. Такой указатель вместе с длиной можно превратить в `std::span` (см. [шаблоны](/cpp-classes/#templates)).
+
+<Callout type="note" title="Два значения символа &">
+
+В типе `PluginProcessor& p` амперсанд означает «ссылка». В выражении `&p` он берёт адрес, и результат — указатель. В конструкторе редактора `AudioProcessorEditor(&p)` базовый класс хочет указатель, а у конструктора есть ссылка, поэтому берётся адрес. Так же `*` в типе означает «указатель», а в выражении — «разыменовать».
+
+</Callout>
+
+Кто отвечает за удаление объекта, на который указывает указатель, — отдельный вопрос. Он разобран в статье [«Кто владеет объектом»](/cpp-ownership/).
+
+## Цикл по диапазону {#loops}
+
+<MarginNote items={[
+  { label: 'Learn C++ → 16.8 Range-based for loops (for-each)', description: 'Цикл for (x : коллекция) и выбор между копией и ссылкой.', target: { url: 'https://www.learncpp.com/cpp-tutorial/range-based-for-loops-for-each/' } },
+]}>
+
+Цикл `for (элемент : коллекция)` (C++11) похож на `for x in xs` в Python и `for _, x := range xs` в Go. Он работает с любым объектом, у которого есть `begin()` и `end()`. Запись `const auto x` копирует каждый элемент, и для чисел это верно. Для больших объектов пишут `const auto& x`, чтобы не копировать, и `auto& x`, чтобы менять элементы на месте.
+
+</MarginNote>
+
+Вместо классического `for (int i = 0; i < n; ++i)` курс использует `std::views::iota` (C++20, заголовок `<ranges>`): ленивую последовательность целых чисел в полуоткрытом интервале `[начало, конец)`, как `range(a, b)` в Python. Массив в памяти не создаётся, а индекс можно объявить `const`.
+
+```cpp
+for (const auto frameIndex : std::views::iota(0, buffer.getNumSamples())) {
+  for (const auto channelIndex : std::views::iota(0, buffer.getNumChannels())) {
+    const auto inputSample = buffer.getSample(channelIndex, frameIndex);
+    buffer.setSample(channelIndex, frameIndex, modulationValue * inputSample);
+  }
+}
+```
+
+Оба аргумента `iota` должны быть одного типа. `getNumSamples()` возвращает `int`, поэтому начало записано как `0`, а не `0u`.
+
+## noexcept и [[nodiscard]] {#attributes}
+
+<MarginNote items={[
+  { label: 'Learn C++ → 27.9 Exception specifications and noexcept', description: 'Что обещает noexcept и что происходит при нарушении обещания.', target: { url: 'https://www.learncpp.com/cpp-tutorial/exception-specifications-and-noexcept/' } },
+  { label: 'C++ в аудиопотоке → Два потока плагина', description: 'Какие вызовы идут из аудиопотока и почему они должны быть быстрыми.', target: { article: 'cpp-audio-thread', anchor: 'two-threads' } },
+]}>
+
+`noexcept` (C++11) обещает, что функция не выбрасывает исключений. Если исключение всё же вылетит, программа завершится через `std::terminate`. Компилятор может сгенерировать более компактный код, а стандартные контейнеры учитывают `noexcept` при выборе между копированием и перемещением. В аудиокоде это ещё и документация: методы, которые вызываются из аудиопотока (`process`, `setBypass`, `reset`), не должны бросать исключения, как и выделять память или блокироваться.
+
+</MarginNote>
+
+```cpp
+void setBypass(bool bypass) noexcept { /* ... */ }
+[[nodiscard]] bool isTransitioning() const noexcept { /* ... */ }
+```
+
+Атрибут `[[nodiscard]]` (C++17) просит компилятор предупредить, если результат функции проигнорирован: вызывать `isTransitioning();` и не использовать ответ бессмысленно. Двойные квадратные скобки — стандартный синтаксис атрибутов (C++11), отличный от `[]` индексирования и от захвата лямбды. Атрибут `nodiscard` — не ключевое слово вроде `const`, а имя атрибута. Другие атрибуты: `[[maybe_unused]]`, `[[fallthrough]]`, `[[likely]]`. Правила описаны в [стандарте](https://eel.is/c++draft/dcl.attr.grammar).
+
+## Точка входа плагина {#entry-point}
+
+У плагина нет функции `main()`. Вместо неё JUCE ищет функцию с фиксированным именем, которая создаёт процессор:
+
+```cpp
+}  // namespace tremolo
+
+// This creates new instances of the plugin.
+// This function definition must be in the global namespace.
+juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() {
+  return new tremolo::PluginProcessor();
+}
+```
+
+Функция определена вне `namespace tremolo`, в глобальном пространстве: внутри пространства её полное имя стало бы `tremolo::createPluginFilter`, и JUCE её бы не нашёл. Макрос `JUCE_CALLTYPE` задаёт соглашение о вызове, то есть порядок передачи аргументов. Оно нужно, чтобы плагин и хост одинаково понимали вызов; на Windows это `__stdcall`, на других платформах макрос пуст.
+
+Выражение `new T(...)` создаёт объект в куче и возвращает указатель на него. Владение переходит обёртке плагина JUCE, и она позже вызовет `delete`. Возвращается указатель на базовый класс `juce::AudioProcessor*`, хотя создан `tremolo::PluginProcessor`: объект наследника можно использовать везде, где ждут базовый класс (см. [наследование](/cpp-classes/#inheritance)). В собственном коде голые `new` и `delete` обычно не пишут: для этого есть `std::make_unique`, подробнее — в [«Кто владеет объектом»](/cpp-ownership/#make-unique).
+
+## Предупреждения компилятора {#warnings}
+
+Файл `cmake/CompilerWarnings.cmake` включает строгий набор предупреждений, и он объясняет несколько особенностей стиля курса. [Таблица 3](#warning-flags) связывает флаги с тем, как они видны в коде.
+
+<DataTable
+  id="warning-flags"
+  number={3}
+  caption="Флаги предупреждений GCC и Clang из CompilerWarnings.cmake и приёмы кода, которые они вызвали."
+  columns={[
+    { label: 'Флаг', width: '10rem' },
+    { label: 'Что проверяет' },
+    { label: 'Как это видно в коде' },
+  ]}
+  rows={[
+    ['<code>-Wunused</code>', 'неиспользуемые переменные и параметры', '<code>juce::ignoreUnused(index)</code>'],
+    ['<code>-Wconversion</code>, <code>-Wsign-conversion</code>, <code>-Wshorten-64-to-32</code>', 'неявные преобразования со знаком и сужением', '<code>static_cast&lt;size_t&gt;(...)</code>, <code>static_cast&lt;int&gt;(...)</code>'],
+    ['<code>-Woverloaded-virtual</code>', 'виртуальная функция базы скрыта перегрузкой', '<code>using AudioProcessor::processBlock;</code>'],
+    ['<code>-Wreorder</code>', 'порядок списка инициализации не совпадает с порядком полей', 'порядок полей в <code>BypassTransitionSmoother</code>'],
+    ['<code>-Wshadow</code>', 'локальное имя скрывает внешнее', 'параметр конструктора назван <code>crossfadeLengthSecondsValue</code>, а не <code>crossfadeLengthSeconds</code>'],
+    ['<code>-Wfloat-equal</code>', 'сравнение вещественных чисел через <code>==</code>', 'в тестах <code>EXPECT_NEAR</code> и <code>EXPECT_FLOAT_EQ</code>'],
+    ['<code>-Wzero-as-null-pointer-constant</code>', '<code>0</code> вместо <code>nullptr</code>', '<code>setLookAndFeel(nullptr)</code>'],
+    ['<code>-Wno-ignored-qualifiers</code>', 'отключено: бессмысленный <code>const</code> у возвращаемого значения', '<code>const juce::String getName() const override</code>'],
+  ]}
+/>
+
+Предупреждения проверяют не только стиль. Смешение знаковых и беззнаковых чисел, неправильный порядок инициализации и скрытая перегрузка виртуального метода приводят к ошибкам, которые трудно искать при выполнении.
+
+<SelfCheck question="Какой тип у литерала 0.4 без суффикса и почему в курсе пишут 0.4f?">
+
+Литерал `0.4` имеет тип `double`. При передаче в параметр типа `float` Clang с флагом `-Wconversion` предупредит о сужении `double` → `float`. Суффикс `f` делает литерал `float` сразу, и преобразования нет.
+
+</SelfCheck>
+
+<SelfCheck question="Что случится, если в цикле for (auto lfo : lfos) вызвать lfo.reset()?">
+
+`auto` отбрасывает ссылку, поэтому `lfo` — копия элемента массива. `reset()` сработает на копии, а осцилляторы в `lfos` не изменятся. Чтобы менять элементы на месте, нужна запись `for (auto& lfo : lfos)`.
+
+</SelfCheck>
+
+<SelfCheck question="Зачем в tremolo_plugin.h порядок директив #include важен, а в обычном проекте с отдельными .cpp-файлами это не так?">
+
+В курсе плагин собирается как одна единица трансляции: все `.cpp` вставляются в `tremolo_plugin.cpp` после общего заголовка. Компилятор читает текст сверху вниз и должен увидеть объявление класса раньше его использования, поэтому `Tremolo.h` идёт раньше `PluginProcessor.h`. В проекте, где каждый `.cpp` подключает нужные заголовки сам, порядок между файлами задаёт не общий заголовок, а директивы каждого файла.
+
+</SelfCheck>
+
+<SelfCheck question="Почему createPluginFilter определена вне namespace tremolo?">
+
+JUCE находит функцию по фиксированному имени `createPluginFilter` в глобальном пространстве. Внутри `namespace tremolo` её полное имя было бы `tremolo::createPluginFilter`, и хост-обёртка JUCE её не нашла бы.
+
+</SelfCheck>
+
+## Источники {#sources}
+
+- [Alex. Learn C++](https://www.learncpp.com/): главы 2 «C++ Basics: Functions and Files» (уроки [2.7](https://www.learncpp.com/cpp-tutorial/forward-declarations/), [2.8](https://www.learncpp.com/cpp-tutorial/programs-with-multiple-code-files/), [2.10](https://www.learncpp.com/cpp-tutorial/introduction-to-the-preprocessor/), [2.11](https://www.learncpp.com/cpp-tutorial/header-files/), [2.12](https://www.learncpp.com/cpp-tutorial/header-guards/)), 4, 5, 7, 10, 11, 12 и 16 — препроцессор, заголовки, типы, литералы, пространства имён, приведение типов, перегрузка, ссылки, указатели и циклы.
+- [cppreference. static_cast](https://en.cppreference.com/w/cpp/language/static_cast) — допустимые преобразования; [std::size_t](https://en.cppreference.com/w/cpp/types/size_t) — определение и заголовок `<cstddef>`; [noexcept specifier](https://en.cppreference.com/w/cpp/language/noexcept_spec) и [nodiscard](https://en.cppreference.com/w/cpp/language/attributes/nodiscard) — семантика и стандарт появления.
+- [Проект стандарта C++ (eel.is/c++draft)](https://eel.is/c++draft/): [support.types.layout](https://eel.is/c++draft/support.types.layout) — `size_t`, [namespace.unnamed](https://eel.is/c++draft/namespace.unnamed) — анонимное пространство имён, [dcl.attr.grammar](https://eel.is/c++draft/dcl.attr.grammar) — синтаксис атрибутов.
+- [Doxygen. Documenting the code](https://www.doxygen.nl/manual/docblocks.html) — формы комментариев документации.
+- [JUCE. tremolo-juce-course](https://github.com/juce-framework/tremolo-juce-course) — фрагменты кода из папки `complete`: `tremolo_plugin.h`, `tremolo_plugin.cpp`, `PluginProcessor.h`, `PluginProcessor.cpp`, `Parameters.cpp`, `Tremolo.h`, `BypassTransitionSmoother.h`, `cmake/CompilerWarnings.cmake`, `CMakeLists.txt` и `test/source/TestUtils.h`.

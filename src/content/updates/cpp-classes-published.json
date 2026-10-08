@@ -1,0 +1,22 @@
+{
+  "id": "cpp-classes-published",
+  "date": "2026-10-08",
+  "order": 6,
+  "type": "new",
+  "article": "cpp-classes",
+  "summary": "Классы и всё, что вокруг них, на коде плагина тремоло: структуры и классы, конструкторы и список инициализации, наследование и override, шаблоны и enum class, RAII, запрет копирования, перегрузка операторов, макросы JUCE, тесты на GoogleTest и лямбды. Заметки на полях ведут на уроки Learn C++.",
+  "items": [
+    {
+      "text": "Наследование и виртуальные методы AudioProcessor",
+      "target": { "article": "cpp-classes", "anchor": "inheritance" }
+    },
+    {
+      "text": "Шаблоны, std::span и enum class",
+      "target": { "article": "cpp-classes", "anchor": "templates" }
+    },
+    {
+      "text": "Макросы jassert и запрета копирования",
+      "target": { "article": "cpp-classes", "anchor": "juce-macros" }
+    }
+  ]
+}

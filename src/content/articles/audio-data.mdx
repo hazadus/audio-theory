@@ -287,7 +287,14 @@ const double sampleRate = 48000.0;
 const double durationMs = 1000.0 * frames / sampleRate; // 10
 ```
 
+<MarginNote items={[
+  { label: 'Основы C++ для JUCE → std::size_t', description: 'Что такое size_t и почему JUCE возвращает размеры как int.', target: { article: 'cpp-basics', anchor: 'size-t' } },
+  { label: 'Основы C++ для JUCE → static_cast', description: 'Явное преобразование типов и его риски.', target: { article: 'cpp-basics', anchor: 'static-cast' } },
+]}>
+
 Для моно заменяем первый аргумент конструктора на 1. Получаем 480 кадров, 480 отдельных значений, 1920 байт при 4-байтовом `float` и те же 10 мс. Приведение к `std::size_t` сделано до умножения: счётчик объёма вычисляется в типе, предназначенном для размеров объектов. Для любых расчётов времени частота должна быть положительной.
+
+</MarginNote>
 
 ### Записать три кадра стерео {#juce-frames}
 
