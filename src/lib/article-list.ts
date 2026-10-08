@@ -7,11 +7,16 @@ import type { HomeArticle } from '@/lib/home';
 import { resolveReadingMinutes } from '@/lib/reading-time';
 import { loadUpdates } from '@/lib/update-list';
 
+/** Запись списка с тегами статьи: их выводит страница тега. */
+export interface ListedArticle extends HomeArticle {
+  tags: readonly string[];
+}
+
 /**
  * Все статьи с датой для карточек и сортировки: последнее дополнение из журнала, иначе публикация
  * (запись «Новое» или первый коммит файла). Без даты — ошибка, кроме режима черновика.
  */
-export async function loadArticleList(): Promise<HomeArticle[]> {
+export async function loadArticleList(): Promise<ListedArticle[]> {
   const entries = await getCollection('articles');
   assertUniqueSlugs(entries);
   const allowDraft = import.meta.env.DEV || process.env[allowDraftEnv] === '1';
@@ -23,6 +28,7 @@ export async function loadArticleList(): Promise<HomeArticle[]> {
       title: data.title,
       question: data.question,
       topic: data.topic,
+      tags: data.tags,
       updated: resolveArticleDates(
         gitPublished,
         updates.filter(({ article }) => article === data.slug),

@@ -78,15 +78,20 @@ export function countByTopic(articles: HomeArticle[]): Record<TopicFilter, numbe
   return counts;
 }
 
-/** «1 статья», «2 статьи», «5 статей». */
-export function articlesLabel(n: number): string {
+/** Число со словом в нужной форме: `forms` — для 1, 2–4 и 5 («статья», «статьи», «статей»). */
+export function pluralRu(n: number, forms: readonly [string, string, string]): string {
   const mod10 = n % 10;
   const mod100 = n % 100;
   const word =
     mod10 === 1 && mod100 !== 11
-      ? 'статья'
+      ? forms[0]
       : mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)
-        ? 'статьи'
-        : 'статей';
+        ? forms[1]
+        : forms[2];
   return `${n} ${word}`;
+}
+
+/** «1 статья», «2 статьи», «5 статей». */
+export function articlesLabel(n: number): string {
+  return pluralRu(n, ['статья', 'статьи', 'статей']);
 }

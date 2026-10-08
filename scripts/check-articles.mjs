@@ -74,7 +74,7 @@ try {
   for (let i = 1; i <= 6; i++) {
     await writeFile(
       join(manyDir, `a${i}.mdx`),
-      `---\nslug: many-${i}\ntitle: Статья ${i}\nquestion: Вопрос ${i}?\ntopic: conv\ntags: [проверка]\nrelated:\n  - label: Другая\n    description: Связь.\n    target: { article: many-${i === 1 ? 2 : 1} }\n---\n\nТекст.\n\n## Источники {#sources}\n\n- [Источник](https://example.com/${i})\n`,
+      `---\nslug: many-${i}\ntitle: Статья ${i}\nquestion: Вопрос ${i}?\ntopic: conv\ntags: [samples]\nrelated:\n  - label: Другая\n    description: Связь.\n    target: { article: many-${i === 1 ? 2 : 1} }\n---\n\nТекст.\n\n## Источники {#sources}\n\n- [Источник](https://example.com/${i})\n`,
     );
   }
   const manyOut = join(temporary, 'many');
@@ -117,7 +117,7 @@ try {
   for (let i = 1; i <= 3; i++) {
     await writeFile(
       join(threeDir, `t${i}.mdx`),
-      `---\nslug: three-${i}\ntitle: Статья\nquestion: Вопрос?\ntopic: ${topicsOfThree[i - 1]}\ntags: [проверка]\nrelated:\n  - label: Другая\n    description: Связь.\n    target: { article: three-${i === 1 ? 2 : 1} }\n---\n\nТекст.\n\n## Источники {#sources}\n\n- [Источник](https://example.com/${i})\n`,
+      `---\nslug: three-${i}\ntitle: Статья\nquestion: Вопрос?\ntopic: ${topicsOfThree[i - 1]}\ntags: [samples]\nrelated:\n  - label: Другая\n    description: Связь.\n    target: { article: three-${i === 1 ? 2 : 1} }\n---\n\nТекст.\n\n## Источники {#sources}\n\n- [Источник](https://example.com/${i})\n`,
     );
   }
   const threeOut = join(temporary, 'three');
@@ -140,6 +140,32 @@ try {
   assert.equal(materialsHtml(emptyList).count, '0 статей');
   assert.match(emptyList, /Материалов пока нет\./);
   assert.doesNotMatch(await readFile(join(emptyOut, 'index.html'), 'utf8'), /class="all"/);
+
+  // Теги: страницы только у использованных тегов, число статей, статьи тега и совместные теги.
+  assert.deepEqual((await readdir(join(validDir, 'tags'))).sort(), [
+    'aliasing',
+    'index.html',
+    'samples',
+  ]);
+  const tagIndex = await readFile(join(validDir, 'tags', 'index.html'), 'utf8');
+  assert.match(tagIndex, /2 тега\. У статьи может быть несколько тегов\./);
+  assert.match(
+    tagIndex,
+    /href="\/tags\/samples\/"[\s\S]*?Отсчёты<\/span>\s*<span class="count"[^>]*>2</,
+  );
+  const samplesTag = await readFile(join(validDir, 'tags', 'samples', 'index.html'), 'utf8');
+  assert.match(samplesTag, /<h1[^>]*>[\s\S]*Отсчёты<\/h1>/);
+  assert.match(samplesTag, /2 статьи\./);
+  assert.deepEqual(
+    [...samplesTag.matchAll(/<a class="title"[^>]*href="\/([^/"]+)\/"/g)]
+      .map(([, slug]) => slug)
+      .sort(),
+    ['test-sampling', 'test-wave'],
+  );
+  assert.match(samplesTag, /Часто вместе с этим тегом[\s\S]*href="\/tags\/aliasing\/"/);
+  const aliasingTag = await readFile(join(validDir, 'tags', 'aliasing', 'index.html'), 'utf8');
+  assert.match(aliasingTag, /1 статья\./);
+  assert.doesNotMatch(await readFile(join(emptyOut, 'tags', 'index.html'), 'utf8'), /class="row"/);
 
   // Оглавление: H2/H3 в порядке документа, H4 нет; якоря остались при любых русских названиях.
   const sampling = await readFile(join(validDir, 'test-sampling', 'index.html'), 'utf8');
@@ -169,7 +195,13 @@ try {
   assert.match(sampling, /<a href="\/materials\/"[^>]*aria-current="page"[^>]*>Материалы<\/a>/);
   assert.match(sampling, /<h1[^>]*>Служебная статья<\/h1>/);
   assert.match(sampling, /Опубликовано <time datetime="[^"]+"[^>]*>\d{1,2} [а-я]+ \d{4}<\/time>/);
-  assert.match(sampling, /проверка<\/li>\s*<li[^>]*>образец/);
+  // Теги — ссылки на страницы тегов в порядке frontmatter, в конце «Все теги».
+  const tagRow = sampling.match(/<ul[^>]*aria-label="Теги"[^>]*>([\s\S]*?)<\/ul>/)?.[1] ?? '';
+  assert.deepEqual(
+    [...tagRow.matchAll(/<a[^>]*href="([^"]+)"/g)].map(([, href]) => href),
+    ['/tags/samples/', '/tags/aliasing/', '/tags/'],
+  );
+  assert.match(tagRow, /Отсчёты[\s\S]*Алиасинг[\s\S]*Все теги/);
   assert.match(sampling, /<aside[^>]*aria-label="Что нужно знать заранее"/);
   assert.match(sampling, /<h2[^>]*>Связанные темы<\/h2>/);
   assert.match(sampling, /<h2 id="sources"/);
@@ -188,6 +220,10 @@ try {
   const prefixedSampling = await readFile(join(prefixedDir, 'test-sampling', 'index.html'), 'utf8');
   assert.match(prefixedSampling, /<a href="\/audio-theory\/"[^>]*>Главная<\/a>/);
   assert.match(prefixedSampling, /href="\/audio-theory\/test-wave\/"/);
+  assert.match(prefixedSampling, /href="\/audio-theory\/tags\/samples\/"/);
+  const prefixedTag = await readFile(join(prefixedDir, 'tags', 'samples', 'index.html'), 'utf8');
+  assert.match(prefixedTag, /href="\/audio-theory\/test-sampling\/"/);
+  assert.match(prefixedTag, /href="\/audio-theory\/tags\/aliasing\/"/);
   const rootWave = await readFile(join(validDir, 'test-wave', 'index.html'), 'utf8');
   assert.match(rootWave, /href="\/test-sampling\/#aliasing"/);
 
@@ -226,6 +262,7 @@ try {
   const failures = [
     ['duplicate-slug', /Повторный slug «same»/],
     ['unknown-topic', /topic/],
+    ['unknown-tag', /неизвестный тег «missing-tag»/],
     ['empty-field', /title/],
     ['bad-reading', /readingMinutes/],
     ['duplicate-anchor', /Повторный якорь «same»/],
@@ -263,7 +300,7 @@ try {
   const realArticles = (
     await readdir(join(root, 'src/content/articles'), { recursive: true })
   ).filter((file) => file.endsWith('.mdx')).length;
-  // HTML-страниц: главная, материалы, визуализации, обновления, каталог треков, глоссарий, «О проекте», 404 и статьи; Pagefind
+  // HTML-страниц: главная, материалы, визуализации, обновления, каталог треков, глоссарий, «О проекте», 404, статьи и теги; Pagefind
   // считает их все, а фрагменты строит только для страниц с `data-pagefind-body` (проверяется ниже).
   // К ним добавляются страницы треков и годов журнала: по одной на трек и непустой год.
   const updateYears = new Set(
@@ -276,7 +313,15 @@ try {
   const realTracks = (await readdir(join(root, 'src/content/tracks'))).filter((file) =>
     file.endsWith('.json'),
   ).length;
-  const pages = 8 + realArticles + realTracks + updateYears;
+  // Страница всех тегов и по одной на каждый тег, который есть хотя бы у одной статьи.
+  const usedTags = new Set();
+  for (const file of await readdir(join(root, 'src/content/articles'))) {
+    const tags = readFileSync(join(root, 'src/content/articles', file), 'utf8').match(
+      /^tags: \[(.*)\]$/m,
+    )?.[1];
+    for (const tag of tags?.split(',') ?? []) usedTags.add(tag.trim());
+  }
+  const pages = 8 + realArticles + realTracks + updateYears + 1 + usedTags.size;
   assert.match(
     published.stdout + published.stderr,
     new RegExp(`Артефакт проверен: ${pages} страниц; индекс Pagefind: ${pages} страниц`),
@@ -286,10 +331,11 @@ try {
   assert.equal(fragments.length, 3 + realArticles);
   console.log('Коллекция статей: маршруты из slug — OK');
   console.log(
-    'Повторный slug, неизвестная группа, пустые поля и readingMinutes блокируют сборку — OK',
+    'Повторный slug, неизвестная группа или тег, пустые поля и readingMinutes блокируют сборку — OK',
   );
   console.log('Главная: пустые группы скрыты, лимит четырёх карточек и «Все N» — OK');
   console.log('Список материалов: 0, 3 и 6 статей, равные даты, пустые темы — OK');
+  console.log('Теги: ссылки в статье, страницы использованных тегов, счётчики и префикс — OK');
   console.log('Layout статьи: крошки, метаданные, предварительные знания и связанные темы — OK');
   console.log('Якоря {#anchor}, оглавление H2/H3 и ссылки на разделы под префиксом — OK');
   console.log('Повторный, неверный и неуместный якорь блокируют сборку — OK');

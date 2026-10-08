@@ -1,5 +1,6 @@
 // Схема frontmatter статьи по контракту docs/spec.md и проверка уникальности slug.
 import { z } from 'astro/zod';
+import { tagIds } from '@/data/tags';
 import { topicIds } from '@/data/topics';
 import { text, target } from '@/lib/links';
 
@@ -11,7 +12,15 @@ export const articleSchema = z.strictObject({
   title: text,
   question: text,
   topic: z.enum(topicIds),
-  tags: z.array(text).min(1),
+  tags: z
+    .array(
+      z.enum(tagIds, {
+        error: (issue) =>
+          `неизвестный тег «${String(issue.input)}»: добавьте его в src/data/tags.ts`,
+      }),
+    )
+    .min(1)
+    .refine((list) => new Set(list).size === list.length, 'повторный тег'),
   prerequisites: z.array(link).optional(),
   related: z.array(link).min(1),
   readingMinutes: z.number().int().positive().optional(),

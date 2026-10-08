@@ -133,7 +133,7 @@ describe('assertValidArticles', () => {
   });
 
   it('не блокирует сборку из-за рекомендательных лимитов', () => {
-    const tags = ['а', 'б', 'в', 'г', 'д', 'е'];
+    const tags = ['samples', 'aliasing', 'spectrum', 'phase', 'decibels', 'loudness'];
     const callouts = '<Callout type="note" title="Врезка">Текст.</Callout>\n\n'.repeat(8);
     const code = `\`\`\`python\n${'x = 1\n'.repeat(60)}\`\`\``;
     expect(

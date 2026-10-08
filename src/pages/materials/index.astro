@@ -7,6 +7,7 @@ import { formatUpdatedDate } from '@/lib/format-date';
 import { buildFirstSteps, firstStepMeta } from '@/lib/first-steps';
 import { compareByUpdated } from '@/lib/home';
 import { articlesLabel, countByTopic } from '@/lib/materials';
+import { tagsIndexHref } from '@/lib/tags';
 import { withBase } from '@/lib/urls';
 
 // Без JS остаётся этот порядок: все статьи по дате обновления.
@@ -34,22 +35,27 @@ const sorts = [
     <h1>Все материалы</h1>
 
     <div class="controls" data-controls hidden>
-      <div class="chips" role="group" aria-label="Фильтр по темам">
-        {chips.map((chip) => (
-          <button
-            type="button"
-            class="chip"
-            data-topic-chip={chip.id}
-            aria-pressed={chip.id === 'all' ? 'true' : 'false'}
-            aria-disabled={counts[chip.id as keyof typeof counts] === 0 ? 'true' : undefined}
-          >
-            <span class="check">
-              <Icon name="check" size={14} />
-            </span>
-            {chip.label}
-            <span class="chip-count">{counts[chip.id as keyof typeof counts]}</span>
-          </button>
-        ))}
+      <div class="filters">
+        <div class="chips" role="group" aria-label="Фильтр по темам">
+          {chips.map((chip) => (
+            <button
+              type="button"
+              class="chip"
+              data-topic-chip={chip.id}
+              aria-pressed={chip.id === 'all' ? 'true' : 'false'}
+              aria-disabled={counts[chip.id as keyof typeof counts] === 0 ? 'true' : undefined}
+            >
+              <span class="check">
+                <Icon name="check" size={14} />
+              </span>
+              {chip.label}
+              <span class="chip-count">{counts[chip.id as keyof typeof counts]}</span>
+            </button>
+          ))}
+        </div>
+        <a class="tags-link" href={withBase(tagsIndexHref)}>
+          Все теги
+        </a>
       </div>
       <div class="sort">
         <span class="sort-label" id="sort-label">
@@ -212,6 +218,21 @@ const sorts = [
 
   .controls[hidden] {
     display: none;
+  }
+
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-4);
+    min-width: 0;
+  }
+
+  .tags-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    font-size: 0.875rem;
   }
 
   .chips {

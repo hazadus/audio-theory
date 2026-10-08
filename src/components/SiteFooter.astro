@@ -1,7 +1,8 @@
 ---
-// Подвал: название, описание, «О проекте», «Обновления», «RSS», «Предложить тему» и ссылка на GitHub.
+// Подвал: название, описание, «О проекте», «Обновления», «RSS», «Теги», «Предложить тему» и ссылка на GitHub.
 import Icon from '@/components/Icon.astro';
 import { siteConfig } from '@/site.config';
+import { tagsIndexHref } from '@/lib/tags';
 import { feedPath } from '@/lib/updates-feed';
 import { withBase } from '@/lib/urls';
 ---
@@ -21,6 +22,9 @@ import { withBase } from '@/lib/urls';
       </li>
       <li>
         <a href={withBase(feedPath)}>RSS</a>
+      </li>
+      <li>
+        <a href={withBase(tagsIndexHref)}>Теги</a>
       </li>
       <li>
         <a href={withBase('/about/#propose')}>Предложить тему</a>

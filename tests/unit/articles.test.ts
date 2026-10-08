@@ -8,7 +8,7 @@ const valid = {
   title: 'Дискретизация',
   question: 'Как непрерывный сигнал становится набором чисел?',
   topic: 'digital',
-  tags: ['дискретизация'],
+  tags: ['samples'],
   related: [
     {
       label: 'Квантование',
@@ -57,6 +57,8 @@ describe('articleSchema', () => {
     ['пустой вопрос', { question: '' }],
     ['пустой список тегов', { tags: [] }],
     ['пустой тег', { tags: [''] }],
+    ['тег вне словаря', { tags: ['дискретизация'] }],
+    ['повторный тег', { tags: ['samples', 'samples'] }],
     ['пустой список связанных', { related: [] }],
     ['нулевое readingMinutes', { readingMinutes: 0 }],
     ['отрицательное readingMinutes', { readingMinutes: -2 }],

@@ -1,0 +1,226 @@
+---
+// Страница тега: заголовок «# тег», описание и число статей, статьи по дате обновления с их остальными тегами,
+// затем теги, которые чаще всего встречаются вместе с этим.
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import TagList from '@/components/TagList.astro';
+import { tags } from '@/data/tags';
+import { loadArticleList } from '@/lib/article-list';
+import { formatUpdatedDate } from '@/lib/format-date';
+import { compareByUpdated } from '@/lib/home';
+import { articlesLabel } from '@/lib/materials';
+import { countTags, relatedTags, tagsIndexHref } from '@/lib/tags';
+import { withBase } from '@/lib/urls';
+
+export async function getStaticPaths() {
+  const articles = (await loadArticleList()).sort(compareByUpdated);
+  // Страницу получают только теги, которые есть хотя бы у одной статьи.
+  return countTags(articles, tags).map((tag) => ({
+    params: { id: tag.id },
+    props: {
+      tag,
+      articles: articles.filter((article) => article.tags.includes(tag.id)),
+      related: relatedTags(tag.id, articles, tags),
+    },
+  }));
+}
+
+const { tag, articles, related } = Astro.props;
+const lead = `${tag.description} ${articlesLabel(tag.count)}.`;
+const title = new Map<string, string>(tags.map((item) => [item.id, item.title]));
+const otherTags = (list: readonly string[]) =>
+  list.filter((id) => id !== tag.id).map((id) => ({ id, title: title.get(id)! }));
+---
+
+<BaseLayout title={`Тег «${tag.title}»`} description={tag.description}>
+  <main id="content" data-pagefind-ignore data-tag-page={tag.id}>
+    <header class="head">
+      <nav class="breadcrumbs" aria-label="Хлебные крошки">
+        <ol>
+          <li>
+            <a href={withBase(tagsIndexHref)}>Теги</a>
+          </li>
+          <li aria-hidden="true">/</li>
+          <li>{tag.title}</li>
+        </ol>
+      </nav>
+      <h1>
+        <span class="hash" aria-hidden="true">
+          #&nbsp;
+        </span>
+        {tag.title}
+      </h1>
+      <p class="lead">{lead}</p>
+    </header>
+
+    <ul class="articles">
+      {articles.map((article) => (
+        <li>
+          <a class="title" href={withBase(`/${article.slug}/`)}>
+            {article.title}
+          </a>
+          <span class="question">{article.question}</span>
+          <div class="meta">
+            <span>
+              {article.updated ? `Обновлено ${formatUpdatedDate(article.updated)}` : 'Черновик'} ·{' '}
+              {article.readingMinutes} мин
+            </span>
+            {otherTags(article.tags).length > 0 && (
+              <TagList tags={otherTags(article.tags)} label="Другие теги" size="sm" />
+            )}
+          </div>
+        </li>
+      ))}
+    </ul>
+
+    <section class="related" aria-labelledby={related.length > 0 ? 'related-tags' : undefined}>
+      {related.length > 0 && (
+        <>
+          <h2 id="related-tags">Часто вместе с этим тегом</h2>
+          <TagList tags={related} label="Часто вместе с этим тегом" />
+        </>
+      )}
+      <a class="all" href={withBase(tagsIndexHref)}>
+        Все теги
+      </a>
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-7);
+    width: min(var(--container-max), 100% - 2 * var(--page-gutter));
+    margin: 0 auto;
+    padding-top: 28px;
+    padding-bottom: var(--space-10);
+    font-family: var(--font-ui);
+  }
+
+  @media (width >= 600px) {
+    main {
+      padding-top: 56px;
+    }
+  }
+
+  .head {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 760px;
+  }
+
+  .breadcrumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--color-text-muted);
+    font-size: 14px;
+  }
+
+  .breadcrumbs a {
+    color: var(--color-text-muted);
+  }
+
+  h1 {
+    margin: 0;
+    font-family: var(--font-text);
+    font-size: var(--text-4xl);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: var(--tracking-tight);
+    text-wrap: balance;
+  }
+
+  .hash {
+    color: var(--color-text-muted);
+    font-weight: 400;
+  }
+
+  .lead {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-family: var(--font-text);
+    font-size: var(--text-lg);
+    line-height: 1.5;
+    text-wrap: pretty;
+  }
+
+  .articles {
+    max-width: 880px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: var(--border-width) solid var(--color-border);
+  }
+
+  .articles > li {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-5) 0;
+    border-bottom: var(--border-width) solid var(--color-border);
+  }
+
+  .title {
+    align-self: flex-start;
+    color: var(--color-text);
+    font-family: var(--font-text);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    line-height: 1.3;
+    text-decoration: none;
+    text-wrap: balance;
+  }
+
+  .title:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+
+  .question {
+    color: var(--color-text-muted);
+    font-family: var(--font-text);
+    font-size: 16px;
+    line-height: 1.5;
+    text-wrap: pretty;
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px var(--space-3);
+    color: var(--color-text-muted);
+    font-size: 13px;
+  }
+
+  .related {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    max-width: 880px;
+  }
+
+  h2 {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-family: var(--font-ui);
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .all {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    min-height: 44px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+</style>

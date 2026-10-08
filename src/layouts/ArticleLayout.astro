@@ -2,10 +2,12 @@
 // Страница статьи: хлебные крошки, заголовок, вопрос, метаданные, оглавление, тело, источники и связанные темы.
 // Раздел «Источники» — часть тела MDX; предварительные знания и связанные темы берутся из frontmatter.
 import Icon from '@/components/Icon.astro';
+import TagList from '@/components/TagList.astro';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import type { ArticleData } from '@/lib/articles';
 import type { TocItem } from '@/lib/headings';
 import { resolveTarget } from '@/lib/links';
+import { tags } from '@/data/tags';
 import { topics } from '@/data/topics';
 import type { ArticleDates } from '@/lib/article-dates';
 import type { SeriesPosition } from '@/lib/first-steps';
@@ -47,6 +49,8 @@ const {
 } = Astro.props;
 const group = topics.find((topic) => topic.id === data.topic)!;
 const prerequisites = data.prerequisites ?? [];
+// Порядок тегов — как во frontmatter; схема уже отклонила неизвестные.
+const articleTags = data.tags.map((id) => tags.find((tag) => tag.id === id)!);
 
 const links = (items: typeof data.related) =>
   items.map((item) => ({
@@ -104,12 +108,8 @@ const links = (items: typeof data.related) =>
             <Icon name="clock" size={16} />
             {readingMinutes} мин чтения
           </span>
-          <ul class="tags" aria-label="Теги">
-            {data.tags.map((tag) => (
-              <li>{tag}</li>
-            ))}
-          </ul>
         </div>
+        <TagList tags={articleTags} label="Теги" all />
         {articleTracks.length > 0 && (
           <p class="in-tracks" data-in-tracks data-pagefind-ignore>
             <span>В треках:</span>
@@ -258,7 +258,6 @@ const links = (items: typeof data.related) =>
   }
 
   .breadcrumbs ol,
-  .tags,
   .toc ol,
   .prerequisites ul,
   .related ul {
@@ -492,20 +491,6 @@ const links = (items: typeof data.related) =>
     display: flex;
     align-items: center;
     gap: 5px;
-  }
-
-  .tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    font-size: var(--text-xs);
-  }
-
-  .tags li {
-    padding: 2px var(--space-2);
-    border: var(--border-width) solid var(--color-border);
-    border-radius: var(--radius-sm);
-    color: var(--color-text);
   }
 
   /* Смартфон и планшет: оглавление — рамка под метаданными, раскрывается кнопкой-summary. Без JS открыто. */
