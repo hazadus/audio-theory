@@ -39,14 +39,14 @@ import Term from '@/components/Term.astro';
 
 ## Исходный и обработанный сигнал {#dry-and-wet}
 
-<Term id="plugin" firstMention define>Плагин</Term> — программный модуль эффекта или инструмента. Он работает внутри DAW или другой программы, которую называют хостом (host): хост передаёт ему блоки отсчётов и забирает результат. Распространённые форматы плагинов — VST3, Audio Unit (AU) и CLAP. Эффект, включённый последовательно в путь дорожки, называют <Term id="insert-effect" firstMention define>вставкой</Term>: весь звук дорожки проходит через него.
+<Term id="plugin" firstMention define>Плагин</Term> — программный модуль эффекта или инструмента. Он работает внутри DAW или другой программы, которую называют хостом (host): хост передаёт ему блоки отсчётов и забирает результат. Распространённые форматы плагинов — VST3, Audio Unit (AU) и CLAP. Эффект, включённый последовательно в путь дорожки, называют <Term id="insert-effect" firstMention define>вставкой</Term>: весь звук дорожки проходит через него. На одной дорожке может стоять несколько вставок подряд. Они образуют цепочку: выход одного плагина идёт на вход следующего.
 
 <Term id="dry-signal" firstMention define>Исходный сигнал</Term> — то, что приходит на вход эффекта. <Term id="wet-signal" firstMention define>Обработанный сигнал</Term> — то, что эффект из него делает: отражения ревербератора, повторы задержки, сжатый звук компрессора. По-английски dry и wet буквально означают «сухой» и «мокрый». В ревербераторе разница слышна сразу, а у компрессора wet — это тот же звук с изменённой динамикой.
 
 <Figure id="dry-wet-structure" number={1}
   name="Смешивание dry и wet внутри плагина"
-  caption="Вход разветвляется: верхняя ветвь проходит обработку и даёт wet, нижняя остаётся dry. Каждая ветвь умножается на свой коэффициент, затем они складываются. Коэффициенты m и 1 − m соответствуют линейному закону; другие законы дают иные пары."
-  alt="Слева вход. Он раздваивается: верхняя линия идёт в блок «обработка», выход блока подписан wet и попадает в умножитель с коэффициентом m. Нижняя линия, подписанная dry, идёт прямо в умножитель с коэффициентом 1 − m. Оба умножителя соединены с сумматором, от которого стрелка ведёт к выходу."
+  caption="Вход плагина — это и есть dry. Он разветвляется: верхняя ветвь проходит обработку и даёт wet, нижняя идёт без изменений. Каждая ветвь умножается на свой коэффициент, затем они складываются. Коэффициенты m и 1 − m соответствуют линейному закону; другие законы дают иные пары."
+  alt="Слева вход. Он раздваивается, и обе линии подписаны dry: верхняя идёт в блок «обработка», выход блока подписан wet и попадает в умножитель с коэффициентом m. Нижняя линия идёт прямо в умножитель с коэффициентом 1 − m. Оба умножителя соединены с сумматором, от которого стрелка ведёт к выходу."
 >
   <svg viewBox="0 0 400 220" style="max-width: 355px; margin-inline: auto" xmlns="http://www.w3.org/2000/svg">
     <g fill="none" stroke="var(--chart-axis)" stroke-width="2">
@@ -64,7 +64,7 @@ import Term from '@/components/Term.astro';
     <circle cx="60" cy="110" r="4" fill="var(--chart-axis)" />
     <g fill="var(--chart-label)" font-size="18" text-anchor="middle">
       <text x="155" y="56">обработка</text>
-      <text x="240" y="40">wet</text><text x="160" y="160">dry</text>
+      <text x="77" y="40">dry</text><text x="240" y="40">wet</text><text x="160" y="160">dry</text>
       <text x="275" y="24">m</text><text x="275" y="206">1 − m</text>
       <text x="8" y="100" text-anchor="start">вход</text><text x="392" y="100" text-anchor="end">выход</text>
     </g>
@@ -140,9 +140,15 @@ $$
   { label: 'Звук в пространстве → Глубина и параллельный возврат', description: 'Почему на возврате ревербератора оставляют только wet.', target: { article: 'spatial-audio', anchor: 'depth-and-routing' } },
 ]}>
 
-Регулятор нужен прежде всего во вставке: другого пути у dry там нет, и без смешивания внутри плагина исходный звук не слышен. Если эффект подключён через посыл и возврат, dry уже идёт в микс по своей дорожке, поэтому на возврате обычно ставят 100 % wet (Izhaki, гл. 23, с. 418).
+Во вставке весь звук дорожки проходит через плагин, поэтому подмешать исходный звук можно только его регулятором mix: при 100 % wet dry на выходе дорожки не останется. При подключении через посыл и возврат эффект стоит на отдельном канале возврата, а исходная дорожка продолжает звучать сама по себе. Dry и wet тогда смешивает микшер DAW, и на возврате обычно ставят 100 % wet (Izhaki, гл. 23, с. 418).
 
 </MarginNote>
+
+### Прослушивание разницы {#delta}
+
+В части плагинов есть кнопка delta, или delta solo: она выводит не смесь, а разность $w[n] - d[n]$, то есть только то, что обработка изменила в звуке ([Goddard, 2025](https://www.production-expert.com/production-expert-1/how-to-use-delta-solo-in-any-daw)). У лимитера в разности слышны срезанные пики, у компрессора — то, на сколько он ослабил громкие места. Без такой кнопки разность собирают вручную: копию сигнала без обработки переворачивают по полярности и складывают с обработанной. Совпадающая часть вычитается, остаётся изменение, и приём подходит почти к любому плагину ([Walden, 2020](https://www.soundonsound.com/techniques/cubase-delta-monitoring-explained)).
+
+Разность — то же смешивание двух ветвей, только с коэффициентами −1 для dry и 1 для wet. Поэтому ей нужно то же выравнивание по времени, что и обходу, [раздел о задержке](#latency-compensation). Если dry не задержан на задержку обработки, совпадающие части не вычтутся, и в разности останется почти весь звук, к тому же с провалами на отдельных частотах.
 
 ## Bypass: эффект выключен {#bypass}
 
@@ -179,11 +185,17 @@ $$
   { label: 'Первое знакомство с DAW → Путь сигнала', description: 'Где в цепочке дорожки стоят эффекты.', target: { article: 'daw-intro', anchor: 'signal-chain' } },
 ]}>
 
-**Обход средствами хоста.** В Ableton Live у каждого устройства есть переключатель Activator. Выключенное устройство убирается из пути сигнала, как будто его временно удалили: звук проходит без обработки, а встроенные устройства не тратят процессорное время ([Ableton, Device Title Bar](https://www.ableton.com/en/live-manual/12/working-with-instruments-and-effects/#device-title-bar)). Хост может обойти любой плагин, даже если тот не знает об обходе. Но плагин в это время не получает входной звук, поэтому после включения его внутреннее состояние, например содержимое линии задержки, может не соответствовать текущему сигналу.
+**Обход средствами хоста.** Выключатель эффекта есть в любой распространённой DAW. Дальше для примера описано поведение Ableton Live; в других программах детали могут отличаться, их описывает руководство программы. В Live у каждого устройства есть переключатель Activator. Выключенное устройство убирается из пути сигнала, как будто его временно удалили: звук проходит без обработки, а встроенные устройства не тратят процессорное время ([Ableton, Device Title Bar](https://www.ableton.com/en/live-manual/12/working-with-instruments-and-effects/#device-title-bar)). Хост может обойти любой плагин, даже если тот не знает об обходе. Но плагин в это время не получает входной звук, поэтому после включения его внутреннее состояние, например содержимое линии задержки, может не соответствовать текущему сигналу.
 
 </MarginNote>
 
 **Обход внутри плагина.** Плагин может объявить один из своих параметров параметром bypass. В VST3 его помечают флагом `kIsBypass`, в CLAP — `CLAP_PARAM_IS_BYPASS`. Тогда кнопка обхода в хосте меняет этот параметр, а хост продолжает вызывать обработку. За результат отвечает сам плагин: спецификация VST3 требует переключать без артефактов, например с плавным переходом, и выдавать на выход копию входа, задержанную на собственную задержку плагина ([Steinberg, VST 3 FAQ](https://steinbergmedia.github.io/vst3_dev_portal/pages/FAQ/Processing.html)). В CLAP значение такого параметра прямо не должно влиять на то, вызывает ли хост обработку; экономию процессора при обходе плагин организует сам ([CLAP 1.2.10, params.h](https://github.com/free-audio/clap/blob/1.2.10/include/clap/ext/params.h)). Как конкретная DAW поступает с плагином, у которого есть такой параметр, описывает её руководство.
+
+<Callout type="important" title="Если параметр bypass не объявлен">
+
+В JUCE плагин объявляет параметр bypass, возвращая его из метода `getBypassParameter`. Когда метод возвращает `nullptr`, обёртка VST3 в JUCE 9.0.3 добавляет собственный параметр Bypass и при его включении вызывает `processBlockBypassed` вместо `processBlock`. Реализация по умолчанию пропускает вход без задержки и в отладочной сборке останавливается на проверке `getLatencySamples() == 0`. Плагину с [задержкой](#latency-compensation) нужно переопределить этот метод и задержать в нём вход на ту же величину, иначе обход сдвинет дорожку раньше остальных ([JUCE, AudioProcessor](https://docs.juce.com/master/classjuce_1_1AudioProcessor.html)).
+
+</Callout>
 
 ### Bypass и mix 0 % {#bypass-vs-mix}
 
@@ -205,13 +217,15 @@ $$
 
 ## Задержка при выключении {#latency-compensation}
 
-Некоторые эффекты выдают результат позже, чем получили вход. Лимитеру с предварительным анализом нужно заранее «видеть» пик, эффектам на основе спектра — накопить блок. Такая <Term id="latency" firstMention>задержка</Term> (latency) — свойство самой обработки; её не следует путать с эффектом delay, где задержка и есть звучание. Плагин сообщает свою задержку хосту в отсчётах. Например, предварительный анализ 2 мс при 48 кГц даёт $0{,}002 \cdot 48\,000 = 96$ отсчётов.
+Некоторые эффекты выдают результат позже, чем получили вход. Лимитеру с предварительным анализом нужно заранее «видеть» пик, эффектам на основе спектра — накопить блок. Такая <Term id="latency" firstMention>задержка</Term> — свойство самой обработки; её не следует путать с эффектом delay, где задержка и есть звучание. Например, предварительный анализ 2 мс при 48 кГц даёт $0{,}002 \cdot 48\,000 = 96$ отсчётов. Значение 2 мс взято для примера: у лимитеров анализ обычно длится единицы миллисекунд, встроенный Limiter в Ableton Live предлагает 1,5, 3 или 6 мс ([Лимитер → Примеры приборов](/limiter/#devices)).
+
+Хост не измеряет задержку сам: её сообщает плагин, и разработчик реализует это вместе с обработкой. В VST3 хост узнаёт задержку методом плагина `getLatencySamples`, в CLAP — через расширение latency; оба возвращают число отсчётов. Audio Unit сообщает задержку в секундах свойством `kAudioUnitProperty_Latency`. Если задержка меняется, например вместе с длиной предварительного анализа, плагин должен уведомить хост. В VST3 для этого вызывают `restartComponent (kLatencyChanged)`, и пересчёт компенсации может прервать воспроизведение ([Steinberg, IAudioProcessor](https://steinbergmedia.github.io/vst3_doc/vstinterfaces/classSteinberg_1_1Vst_1_1IAudioProcessor.html)). В CLAP задержка может меняться только при активации плагина, поэтому активный плагин просит хост перезапустить его ([CLAP 1.2.10, latency.h](https://github.com/free-audio/clap/blob/1.2.10/include/clap/ext/latency.h)). В JUCE достаточно вызвать `setLatencySamples`, а передачу значения хосту в нужном формате берёт на себя обёртка, как в [примере ниже](#juce-example).
 
 <MarginNote items={[
   { label: 'Аудиоданные → Размер блока и задержка', description: 'Из чего складывается задержка аудиотракта.', target: { article: 'audio-data', anchor: 'block-time-and-latency' } },
 ]}>
 
-<Term id="delay-compensation" firstMention define>Компенсация задержки</Term> выравнивает дорожки: хост знает задержку каждого плагина и задерживает остальные пути на недостающую величину. Если на одной дорожке стоит эффект с задержкой 96 отсчётов, все другие дорожки при воспроизведении тоже сдвигаются на 96 отсчётов, и сумма звучит синхронно. Ableton Live делает это автоматически, включая плагины на возвратах ([Ableton, Device Delay Compensation](https://www.ableton.com/en/live-manual/12/working-with-instruments-and-effects/#device-delay-compensation)).
+<Term id="delay-compensation" firstMention define>Компенсация задержки</Term> выравнивает дорожки: хост знает задержку каждого плагина и задерживает остальные пути на недостающую величину. Если на одной дорожке стоит эффект с задержкой 96 отсчётов, все другие дорожки при воспроизведении тоже сдвигаются на 96 отсчётов, и сумма звучит синхронно. DAW делают это автоматически; Ableton Live, например, учитывает и плагины на возвратах ([Ableton, Device Delay Compensation](https://www.ableton.com/en/live-manual/12/working-with-instruments-and-effects/#device-delay-compensation)).
 
 </MarginNote>
 
@@ -245,7 +259,13 @@ $$
 
 </MarginNote>
 
-Ableton Live сохраняет задержку выключенных устройств, которым она нужна по самим параметрам, например предварительному анализу компрессора, чтобы не нарушать компенсацию ([Ableton, Audio Fact Sheet](https://www.ableton.com/en/live-manual/12/audio-fact-sheet/#bypassed-effects)). Если же обход выполняет плагин, задержать dry должен он сам.
+Когда обход выполняет хост, выравнивание остаётся его заботой. Ableton Live, например, сохраняет задержку выключенного устройства, если она задана его параметрами, как у компрессора с предварительным анализом, чтобы не нарушать компенсацию ([Ableton, Audio Fact Sheet](https://www.ableton.com/en/live-manual/12/audio-fact-sheet/#bypassed-effects)).
+
+<Callout type="important" title="При обходе внутри плагина dry задерживает сам плагин">
+
+Если bypass — параметр плагина, хост не меняет компенсацию: он по-прежнему считает задержку плагина равной заявленной и сдвигает остальные дорожки на неё. Поэтому в режиме обхода плагин должен выдавать не сам вход, а вход, задержанный на ту же величину, что и обработка, — третья строка [рисунка 3](#bypass-latency). Этого требует спецификация VST3 ([Steinberg, VST 3 FAQ](https://steinbergmedia.github.io/vst3_dev_portal/pages/FAQ/Processing.html)). В [примере на C++ и JUCE](#juce-example) dry задерживает `DryWetMixer`.
+
+</Callout>
 
 ## Щелчок при переключении {#clicks}
 
@@ -281,7 +301,7 @@ Ableton Live сохраняет задержку выключенных устр
 
 </MarginNote>
 
-Плагин читает параметр bypass в начале блока или точно по отсчёту, если хост передал момент изменения. Спецификация VST3 допускает поблочную обработку, но не рекомендует её при блоках длиннее 1024 отсчётов: при 48 кГц переход начнётся с опозданием до 21 мс ([Steinberg, VST 3 FAQ](https://steinbergmedia.github.io/vst3_dev_portal/pages/FAQ/Processing.html)).
+Плагин читает параметр bypass в начале блока или точно по отсчёту, если хост передал момент изменения. Размер блока задаёт хост, обычно по настройке буфера в DAW, например 128 или 512 кадров; очередной блок может оказаться и короче заявленного наибольшего ([Аудиоданные → Размер блока и задержка](/audio-data/#block-time-and-latency)). Спецификация VST3 допускает поблочную обработку, но не рекомендует её при блоках длиннее 1024 отсчётов: при 48 кГц переход начнётся с опозданием до 21 мс ([Steinberg, VST 3 FAQ](https://steinbergmedia.github.io/vst3_dev_portal/pages/FAQ/Processing.html)).
 
 ## Пример на C++ и JUCE {#juce-example}
 
@@ -338,7 +358,7 @@ public:
     }
 
 private:
-    static constexpr int latency = 96; // 2 мс при 48 кГц
+    static constexpr int latency = 96; // пример: анализ 2 мс при 48 кГц
     juce::AudioParameterFloat* mix = nullptr;
     juce::AudioParameterBool* bypass = nullptr;
     Effect effect; // обработка, которая задерживает выход на latency
@@ -351,12 +371,6 @@ private:
 При включённом bypass смеситель получает долю wet 0 и за 50 мс переводит коэффициенты в 0 для wet и 1 для dry. На выходе остаётся вход, задержанный на 96 отсчётов, поэтому выравнивание с другими дорожками не меняется. Положение mix при этом не трогается: после выключения обхода эффект вернётся к прежнему соотношению. Обработка продолжает работать и при обходе, так что её состояние не устаревает. Длительность перехода меняет `setRampLength`, закон — `setMixingRule` ([JUCE, DryWetMixer](https://docs.juce.com/master/classjuce_1_1dsp_1_1DryWetMixer.html)).
 
 Пример рассчитан на эффект с одинаковым числом входных и выходных каналов и блоки не длиннее, чем передано в `prepareToPlay`: очередь dry внутри `DryWetMixer` имеет размер по этому значению. При проверке в JUCE 9.0.3 вместо `effect` стояла задержка на 96 отсчётов с переворотом полярности. При mix 50 % выход оказался нулевым, значит dry и wet совпали по времени до отсчёта. При включённом bypass выход совпал с входом, задержанным на 96 отсчётов. Наибольшее изменение между соседними отсчётами в переходах осталось таким же, как у самого тестового тона 440 Гц.
-
-<Callout type="important" title="Если параметр bypass не объявлен">
-
-Когда `getBypassParameter` возвращает `nullptr`, обёртка VST3 в JUCE 9.0.3 добавляет собственный параметр Bypass и при его включении вызывает `processBlockBypassed` вместо `processBlock`. Реализация по умолчанию пропускает вход без задержки и в отладочной сборке останавливается на проверке `getLatencySamples() == 0`. Плагину с задержкой нужно переопределить этот метод и задержать в нём вход на ту же величину, иначе обход сдвинет дорожку раньше остальных ([JUCE, AudioProcessor](https://docs.juce.com/master/classjuce_1_1AudioProcessor.html)).
-
-</Callout>
 
 ## Самопроверка {#self-check}
 
@@ -384,10 +398,15 @@ $240 / 48\,000 = 0{,}005$ с, то есть 5 мс. Хост по-прежне�
 - [CLAP 1.2.10. params.h](https://github.com/free-audio/clap/blob/1.2.10/include/clap/ext/params.h) — флаг `CLAP_PARAM_IS_BYPASS`, объединение кнопок обхода хоста и плагина, независимость вызова обработки от значения параметра.
 - [Ableton. Live 12 Reference Manual: Working with Instruments and Effects](https://www.ableton.com/en/live-manual/12/working-with-instruments-and-effects/), разделы 23.2.1 Device Title Bar и 23.3 Device Delay Compensation — переключатель Activator, автоматическая компенсация задержки плагинов.
 - [Ableton. Live 12 Reference Manual: Audio Fact Sheet](https://www.ableton.com/en/live-manual/12/audio-fact-sheet/), раздел 39.2.8 Bypassed Effects — удаление выключенного эффекта из пути сигнала и сохранение задержки ради компенсации.
+- [Steinberg. VST 3 API Documentation: IAudioProcessor](https://steinbergmedia.github.io/vst3_doc/vstinterfaces/classSteinberg_1_1Vst_1_1IAudioProcessor.html) — `getLatencySamples` в отсчётах, уведомление `restartComponent (kLatencyChanged)` и возможная остановка воспроизведения при пересчёте.
+- [CLAP 1.2.10. latency.h](https://github.com/free-audio/clap/blob/1.2.10/include/clap/ext/latency.h) — задержка в отсчётах, изменение только при активации, `request_restart` для активного плагина.
+- [Apple. kAudioUnitProperty_Latency](https://developer.apple.com/documentation/audiotoolbox/kaudiounitproperty_latency), заголовок `AudioUnitProperties.h` — задержка Audio Unit в секундах.
 - [JUCE. AudioProcessor](https://docs.juce.com/master/classjuce_1_1AudioProcessor.html), [заголовок 9.0.3](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_processors_headless/processors/juce_AudioProcessor.h) и [реализация 9.0.3](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_processors_headless/processors/juce_AudioProcessor.cpp) — `getBypassParameter`, `processBlockBypassed` и проверка задержки по умолчанию, `setLatencySamples`.
 - [JUCE. Обёртка VST3, версия 9.0.3](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_plugin_client/juce_audio_plugin_client_VST3.cpp) — собственный параметр Bypass, флаг `kIsBypass` и выбор между `processBlock` и `processBlockBypassed`.
 - [JUCE. DryWetMixer](https://docs.juce.com/master/classjuce_1_1dsp_1_1DryWetMixer.html) и [исходник 9.0.3](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_dsp/processors/juce_DryWetMixer.cpp) — законы смешивания, задержка dry, линейный переход 50 мс.
 - [Geraint Luff. A cheap energy-preserving-ish crossfade. Signalsmith Audio, 2021](https://signalsmith-audio.co.uk/writing/2021/cheap-energy-crossfade/) — переход с постоянной суммой амплитуд для коррелированных сигналов и с постоянной энергией для некоррелированных.
+- [Luke Goddard. How To Use Delta Solo In Any DAW. Production Expert, 2025](https://www.production-expert.com/production-expert-1/how-to-use-delta-solo-in-any-daw) — кнопка delta solo: прослушивание только разницы между обработанным и исходным звуком.
+- [John Walden. Cubase: Delta Monitoring Explained. Sound On Sound, июль 2020](https://www.soundonsound.com/techniques/cubase-delta-monitoring-explained) — ручная сборка разности переворотом полярности необработанной копии, применимость почти к любому плагину.
 - Roey Izhaki. Mixing Audio: Concepts, Practices and Tools, 2nd ed., Focal Press, 2012, гл. 23, с. 418 — dry/wet во вставке и при подключении через посыл.
 
 Рисунки — схемы и расчётные сигналы для пояснения, а не записи реальных плагинов.

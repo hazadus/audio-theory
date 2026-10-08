@@ -1,0 +1,23 @@
+{
+  "id": "dry-wet-bypass-delta-latency",
+  "date": "2026-10-08",
+  "order": 1,
+  "type": "updated",
+  "article": "dry-wet-bypass",
+  "items": [
+    {
+      "text": "Новый подраздел о прослушивании разницы (delta)",
+      "target": {
+        "article": "dry-wet-bypass",
+        "anchor": "delta"
+      }
+    },
+    {
+      "text": "Как плагин сообщает хосту свою задержку в VST3, CLAP, AU и JUCE",
+      "target": {
+        "article": "dry-wet-bypass",
+        "anchor": "latency-compensation"
+      }
+    }
+  ]
+}
