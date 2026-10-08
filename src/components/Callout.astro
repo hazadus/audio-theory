@@ -168,4 +168,28 @@ const isNote = type === 'note';
   .callout[data-type='note'] .callout-body > p:first-of-type {
     display: inline;
   }
+
+  /* В печати врезка набрана кеглем текста статьи; примечание и подписи мельче. */
+  @media print {
+    .callout,
+    .callout[data-type='definition'] {
+      font-size: 10pt;
+    }
+
+    .callout[data-type='note'] {
+      font-size: 9pt;
+    }
+
+    .callout-label {
+      font-size: 7.5pt;
+    }
+
+    .callout-heading {
+      font-size: 8.5pt;
+    }
+
+    .callout[data-type='note'] .callout-heading {
+      font-size: inherit;
+    }
+  }
 </style>

@@ -66,4 +66,10 @@ const svg = annotateSvg(await Astro.slots.render('default'), {
     font-weight: 600;
     color: var(--color-text);
   }
+
+  @media print {
+    .figure-caption {
+      font-size: 9.5pt;
+    }
+  }
 </style>

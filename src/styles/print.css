@@ -9,6 +9,19 @@
     color-scheme: light;
   }
 
+  /* Шкала кегля в пунктах: текст 10pt. Компоненты с размерами в px задают печатный кегль в своих стилях. */
+  :root {
+    --text-xs: 7.5pt;
+    --text-sm: 8pt;
+    --text-ui: 8.5pt;
+    --text-base: 10pt;
+    --text-lg: 11.5pt;
+    --text-xl: 12pt;
+    --text-2xl: 14pt;
+    --text-3xl: 17pt;
+    --text-4xl: 20pt;
+  }
+
   /* Служебные элементы интерфейса: на бумаге не работают. */
   .skip-link,
   .site-header,
@@ -40,22 +53,6 @@
     hyphens: manual;
   }
 
-  h1 {
-    font-size: 20pt;
-  }
-
-  h2 {
-    font-size: 14pt;
-  }
-
-  h3 {
-    font-size: 12pt;
-  }
-
-  h4 {
-    font-size: 10pt;
-  }
-
   main {
     width: 100%;
   }
@@ -79,6 +76,8 @@
     display: block !important;
   }
 
+  /* Блочные контейнеры теряют gap: отступ между блоками задаётся полем. */
+  .body > * + *,
   .prose > * + * {
     margin-top: 14pt !important;
   }
@@ -140,20 +139,10 @@
   .code-block pre {
     white-space: pre-wrap;
     overflow-wrap: anywhere;
-    font-size: 8.5pt;
-  }
-
-  .data-table table {
-    font-size: 9pt;
   }
 
   a,
   a:visited {
     color: inherit;
-  }
-
-  .figure-caption,
-  .data-table-caption {
-    font-size: 9.5pt;
   }
 }

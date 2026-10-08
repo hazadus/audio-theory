@@ -142,3 +142,9 @@
     height: 44px;
   }
 }
+
+@media print {
+  .code-lang {
+    font-size: 7.5pt;
+  }
+}

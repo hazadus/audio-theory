@@ -42,4 +42,10 @@ const label = kind === 'wrong' ? 'Неверно' : 'Верно';
   .callout-case-text > :last-child {
     margin-bottom: 0;
   }
+
+  @media print {
+    .callout-mark {
+      font-size: 7.5pt;
+    }
+  }
 </style>

@@ -138,4 +138,18 @@ const label = number === undefined ? 'Формула' : `Формула ${number
       font-size: 21px;
     }
   }
+
+  @media print {
+    .equation-number {
+      font-size: 8.5pt;
+    }
+
+    .equation-math {
+      font-size: 13pt;
+    }
+
+    .equation-symbols {
+      font-size: 8pt;
+    }
+  }
 </style>
