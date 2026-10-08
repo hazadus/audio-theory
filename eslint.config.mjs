@@ -8,6 +8,7 @@ export default [
     ignores: [
       'dist/**',
       '.astro/**',
+      'tests/fixtures/artifact/.astro/**',
       '.e2e/**',
       '.tmp/**',
       'test-results/**',
