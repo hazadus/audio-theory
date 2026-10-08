@@ -1,17 +1,20 @@
 ---
 // Карточка трека: одна обычная ссылка; в каталоге дополнительно перечислены названия этапов.
+import Icon from '@/components/Icon.astro';
 import { trackCounts } from '@/lib/track-view';
 
 interface Props {
   track: { title: string; audience: string; href: string; stageCount: number; itemCount: number };
   /** Названия этапов в порядке чтения; выводятся только в каталоге. */
   stages?: string[];
+  /** На смартфоне карточка сворачивается в строку списка высотой не меньше 56 px (главная). */
+  compact?: boolean;
 }
 
-const { track, stages = [] } = Astro.props;
+const { track, stages = [], compact = false } = Astro.props;
 ---
 
-<a class="card" href={track.href}>
+<a class:list={['card', { compact }]} href={track.href}>
   <span class="title">{track.title}</span>
   <span class="audience">{track.audience}</span>
   {stages.length > 0 && (
@@ -22,6 +25,7 @@ const { track, stages = [] } = Astro.props;
     </ol>
   )}
   <span class="counts">{trackCounts(track)}</span>
+  {compact && <Icon name="chevron-right" size={18} />}
 </a>
 
 <style>
@@ -77,5 +81,39 @@ const { track, stages = [] } = Astro.props;
     color: var(--color-text-muted);
     font-family: var(--font-ui);
     font-size: 12px;
+  }
+
+  .card :global(.icon) {
+    display: none;
+  }
+
+  @media (width < 600px) {
+    .card.compact {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      column-gap: var(--space-3);
+      row-gap: 2px;
+      min-height: 56px;
+      padding: 8px 0;
+      border-width: 0 0 var(--border-width);
+      border-radius: 0;
+    }
+
+    .card.compact .audience {
+      display: none;
+    }
+
+    .card.compact .counts {
+      grid-column: 1;
+      margin-top: 0;
+    }
+
+    .card.compact :global(.icon) {
+      display: block;
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      color: var(--color-text-muted);
+    }
   }
 </style>

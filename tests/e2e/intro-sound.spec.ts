@@ -13,7 +13,7 @@ test(
   async ({ page }, info) => {
     const base = info.project.metadata.base;
     await page.goto('./');
-    await page.locator('.start-intro[href$="/audio-intro/"]').click();
+    await page.locator('.first-card[href$="/audio-intro/"]').click();
     await expect(page).toHaveURL(new RegExp(`${base}audio-intro/$`));
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
       'Как устроен звук: первый обзор',

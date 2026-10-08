@@ -1,6 +1,8 @@
 ---
 import { getCollection, render } from 'astro:content';
 import { assertValidArticles } from '@/lib/article-content';
+import { seriesPosition } from '@/lib/first-steps';
+import { loadFirstSteps } from '@/lib/first-steps-list';
 import { loadUpdates } from '@/lib/update-list';
 import { assertUniqueSlugs } from '@/lib/articles';
 import { assertUniqueAnchors, getToc } from '@/lib/headings';
@@ -47,8 +49,17 @@ const dates = resolveArticleDates(
 const tracks = await loadTrackData();
 const articleTracks = getArticleTracks(tracks, article.data.slug);
 const trackNav = buildNavData(tracks, article.data.slug);
+const series = seriesPosition(await loadFirstSteps(), article.data.slug);
 ---
 
-<ArticleLayout data={article.data} {toc} {dates} {readingMinutes} {articleTracks} {trackNav}>
+<ArticleLayout
+  data={article.data}
+  {toc}
+  {dates}
+  {readingMinutes}
+  {articleTracks}
+  {trackNav}
+  {series}
+>
   <Content />
 </ArticleLayout>

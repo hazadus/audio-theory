@@ -4,6 +4,7 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import { topics } from '@/data/topics';
 import { loadArticleList } from '@/lib/article-list';
 import { formatUpdatedDate } from '@/lib/format-date';
+import { buildFirstSteps, firstStepMeta } from '@/lib/first-steps';
 import { compareByUpdated } from '@/lib/home';
 import { articlesLabel, countByTopic } from '@/lib/materials';
 import { withBase } from '@/lib/urls';
@@ -11,6 +12,7 @@ import { withBase } from '@/lib/urls';
 // Без JS остаётся этот порядок: все статьи по дате обновления.
 const articles = (await loadArticleList()).sort(compareByUpdated);
 const counts = countByTopic(articles);
+const firstSteps = buildFirstSteps(articles);
 const topicTitle = new Map<string, string>(topics.map((topic) => [topic.id, topic.title]));
 const chips = [
   { id: 'all', label: 'Все' },
@@ -85,6 +87,25 @@ const sorts = [
       )}
     </div>
 
+    {firstSteps.length > 0 && (
+      <section
+        id="first-steps"
+        class="first-steps"
+        aria-labelledby="first-steps-title"
+        data-first-steps
+      >
+        <h2 id="first-steps-title">Первое знакомство</h2>
+        <ul>
+          {firstSteps.map((step) => (
+            <li class="first-row">
+              <a href={withBase(`/${step.slug}/`)}>{step.title}</a>
+              <span>{firstStepMeta(step)}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
     <div class="list" data-list data-sort="date">
       <ul class="rows">
         {articles.map((article) => (
@@ -136,6 +157,49 @@ const sorts = [
     font-size: var(--text-3xl);
     line-height: 1.15;
     letter-spacing: var(--tracking-tight);
+  }
+
+  .first-steps {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .first-steps[hidden] {
+    display: none;
+  }
+
+  .first-steps h2 {
+    margin: 0;
+    font-size: var(--text-xl);
+  }
+
+  .first-steps ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: var(--border-width) solid var(--color-border);
+  }
+
+  .first-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px 16px;
+    padding: 10px 0;
+    border-bottom: var(--border-width) solid var(--color-border);
+    font-family: var(--font-text);
+  }
+
+  .first-row a {
+    font-size: 1.0625rem;
+    color: var(--color-text);
+  }
+
+  .first-row span {
+    font-family: var(--font-ui);
+    font-size: 0.8125rem;
+    color: var(--color-text-muted);
   }
 
   .controls {

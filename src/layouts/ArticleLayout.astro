@@ -8,6 +8,7 @@ import type { TocItem } from '@/lib/headings';
 import { resolveTarget } from '@/lib/links';
 import { topics } from '@/data/topics';
 import type { ArticleDates } from '@/lib/article-dates';
+import type { SeriesPosition } from '@/lib/first-steps';
 import type { NavTrack } from '@/lib/track-navigation';
 import { formatUpdatedDate } from '@/lib/format-date';
 import { materialsHref } from '@/lib/materials';
@@ -31,9 +32,19 @@ interface Props {
   }[];
   /** Полный порядок элементов треков статьи для блока «Трек» по адресу. */
   trackNav?: NavTrack[];
+  /** Положение в серии «Первое знакомство»; у статей вне серии не задаётся. */
+  series?: SeriesPosition | null;
 }
 
-const { data, toc, dates, readingMinutes, articleTracks = [], trackNav = [] } = Astro.props;
+const {
+  data,
+  toc,
+  dates,
+  readingMinutes,
+  articleTracks = [],
+  trackNav = [],
+  series = null,
+} = Astro.props;
 const group = topics.find((topic) => topic.id === data.topic)!;
 const prerequisites = data.prerequisites ?? [];
 
@@ -65,6 +76,11 @@ const links = (items: typeof data.related) =>
       </nav>
 
       <header class="head">
+        {series && (
+          <a class="series-label" href={`${withBase('/')}#first-steps`} data-pagefind-ignore>
+            Первое знакомство · {series.number} из {series.total}
+          </a>
+        )}
         <h1>{data.title}</h1>
         <p class="question">{data.question}</p>
         <div class="meta">
@@ -143,6 +159,27 @@ const links = (items: typeof data.related) =>
         <div class="prose">
           <slot />
         </div>
+        {series && (
+          <nav
+            class="series-nav"
+            aria-label="Первое знакомство"
+            data-series-nav
+            data-pagefind-ignore
+          >
+            {series.next && (
+              <a class="series-next" href={withBase(`/${series.next.slug}/`)}>
+                <span class="series-hint">
+                  Дальше в знакомстве · {series.number + 1} из {series.total}
+                </span>
+                <span class="series-title">{series.next.title}</span>
+              </a>
+            )}
+            <a class="series-tracks" href={withBase('/tracks/')}>
+              <span class="series-hint">Хотите глубже?</span>
+              <span class="series-title">Выберите трек под свою задачу</span>
+            </a>
+          </nav>
+        )}
         {trackNav.length > 0 && (
           <>
             <nav
@@ -302,6 +339,62 @@ const links = (items: typeof data.related) =>
     color: var(--color-text-muted);
     font-family: var(--font-ui);
     font-size: 14px;
+  }
+
+  .series-label {
+    align-self: flex-start;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+
+  .series-nav {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    font-family: var(--font-ui);
+  }
+
+  .series-next,
+  .series-tracks {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 14px 16px;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+  }
+
+  .series-next {
+    border-color: var(--color-border-strong);
+    background: var(--color-surface);
+  }
+
+  .series-next:hover,
+  .series-tracks:hover {
+    border-color: var(--color-accent);
+  }
+
+  .series-hint {
+    font-size: 12px;
+    color: var(--color-text-muted);
+  }
+
+  .series-title {
+    font-family: var(--font-text);
+    font-weight: 600;
+    font-size: 17px;
+    color: var(--color-text);
+  }
+
+  @media (width >= 600px) {
+    .series-nav:has(.series-next) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
 
   .in-tracks {

@@ -35,6 +35,7 @@ export function initMaterials(): void {
   const controls = root.querySelector<HTMLElement>('[data-controls]')!;
   const list = root.querySelector<HTMLElement>('[data-list]')!;
   const count = root.querySelector<HTMLElement>('[data-count]')!;
+  const firstSteps = root.querySelector<HTMLElement>('[data-first-steps]');
   const empty = root.querySelector<HTMLElement>('[data-empty]')!;
   const chips = [...root.querySelectorAll<HTMLButtonElement>('[data-topic-chip]')];
   const sorts = [...root.querySelectorAll<HTMLButtonElement>('[data-sort-option]')];
@@ -72,6 +73,8 @@ export function initMaterials(): void {
     list.replaceChildren(...nodes);
     count.textContent = articlesLabel(visible);
     empty.hidden = visible > 0;
+    // Серия показывается над общим списком, пока тема не сужена.
+    if (firstSteps) firstSteps.hidden = state.topic !== 'all';
     for (const chip of chips) {
       const pressed = chip.dataset.topicChip === state.topic;
       chip.setAttribute('aria-pressed', String(pressed));

@@ -14,7 +14,7 @@ test(
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Теория аудио');
     await expect(page.getByRole('main')).toContainText('Личный учебник по теории аудио');
     await expect(page.locator('main section.group a.card').first()).toBeVisible();
-    const intro = page.locator('.start-intro[href$="/audio-intro/"]');
+    const intro = page.locator('.first-card[href$="/audio-intro/"]');
     await expect(intro).toHaveAttribute('href', `${base}audio-intro/`);
     await intro.click();
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
@@ -22,7 +22,9 @@ test(
     );
     await expect(page.locator('[data-intro-demo]')).toHaveCount(4);
     await page.goto('./');
-    const music = page.getByRole('link', { name: /Первое знакомство Теория музыки/ });
+    const music = page
+      .locator('#first-steps')
+      .getByRole('link', { name: /Теория музыки: ноты, ритм и гармония/ });
     await expect(music).toHaveAttribute('href', `${base}music-theory-intro/`);
     await music.click();
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
@@ -30,7 +32,9 @@ test(
     );
     await expect(page.locator('[data-music-demo]')).toHaveCount(8);
     await page.goto('./');
-    const daw = page.getByRole('link', { name: /Первое знакомство Первое знакомство с DAW/ });
+    const daw = page
+      .locator('#first-steps')
+      .getByRole('link', { name: /Первое знакомство с DAW: дорожки/ });
     await expect(daw).toHaveAttribute('href', `${base}daw-intro/`);
     await daw.click();
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
@@ -335,10 +339,6 @@ for (const [name, viewport] of [
         expect(await cards.count()).toBeGreaterThan(0);
         // Каждая карточка — одна ссылка без вложенных интерактивных элементов.
         expect(await page.locator('a.card a, a.card button').count()).toBe(0);
-        // Раздел визуализаций (`ul.viz-list`) идёт первым; остальные секции — тематические группы.
-        expect(await page.locator('section ul.cards').count()).toBe(
-          (await page.locator('main section').count()) - 1,
-        );
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
           viewport.width,
         );
@@ -455,3 +455,49 @@ test(
     }
   },
 );
+
+test('главная: «Первое знакомство» — три карточки перед «Треками»', async ({ page }, testInfo) => {
+  const base = testInfo.project.metadata.base as string;
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('./');
+  const section = page.locator('#first-steps');
+  await expect(section.getByRole('heading', { level: 2, name: 'Первое знакомство' })).toBeVisible();
+  const cards = section.locator('a.first-card');
+  await expect(cards).toHaveCount(3);
+  await expect(cards.first()).toHaveAttribute('href', `${base}audio-intro/`);
+  await expect(cards.first()).toContainText('мин · интерактивно');
+  await expect(cards.first()).not.toContainText('Первое знакомство');
+  const lefts = await cards.evaluateAll((items) =>
+    items.map((card) => Math.round(card.getBoundingClientRect().left)),
+  );
+  expect(new Set(lefts).size).toBe(3);
+  const tops = await page.evaluate(() => [
+    document.querySelector('#first-steps')!.getBoundingClientRect().top,
+    document.querySelector('[data-start-tracks]')!.getBoundingClientRect().top,
+  ]);
+  expect(tops[0]).toBeLessThan(tops[1]);
+  await page.setViewportSize({ width: 390, height: 800 });
+  const mobile = await cards.evaluateAll((items) =>
+    items.map((card) => Math.round(card.getBoundingClientRect().left)),
+  );
+  expect(new Set(mobile).size).toBe(1);
+});
+
+test('статья серии: метка, ссылка «дальше» и выход на треки', async ({ page }, testInfo) => {
+  const base = testInfo.project.metadata.base as string;
+  await page.goto('audio-intro/');
+  const label = page.getByRole('link', { name: 'Первое знакомство · 1 из 3' });
+  await expect(label).toHaveAttribute('href', `${base}#first-steps`);
+  const nav = page.getByRole('navigation', { name: 'Первое знакомство' });
+  await expect(nav.getByRole('link')).toHaveCount(2);
+  await expect(nav.getByRole('link').first()).toHaveAttribute('href', `${base}music-theory-intro/`);
+  await expect(nav.getByRole('link').last()).toHaveAttribute('href', `${base}tracks/`);
+  await page.goto('daw-intro/');
+  await expect(page.getByRole('link', { name: 'Первое знакомство · 3 из 3' })).toBeVisible();
+  await expect(
+    page.getByRole('navigation', { name: 'Первое знакомство' }).getByRole('link'),
+  ).toHaveCount(1);
+  await page.goto('sound-wave/');
+  await expect(page.getByRole('navigation', { name: 'Первое знакомство' })).toHaveCount(0);
+  await expect(page.getByText(/Первое знакомство · \d из/)).toHaveCount(0);
+});

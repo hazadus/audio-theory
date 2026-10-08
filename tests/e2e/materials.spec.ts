@@ -310,3 +310,16 @@ for (const [name, viewport] of [
     },
   );
 }
+
+test('материалы: группа «Первое знакомство» первой и только без фильтра по теме', async ({
+  page,
+}) => {
+  await page.goto('materials/');
+  const group = page.locator('#first-steps');
+  await expect(group.getByRole('heading', { level: 2, name: 'Первое знакомство' })).toBeVisible();
+  await expect(group.getByRole('link')).toHaveCount(3);
+  await page.getByRole('button', { name: /^Основы звука/ }).click();
+  await expect(group).toBeHidden();
+  await page.getByRole('button', { name: /^Все/ }).click();
+  await expect(group).toBeVisible();
+});

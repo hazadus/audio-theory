@@ -6,6 +6,7 @@ import VisualizationsSection from '@/components/VisualizationsSection.astro';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { topics } from '@/data/topics';
 import { loadArticleList } from '@/lib/article-list';
+import { buildFirstSteps, firstStepMeta, firstStepsHomeLimit } from '@/lib/first-steps';
 import { formatUpdatedDate } from '@/lib/format-date';
 import { buildHomeGroups } from '@/lib/home';
 import { loadTracks } from '@/lib/track-list';
@@ -15,24 +16,8 @@ import { withBase } from '@/lib/urls';
 
 const articles = await loadArticleList();
 const groups = buildHomeGroups(articles, topics);
-const introductions = [
-  {
-    slug: 'audio-intro',
-    description:
-      'Измените высоту и громкость, соберите ноту синтезатора и узнайте, как звук записывают в файл.',
-  },
-  {
-    slug: 'music-theory-intro',
-    description: 'Выберите ноты, соберите ритм и последовательность аккордов, попробуйте арпеджио.',
-  },
-  {
-    slug: 'daw-intro',
-    description: 'Познакомьтесь с музыкальной программой: дорожками, записью и первым проектом.',
-  },
-].flatMap((entry) => {
-  const article = articles.find((article) => article.slug === entry.slug);
-  return article ? [{ ...article, description: entry.description }] : [];
-});
+const firstSteps = buildFirstSteps(articles);
+const shownFirstSteps = firstSteps.slice(0, firstStepsHomeLimit);
 const tracks = await loadTracks();
 const visualizations = await loadVisualizationSection();
 ---
@@ -55,28 +40,50 @@ const visualizations = await loadVisualizationSection();
       </button>
     </div>
 
+    {firstSteps.length > 0 && (
+      <section
+        id="first-steps"
+        aria-labelledby="first-steps-title"
+        data-first-steps
+        data-pagefind-ignore
+      >
+        <div class="start-head">
+          <h2 id="first-steps-title">Первое знакомство</h2>
+          <p>Если вы здесь впервые: короткие статьи, в которых всё можно попробовать руками.</p>
+        </div>
+        <ul class="first-grid">
+          {shownFirstSteps.map((step) => (
+            <li>
+              <a class="first-card" href={withBase(`/${step.slug}/`)}>
+                <span class="first-title">{step.title}</span>
+                <span class="first-desc">{step.description}</span>
+                <span class="first-meta">
+                  <span>{firstStepMeta(step)}</span>
+                  <Icon name="arrow-right" size={18} />
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+        {firstSteps.length > firstStepsHomeLimit && (
+          <a class="all" href={`${withBase('/materials/')}#first-steps`}>
+            Все статьи для знакомства
+            <Icon name="chevron-right" size={14} />
+          </a>
+        )}
+      </section>
+    )}
+
     {tracks.length > 0 && (
       <section class="start" aria-labelledby="start-title" data-start-tracks data-pagefind-ignore>
         <div class="start-head">
-          <h2 id="start-title">С чего начать</h2>
-          <p>Треки: материалы сайта в порядке чтения под вашу задачу.</p>
-        </div>
-        <div class="start-overviews">
-          {introductions.map((intro) => (
-            <a class="start-intro" href={withBase(`/${intro.slug}/`)}>
-              <div>
-                <span class="start-intro-label">Первое знакомство</span>
-                <b>{intro.title}</b>
-                <p>{intro.description}</p>
-              </div>
-              <Icon name="arrow-right" size={22} />
-            </a>
-          ))}
+          <h2 id="start-title">Треки</h2>
+          <p>Материалы сайта в порядке чтения под вашу задачу.</p>
         </div>
         <ul class="start-grid">
           {tracks.map((track) => (
             <li>
-              <TrackCard {track} />
+              <TrackCard {track} compact />
             </li>
           ))}
         </ul>
@@ -250,10 +257,16 @@ const visualizations = await loadVisualizationSection();
     color: var(--color-link);
   }
 
-  .start {
+  .start,
+  [data-first-steps] {
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
+  }
+
+  .start {
+    padding-top: var(--space-5);
+    border-top: var(--border-width) solid var(--color-border);
   }
 
   .start-head {
@@ -269,46 +282,66 @@ const visualizations = await loadVisualizationSection();
     color: var(--color-text-muted);
   }
 
-  .start-overviews {
+  /* Одна колонка; 3 от 1024 px. Карточки на поверхности с сильной рамкой отличают знакомство от треков. */
+  .first-grid {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
   }
-  .start-intro {
+
+  .first-card {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-4);
-    padding: var(--space-5);
+    flex-direction: column;
+    gap: 10px;
+    height: 100%;
+    box-sizing: border-box;
+    padding: 20px 22px 18px;
     border: var(--border-width) solid var(--color-border-strong);
     border-radius: var(--radius-lg);
     background: var(--color-surface);
     color: var(--color-text);
     text-decoration: none;
   }
-  .start-intro-label {
-    display: block;
-    margin-bottom: var(--space-1);
-    font-size: var(--text-xs);
-    color: var(--color-text-muted);
-  }
-  .start-intro b {
-    font-family: var(--font-text);
-    font-size: var(--text-lg);
-  }
-  .start-intro p {
-    margin: var(--space-2) 0 0;
-    max-width: 680px;
-    color: var(--color-text-muted);
-  }
-  .start-intro :global(svg) {
-    flex: none;
-    color: var(--color-link);
-  }
-  .start-intro:hover {
+
+  .first-card:hover {
     border-color: var(--color-accent);
   }
 
-  /* Одна колонка; 2 от 600 px, 3 от 1024 px. Ячейки фиксированной ширины: одиночная карточка не растягивается. */
+  .first-title {
+    font-family: var(--font-text);
+    font-weight: 600;
+    font-size: var(--text-xl);
+    line-height: 1.25;
+    text-wrap: balance;
+  }
+
+  .first-desc {
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    color: var(--color-text-muted);
+    text-wrap: pretty;
+  }
+
+  .first-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-top: auto;
+    padding-top: 6px;
+    font-size: 0.8125rem;
+    color: var(--color-text-muted);
+  }
+
+  .first-meta :global(svg) {
+    flex: none;
+    color: var(--color-accent);
+  }
+
+  /* Одна колонка; 2 от 600 px, 3 от 1024 px, 5 от 1280 px. Ячейки фиксированной ширины: одиночная карточка не растягивается. */
   .start-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -318,7 +351,8 @@ const visualizations = await loadVisualizationSection();
     list-style: none;
   }
 
-  .start .all {
+  .start .all,
+  [data-first-steps] .all {
     align-self: flex-start;
   }
 
@@ -371,6 +405,13 @@ const visualizations = await loadVisualizationSection();
     color: var(--color-text-muted);
   }
 
+  @media (width < 600px) {
+    .start-grid {
+      gap: 0;
+      border-top: var(--border-width) solid var(--color-border);
+    }
+  }
+
   @media (width >= 600px) {
     .start-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -378,12 +419,22 @@ const visualizations = await loadVisualizationSection();
   }
 
   @media (width >= 1024px) {
+    .first-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
     .start-grid {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
     kbd {
       display: block;
+    }
+  }
+
+  @media (width >= 1280px) {
+    .start-grid {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
     }
   }
 

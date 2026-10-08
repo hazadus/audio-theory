@@ -37,14 +37,14 @@ test('мобильное меню: «Треки» вторым пунктом', 
 });
 
 test(
-  'главная: «С чего начать» после поиска и перед визуализациями',
+  'главная: «Треки» после «Первого знакомства» и перед визуализациями',
   { tag: ['@tracks'] },
   async ({ page }, info) => {
     const base = info.project.metadata.base;
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('');
     const section = page.locator('[data-start-tracks]');
-    await expect(section.getByRole('heading', { level: 2, name: 'С чего начать' })).toBeVisible();
+    await expect(section.getByRole('heading', { level: 2, name: 'Треки' })).toBeVisible();
     await expect(section.locator('a.card')).toHaveCount(2);
     await expect(section.locator('a.card').first()).toHaveAttribute(
       'href',
