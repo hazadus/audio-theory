@@ -42,7 +42,7 @@ import SelfCheck from '@/components/SelfCheck.astro';
 
 </MarginNote>
 
-В курсе `Parameters` — структура из трёх ссылок на параметры, а `BypassTransitionSmoother` — класс с закрытым состоянием. Доступ задают метки `public`, `protected` и `private`; метка действует до следующей. `private` разрешает доступ только методам этого класса, `protected` — ещё и наследникам, `public` — всем.
+`Parameters` — структура из трёх ссылок на параметры, а `BypassTransitionSmoother` — класс с закрытым состоянием. Доступ задают метки `public`, `protected` и `private`; метка действует до следующей. `private` разрешает доступ только методам этого класса, `protected` — ещё и наследникам, `public` — всем.
 
 ```cpp
 class BypassTransitionSmoother {
@@ -79,7 +79,7 @@ private:
 
 </MarginNote>
 
-Старый `const` перед типом результата, как в `const juce::String getName() const override`, остался от шаблона JUCE. Он относится к возвращаемой копии строки, не нужен в современном C++, и сигнатура должна совпадать с базовым классом. Предупреждение об этом отключено флагом `-Wno-ignored-qualifiers`.
+В объявлении `const juce::String getName() const override` два `const`. Второй, после списка параметров, делает метод константным. Первый стоит перед типом результата и относится к возвращаемому значению: метод возвращает копию строки, и эту копию нельзя изменить. Для значения, возвращаемого по копии, такой запрет бесполезен: вызывающий код всё равно получает собственный объект. С C++11 он ещё и мешает перемещению, о котором речь [ниже](#copying). В `PluginProcessor` этот `const` написан потому, что так объявлен чисто виртуальный метод в `juce::AudioProcessor`: `virtual const String getName() const = 0;`. Переопределение должно возвращать тот же тип, что и метод базы, и убрать `const` только в наследнике нельзя.
 
 ### Статические члены и this {#static-this}
 
@@ -88,7 +88,7 @@ private:
   { label: 'Learn C++ → 15.6 Static member variables', description: 'Статические поля: одно на весь класс.', target: { url: 'https://www.learncpp.com/cpp-tutorial/static-member-variables/' } },
 ]}>
 
-Статический метод принадлежит классу, а не объекту, и не имеет `this`. `JsonSerializer` в курсе — класс без полей, который служит группой функций: `JsonSerializer::serialize(parameters, outputStream)` вызывается без объекта. Статическое поле одно на весь класс; `static constexpr auto modulationDepth = 0.4f;` в `Tremolo` — константа класса, известная при компиляции. Слово `static` в C++ означает разное в зависимости от места: у члена класса — «принадлежит классу», у локальной переменной — «живёт до конца программы», у функции вне класса — «видна только в этом файле».
+Статический метод принадлежит классу, а не объекту, и не имеет `this`. `JsonSerializer` — класс без полей, который служит группой функций: `JsonSerializer::serialize(parameters, outputStream)` вызывается без объекта. Статическое поле одно на весь класс; `static constexpr auto modulationDepth = 0.4f;` в `Tremolo` — константа класса, известная при компиляции. Слово `static` в C++ означает разное в зависимости от места: у члена класса — «принадлежит классу», у локальной переменной — «живёт до конца программы», у функции вне класса — «видна только в этом файле».
 
 </MarginNote>
 
@@ -113,7 +113,7 @@ explicit BypassTransitionSmoother(double crossfadeLengthSecondsValue = 0.01)
 }
 ```
 
-Для ссылок, `const`-полей и классов без конструктора по умолчанию список инициализации — единственный способ. Так написан конструктор `Parameters` в курсе: поля-ссылки `rate`, `bypassed` и `waveform` невозможно создать пустыми. Поля инициализируются в порядке объявления в классе, а не в порядке записи в списке; если порядки расходятся, срабатывает `-Wreorder`.
+Для ссылок, `const`-полей и классов без конструктора по умолчанию список инициализации — единственный способ. Так написан конструктор `Parameters`: поля-ссылки `rate`, `bypassed` и `waveform` невозможно создать пустыми. Поля инициализируются в порядке объявления в классе, а не в порядке записи в списке; если порядки расходятся, срабатывает `-Wreorder`.
 
 Конструктор базового класса тоже вызывается в списке инициализации, как `super().__init__(...)` в Python. База создаётся раньше полей наследника:
 
@@ -135,9 +135,22 @@ PluginEditor::PluginEditor(PluginProcessor& p) : AudioProcessorEditor(&p), /* ..
   { label: 'Learn C++ → 14.16 Converting constructors and the explicit keyword', description: 'Converting constructors и ключевое слово explicit.', target: { url: 'https://www.learncpp.com/cpp-tutorial/converting-constructors-and-the-explicit-keyword/' } },
 ]}>
 
-Конструктор с одним параметром C++ по умолчанию использует и для неявного преобразования. Без `explicit` можно было бы передать `PluginProcessor` там, где ждут `PluginEditor`, и компилятор молча создал бы редактор. Слово `explicit` запрещает неявное преобразование и оставляет только явное создание объекта. В курсе его пишут у `explicit Parameters(juce::AudioProcessor&)` и `explicit PluginEditor(PluginProcessor&)`; хорошее правило — ставить его у всех конструкторов с одним аргументом, если неявное преобразование не нужно.
+Неявное преобразование превращает одно значение в объект другого типа, когда тип аргумента не совпадает с ожидаемым. Для этого компилятор ищет у нужного класса конструктор, который можно вызвать с одним аргументом: исходное значение одно, и других данных для создания объекта у него нет. Подходит и конструктор, у которого остальные параметры имеют значения по умолчанию, как у `BypassTransitionSmoother(double crossfadeLengthSecondsValue = 0.01)`.
 
 </MarginNote>
+
+Если бы этот конструктор не был помечен `explicit`, следующий код компилировался бы без ошибок. Функция `inspect` придумана для примера:
+
+```cpp
+void inspect(const BypassTransitionSmoother& smoother);
+
+inspect(0.5);                             // из 0.5 создаётся временный BypassTransitionSmoother
+BypassTransitionSmoother smoother = 0.5;  // то же при инициализации через =
+```
+
+Число `0.5` молча превратилось бы в объект с переходом длиной полсекунды, хотя по вызову `inspect(0.5)` этого не видно. С `explicit` обе строки — ошибка компиляции, и объект создаётся только явно: `inspect(BypassTransitionSmoother{0.5})`. Так же объявлены `explicit Parameters(juce::AudioProcessor&)` и `explicit PluginEditor(PluginProcessor&)`: без `explicit` процессор можно было бы передать в функцию, которая ждёт `const PluginEditor&`, и компилятор создал бы для этого вызова временный редактор.
+
+Конструктор с несколькими параметрами тоже может участвовать в неявном преобразовании, но только из списка в фигурных скобках: вызов `f({a, b})` создаст объект параметра из `a` и `b`. `explicit` запрещает и этот случай. Обычно его ставят у всех конструкторов, которые можно вызвать с одним аргументом, если неявное преобразование не нужно.
 
 ### Фигурные скобки {#brace-init}
 
@@ -146,7 +159,7 @@ PluginEditor::PluginEditor(PluginProcessor& p) : AudioProcessorEditor(&p), /* ..
   { label: 'Learn C++ → 13.8 Struct aggregate initialization', description: 'Агрегатная инициализация структур.', target: { url: 'https://www.learncpp.com/cpp-tutorial/struct-aggregate-initialization/' } },
 ]}>
 
-В C++ несколько синтаксисов создания объекта; курс в основном использует фигурные скобки (C++11): `BypassTransitionSmoother testee{1.0};`, `juce::LinearSmoothedValue<float> dryGain{0.f};`, `PluginProcessor processor{};`. Отличия от круглых скобок: `{}` запрещает сужающие преобразования (`int x{3.7};` не компилируется, а `int x(3.7);` молча даст 3), а `int x{};` гарантирует ноль, тогда как `int x;` оставляет произвольное значение.
+В C++ несколько синтаксисов создания объекта; в коде плагина в основном используются фигурные скобки (C++11): `BypassTransitionSmoother testee{1.0};`, `juce::LinearSmoothedValue<float> dryGain{0.f};`, `PluginProcessor processor{};`. Отличия от круглых скобок: `{}` запрещает сужающие преобразования (`int x{3.7};` не компилируется, а `int x(3.7);` молча даст 3), а `int x{};` гарантирует ноль, тогда как `int x;` оставляет произвольное значение.
 
 </MarginNote>
 
@@ -173,7 +186,7 @@ testee.prepare({sampleRate, blockSize, channelCount});  // в тесте
   { label: 'Learn C++ → 24.4 Constructors and initialization of derived classes', description: 'Конструкторы производных классов.', target: { url: 'https://www.learncpp.com/cpp-tutorial/constructors-and-initialization-of-derived-classes/' } },
 ]}>
 
-Запись `class PluginProcessor : public juce::AudioProcessor` — открытое наследование (inheritance): публичные члены базы остаются публичными, а объект наследника можно использовать везде, где ждут базу. Почти всегда пишут именно `public`; множественное наследование в курсе не встречается. `CustomLookAndFeel` в курсе наследует `juce::LookAndFeel_V4` и переопределяет методы отрисовки; остальное поведение унаследовано.
+Запись `class PluginProcessor : public juce::AudioProcessor` — открытое наследование (inheritance): публичные члены базы остаются публичными, а объект наследника можно использовать везде, где ждут базу. Почти всегда пишут именно `public`; множественного наследования в плагине нет. `CustomLookAndFeel` наследует `juce::LookAndFeel_V4` и переопределяет методы отрисовки; остальное поведение унаследовано.
 
 </MarginNote>
 
@@ -229,7 +242,7 @@ using AudioProcessor::processBlock;
 
 </MarginNote>
 
-Шаблон принимает и значения: в `std::array<juce::dsp::Oscillator<float>, 2u> lfos` второй аргумент задаёт число элементов. В курсе есть и собственные шаблоны. `SampleFifo<SampleType>` передаёт отсчёты LFO из аудиопотока в интерфейс, а `StridedQueue<T, Size>` хранит точки графика:
+Шаблон принимает и значения: в `std::array<juce::dsp::Oscillator<float>, 2u> lfos` второй аргумент задаёт число элементов. Плагин объявляет и собственные шаблоны. `SampleFifo<SampleType>` передаёт отсчёты LFO из аудиопотока в интерфейс, а `StridedQueue<T, Size>` хранит точки графика:
 
 ```cpp
 template <typename SampleType>
@@ -273,7 +286,7 @@ lfoSamplesToPlot.pushBack(std::span{
   { label: 'Learn C++ → 13.14 Class template argument deduction (CTAD) and deduction guides', description: 'Вывод аргументов шаблона класса и подсказки вывода.', target: { url: 'https://www.learncpp.com/cpp-tutorial/class-template-argument-deduction-ctad-and-deduction-guides/' } },
 ]}>
 
-`std::span` (C++20) — «вид» на непрерывный кусок памяти: указатель и длина, без владения данными. Это аналог среза в Go без возможности расти или `memoryview` в Python. Курс передаёт в `pushBack` указатель на отсчёты канала вместе с длиной, не копируя данные.
+`std::span` (C++20) — «вид» на непрерывный кусок памяти: указатель и длина, без владения данными. Это аналог среза в Go без возможности расти или `memoryview` в Python. Через него в `pushBack` передаются указатель на отсчёты канала и их число, а сами отсчёты не копируются.
 
 </MarginNote>
 
@@ -283,7 +296,7 @@ lfoSamplesToPlot.pushBack(std::span{
   { label: 'Learn C++ → 13.6 Scoped enumerations (enum classes)', description: 'Перечисления с областью видимости.', target: { url: 'https://www.learncpp.com/cpp-tutorial/scoped-enumerations-enum-classes/' } },
 ]}>
 
-`enum class` (C++11) — перечисление со своей областью видимости: значения пишутся как `LfoWaveform::sine`, а не просто `sine`, и неявно в число не превращаются. Старый `enum` из C++98 выбрасывал имена значений наружу и молча приводился к `int`. В курсе перечисление объявлено внутри `Tremolo` с явным базовым типом `size_t`, чтобы значение подходило как индекс массива.
+`enum class` (C++11) — перечисление со своей областью видимости: значения пишутся как `LfoWaveform::sine`, а не просто `sine`, и неявно в число не превращаются. Старый `enum` из C++98 выбрасывал имена значений наружу и молча приводился к `int`. `LfoWaveform` объявлено внутри `Tremolo` с явным базовым типом `size_t`, чтобы значение подходило как индекс массива.
 
 </MarginNote>
 
@@ -318,7 +331,7 @@ static_cast<Tremolo::LfoWaveform>(parameters.waveform.getIndex())
 
 </MarginNote>
 
-RAII (Resource Acquisition Is Initialization) — идиома, при которой ресурс захватывается в конструкторе и освобождается в деструкторе. В `processBlock` курса это одна строка:
+RAII (Resource Acquisition Is Initialization) — идиома, при которой ресурс захватывается в конструкторе и освобождается в деструкторе. В `processBlock` плагина её показывает одна строка:
 
 ```cpp
 void PluginProcessor::processBlock(juce::AudioBuffer<float>& buffer,
@@ -352,7 +365,7 @@ PluginProcessor& operator=(const PluginProcessor&) = delete;
 
 `= delete` удаляет функцию: любая попытка скопировать объект становится ошибкой компиляции. В C++98 эти функции объявляли `private` и не определяли, и ошибка появлялась позже, при компоновке.
 
-В курсе эти две строки пишет макрос JUCE (см. [раздел о макросах](#juce-macros)). В C++11 появилась и семантика перемещения (`T&&`, `std::move`): вместо копирования содержимое «забирается» у объекта, который больше не нужен, например у временного. Поэтому возврат большого объекта из функции по значению в современном C++ обычно не копирует данные. `std::unique_ptr` не копируется, а только перемещается, и в статье [«Кто владеет объектом»](/cpp-ownership/#unique-ptr) это объяснено на примере параметров плагина.
+В `PluginProcessor` эти две строки пишет макрос JUCE (см. [раздел о макросах](#juce-macros)). В C++11 появилась и семантика перемещения (`T&&`, `std::move`): вместо копирования содержимое «забирается» у объекта, который больше не нужен, например у временного. Поэтому возврат большого объекта из функции по значению в современном C++ обычно не копирует данные. `std::unique_ptr` не копируется, а только перемещается, и в статье [«Кто владеет объектом»](/cpp-ownership/#unique-ptr) это объяснено на примере параметров плагина.
 
 ## Неявные преобразования и перегрузка операторов {#operator-overloading}
 
@@ -361,11 +374,11 @@ PluginProcessor& operator=(const PluginProcessor&) = delete;
   { label: 'Learn C++ → 21.11 Overloading typecasts', description: 'Перегрузка операторов приведения типов.', target: { url: 'https://www.learncpp.com/cpp-tutorial/overloading-typecasts/' } },
 ]}>
 
-Класс может определить собственные версии операторов: `operator==`, `operator!=`, `operator=`, `operator[]` и других, а также операторы преобразования к другому типу. Перегрузка операторов есть в Python (`__eq__`, `__add__`), но нет в Go и TypeScript. Из-за неявных преобразований часть строк курса выглядит проще, чем работает.
+Класс может определить собственные версии операторов: `operator==`, `operator!=`, `operator=`, `operator[]` и других, а также операторы преобразования к другому типу. Перегрузка операторов есть в Python (`__eq__`, `__add__`), но нет в Go и TypeScript. Из-за неявных преобразований часть строк плагина выглядит проще, чем работает.
 
 </MarginNote>
 
-Параметры плагина в курсе хранятся как ссылки на объекты JUCE, а не как числа. Эти классы определяют оператор преобразования и перегруженное присваивание:
+Параметры плагина хранятся как ссылки на объекты JUCE, а не как числа. Эти классы определяют оператор преобразования и перегруженное присваивание:
 
 ```cpp
 tremolo.setModulationRateHz(parameters.rate, applySmoothing);  // operator float()
@@ -379,7 +392,7 @@ parameters.rate = 10.f;                                        // operator=(floa
 
 ## Макросы JUCE {#juce-macros}
 
-Макрос (`#define`) — текстовая подстановка препроцессора. Имена макросов по соглашению пишут заглавными буквами. В классах курса встречаются два макроса JUCE: `jassert` и семейство `JUCE_DECLARE_NON_COPYABLE`.
+Макрос (`#define`) — текстовая подстановка препроцессора. Имена макросов по соглашению пишут заглавными буквами. В классах плагина используются макросы JUCE `jassert` и семейство `JUCE_DECLARE_NON_COPYABLE`.
 
 ### jassert {#jassert}
 
@@ -402,7 +415,7 @@ jassert(buffer.getNumSamples() <= dryBuffer.getNumSamples());
   { label: 'GoogleTest → Primer', description: 'Основы TEST, TEST_F и проверок EXPECT и ASSERT.', target: { url: 'https://google.github.io/googletest/primer.html' } },
 ]}>
 
-Тесты курса написаны на GoogleTest и лежат в папке `test/`. `TEST(Группа, Имя)` раскрывается в определение класса-наследника `testing::Test` и его метода, тело которого вы пишете в фигурных скобках. `TEST_F` делает то же, но наследуется от вашего класса-фикстуры (fixture), как `BypassTransitionSmootherTest`: перед каждым тестом создаётся новый объект фикстуры и вызывается её `SetUp()`. Аналог — `setUp` в `unittest` Python или `beforeEach` в Jest.
+Тесты плагина написаны на GoogleTest и лежат в папке `test/`. `TEST(Группа, Имя)` раскрывается в определение класса-наследника `testing::Test` и его метода, тело которого вы пишете в фигурных скобках. `TEST_F` делает то же, но наследуется от вашего класса-фикстуры (fixture), как `BypassTransitionSmootherTest`: перед каждым тестом создаётся новый объект фикстуры и вызывается её `SetUp()`. Аналог — `setUp` в `unittest` Python или `beforeEach` в Jest.
 
 </MarginNote>
 
@@ -425,14 +438,14 @@ TEST_F(BypassTransitionSmootherTest, OffOnTransitionIsSmooth) {
 
 Проверки `EXPECT_EQ`, `EXPECT_TRUE`, `EXPECT_NEAR`, `EXPECT_FLOAT_EQ` при неудаче помечают тест проваленным, но он продолжает выполняться. `ASSERT_*` при неудаче прерывает тест сразу, и его берут для предусловий, без которых дальнейшие проверки бессмысленны. Поля фикстуры объявлены `protected`, потому что каждый `TEST_F` технически является наследником фикстуры. Для сравнения вещественных чисел используют `EXPECT_NEAR` и `EXPECT_FLOAT_EQ`, а не `==`, о чём предупреждает флаг `-Wfloat-equal`.
 
-## Что понадобится ещё {#next}
+## Стандартная библиотека и лямбды {#next}
 
-В `tremolo_plugin.h` подключены стандартные заголовки, которые нужны курсу. [Таблица 1](#std-headers) перечисляет их назначение.
+[Таблица 1](#std-headers) перечисляет стандартные заголовки, подключённые в `tremolo_plugin.h`.
 
 <DataTable
   id="std-headers"
   number={1}
-  caption="Стандартные заголовки, подключённые в tremolo_plugin.h, и то, что из них используется в курсе."
+  caption="Стандартные заголовки, подключённые в tremolo_plugin.h, и то, что из них используется в плагине."
   columns={[
     { label: 'Заголовок', width: '8rem' },
     { label: 'Что даёт' },
@@ -460,7 +473,7 @@ TEST_F(BypassTransitionSmootherTest, OffOnTransitionIsSmooth) {
 
 </MarginNote>
 
-В курсе лямбды связывают редактор с процессором и реагируют на события интерфейса:
+В плагине лямбды связывают редактор с процессором и реагируют на события интерфейса:
 
 ```cpp
 bypassButton.onClick = [this]() {
