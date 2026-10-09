@@ -27,14 +27,15 @@ import Callout from '@/components/Callout.astro';
 import DataTable from '@/components/DataTable.astro';
 import MarginNote from '@/components/MarginNote.astro';
 import SelfCheck from '@/components/SelfCheck.astro';
+import Term from '@/components/Term.astro';
 
-Код учебного плагина тремоло из [официального курса JUCE](https://github.com/juce-framework/tremolo-juce-course) написан на C++23 и местами выглядит непривычно: макросы вместо констант, пустые функции для «использования» параметра, `static_cast` на каждом шагу. Эта статья разбирает язык ровно в том объёме, который нужен, чтобы читать этот код и дописывать его. Каждое понятие показано на строке из этого плагина, а за подробностями ведут заметки на полях со ссылками на учебник [Learn C++](https://www.learncpp.com/) и справочник cppreference.
+Код учебного <Term id="plugin" firstMention>плагина</Term> <Term id="tremolo" firstMention>тремоло</Term> из [официального курса JUCE](https://github.com/juce-framework/tremolo-juce-course) написан на C++23 и местами выглядит непривычно: макросы вместо констант, пустые функции для «использования» параметра, `static_cast` на каждом шагу. Эта статья разбирает язык ровно в том объёме, который нужен, чтобы читать этот код и дописывать его. Каждое понятие показано на строке из этого плагина, а за подробностями ведут заметки на полях со ссылками на учебник [Learn C++](https://www.learncpp.com/) и справочник cppreference.
 
 Фрагменты взяты из готовой версии плагина в папке [`complete`](https://github.com/juce-framework/tremolo-juce-course/tree/main/complete) репозитория `tremolo-juce-course` (JUCE 8.0.12). Короткие учебные примеры без JUCE проверены компиляцией: Apple clang 17, режим C++23.
 
 C++ развивается стандартами: C++98, C++11, C++14, C++17, C++20, C++23. Рядом с возможностями, которые появились после 1998 года, в скобках указан стандарт. Плагин собирается в режиме C++23, поэтому доступно всё перечисленное.
 
-Классы, конструкторы, наследование, шаблоны и время жизни объектов разобраны во второй части, [«C++ в плагине: классы, шаблоны и время жизни»](/cpp-classes/). Владение объектами в куче — в отдельной статье [«Кто владеет объектом»](/cpp-ownership/), а правила для аудиопотока — в [«C++ в аудиопотоке»](/cpp-audio-thread/).
+Классы, конструкторы, наследование, шаблоны и <Term id="object-lifetime" firstMention>время жизни объектов</Term> разобраны во второй части, [«C++ в плагине: классы, шаблоны и время жизни»](/cpp-classes/). <Term id="object-ownership" firstMention>Владение объектами</Term> в <Term id="heap" firstMention>куче</Term> — в отдельной статье [«Кто владеет объектом»](/cpp-ownership/), а правила для <Term id="audio-thread" firstMention>аудиопотока</Term> — в [«C++ в аудиопотоке»](/cpp-audio-thread/).
 
 ## Как код попадает в компилятор {#build}
 
@@ -140,7 +141,7 @@ const juce::String PluginProcessor::getName() const {
   { label: 'Learn C++ → 4.8 Floating point numbers', description: 'Точность float и double и ошибки округления.', target: { url: 'https://www.learncpp.com/cpp-tutorial/floating-point-numbers/' } },
 ]}>
 
-[Таблица 1](#builtin-types) показывает встроенные типы, которые чаще всего встречаются в коде плагина. Отсчёты аудио хранятся во `float`: для звука хватает точности, а данных вдвое меньше, чем с `double`. Частота дискретизации и время — в `double`. Подробнее о представлении отсчётов — в статье [«Аудиоданные»](/audio-data/).
+[Таблица 1](#builtin-types) показывает встроенные типы, которые чаще всего встречаются в коде плагина. <Term id="sample" firstMention>Отсчёты</Term> аудио хранятся во `float`: для звука хватает точности, а данных вдвое меньше, чем с `double`. <Term id="sample-rate" firstMention>Частота дискретизации</Term> и время — в `double`. Подробнее о представлении отсчётов — в статье [«Аудиоданные»](/audio-data/).
 
 </MarginNote>
 
@@ -213,7 +214,7 @@ for (auto& lfo : lfos) {   // ссылка на каждый осциллято�
 }
 ```
 
-Если в этом цикле написать `auto lfo`, `reset()` сработает на копии осциллятора, а исходный не изменится.
+Если в этом цикле написать `auto lfo`, `reset()` сработает на копии <Term id="oscillator" firstMention>осциллятора</Term>, а исходный не изменится.
 
 `const` запрещает менять объект после инициализации. В коде плагина почти всё неизменяемое помечено `const`:
 

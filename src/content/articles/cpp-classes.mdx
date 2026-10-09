@@ -26,10 +26,11 @@ related:
 import DataTable from '@/components/DataTable.astro';
 import MarginNote from '@/components/MarginNote.astro';
 import SelfCheck from '@/components/SelfCheck.astro';
+import Term from '@/components/Term.astro';
 
-Эта статья продолжает [«Основы C++ для JUCE»](/cpp-basics/) и разбирает остальную часть языка, которая нужна для чтения плагина тремоло из [официального курса JUCE](https://github.com/juce-framework/tremolo-juce-course): классы и структуры, конструкторы, наследование и виртуальные методы, шаблоны, время жизни объектов, запрет копирования, неявные преобразования, макросы JUCE и тесты. Каждое понятие показано на фрагменте готовой версии из папки [`complete`](https://github.com/juce-framework/tremolo-juce-course/tree/main/complete) (JUCE 8.0.12, C++23); на полях стоят ссылки на уроки [Learn C++](https://www.learncpp.com/) и справочник cppreference.
+Эта статья продолжает [«Основы C++ для JUCE»](/cpp-basics/) и разбирает остальную часть языка, которая нужна для чтения <Term id="plugin" firstMention>плагина</Term> <Term id="tremolo" firstMention>тремоло</Term> из [официального курса JUCE](https://github.com/juce-framework/tremolo-juce-course): классы и структуры, конструкторы, наследование и виртуальные методы, шаблоны, <Term id="object-lifetime" firstMention>время жизни объектов</Term>, запрет копирования, неявные преобразования, макросы JUCE и тесты. Каждое понятие показано на фрагменте готовой версии из папки [`complete`](https://github.com/juce-framework/tremolo-juce-course/tree/main/complete) (JUCE 8.0.12, C++23); на полях стоят ссылки на уроки [Learn C++](https://www.learncpp.com/) и справочник cppreference.
 
-Владение объектами в куче разобрано отдельно, в статье [«Кто владеет объектом»](/cpp-ownership/), а правила аудиопотока — в [«C++ в аудиопотоке»](/cpp-audio-thread/); здесь они упомянуты кратко.
+<Term id="object-ownership" firstMention>Владение объектами</Term> в <Term id="heap" firstMention>куче</Term> разобрано отдельно, в статье [«Кто владеет объектом»](/cpp-ownership/), а правила <Term id="audio-thread" firstMention>аудиопотока</Term> — в [«C++ в аудиопотоке»](/cpp-audio-thread/); здесь они упомянуты кратко.
 
 ## Классы и структуры {#classes}
 
@@ -238,11 +239,11 @@ using AudioProcessor::processBlock;
   { label: 'Learn C++ → 11.6 Function templates', description: 'Шаблоны функций.', target: { url: 'https://www.learncpp.com/cpp-tutorial/function-templates/' } },
 ]}>
 
-Шаблон (template) позволяет один раз описать алгоритм или контейнер для разных типов. По назначению он близок к дженерикам других языков. `juce::AudioBuffer<float>` — буфер отсчётов `float`, `AudioBuffer<double>` — буфер `double`; логика класса общая, а тип элементов выбирается при использовании. Компилятор инстанцирует (instantiate) шаблон для каждого набора аргументов, поэтому определение шаблона должно быть видно в месте использования, и шаблонный код обычно лежит в заголовках.
+Шаблон (template) позволяет один раз описать алгоритм или контейнер для разных типов. По назначению он близок к дженерикам других языков. `juce::AudioBuffer<float>` — буфер <Term id="sample" firstMention>отсчётов</Term> `float`, `AudioBuffer<double>` — буфер `double`; логика класса общая, а тип элементов выбирается при использовании. Компилятор инстанцирует (instantiate) шаблон для каждого набора аргументов, поэтому определение шаблона должно быть видно в месте использования, и шаблонный код обычно лежит в заголовках.
 
 </MarginNote>
 
-Шаблон принимает и значения: в `std::array<juce::dsp::Oscillator<float>, 2u> lfos` второй аргумент задаёт число элементов. Плагин объявляет и собственные шаблоны. `SampleFifo<SampleType>` передаёт отсчёты LFO из аудиопотока в интерфейс, а `StridedQueue<T, Size>` хранит точки графика:
+Шаблон принимает и значения: в `std::array<juce::dsp::Oscillator<float>, 2u> lfos` второй аргумент задаёт число элементов. Плагин объявляет и собственные шаблоны. `SampleFifo<SampleType>` передаёт отсчёты <Term id="lfo" firstMention>LFO</Term> из аудиопотока в интерфейс, а `StridedQueue<T, Size>` хранит точки графика:
 
 ```cpp
 template <typename SampleType>
@@ -331,7 +332,7 @@ static_cast<Tremolo::LfoWaveform>(parameters.waveform.getIndex())
 
 </MarginNote>
 
-RAII (Resource Acquisition Is Initialization) — идиома, при которой ресурс захватывается в конструкторе и освобождается в деструкторе. В `processBlock` плагина её показывает одна строка:
+<Term id="raii" firstMention define>RAII</Term> — идиома, при которой ресурс захватывается в конструкторе и освобождается в деструкторе. В `processBlock` плагина её показывает одна строка:
 
 ```cpp
 void PluginProcessor::processBlock(juce::AudioBuffer<float>& buffer,
