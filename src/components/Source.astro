@@ -1,0 +1,42 @@
+---
+// Издание из списка литературы в разделе «Источники»: авторы и название из реестра,
+// уточнение (глава, страницы со ссылками на текст в сети) — из содержимого, ссылка на запись в списке.
+import literatureData from '@/data/literature.json';
+import { authorLine, editionHref, findEdition, parseLiterature } from '@/lib/literature';
+import { withBase } from '@/lib/urls';
+
+interface Props {
+  /** `id` издания в src/data/literature.json. */
+  id: string;
+}
+
+const { id } = Astro.props;
+const literature = parseLiterature(literatureData);
+const edition = findEdition(literature, id);
+const hasLocator = Astro.slots.has('default');
+// Точка после авторов не удваивается: «и др.», «Smith S. W.».
+const authors = authorLine(literature, edition, true);
+const authorsEnd = authors.endsWith('.') ? '' : '.';
+---
+
+<span class="source">
+  {authors}
+  {authorsEnd} {edition.url ? <a href={edition.url}>{edition.title}</a> : edition.title}.
+  {hasLocator && (
+    <>
+      {' '}
+      <slot />.
+    </>
+  )}{' '}
+  <a class="literature-link" href={withBase(editionHref(id))} data-pagefind-ignore>
+    в списке литературы&nbsp;→
+  </a>
+</span>
+
+<style>
+  .literature-link {
+    font-family: var(--font-ui);
+    font-size: 0.875em;
+    white-space: nowrap;
+  }
+</style>

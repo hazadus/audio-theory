@@ -27,6 +27,7 @@ import Equation from '@/components/Equation.astro';
 import Figure from '@/components/Figure.astro';
 import MarginNote from '@/components/MarginNote.astro';
 import SelfCheck from '@/components/SelfCheck.astro';
+import Source from '@/components/Source.astro';
 import Term from '@/components/Term.astro';
 import { equalLoudnessContours } from '@/lib/equal-loudness';
 
@@ -172,9 +173,9 @@ $$
 ## Источники {#sources}
 
 - [ISO 226:2023. Acoustics — Normal equal-loudness-level contours](https://www.iso.org/standard/83117.html) — область применения и условия прослушивания. [Открытый фрагмент](https://cdn.standards.iteh.ai/samples/83117/6afa5bd94e0e4f32812c28c3b0a7b8ac/ISO-226-2023.pdf): определения, формула (1), таблица 1 с коэффициентами для графика.
-- [Yôiti Suzuki, Hisashi Takeshima, Kenji Kurakata. Revision of ISO 226 “Normal Equal-Loudness-Level Contours” from 2003 to 2023 edition: The background and results. Acoustical Science and Technology, 45(1), 2024, с. 1–8](https://www.jstage.jst.go.jp/article/ast/45/1/45_e23.66/_article/-char/en) — фоны, история измерений и формула редакции 2023 года, раздел 2.3. Статья доступна по CC BY-ND 4.0; её рисунки здесь не воспроизводятся.
+- <Source id="suzuki-2024" /> — фоны, история измерений и формула редакции 2023 года, раздел 2.3. Статья доступна по CC BY-ND 4.0; её рисунки здесь не воспроизводятся.
 - [Audio Engineering Society. Learn More: Equal loudness contours](https://aes.org/resources/audio-topics/loudness-project/learn-more/) — зависимость чувствительности слуха от частоты и уровня прослушивания, связь с музыкой.
-- [Steven W. Smith. The Scientist and Engineer's Guide to Digital Signal Processing, глава 22: Human Hearing](https://www.dspguide.com/ch22/1.htm) — устройство уха и разделение частот во внутреннем ухе.
-- [Roland Sottek, Thiago Lobato, Moritz Bender, Julian Becker. Modeling the ISO 226:2023 equal-loudness-level contours by standardized loudness methods, Forum Acusticum 2023](https://dael.euracoustics.org/confs/fa2023/data/articles/000585.pdf) — раздел 3: частотные фильтры и нелинейность слуха.
-- [Julius O. Smith III. Mathematics of the DFT: Signal Metrics](https://ccrma.stanford.edu/~jos/mdft/Signal_Metrics.html) — средний квадрат и RMS синусоиды.
+- <Source id="smith-1997">[Гл. 22: Human Hearing](https://www.dspguide.com/ch22/1.htm)</Source> — устройство уха и разделение частот во внутреннем ухе.
+- <Source id="sottek-2023" /> — раздел 3: частотные фильтры и нелинейность слуха.
+- <Source id="smith-2007">[Signal Metrics](https://ccrma.stanford.edu/~jos/mdft/Signal_Metrics.html)</Source> — средний квадрат и RMS синусоиды.
 - [NERC Vocabulary Server. Sound pressure level in air](https://vocab.nerc.ac.uk/collection/P07/current/CFSN0309/) — определение SPL через среднеквадратичное давление и опору 20 мкПа.

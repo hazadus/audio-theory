@@ -4,6 +4,8 @@ import remarkMath from 'remark-math';
 import remarkParse from 'remark-parse';
 import remarkHeadingAnchors from './remark-heading-anchors.mjs';
 import { unified } from 'unified';
+import literatureData from '@/data/literature.json';
+import { authorLine, findEdition, parseLiterature } from '@/lib/literature';
 
 /** Скорость чтения, слов в минуту. */
 export const wordsPerMinute = 180;
@@ -28,6 +30,14 @@ interface MdNode {
   name?: string | null;
   attributes?: { type: string; name?: string; value?: unknown }[];
   children?: MdNode[];
+}
+
+let parsedLiterature: ReturnType<typeof parseLiterature> | undefined;
+const literature = () => (parsedLiterature ??= parseLiterature(literatureData));
+
+function stringAttribute(node: MdNode, name: string): string | undefined {
+  const attribute = node.attributes?.find((a) => a.type === 'mdxJsxAttribute' && a.name === name);
+  return typeof attribute?.value === 'string' ? attribute.value : undefined;
 }
 
 const parser = unified().use(remarkParse).use(remarkMdx).use(remarkMath).use(remarkHeadingAnchors);
@@ -60,6 +70,12 @@ function collect(node: MdNode, out: string[]): void {
   const isInline = inlineTypes.has(node.type);
   if (!isInline) out.push(' ');
   if (node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement') {
+    // `Source` выводит авторов и название издания из реестра: это видимый текст раздела «Источники».
+    const sourceId = node.name === 'Source' ? stringAttribute(node, 'id') : undefined;
+    if (sourceId !== undefined) {
+      const edition = findEdition(literature(), sourceId);
+      out.push(' ', authorLine(literature(), edition, true), ' ', edition.title, ' ');
+    }
     for (const attribute of node.attributes ?? []) {
       if (attribute.type === 'mdxJsxAttribute' && visibleAttributes.has(attribute.name ?? '')) {
         if (typeof attribute.value === 'string') out.push(' ', attribute.value, ' ');

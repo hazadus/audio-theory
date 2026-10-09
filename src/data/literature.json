@@ -1,0 +1,405 @@
+{
+  "authors": {
+    "abel": "Abel J. S.",
+    "abramson": "Abramson J.",
+    "aldoshina": "Алдошина И. А.",
+    "alex": "Alex",
+    "becker": "Becker J.",
+    "bencina": "Bencina R.",
+    "bender": "Bender M.",
+    "blauert": "Блауэрт Й.",
+    "brandenburg": "Brandenburg K.",
+    "davies": "Davies S.",
+    "dean": "Dean S.",
+    "doumler": "Doumler T.",
+    "fastl": "Fastl H.",
+    "gotham": "Gotham M.",
+    "gullings": "Gullings K.",
+    "hamm": "Hamm C.",
+    "hartmann": "Hartmann W. M.",
+    "hughes": "Hughes B.",
+    "huovilainen": "Huovilainen A.",
+    "hutchinson": "Hutchinson R.",
+    "illowsky": "Illowsky B.",
+    "izhaki": "Izhaki R.",
+    "jarvis": "Jarvis B.",
+    "kabal": "Kabal P.",
+    "katz": "Katz B.",
+    "kester": "Kester W.",
+    "kurakata": "Kurakata K.",
+    "lavengood": "Lavengood M.",
+    "lipshitz": "Lipshitz S. P.",
+    "lobato": "Lobato T.",
+    "luff": "Luff G.",
+    "macaulay": "Macaulay E. J.",
+    "nam": "Nam J.",
+    "nave": "Nave C. R.",
+    "painter": "Painter T.",
+    "pekonen": "Pekonen J.",
+    "peterson": "Peterson J.",
+    "puckette": "Puckette M.",
+    "raissi": "Raissi R.",
+    "robjohns": "Robjohns H.",
+    "russell": "Russell D. A.",
+    "senior": "Senior M.",
+    "smith-jo": "Smith J. O. III",
+    "smith-sw": "Smith S. W.",
+    "sottek": "Sottek R.",
+    "spanias": "Spanias A.",
+    "stroustrup": "Stroustrup B.",
+    "supurovic": "Supurovic P.",
+    "sutter": "Sutter H.",
+    "suzuki": "Suzuki Y.",
+    "takeshima": "Takeshima H.",
+    "valimaki": "Välimäki V.",
+    "vanderkooy": "Vanderkooy J.",
+    "walden": "Walden J.",
+    "wannamaker": "Wannamaker R. A.",
+    "whittle": "Whittle R.",
+    "wright": "Wright J. N.",
+    "zwicker": "Zwicker E."
+  },
+  "editions": [
+    {
+      "id": "smith-1997",
+      "type": "book",
+      "authors": ["smith-sw"],
+      "title": "The Scientist and Engineer’s Guide to Digital Signal Processing",
+      "publication": "California Technical Publishing, 1997.",
+      "url": "https://www.dspguide.com/",
+      "translation": "Смит С. Цифровая обработка сигналов. Практическое руководство для инженеров и научных работников / пер. с англ. А. Ю. Линовича, С. В. Витязева, И. С. Гусинского. М.: ДМК Пресс, 2018. 718 с. Перевод книжного издания Newnes, 2003."
+    },
+    {
+      "id": "puckette-2007",
+      "type": "book",
+      "authors": ["puckette"],
+      "title": "The Theory and Technique of Electronic Music",
+      "publication": "World Scientific, 2007.",
+      "url": "https://msp.ucsd.edu/techniques.htm"
+    },
+    {
+      "id": "smith-2007",
+      "type": "book",
+      "authors": ["smith-jo"],
+      "title": "Mathematics of the Discrete Fourier Transform (DFT) with Audio Applications",
+      "publication": "2nd ed. W3K Publishing, 2007.",
+      "url": "https://ccrma.stanford.edu/~jos/mdft/"
+    },
+    {
+      "id": "smith-2010",
+      "type": "book",
+      "authors": ["smith-jo"],
+      "title": "Physical Audio Signal Processing for Virtual Musical Instruments and Audio Effects",
+      "publication": "W3K Publishing, 2010.",
+      "url": "https://ccrma.stanford.edu/~jos/pasp/"
+    },
+    {
+      "id": "smith-2011",
+      "type": "book",
+      "authors": ["smith-jo"],
+      "title": "Spectral Audio Signal Processing",
+      "publication": "W3K Publishing, 2011.",
+      "url": "https://ccrma.stanford.edu/~jos/sasp/"
+    },
+    {
+      "id": "smith-1999",
+      "type": "article",
+      "authors": ["smith-jo", "abel"],
+      "title": "Bark and ERB Bilinear Transforms",
+      "publication": "IEEE Transactions on Speech and Audio Processing. 1999. Vol. 7, № 6. P. 697–708.",
+      "url": "https://ccrma.stanford.edu/~jos/bbt/"
+    },
+    {
+      "id": "abramson-2021",
+      "type": "book",
+      "authors": ["abramson"],
+      "etAl": true,
+      "title": "Precalculus 2e",
+      "publication": "OpenStax, 2021.",
+      "url": "https://openstax.org/books/precalculus-2e/"
+    },
+    {
+      "id": "illowsky-2023",
+      "type": "book",
+      "authors": ["illowsky", "dean"],
+      "title": "Introductory Statistics 2e",
+      "publication": "OpenStax, 2023.",
+      "url": "https://openstax.org/books/introductory-statistics-2e/"
+    },
+    {
+      "id": "davies-2023",
+      "type": "book",
+      "authors": ["davies"],
+      "title": "A Cool Brisk Walk Through Discrete Mathematics",
+      "publication": "Version 2.2. University of Mary Washington, 2023.",
+      "url": "https://math.libretexts.org/Bookshelves/Combinatorics_and_Discrete_Mathematics/A_Cool_Brisk_Walk_Through_Discrete_Mathematics_(Davies)"
+    },
+    {
+      "id": "hutchinson-2017",
+      "type": "book",
+      "authors": ["hutchinson"],
+      "title": "Music Theory for the 21st-Century Classroom",
+      "publication": "University of Puget Sound, 2017.",
+      "url": "https://musictheory.pugetsound.edu/mt21c/"
+    },
+    {
+      "id": "gotham-2021",
+      "type": "book",
+      "authors": ["gotham", "gullings", "hamm", "hughes", "jarvis", "lavengood", "peterson"],
+      "title": "Open Music Theory. Version 2",
+      "publication": "VIVA Open Publishing, 2021.",
+      "url": "https://viva.pressbooks.pub/openmusictheory/"
+    },
+    {
+      "id": "izhaki-2012",
+      "type": "book",
+      "authors": ["izhaki"],
+      "title": "Mixing Audio: Concepts, Practices and Tools",
+      "publication": "2nd ed. Focal Press, 2012. ISBN 978-0-240-52222-7."
+    },
+    {
+      "id": "senior-2011",
+      "type": "book",
+      "authors": ["senior"],
+      "title": "Mixing Secrets for the Small Studio",
+      "publication": "Focal Press, 2011. ISBN 978-0-240-81580-0."
+    },
+    {
+      "id": "fastl-2007",
+      "type": "book",
+      "authors": ["fastl", "zwicker"],
+      "title": "Psychoacoustics: Facts and Models",
+      "publication": "3rd ed. Springer, 2007. ISBN 978-3-540-23159-2."
+    },
+    {
+      "id": "blauert-1979",
+      "type": "book",
+      "authors": ["blauert"],
+      "title": "Пространственный слух",
+      "publication": "Пер. с нем. И. Д. Гурвица. М.: Энергия, 1979. 224 с."
+    },
+    {
+      "id": "aldoshina-1999",
+      "type": "article",
+      "authors": ["aldoshina"],
+      "title": "Основы психоакустики",
+      "publication": "Цикл статей в журнале «Звукорежиссёр», 1999–2001."
+    },
+    {
+      "id": "brandenburg-1999",
+      "type": "article",
+      "authors": ["brandenburg"],
+      "title": "MP3 and AAC Explained",
+      "publication": "AES 17th International Conference on High-Quality Audio Coding, 1999.",
+      "url": "https://www.iis.fraunhofer.de/content/dam/iis/de/doc/ame/conference/AES-17-Conference_mp3-and-AAC-explained_AES17.pdf"
+    },
+    {
+      "id": "painter-2000",
+      "type": "article",
+      "authors": ["painter", "spanias"],
+      "title": "Perceptual Coding of Digital Audio",
+      "publication": "Proceedings of the IEEE. 2000. Vol. 88, № 4. P. 451–513.",
+      "url": "https://www.cns.nyu.edu/~david/courses/perceptionGrad/Readings/PainterSpanias-ProcIEEE2000.pdf"
+    },
+    {
+      "id": "wannamaker-2000",
+      "type": "article",
+      "authors": ["wannamaker", "lipshitz", "vanderkooy", "wright"],
+      "title": "A Theory of Nonsubtractive Dither",
+      "publication": "IEEE Transactions on Signal Processing. 2000. Vol. 48, № 2. P. 499–516.",
+      "url": "https://www.researchgate.net/publication/3317523_A_theory_of_nonsubtractive_dither"
+    },
+    {
+      "id": "valimaki-2007",
+      "type": "article",
+      "authors": ["valimaki", "huovilainen"],
+      "title": "Antialiasing Oscillators in Subtractive Synthesis",
+      "publication": "IEEE Signal Processing Magazine. 2007. Vol. 24, № 2. P. 116–125."
+    },
+    {
+      "id": "valimaki-2012",
+      "type": "article",
+      "authors": ["valimaki", "pekonen", "nam"],
+      "title": "Perceptually informed synthesis of bandlimited classical waveforms using integrated polynomial interpolation",
+      "publication": "Journal of the Acoustical Society of America. 2012. Vol. 131, № 1. P. 974–986.",
+      "url": "https://doi.org/10.1121/1.3651227"
+    },
+    {
+      "id": "suzuki-2024",
+      "type": "article",
+      "authors": ["suzuki", "takeshima", "kurakata"],
+      "title": "Revision of ISO 226 “Normal Equal-Loudness-Level Contours” from 2003 to 2023 edition: The background and results",
+      "publication": "Acoustical Science and Technology. 2024. Vol. 45, № 1. P. 1–8.",
+      "url": "https://www.jstage.jst.go.jp/article/ast/45/1/45_e23.66/_article/-char/en"
+    },
+    {
+      "id": "hartmann-2014",
+      "type": "article",
+      "authors": ["hartmann", "macaulay"],
+      "title": "Anatomical limits on interaural time differences: an ecological perspective",
+      "publication": "Frontiers in Neuroscience. 2014. Vol. 8.",
+      "url": "https://www.frontiersin.org/journals/neuroscience/articles/10.3389/fnins.2014.00034/full"
+    },
+    {
+      "id": "sottek-2023",
+      "type": "article",
+      "authors": ["sottek", "lobato", "bender", "becker"],
+      "title": "Modeling the ISO 226:2023 equal-loudness-level contours by standardized loudness methods",
+      "publication": "Forum Acusticum, 2023.",
+      "url": "https://dael.euracoustics.org/confs/fa2023/data/articles/000585.pdf"
+    },
+    {
+      "id": "katz-2000",
+      "type": "article",
+      "authors": ["katz"],
+      "title": "An Integrated Approach to Metering, Monitoring, and Leveling Practices, Part 1: Two-Channel Metering",
+      "publication": "Journal of the Audio Engineering Society. 2000. Vol. 48, № 9. Обновлённая версия на сайте автора — «Level Practices (Part 2)».",
+      "url": "https://www.digido.com/portfolio-item/level-practices-part-2/"
+    },
+    {
+      "id": "katz-level-practices",
+      "type": "web",
+      "authors": ["katz"],
+      "title": "Level Practices (Part 1)",
+      "publication": "Digital Domain.",
+      "url": "https://www.digido.com/portfolio-item/level-practices-part-1/"
+    },
+    {
+      "id": "robjohns-2014",
+      "type": "article",
+      "authors": ["robjohns"],
+      "title": "MeterPlugs K-Meter",
+      "publication": "Sound On Sound. 2014, октябрь.",
+      "url": "https://www.soundonsound.com/reviews/meterplugs-k-meter"
+    },
+    {
+      "id": "walden-2020",
+      "type": "article",
+      "authors": ["walden"],
+      "title": "Cubase: Delta Monitoring Explained",
+      "publication": "Sound On Sound. 2020, июль.",
+      "url": "https://www.soundonsound.com/techniques/cubase-delta-monitoring-explained"
+    },
+    {
+      "id": "kester-2008",
+      "type": "web",
+      "authors": ["kester"],
+      "title": "MT-001: Taking the Mystery out of the Infamous Formula, “SNR = 6.02N + 1.76dB,” and Why You Should Care",
+      "publication": "Analog Devices, 2008.",
+      "url": "https://www.analog.com/media/en/training-seminars/tutorials/MT-001.pdf"
+    },
+    {
+      "id": "kester-mt-017",
+      "type": "web",
+      "authors": ["kester"],
+      "title": "MT-017: Oversampling Interpolating DACs",
+      "publication": "Analog Devices.",
+      "url": "https://www.analog.com/media/en/training-seminars/tutorials/mt-017.pdf"
+    },
+    {
+      "id": "raissi-2002",
+      "type": "web",
+      "authors": ["raissi"],
+      "title": "The Theory Behind Mp3",
+      "publication": "2002.",
+      "url": "http://www.mp3-tech.org/programmer/docs/mp3_theory.pdf"
+    },
+    {
+      "id": "supurovic-1998",
+      "type": "web",
+      "authors": ["supurovic"],
+      "title": "MPEG Audio Frame Header",
+      "publication": "1998.",
+      "url": "http://www.datavoyage.com/mpgscript/mpeghdr.htm"
+    },
+    {
+      "id": "kabal-wave",
+      "type": "web",
+      "authors": ["kabal"],
+      "title": "Wave File Specifications",
+      "publication": "McGill University.",
+      "url": "https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html"
+    },
+    {
+      "id": "kabal-aiff",
+      "type": "web",
+      "authors": ["kabal"],
+      "title": "AIFF / AIFF-C Sound File Specifications",
+      "publication": "McGill University.",
+      "url": "https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/AIFF/AIFF.html"
+    },
+    {
+      "id": "whittle-pink-noise",
+      "type": "web",
+      "authors": ["whittle"],
+      "title": "DSP Generation of Pink Noise",
+      "publication": "First Principles Electronics.",
+      "url": "https://www.firstpr.com.au/dsp/pink-noise/"
+    },
+    {
+      "id": "russell-animations",
+      "type": "web",
+      "authors": ["russell"],
+      "title": "Acoustics and Vibration Animations",
+      "publication": "Pennsylvania State University.",
+      "url": "https://www.acs.psu.edu/drussell/demos.html"
+    },
+    {
+      "id": "hyperphysics",
+      "type": "web",
+      "authors": ["nave"],
+      "title": "HyperPhysics",
+      "publication": "Georgia State University.",
+      "url": "https://hyperphysics.gsu.edu/hbase/hframe.html"
+    },
+    {
+      "id": "bencina-2011",
+      "type": "web",
+      "authors": ["bencina"],
+      "title": "Real-time audio programming 101: time waits for nothing",
+      "publication": "2011.",
+      "url": "http://www.rossbencina.com/code/real-time-audio-programming-101-time-waits-for-nothing"
+    },
+    {
+      "id": "doumler-2020",
+      "type": "web",
+      "authors": ["doumler"],
+      "title": "Using locks in real-time audio processing, safely",
+      "publication": "2020. Копия в Internet Archive.",
+      "url": "https://web.archive.org/web/20250113204348/https://timur.audio/using-locks-in-real-time-audio-processing-safely"
+    },
+    {
+      "id": "luff-2021",
+      "type": "web",
+      "authors": ["luff"],
+      "title": "A cheap energy-preserving-ish crossfade",
+      "publication": "Signalsmith Audio, 2021.",
+      "url": "https://signalsmith-audio.co.uk/writing/2021/cheap-energy-crossfade/"
+    },
+    {
+      "id": "luff-2022",
+      "type": "web",
+      "authors": ["luff"],
+      "title": "Designing a straightforward limiter",
+      "publication": "Signalsmith Audio, 2022.",
+      "url": "https://signalsmith-audio.co.uk/writing/2022/limiter/"
+    },
+    {
+      "id": "learncpp",
+      "type": "web",
+      "authors": ["alex"],
+      "title": "Learn C++",
+      "publication": "learncpp.com.",
+      "url": "https://www.learncpp.com/"
+    },
+    {
+      "id": "cpp-core-guidelines",
+      "type": "web",
+      "authors": ["stroustrup", "sutter"],
+      "editors": true,
+      "title": "C++ Core Guidelines",
+      "publication": "Standard C++ Foundation.",
+      "url": "https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines"
+    }
+  ]
+}

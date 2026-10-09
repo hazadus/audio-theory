@@ -32,6 +32,7 @@ describe('список пунктов', () => {
       '/materials/',
       '/tracks/',
       '/glossary/',
+      '/literature/',
       '/about/',
     ]);
   });

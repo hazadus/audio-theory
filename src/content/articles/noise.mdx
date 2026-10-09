@@ -32,6 +32,7 @@ import Equation from '@/components/Equation.astro';
 import MarginNote from '@/components/MarginNote.astro';
 import NoiseDemo from '@/components/NoiseDemo.astro';
 import SelfCheck from '@/components/SelfCheck.astro';
+import Source from '@/components/Source.astro';
 import Term from '@/components/Term.astro';
 
 Синусоида повторяет одну форму через каждый <Term id="period" firstMention>период</Term>. Шум меняется так, что у обычного фрагмента нет одного повторяющегося цикла. В синтезаторе такой источник может дать шипение, дыхание или основу ударного звука: генератор создаёт <Term id="sample" firstMention>отсчёты</Term>, а усиление, фильтр и <Term id="envelope" firstMention>огибающая</Term> определяют результат.
@@ -420,13 +421,13 @@ private:
 
 ## Источники {#sources}
 
-- [Julius O. Smith III. Spectral Audio Signal Processing, White Noise](https://www.dsprelated.com/freebooks/sasp/White_Noise.html) — временные связи, белый спектр и распределение амплитуд.
+- <Source id="smith-2011">[White Noise](https://www.dsprelated.com/freebooks/sasp/White_Noise.html)</Source> — временные связи, белый спектр и распределение амплитуд.
 
-- [Steven W. Smith. The Scientist and Engineer's Guide to DSP, глава 2.6: Digital Noise Generation](https://www.dspguide.com/ch2/6.htm) — равномерные числа, seed, псевдослучайность и сложение распределений. [Глава 2.2](https://www.dspguide.com/ch2/2.htm) и [глава 2.3](https://www.dspguide.com/ch2/3.htm) — среднее, DC, RMS и разница сигнала с порождающим процессом.
+- <Source id="smith-1997">[Гл. 2.6: Digital Noise Generation](https://www.dspguide.com/ch2/6.htm)</Source> — равномерные числа, seed, псевдослучайность и сложение распределений. [Глава 2.2](https://www.dspguide.com/ch2/2.htm) и [глава 2.3](https://www.dspguide.com/ch2/3.htm) — среднее, DC, RMS и разница сигнала с порождающим процессом.
 - [JUCE. Random](https://docs.juce.com/master/classjuce_1_1Random.html) и [исходник версии 9.0.3](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_core/maths/juce_Random.cpp) — seed, текущее состояние, LCG и границы `nextFloat`.
-- [Robin Whittle. DSP Generation of Pink Noise](https://www.firstpr.com.au/dsp/pink-noise/) — белая и розовая PSD; опубликованные сообщения James McCartney, дополнительный белый компонент и анализ Allan Herriman. Код статьи написан по описанию алгоритма.
+- <Source id="whittle-pink-noise" /> — белая и розовая PSD; опубликованные сообщения James McCartney, дополнительный белый компонент и анализ Allan Herriman. Код статьи написан по описанию алгоритма.
 - [Рабочий текст стандарта C++, Counting functions](https://eel.is/c++draft/bit.count) — `std::countr_zero` из `<bit>`.
 - [SciPy. Welch](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.welch.html) — сегменты, окно Hann, усреднение и нормирование PSD. Реализация браузерного анализа собственная.
-- [Julius O. Smith III. Spectral Audio Signal Processing, Welch's Method](https://www.dsprelated.com/freebooks/sasp/Welch_s_Method.html) — периодограммы последовательных блоков, их усреднение и выбор между разрешением и устойчивостью оценки.
-- [Ross Bencina. Real-time audio programming 101: time waits for nothing](http://www.rossbencina.com/code/real-time-audio-programming-101-time-waits-for-nothing) — операции, которые могут заблокировать аудиопоток: блокировки, выделение памяти, обращение к диску.
-- [Robert A. Wannamaker, Stanley P. Lipshitz, John Vanderkooy, J. Nelson Wright. A Theory of Non-Subtractive Dither, IEEE Transactions on Signal Processing 48(2), 2000, с. 499–516](https://www.researchgate.net/publication/3317523_A_theory_of_nonsubtractive_dither) — авторская копия, раздел Practical Dither Signals, TPDF с размахом два шага квантования и ограничения независимости ошибки.
+- <Source id="smith-2011">[Welch's Method](https://www.dsprelated.com/freebooks/sasp/Welch_s_Method.html)</Source> — периодограммы последовательных блоков, их усреднение и выбор между разрешением и устойчивостью оценки.
+- <Source id="bencina-2011" /> — операции, которые могут заблокировать аудиопоток: блокировки, выделение памяти, обращение к диску.
+- <Source id="wannamaker-2000" /> — авторская копия, раздел Practical Dither Signals, TPDF с размахом два шага квантования и ограничения независимости ошибки.

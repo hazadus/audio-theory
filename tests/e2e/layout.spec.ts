@@ -40,11 +40,12 @@ test(
           await page.locator(selector).evaluate((el) => getComputedStyle(el).fontFamily),
         ).toContain('Literata');
       }
-      // В навигации только существующие страницы: «Материалы», «Треки», «Глоссарий» и «О проекте».
+      // В навигации только существующие страницы: «Материалы», «Треки», «Глоссарий», «Литература» и «О проекте».
       await expect(header.getByRole('navigation').getByRole('link')).toHaveText([
         'Материалы',
         'Треки',
         'Глоссарий',
+        'Литература',
         'О проекте',
       ]);
       const footer = page.locator('footer');

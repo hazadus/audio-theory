@@ -29,6 +29,7 @@ import IntroLfoDemo from '@/components/IntroLfoDemo.astro';
 import ReadingTrackLinks from '@/components/ReadingTrackLinks.astro';
 import MarginNote from '@/components/MarginNote.astro';
 import SelfCheck from '@/components/SelfCheck.astro';
+import Source from '@/components/Source.astro';
 import Term from '@/components/Term.astro';
 
 Поставьте рядом два знакомых звука: басовую ноту и удар по тарелке. Один можно напеть, другой больше похож на шорох. Один тянется ровно, другой начинается резко и затихает. Теория аудио помогает описать эти отличия, изменить звук и сохранить результат в файле.
@@ -174,10 +175,11 @@ import Term from '@/components/Term.astro';
 
 ## Источники {#sources}
 
-- [Steven W. Smith. The Scientist and Engineer’s Guide to Digital Signal Processing, гл. 22: Human Hearing](https://www.dspguide.com/ch22/1.htm) и [Timbre](https://www.dspguide.com/ch22/2.htm) — частота, громкость, маскировка и развитие звука во времени.
-- [Miller Puckette. The Theory and Technique of Electronic Music, гл. 10: Fourier series of the elementary waveforms](https://msp.ucsd.edu/techniques/latest/book-html/node188.html) — формы периодических волн и гармоники.
+- <Source id="smith-1997">[Гл. 22: Human Hearing](https://www.dspguide.com/ch22/1.htm) и [Timbre](https://www.dspguide.com/ch22/2.htm)</Source> — частота, громкость, маскировка и развитие звука во времени.
+- <Source id="puckette-2007">[Гл. 10: Fourier series of the elementary waveforms](https://msp.ucsd.edu/techniques/latest/book-html/node188.html)</Source> — формы периодических волн и гармоники.
 - [Ableton. Live 12 Manual, Analog: Oscillators, Envelopes, LFOs](https://www.ableton.com/en/live-manual/12/live-instrument-reference/#analog) — заполнение импульса, расстройка, этапы огибающей и направления модуляции.
 - [JUCE. juce::ADSR](https://docs.juce.com/master/classjuce_1_1ADSR.html) — запуск огибающей нажатием и переход к release отпусканием клавиши.
-- [Steven W. Smith. The Scientist and Engineer’s Guide to Digital Signal Processing, гл. 3: Quantization](https://www.dspguide.com/ch3/1.htm) — измерение во времени и конечные уровни отсчётов.
-- [Steven W. Smith. The Scientist and Engineer’s Guide to Digital Signal Processing, гл. 27: Data Compression Strategies](https://www.dspguide.com/ch27/1.htm) и [Xiph.Org. FLAC Format](https://xiph.org/flac/format.html) — сжатие с потерями и без них.
+- <Source id="smith-1997">[Гл. 3: Quantization](https://www.dspguide.com/ch3/1.htm)</Source> — измерение во времени и конечные уровни отсчётов.
+- <Source id="smith-1997">[Гл. 27: Data Compression Strategies](https://www.dspguide.com/ch27/1.htm)</Source> — сжатие с потерями и без них.
+- [Xiph.Org. FLAC Format](https://xiph.org/flac/format.html) — сжатие с потерями и без них.
 - [SANDYNE. Learn](https://sandyne.com/learn#oscillators) — ориентир компоновки и взаимодействий вводных опытов с осциллятором, ADSR и LFO. Текст, графики и код опытов здесь подготовлены для «Теории аудио».

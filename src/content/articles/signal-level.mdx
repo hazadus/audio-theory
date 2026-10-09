@@ -36,6 +36,7 @@ import Equation from '@/components/Equation.astro';
 import Figure from '@/components/Figure.astro';
 import MarginNote from '@/components/MarginNote.astro';
 import SelfCheck from '@/components/SelfCheck.astro';
+import Source from '@/components/Source.astro';
 import Term from '@/components/Term.astro';
 
 Цифровой сигнал — последовательность <Term id="sample" firstMention>отсчётов</Term>. Их хранят целыми числами или <Term id="floating-point-samples" firstMention>числами с плавающей точкой</Term>; номинальную <Term id="full-scale" firstMention>полную шкалу</Term> последних обычно принимают за ±1. Чтобы настраивать обработку и следить за перегрузкой, измеряют уровень сигнала. Пик и <Term id="rms-level" firstMention>RMS</Term> описывают разные его свойства. Воспринимаемая <Term id="loudness" firstMention>громкость</Term> зависит также от частотного состава и условий прослушивания, поэтому для неё есть отдельная мера: громкость в <Term id="lufs" firstMention>LUFS</Term>.
@@ -405,17 +406,17 @@ LRA не равен [динамическому диапазону](#dynamic-ran
 
 ## Источники {#sources}
 
-- [Julius O. Smith III. Mathematics of the DFT: Decibels](https://ccrma.stanford.edu/~jos/mdft/Decibels.html) — определение децибела, множители 20 для амплитуды и 10 для мощности, роль опорной величины.
-- [Julius O. Smith III. Mathematics of the DFT: Properties of dB Scales](https://ccrma.stanford.edu/~jos/mdft/Properties_DB_Scales.html) — удвоение амплитуды ≈ 6 дБ, удвоение мощности ≈ 3 дБ, множитель 10 — 20 дБ.
-- [Julius O. Smith III. Mathematics of the DFT: dB Full Scale (dBFS)](https://ccrma.stanford.edu/~jos/mdft/DB_Full_Scale_dBFS.html) — наибольшая амплитуда как опора, 0 дБ на полной шкале.
-- [Julius O. Smith III. Mathematics of the DFT: Signal Metrics](https://ccrma.stanford.edu/~jos/mdft/Signal_Metrics.html) — средняя мощность, уровень RMS, мощность $A^2/2$ у вещественной синусоиды.
-- [Julius O. Smith III. Mathematics of the DFT: Dynamic Range](https://ccrma.stanford.edu/~jos/mdft/Dynamic_Range.html) — динамический диапазон системы и сигнала.
+- <Source id="smith-2007">[Decibels](https://ccrma.stanford.edu/~jos/mdft/Decibels.html)</Source> — определение децибела, множители 20 для амплитуды и 10 для мощности, роль опорной величины.
+- <Source id="smith-2007">[Properties of dB Scales](https://ccrma.stanford.edu/~jos/mdft/Properties_DB_Scales.html)</Source> — удвоение амплитуды ≈ 6 дБ, удвоение мощности ≈ 3 дБ, множитель 10 — 20 дБ.
+- <Source id="smith-2007">[dB Full Scale (dBFS)](https://ccrma.stanford.edu/~jos/mdft/DB_Full_Scale_dBFS.html)</Source> — наибольшая амплитуда как опора, 0 дБ на полной шкале.
+- <Source id="smith-2007">[Signal Metrics](https://ccrma.stanford.edu/~jos/mdft/Signal_Metrics.html)</Source> — средняя мощность, уровень RMS, мощность $A^2/2$ у вещественной синусоиды.
+- <Source id="smith-2007">[Dynamic Range](https://ccrma.stanford.edu/~jos/mdft/Dynamic_Range.html)</Source> — динамический диапазон системы и сигнала.
 - [Wikipedia. DBFS](https://en.wikipedia.org/wiki/DBFS) — 0 dBFS как наибольший цифровой уровень, соглашение AES17 об RMS синусоиды, около 96 дБ у 16-битной записи.
 - [ITU-R BS.1770-5 (11/2023). Algorithms to measure audio programme loudness and true-peak audio level](https://www.itu.int/dms_pubrec/itu-r/rec/bs/R-REC-BS.1770-5-202311-I!!PDF-E.pdf) — прил. 1: взвешивание K из полочного фильтра и фильтра RLB, коэффициенты для 48 кГц, формула громкости с весами каналов и постоянной −0,691, блоки 400 мс с перекрытием 75 %, пороги −70 LKFS и −10 LU, −3,01 LKFS для тона 997 Гц с пиком 0 dBFS в одном канале, неприменимость к чистым тонам; дополнение 1 к прил. 1: сравнение Leq(RLB) с оценками слушателей; прил. 2: истинный пик, передискретизация до 192 кГц, единица dB TP.
 - [EBU R 128-2023. Loudness normalisation and permitted maximum level of audio signals](https://tech.ebu.ch/docs/r/r128.pdf) — целевая громкость −23,0 LUFS, ограничение истинного пика программы, измерение по BS.1770 и EBU Tech 3341.
 - [EBU Tech 3341-2023. Loudness Metering: ‘EBU Mode’ metering to supplement EBU R 128 loudness normalization](https://tech.ebu.ch/docs/tech/tech3341.pdf) — разд. 2.1–2.2: шкалы M, S, I, окна 0,4 и 3 с без стробирования, частота обновления; разд. 2.5: единицы LUFS и LU; разд. 2.7–2.9: шкалы, обязательный набор показаний, проверка стереосинусоидой −18 dBFS; табл. 1: проверочные сигналы.
 - [EBU Tech 3342-2023. Loudness Range: a measure to supplement EBU R 128 loudness normalization](https://tech.ebu.ch/docs/tech/tech3342.pdf) — разд. 2–3: определение LRA, окно 3 с, пороги −70 LUFS и −20 LU, 10-й и 95-й процентили, отличие от динамического диапазона и пик-фактора; табл. 1: проверочные сигналы.
 - [EBU Tech 3205-E. The EBU standard peak-programme meter for the control of international transmissions, 2nd ed., 1979](https://tech.ebu.ch/docs/tech/tech3205.pdf) — квазипиковое показание, время интеграции 10 мс и его определение, возврат с +12 до −12 за 2,8 с, тип IIb по IEC 268-10; документ сохранён EBU как исторический и заменён R 128.
-- Roey Izhaki. Mixing Audio: Concepts, Practices and Tools. 2nd ed. Focal Press, 2012. ISBN 978-0-240-52222-7 — гл. 8, с. 93–98: пиковые и усредняющие измерители, удержание пика и индикатор перегрузки, VU-метр и его шкала.
+- <Source id="izhaki-2012" /> — гл. 8, с. 93–98: пиковые и усредняющие измерители, удержание пика и индикатор перегрузки, VU-метр и его шкала.
 - [Wikipedia. VU meter](https://en.wikipedia.org/wiki/VU_meter) — время нарастания 300 мс до 99 % показания, шкала от −20 до +3 VU, стандарты ANSI C16.5 и IEC 60268-17.
 - [Wikipedia. Peak programme meter](https://en.wikipedia.org/wiki/Peak_programme_meter) — квазипиковые и выборочные PPM, время интеграции 5 мс у типа I и 10 мс у типа II по IEC 60268-10, занижение коротких пиков.

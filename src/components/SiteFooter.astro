@@ -1,5 +1,5 @@
 ---
-// Подвал: название, описание, «О проекте», «Обновления», «RSS», «Теги», «Граф связей», «Предложить тему» и ссылка на GitHub.
+// Подвал: название, описание, «Литература», «О проекте», «Обновления», «RSS», «Теги», «Граф связей», «Предложить тему» и ссылка на GitHub.
 import Icon from '@/components/Icon.astro';
 import { siteConfig } from '@/site.config';
 import { tagsIndexHref } from '@/lib/tags';
@@ -14,6 +14,9 @@ import { withBase } from '@/lib/urls';
       <p class="description">Личный учебник по теории аудио и цифровой обработке звука.</p>
     </div>
     <ul>
+      <li>
+        <a href={withBase('/literature/')}>Литература</a>
+      </li>
       <li>
         <a href={withBase('/about/')}>О проекте</a>
       </li>

@@ -45,6 +45,11 @@ describe('countWords', () => {
     expect(countWords(source)).toBe(3);
   });
 
+  it('учитывает авторов и название издания, которые Source выводит из реестра', () => {
+    // «Smith S. W.» — 3 слова, название — 9, уточнение «Гл. 3» — 2, описание — 1.
+    expect(countWords('- <Source id="smith-1997">Гл. 3</Source> — описание.')).toBe(15);
+  });
+
   it('исключает блоки и строчный код', () => {
     const source = ['Текст `const x = 1` дальше.', '', '```js', words(40), '```'];
     expect(countWords(source.join('\n'))).toBe(2);

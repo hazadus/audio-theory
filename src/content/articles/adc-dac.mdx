@@ -32,6 +32,7 @@ import DataTable from '@/components/DataTable.astro';
 import Equation from '@/components/Equation.astro';
 import MarginNote from '@/components/MarginNote.astro';
 import SelfCheck from '@/components/SelfCheck.astro';
+import Source from '@/components/Source.astro';
 import Term from '@/components/Term.astro';
 
 <Term id="microphone" firstMention>Микрофон</Term> выдаёт меняющееся напряжение, а компьютер хранит числа. При записи нужно измерить напряжение и записать результат числом; при воспроизведении — получить из чисел электрический сигнал для усилителя и динамика. За эти переходы отвечают два преобразователя.
@@ -211,8 +212,8 @@ $$
 
 ## Источники {#sources}
 
-- [Steven W. Smith. The Scientist and Engineer's Guide to Digital Signal Processing, глава 3.1: Quantization](https://www.dspguide.com/ch3/1.htm) — разделение дискретизации и квантования, ошибка округления и собственный шум тракта.
-- [Steven W. Smith. Глава 3.3: Digital-to-Analog Conversion](https://www.dspguide.com/ch3/3.htm) — удержание уровня, спектральные копии и компенсация частотной характеристики.
-- [Steven W. Smith. Глава 3.4: Analog Filters for Data Conversion](https://www.dspguide.com/ch3/4.htm) — назначение входного антиалиасингового и выходного восстановительного фильтров.
-- [Walt Kester. Analog Devices, MT-001: Taking the Mystery out of the Infamous Formula, “SNR = 6.02N + 1.76dB,” and Why You Should Care](https://www.analog.com/media/en/training-seminars/tutorials/MT-001.pdf) — идеальный равномерный преобразователь, ошибка в половину шага и условия расчёта SNR.
-- [Walt Kester. Analog Devices, MT-017: Oversampling Interpolating DACs, с. 1–2](https://www.analog.com/media/en/training-seminars/tutorials/mt-017.pdf) — передискретизация, цифровой фильтр и упрощение аналогового выходного фильтра.
+- <Source id="smith-1997">[Гл. 3.1: Quantization](https://www.dspguide.com/ch3/1.htm)</Source> — разделение дискретизации и квантования, ошибка округления и собственный шум тракта.
+- <Source id="smith-1997">[Гл. 3.3: Digital-to-Analog Conversion](https://www.dspguide.com/ch3/3.htm)</Source> — удержание уровня, спектральные копии и компенсация частотной характеристики.
+- <Source id="smith-1997">[Гл. 3.4: Analog Filters for Data Conversion](https://www.dspguide.com/ch3/4.htm)</Source> — назначение входного антиалиасингового и выходного восстановительного фильтров.
+- <Source id="kester-2008" /> — идеальный равномерный преобразователь, ошибка в половину шага и условия расчёта SNR.
+- <Source id="kester-mt-017">[С. 1–2](https://www.analog.com/media/en/training-seminars/tutorials/mt-017.pdf)</Source> — передискретизация, цифровой фильтр и упрощение аналогового выходного фильтра.

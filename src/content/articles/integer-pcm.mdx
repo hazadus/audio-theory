@@ -28,6 +28,7 @@ import DataTable from '@/components/DataTable.astro';
 import MarginNote from '@/components/MarginNote.astro';
 import PcmSampleDemo from '@/components/PcmSampleDemo.astro';
 import SelfCheck from '@/components/SelfCheck.astro';
+import Source from '@/components/Source.astro';
 import Term from '@/components/Term.astro';
 
 Три байта `00 00 80` могут обозначать <Term id="sample" firstMention>отсчёт</Term> −8388608. Если собрать их как положительное число и сразу поделить на масштаб, получится +1 вместо −1. Чтобы прочитать звук правильно, нужно знать <Term id="bit-depth" firstMention>разрядность</Term>, способ кодирования знака и порядок байтов. При записи добавляются ещё два решения: как округлять и что делать с выходом за диапазон.
@@ -351,10 +352,10 @@ void writeWithJuce (float x, std::uint8_t* p)
 
 ## Источники {#sources}
 
-- [Steven W. Smith. The Scientist and Engineer's Guide to Digital Signal Processing, глава 4.2: Fixed Point (Integers)](https://www.dspguide.com/ch4/2.htm) — представления целых, дополнительный код и асимметричный диапазон. Примеры байтов и расчёты в статье собственные.
-- [Steven W. Smith. Глава 4.3: Floating Point (Real Numbers)](https://www.dspguide.com/ch4/3.htm) — значащая часть и показатель степени; 24 значащих разряда одинарной точности.
-- [Steven W. Smith. Глава 3.1: Quantization](https://www.dspguide.com/ch3/1.htm) — ошибка квантования и добавление случайного шума перед квантованием.
-- [Peter Kabal, McGill University. Wave File Specifications](https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html) — кодирование PCM, 8 бит со смещением и более широкие знаковые отсчёты.
+- <Source id="smith-1997">[Гл. 4.2: Fixed Point (Integers)](https://www.dspguide.com/ch4/2.htm)</Source> — представления целых, дополнительный код и асимметричный диапазон. Примеры байтов и расчёты в статье собственные.
+- <Source id="smith-1997">[Гл. 4.3: Floating Point (Real Numbers)](https://www.dspguide.com/ch4/3.htm)</Source> — значащая часть и показатель степени; 24 значащих разряда одинарной точности.
+- <Source id="smith-1997">[Гл. 3.1: Quantization](https://www.dspguide.com/ch3/1.htm)</Source> — ошибка квантования и добавление случайного шума перед квантованием.
+- <Source id="kabal-wave" /> — кодирование PCM, 8 бит со смещением и более широкие знаковые отсчёты.
 - [libsndfile. FAQ, Q10](https://libsndfile.github.io/libsndfile/FAQ.html#Q010) — различие масштабов чтения и записи нормированных отсчётов.
 - [Рабочий текст стандарта C++, Floating-integral conversions](https://eel.is/c++draft/conv.fpint), [Shift operators](https://eel.is/c++draft/expr.shift) — условия преобразования вещественного числа в целое и правила сдвига. Для варианта с `bit_cast` в статье требуется C++20.
 - [JUCE. AudioData::Pointer](https://docs.juce.com/master/classjuce_1_1AudioData_1_1Pointer.html) и [исходники JUCE 9.0.3, AudioDataConverters](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_basics/buffers/juce_AudioDataConverters.h) — форматы указателя, масштаб, границы записи и методы преобразования.

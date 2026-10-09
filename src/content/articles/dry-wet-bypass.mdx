@@ -33,6 +33,7 @@ import Equation from '@/components/Equation.astro';
 import Figure from '@/components/Figure.astro';
 import MarginNote from '@/components/MarginNote.astro';
 import SelfCheck from '@/components/SelfCheck.astro';
+import Source from '@/components/Source.astro';
 import Term from '@/components/Term.astro';
 
 У эффекта в DAW обычно есть два органа управления, которые решают, сколько обработки попадёт на выход. <Term id="dry-wet-mix" firstMention>Регулятор dry/wet</Term> смешивает исходный звук с обработанным. Кнопка bypass выключает эффект целиком. Выключенный эффект с <Term id="latency" firstMention>задержкой</Term> может сдвинуть дорожку во времени, а резкое переключение даёт щелчок. Оба случая разобраны ниже вместе с законами смешивания и примером на C++ и JUCE.
@@ -410,9 +411,9 @@ $240 / 48\,000 = 0{,}005$ с, то есть 5 мс. Хост по-прежне�
 - [JUCE. AudioProcessor](https://docs.juce.com/master/classjuce_1_1AudioProcessor.html), [заголовок 9.0.3](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_processors_headless/processors/juce_AudioProcessor.h) и [реализация 9.0.3](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_processors_headless/processors/juce_AudioProcessor.cpp) — `getBypassParameter`, `processBlockBypassed` и проверка задержки по умолчанию, `setLatencySamples`.
 - [JUCE. Обёртка VST3, версия 9.0.3](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_plugin_client/juce_audio_plugin_client_VST3.cpp) — собственный параметр Bypass, флаг `kIsBypass` и выбор между `processBlock` и `processBlockBypassed`.
 - [JUCE. DryWetMixer](https://docs.juce.com/master/classjuce_1_1dsp_1_1DryWetMixer.html) и [исходник 9.0.3](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_dsp/processors/juce_DryWetMixer.cpp) — законы смешивания, задержка dry, линейный переход 50 мс.
-- [Geraint Luff. A cheap energy-preserving-ish crossfade. Signalsmith Audio, 2021](https://signalsmith-audio.co.uk/writing/2021/cheap-energy-crossfade/) — переход с постоянной суммой амплитуд для коррелированных сигналов и с постоянной энергией для некоррелированных.
+- <Source id="luff-2021" /> — переход с постоянной суммой амплитуд для коррелированных сигналов и с постоянной энергией для некоррелированных.
 - [Luke Goddard. How To Use Delta Solo In Any DAW. Production Expert, 2025](https://www.production-expert.com/production-expert-1/how-to-use-delta-solo-in-any-daw) — кнопка delta solo: прослушивание только разницы между обработанным и исходным звуком.
-- [John Walden. Cubase: Delta Monitoring Explained. Sound On Sound, июль 2020](https://www.soundonsound.com/techniques/cubase-delta-monitoring-explained) — ручная сборка разности переворотом полярности необработанной копии, применимость почти к любому плагину.
-- Roey Izhaki. Mixing Audio: Concepts, Practices and Tools, 2nd ed., Focal Press, 2012, гл. 23, с. 418 — dry/wet во вставке и при подключении через посыл.
+- <Source id="walden-2020" /> — ручная сборка разности переворотом полярности необработанной копии, применимость почти к любому плагину.
+- <Source id="izhaki-2012">Гл. 23, с. 418</Source> — dry/wet во вставке и при подключении через посыл.
 
 Рисунки — схемы и расчётные сигналы для пояснения, а не записи реальных плагинов.

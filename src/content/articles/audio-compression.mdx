@@ -37,6 +37,7 @@ import Figure from '@/components/Figure.astro';
 import FlacPredictionDemo from '@/components/FlacPredictionDemo.astro';
 import MarginNote from '@/components/MarginNote.astro';
 import SelfCheck from '@/components/SelfCheck.astro';
+import Source from '@/components/Source.astro';
 import Term from '@/components/Term.astro';
 
 Минута стереозаписи с параметрами компакт-диска занимает в <Term id="wav-file" firstMention>WAV</Term> около 10,6 млн байт. Во <Term id="flac" firstMention>FLAC</Term> та же минута обычно занимает чуть больше половины этого объёма, а в <Term id="mp3" firstMention>MP3</Term> с <Term id="bitrate" firstMention>битрейтом</Term> 128 кбит/с — 0,96 млн байт, в 11 раз меньше. За этими числами стоят два разных подхода. FLAC убирает предсказуемую часть данных и после распаковки возвращает те же числа. MP3 отбрасывает то, что по модели слуха не будет услышано, и возвращает другие числа, близкие на слух.
@@ -477,11 +478,11 @@ $144 \cdot 160\,000 / 48\,000 = 480$ байт ровно. Дробной час�
 - [RFC 9639. Free Lossless Audio Codec (FLAC), IETF, 2024](https://www.rfc-editor.org/rfc/rfc9639) — разд. 1, 3–5 (принцип, определения, этапы кодера), 7 (потоковое подмножество), 8 (метаданные и `STREAMINFO`), 9 (кадр, фиксированные и линейные предсказатели, коды Райса). Учебные сигналы и расчёты визуализации собственные.
 - [Apple Computer. Audio Interchange File Format «AIFF», version 1.3, 1989](https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/AIFF/Docs/AIFF-1.3.pdf) — чанки `FORM`, `COMM`, `SSND`, порядок байтов, отсчёты и их выравнивание.
 - [Apple Computer. Audio Interchange File Format AIFF-C, черновик 1991](https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/AIFF/Docs/AIFF-C.9.26.91.pdf) — тип `AIFC`, чанк `FVER`, поля `compressionType` и `compressionName`.
-- [Peter Kabal, McGill University. AIFF / AIFF-C Sound File Specifications](https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/AIFF/AIFF.html) — коды сжатия AIFF-C, вариант `sowt`, частота как 80-битное число.
+- <Source id="kabal-aiff" /> — коды сжатия AIFF-C, вариант `sowt`, частота как 80-битное число.
 - [Wikipedia. Extended precision: x86 extended-precision format](https://en.wikipedia.org/wiki/Extended_precision#x86_extended-precision_format) — устройство 80-битного числа: знак, показатель со смещением 16 383, явный целый бит.
-- [Karlheinz Brandenburg. MP3 and AAC Explained. AES 17th International Conference, 1999](https://www.iis.fraunhofer.de/content/dam/iis/de/doc/ame/conference/AES-17-Conference_mp3-and-AAC-explained_AES17.pdf) — разд. 2–6: стандарты MPEG, режимы и битрейты, гибридный банк фильтров, модель слуха, квантование и циклы, AAC, артефакты, оценка качества, ограничение полосы, заголовок кадра.
-- [Rassol Raissi. The Theory Behind Mp3, 2002](http://www.mp3-tech.org/programmer/docs/mp3_theory.pdf) — разд. 5–6: кадр и гранулы, побочная информация и `main_data_begin`, области таблиц Хаффмана, ID3, этапы кодера. Числа сверены с Brandenburg и Supurovic.
-- [Predrag Supurovic. MPEG Audio Frame Header, 1998](http://www.datavoyage.com/mpgscript/mpeghdr.htm) — поля заголовка кадра, таблицы битрейтов и частот, бит защиты, формула длины кадра.
+- <Source id="brandenburg-1999" /> — разд. 2–6: стандарты MPEG, режимы и битрейты, гибридный банк фильтров, модель слуха, квантование и циклы, AAC, артефакты, оценка качества, ограничение полосы, заголовок кадра.
+- <Source id="raissi-2002" /> — разд. 5–6: кадр и гранулы, побочная информация и `main_data_begin`, области таблиц Хаффмана, ID3, этапы кодера. Числа сверены с Brandenburg и Supurovic.
+- <Source id="supurovic-1998" /> — поля заголовка кадра, таблицы битрейтов и частот, бит защиты, формула длины кадра.
 - [Martijn van Beurden. Lossless audio codec comparison, revision 6, CDDA](http://www.audiograaf.nl/losslesstest/Lossless%20audio%20codec%20comparison%20-%20revision%206%20-%20cdda.html) — средний размер файлов FLAC, ALAC и других кодеков без потерь на 64 записях CD.
 - [RFC 6716. Definition of the Opus Audio Codec, IETF, 2012](https://www.rfc-editor.org/rfc/rfc6716) — разд. 2: диапазон битрейтов, полосы, слои SILK и CELT, длительности кадров, рекомендуемые битрейты.
 - [Apple. Apple Lossless Audio Codec, исходные тексты и ReadMe](https://github.com/macosforge/alac) — разрядность, частоты, число каналов и размер пакета ALAC.

@@ -330,6 +330,36 @@ export function findDemos(body: string): { component: DemoComponent; id: string 
   );
 }
 
+/** Видимый текст узла: текст, код и формулы без разметки. */
+function plainText(node: MdNode): string {
+  if (node.type === 'text' || node.type === 'inlineCode' || node.type === 'inlineMath') {
+    return node.value ?? '';
+  }
+  return (node.children ?? []).map(plainText).join('');
+}
+
+/**
+ * Ссылки статьи на список литературы: `id` каждого компонента `Source` и текст уточнения
+ * (глава, страницы) из его содержимого без разметки. `id` здесь не проверяется.
+ */
+export function findSourceCitations(body: string): { id: string; locator: string }[] {
+  const citations: { id: string; locator: string }[] = [];
+  function walk(node: MdNode) {
+    if (
+      (node.type === 'mdxJsxTextElement' || node.type === 'mdxJsxFlowElement') &&
+      node.name === 'Source'
+    ) {
+      const id = stringAttribute(node, 'id');
+      if (id === undefined) throw new Error(`строка ${lineOf(node)}: <Source> без атрибута id`);
+      citations.push({ id, locator: plainText(node).replace(/\s+/g, ' ').trim() });
+      return;
+    }
+    for (const child of node.children ?? []) walk(child);
+  }
+  walk(parser.parse(body) as MdNode);
+  return citations;
+}
+
 /** Строковые значения свойств `article` в выражении атрибута MDX (дерево estree). */
 function collectArticleProperties(node: unknown, slugs: Set<string>): void {
   if (Array.isArray(node)) {

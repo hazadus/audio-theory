@@ -34,6 +34,7 @@ import Figure from '@/components/Figure.astro';
 import MarginNote from '@/components/MarginNote.astro';
 import SamplingDemo from '@/components/SamplingDemo.astro';
 import SelfCheck from '@/components/SelfCheck.astro';
+import Source from '@/components/Source.astro';
 import Term from '@/components/Term.astro';
 
 <Term id="analog-audio-signal" firstMention>Аналоговый аудиосигнал</Term> определён в каждый момент времени, а компьютер хранит только конечный список чисел. Чтобы перейти от одного к другому, сигнал измеряют через равные промежутки времени и записывают результаты по порядку.
@@ -353,12 +354,12 @@ $$
 
 ## Источники {#sources}
 
-- [Steven W. Smith. The Scientist and Engineer's Guide to Digital Signal Processing, глава 3.1: Quantization](https://www.dspguide.com/ch3/1.htm) — дискретизация и квантование как отдельные шаги; изменения сигнала между отсчётами не сохраняются.
-- [Steven W. Smith. The Scientist and Engineer's Guide to Digital Signal Processing, глава 3.2: The Sampling Theorem](https://www.dspguide.com/ch3/2.htm) — условие правильной дискретизации, половина частоты дискретизации, наложение спектров и сдвиг фазы на 180°.
-- [Steven W. Smith. The Scientist and Engineer's Guide to Digital Signal Processing, глава 3.4: Analog Filters for Data Conversion](https://www.dspguide.com/ch3/4.htm) — антиалиасинговый фильтр перед аналого-цифровым преобразователем.
-- [Steven W. Smith. The Scientist and Engineer's Guide to Digital Signal Processing, глава 22.3: Audio Processing](https://www.dspguide.com/ch22/3.htm) — частоты дискретизации компакт-диска и телефонной связи, полоса речи и музыки.
-- [Julius O. Smith III. Mathematics of the DFT: DFT Definition](https://ccrma.stanford.edu/~jos/mdft/DFT_Definition.html) — обозначения: момент отсчёта $t_n = nT$, период и частота дискретизации $f_s = 1/T$.
-- [Julius O. Smith III. Mathematics of the DFT: Introduction to Sampling](https://ccrma.stanford.edu/~jos/mdft/Introduction_Sampling.html) — отсчёт как число, частота дискретизации компакт-диска 44 100 отсчётов в секунду.
-- [Julius O. Smith III. Mathematics of the DFT: Sampling Theory](https://ccrma.stanford.edu/~jos/mdft/Sampling_Theory.html) — восстановление сигнала с ограниченным спектром по отсчётам.
-- [Julius O. Smith III. Mathematics of the DFT: Sampling Theorem](https://ccrma.stanford.edu/~jos/mdft/Sampling_Theorem.html) — формула восстановления через sinc; частота $f_s/2$ исключена из теоремы, потому что фаза на ней ограничена значениями 0 и π.
-- [Julius O. Smith III. Mathematics of the DFT: Aliasing of Sampled Signals](https://ccrma.stanford.edu/~jos/mdft/Aliasing_Sampled_Signals.html) — перенос частоты выше $f_s/2$ в полосу до $f_s/2$.
+- <Source id="smith-1997">[Гл. 3.1: Quantization](https://www.dspguide.com/ch3/1.htm)</Source> — дискретизация и квантование как отдельные шаги; изменения сигнала между отсчётами не сохраняются.
+- <Source id="smith-1997">[Гл. 3.2: The Sampling Theorem](https://www.dspguide.com/ch3/2.htm)</Source> — условие правильной дискретизации, половина частоты дискретизации, наложение спектров и сдвиг фазы на 180°.
+- <Source id="smith-1997">[Гл. 3.4: Analog Filters for Data Conversion](https://www.dspguide.com/ch3/4.htm)</Source> — антиалиасинговый фильтр перед аналого-цифровым преобразователем.
+- <Source id="smith-1997">[Гл. 22.3: Audio Processing](https://www.dspguide.com/ch22/3.htm)</Source> — частоты дискретизации компакт-диска и телефонной связи, полоса речи и музыки.
+- <Source id="smith-2007">[DFT Definition](https://ccrma.stanford.edu/~jos/mdft/DFT_Definition.html)</Source> — обозначения: момент отсчёта $t_n = nT$, период и частота дискретизации $f_s = 1/T$.
+- <Source id="smith-2007">[Introduction to Sampling](https://ccrma.stanford.edu/~jos/mdft/Introduction_Sampling.html)</Source> — отсчёт как число, частота дискретизации компакт-диска 44 100 отсчётов в секунду.
+- <Source id="smith-2007">[Sampling Theory](https://ccrma.stanford.edu/~jos/mdft/Sampling_Theory.html)</Source> — восстановление сигнала с ограниченным спектром по отсчётам.
+- <Source id="smith-2007">[Sampling Theorem](https://ccrma.stanford.edu/~jos/mdft/Sampling_Theorem.html)</Source> — формула восстановления через sinc; частота $f_s/2$ исключена из теоремы, потому что фаза на ней ограничена значениями 0 и π.
+- <Source id="smith-2007">[Aliasing of Sampled Signals](https://ccrma.stanford.edu/~jos/mdft/Aliasing_Sampled_Signals.html)</Source> — перенос частоты выше $f_s/2$ в полосу до $f_s/2$.

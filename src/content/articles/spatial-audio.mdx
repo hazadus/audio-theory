@@ -24,6 +24,7 @@ import Equation from '@/components/Equation.astro';
 import Figure from '@/components/Figure.astro';
 import MarginNote from '@/components/MarginNote.astro';
 import SelfCheck from '@/components/SelfCheck.astro';
+import Source from '@/components/Source.astro';
 import Term from '@/components/Term.astro';
 
 В записи голос может звучать прямо перед слушателем, гитара — левее, а ударные — словно в глубине комнаты. При сведении это впечатление создают соотношением сигналов в каналах, отражениями и задержанными копиями. <Term id="pan" firstMention>Панорама</Term> задаёт положение, отражения создают <Term id="spatial-depth" firstMention>глубину</Term>, а различия каналов позволяют управлять шириной. При сложении в <Term id="mono" firstMention>моно</Term> часть этих различий пропадает.
@@ -387,7 +388,7 @@ M = (0,6 − 0,2) / 2 = 0,2; S = (0,6 + 0,2) / 2 = 0,4. При w = 0 оба вы
 
 ## Источники {#sources}
 
-- Roey Izhaki. Mixing Audio: Concepts, Practices and Tools, 2nd ed. Focal Press, 2012. ISBN 978-0-240-52222-7 — гл. 9, с. 108–113 (посылы и возвраты), гл. 11 (фаза и задержанные копии), гл. 13, с. 180–194 (панорама, её законы и стереобаланс), гл. 21, с. 377–386 (delay, feedback и диапазоны времени), гл. 23, с. 411–430 (алгоритмы реверберации, ранние отражения, предзадержка, глубина и затухание), гл. 26, с. 461–464 (M/S и преобразование L/R).
+- <Source id="izhaki-2012" /> — гл. 9, с. 108–113 (посылы и возвраты), гл. 11 (фаза и задержанные копии), гл. 13, с. 180–194 (панорама, её законы и стереобаланс), гл. 21, с. 377–386 (delay, feedback и диапазоны времени), гл. 23, с. 411–430 (алгоритмы реверберации, ранние отражения, предзадержка, глубина и затухание), гл. 26, с. 461–464 (M/S и преобразование L/R).
 - [Ableton. Live 12 Reference Manual: Reverb](https://www.ableton.com/en/live-manual/12/live-audio-effect-reference/#reverb) — определения Predelay и Decay в конкретном приборе.
 - [DPA Microphones. MS Recording](https://www.dpamicrophones.com/dictionary/m/ms-recording/) — микрофонная пара M/S и пример нормировки через квадратный корень из двух.
 - [ITU-R BS.775-3. Multichannel stereophonic sound system with and without accompanying picture, 2012](https://www.itu.int/dms_pubrec/itu-r/rec/bs/R-REC-BS.775-3-201208-S!!PDF-E.pdf) — прил. 1: расположение каналов; прил. 7: назначение LFE и отличие от баса других каналов.

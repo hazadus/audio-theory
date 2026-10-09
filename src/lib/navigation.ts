@@ -15,6 +15,7 @@ export const navItems: NavItem[] = [
   { label: 'Материалы', href: '/materials/', section: 'materials' },
   { label: 'Треки', href: '/tracks/', activeUnder: ['/tracks'] },
   { label: 'Глоссарий', href: '/glossary/' },
+  { label: 'Литература', href: '/literature/' },
   { label: 'О проекте', href: '/about/' },
 ];
 

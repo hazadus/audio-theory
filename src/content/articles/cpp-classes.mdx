@@ -26,6 +26,7 @@ related:
 import DataTable from '@/components/DataTable.astro';
 import MarginNote from '@/components/MarginNote.astro';
 import SelfCheck from '@/components/SelfCheck.astro';
+import Source from '@/components/Source.astro';
 import Term from '@/components/Term.astro';
 
 Эта статья продолжает [«Основы C++ для JUCE»](/cpp-basics/) и разбирает остальную часть языка, которая нужна для чтения <Term id="plugin" firstMention>плагина</Term> <Term id="tremolo" firstMention>тремоло</Term> из [официального курса JUCE](https://github.com/juce-framework/tremolo-juce-course): классы и структуры, конструкторы, наследование и виртуальные методы, шаблоны, <Term id="object-lifetime" firstMention>время жизни объектов</Term>, запрет копирования, неявные преобразования, макросы JUCE и тесты. Каждое понятие показано на фрагменте готовой версии из папки [`complete`](https://github.com/juce-framework/tremolo-juce-course/tree/main/complete) (JUCE 8.0.12, C++23); на полях стоят ссылки на уроки [Learn C++](https://www.learncpp.com/) и справочник cppreference.
@@ -515,7 +516,7 @@ lfoVisualizer{
 
 ## Источники {#sources}
 
-- [Alex. Learn C++](https://www.learncpp.com/): главы 13 «Introduction to program-defined types» и 14–15 «Introduction to classes» — классы, конструкторы, `const`-методы, `this`, статические члены; 24–25 — наследование и виртуальные функции; 11 и 13.13–13.14 — шаблоны; 21 — перегрузка операторов; 20.6–20.7 — лямбды; 22 — перемещение и умные указатели.
+- <Source id="learncpp">Главы 13 «Introduction to program-defined types» и 14–15 «Introduction to classes»</Source> — классы, конструкторы, `const`-методы, `this`, статические члены; 24–25 — наследование и виртуальные функции; 11 и 13.13–13.14 — шаблоны; 21 — перегрузка операторов; 20.6–20.7 — лямбды; 22 — перемещение и умные указатели.
 - [cppreference. override specifier](https://en.cppreference.com/w/cpp/language/override), [explicit specifier](https://en.cppreference.com/w/cpp/language/explicit), [Destructors](https://en.cppreference.com/w/cpp/language/destructor), [Lambda expressions](https://en.cppreference.com/w/cpp/language/lambda), [std::span](https://en.cppreference.com/w/cpp/container/span) и [Class template argument deduction](https://en.cppreference.com/w/cpp/language/class_template_argument_deduction) — семантика и стандарты появления.
 - [Проект стандарта C++](https://eel.is/c++draft/): [dcl.ambig.res](https://eel.is/c++draft/dcl.ambig.res) — правило разбора, из которого следует «most vexing parse».
 - [GoogleTest. Primer](https://google.github.io/googletest/primer.html) — `TEST`, `TEST_F`, `EXPECT_*` и `ASSERT_*`.

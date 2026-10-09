@@ -39,6 +39,7 @@ import Equation from '@/components/Equation.astro';
 import Figure from '@/components/Figure.astro';
 import MarginNote from '@/components/MarginNote.astro';
 import SelfCheck from '@/components/SelfCheck.astro';
+import Source from '@/components/Source.astro';
 import Term from '@/components/Term.astro';
 
 Перед записью в файл, перед <Term id="dac" firstMention>ЦАП</Term> или в эфире сигнал не должен подниматься выше определённого уровня. <Term id="limiter" firstMention define /> следит за этим: он снижает усиление ровно настолько, чтобы пики не прошли выше заданной границы. По статической характеристике это <Term id="compressor" firstMention>компрессор</Term> с бесконечной <Term id="compression-ratio" firstMention>степенью сжатия</Term>. Но чтобы граница соблюдалась, лимитеру нужны другие детектор, атака и способ заглядывать вперёд.
@@ -365,9 +366,9 @@ $$
 
 ## Источники {#sources}
 
-- Roey Izhaki. Mixing Audio: Concepts, Practices and Tools. 2nd ed. Focal Press, 2012. ISBN 978-0-240-52222-7 — гл. 15, с. 264–265 (характеристика лимитера, накачка); гл. 16, с. 279 (автоматическое восстановление), с. 294 (компрессор 10:1 и ∞:1 против лимитера), с. 301–303 (искажение низких частот при коротком восстановлении, удержание, накачка, очень длинное восстановление); гл. 17, с. 331–333 (пиковый детектор, жёсткое колено и нулевая атака, предварительный анализ, две ступени, потолок и запас на ЦАП, применение, сравнение при одинаковой громкости).
-- Mike Senior. Mixing Secrets for the Small Studio. Focal Press, 2011. ISBN 978-0-240-81580-0 — гл. 10, с. 167 (предварительный анализ в несколько миллисекунд, задержка и гребенчатая фильтрация при параллельной обработке); гл. 19, с. 279 (побочные эффекты ограничения всей суммы).
-- [Geraint Luff. Designing a straightforward limiter. Signalsmith Audio, 2022](https://signalsmith-audio.co.uk/writing/2022/limiter/) — мгновенное усиление как клиппер, скользящий минимум и конечное сглаживание с задержкой, восстановление перед сглаживанием, первая ступень с коротким превышением и клиппер после неё, пики между отсчётами.
+- <Source id="izhaki-2012" /> — гл. 15, с. 264–265 (характеристика лимитера, накачка); гл. 16, с. 279 (автоматическое восстановление), с. 294 (компрессор 10:1 и ∞:1 против лимитера), с. 301–303 (искажение низких частот при коротком восстановлении, удержание, накачка, очень длинное восстановление); гл. 17, с. 331–333 (пиковый детектор, жёсткое колено и нулевая атака, предварительный анализ, две ступени, потолок и запас на ЦАП, применение, сравнение при одинаковой громкости).
+- <Source id="senior-2011" /> — гл. 10, с. 167 (предварительный анализ в несколько миллисекунд, задержка и гребенчатая фильтрация при параллельной обработке); гл. 19, с. 279 (побочные эффекты ограничения всей суммы).
+- <Source id="luff-2022" /> — мгновенное усиление как клиппер, скользящий минимум и конечное сглаживание с задержкой, восстановление перед сглаживанием, первая ступень с коротким превышением и клиппер после неё, пики между отсчётами.
 - [ITU-R BS.1770-5 (11/2023). Algorithms to measure audio programme loudness and true-peak audio level](https://www.itu.int/dms_pubrec/itu-r/rec/bs/R-REC-BS.1770-5-202311-I!!PDF-E.pdf) — прил. 2: истинный пик, четырёхкратная передискретизация при 48 кГц, единица dB TP; дополнение 1: ошибки пиковых измерителей по отсчётам, недооценка 3 дБ для тона fs/4, формула и таблица наибольшей недооценки.
 - [EBU R 128-2023. Loudness normalisation and permitted maximum level of audio signals](https://tech.ebu.ch/docs/r/r128.pdf) — пункт m: истинный пик не выше −1 dBTP при производстве, допуск ±0,3 дБ, более низкие пределы для систем распространения.
 - [Приказ Минкомсвязи России от 21.05.2015 № 171 «Об утверждении Рекомендаций в области нормирования звуковых сигналов в телерадиовещании»](https://www.garant.ru/products/ipo/prime/doc/70951794/) — п. 1.3–1.4 (добровольное применение, основа EBU R 128-2011), п. 3.7–3.8 (−1 dBTP в тракте формирования программы, −3 dBTP для программ короче 30 с).
@@ -377,5 +378,5 @@ $$
 - [LoudMax](https://loudmax.blogspot.com/) — два регулятора, постоянные предварительный анализ и атака 1,25 мс, автоматическое восстановление, режим ISP.
 - [FabFilter. Pro-L 2 Help: Advanced settings](https://www.fabfilter.com/help/pro-l/using/advancedsettings) и [Input and output options](https://www.fabfilter.com/help/pro-l/using/outputoptions) — алгоритмы, быстрая ступень с предварительным анализом и медленная ступень восстановления, приближение к клиппингу при анализе короче 0,1 мс, ограничение истинного пика.
 - [Tokyo Dawn Labs. Limiter 6 GE Manual](https://docs.tokyodawn.net/limiter-6-ge-manual/) — модули и их порядок, защитный лимитер выхода, потолок по отсчётам и по истинному пику.
-- [Julius O. Smith III. Physical Audio Signal Processing: Clipping Nonlinearity](https://www.dsprelated.com/freebooks/pasp/Clipping_Nonlinearity.html) и [Soft Clipping](https://ccrma.stanford.edu/~jos/pasp/Soft_Clipping.html) — необратимость жёсткого ограничения, наложение спектров, кубический мягкий клиппер.
+- <Source id="smith-2010">[Clipping Nonlinearity](https://www.dsprelated.com/freebooks/pasp/Clipping_Nonlinearity.html) и [Soft Clipping](https://ccrma.stanford.edu/~jos/pasp/Soft_Clipping.html)</Source> — необратимость жёсткого ограничения, наложение спектров, кубический мягкий клиппер.
 - [Wikipedia. Dynamic range compression](https://en.wikipedia.org/wiki/Dynamic_range_compression) — разделы Look-ahead (две ветви, задержка звука, цена в виде задержки) и Limiting (сравнение лимитера и клиппера).

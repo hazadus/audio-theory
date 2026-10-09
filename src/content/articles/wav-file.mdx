@@ -35,6 +35,7 @@ import DataTable from '@/components/DataTable.astro';
 import Equation from '@/components/Equation.astro';
 import MarginNote from '@/components/MarginNote.astro';
 import SelfCheck from '@/components/SelfCheck.astro';
+import Source from '@/components/Source.astro';
 import Term from '@/components/Term.astro';
 import WavDumpDemo from '@/components/WavDumpDemo.astro';
 
@@ -473,7 +474,7 @@ $12 + 8 + 603 + 1 = 624$. Данные занимают байты 20–622, б�
 ## Источники {#sources}
 
 - [IBM Corporation, Microsoft Corporation. Multimedia Programming Interface and Data Specifications 1.0, август 1991](https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/Docs/riffmci.pdf) — гл. 2, с. 2-2–2-18: чанки, байт выравнивания, пропуск незнакомых чанков, `LIST`/`INFO`, `JUNK`; гл. 3, с. 3-22 и далее: форма WAVE, чанк `fmt `, формулы, расположение отсчётов PCM.
-- [Peter Kabal (McGill University). Wave File Specifications](https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html) — сводка полей `fmt ` для размеров 16, 18 и 40 байт, условия для `WAVE_FORMAT_EXTENSIBLE`.
+- <Source id="kabal-wave" /> — сводка полей `fmt ` для размеров 16, 18 и 40 байт, условия для `WAVE_FORMAT_EXTENSIBLE`.
 - [Microsoft Learn. WAVEFORMATEX structure](https://learn.microsoft.com/en-us/windows/win32/api/mmreg/ns-mmreg-waveformatex) — назначение полей, `nBlockAlign` как размер кадра, ограничения простого описания и `WAVEFORMATEXTENSIBLE`.
 - [EBU Tech 3285. Specification of the Broadcast Wave Format, версия 2.0, май 2011](https://tech.ebu.ch/docs/tech/tech3285.pdf) — разд. 2.1–2.3: структура BWF, частные чанки, поля `bext`.
 - [EBU Tech 3306. MBWF / RF64: An Extended File Format for Audio, июль 2009](https://tech.ebu.ch/docs/tech/tech3306v1_1.pdf) — разд. 3.4–3.5: предел 4 ГБ, `RF64`, `ds64`, резерв через `JUNK`.

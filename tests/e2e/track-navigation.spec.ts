@@ -15,6 +15,7 @@ test(
       'Материалы',
       'Треки',
       'Глоссарий',
+      'Литература',
       'О проекте',
     ]);
     await expect(nav.locator('a[aria-current="page"]')).toHaveText('Треки');

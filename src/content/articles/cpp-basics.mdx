@@ -27,6 +27,7 @@ import Callout from '@/components/Callout.astro';
 import DataTable from '@/components/DataTable.astro';
 import MarginNote from '@/components/MarginNote.astro';
 import SelfCheck from '@/components/SelfCheck.astro';
+import Source from '@/components/Source.astro';
 import Term from '@/components/Term.astro';
 
 Код учебного <Term id="plugin" firstMention>плагина</Term> <Term id="tremolo" firstMention>тремоло</Term> из [официального курса JUCE](https://github.com/juce-framework/tremolo-juce-course) написан на C++23 и местами выглядит непривычно: макросы вместо констант, пустые функции для «использования» параметра, `static_cast` на каждом шагу. Эта статья разбирает язык ровно в том объёме, который нужен, чтобы читать этот код и дописывать его. Каждое понятие показано на строке из этого плагина, а за подробностями ведут заметки на полях со ссылками на учебник [Learn C++](https://www.learncpp.com/) и справочник cppreference.
@@ -546,7 +547,7 @@ JUCE находит функцию по фиксированному имени 
 
 ## Источники {#sources}
 
-- [Alex. Learn C++](https://www.learncpp.com/): главы 2 «C++ Basics: Functions and Files» (уроки [2.7](https://www.learncpp.com/cpp-tutorial/forward-declarations/), [2.8](https://www.learncpp.com/cpp-tutorial/programs-with-multiple-code-files/), [2.10](https://www.learncpp.com/cpp-tutorial/introduction-to-the-preprocessor/), [2.11](https://www.learncpp.com/cpp-tutorial/header-files/), [2.12](https://www.learncpp.com/cpp-tutorial/header-guards/)), 4, 5, 7, 10, 11, 12 и 16 — препроцессор, заголовки, типы, литералы, пространства имён, приведение типов, перегрузка, ссылки, указатели и циклы.
+- <Source id="learncpp">Главы 2 «C++ Basics: Functions and Files» (уроки [2.7](https://www.learncpp.com/cpp-tutorial/forward-declarations/), [2.8](https://www.learncpp.com/cpp-tutorial/programs-with-multiple-code-files/), [2.10](https://www.learncpp.com/cpp-tutorial/introduction-to-the-preprocessor/), [2.11](https://www.learncpp.com/cpp-tutorial/header-files/), [2.12](https://www.learncpp.com/cpp-tutorial/header-guards/)), 4, 5, 7, 10, 11, 12 и 16</Source> — препроцессор, заголовки, типы, литералы, пространства имён, приведение типов, перегрузка, ссылки, указатели и циклы.
 - [cppreference. static_cast](https://en.cppreference.com/w/cpp/language/static_cast) — допустимые преобразования; [std::size_t](https://en.cppreference.com/w/cpp/types/size_t) — определение и заголовок `<cstddef>`; [noexcept specifier](https://en.cppreference.com/w/cpp/language/noexcept_spec) и [nodiscard](https://en.cppreference.com/w/cpp/language/attributes/nodiscard) — семантика и стандарт появления.
 - [Проект стандарта C++ (eel.is/c++draft)](https://eel.is/c++draft/): [support.types.layout](https://eel.is/c++draft/support.types.layout) — `size_t`, [namespace.unnamed](https://eel.is/c++draft/namespace.unnamed) — анонимное пространство имён, [dcl.attr.grammar](https://eel.is/c++draft/dcl.attr.grammar) — синтаксис атрибутов.
 - [JUCE. JUCE Module Format](https://github.com/juce-framework/JUCE/blob/master/docs/JUCE%20Module%20Format.md) — модуль из одного `.cpp`, который вставляет остальные исходники, и блок `BEGIN_JUCE_MODULE_DECLARATION`.

@@ -27,6 +27,7 @@ import Equation from '@/components/Equation.astro';
 import Figure from '@/components/Figure.astro';
 import MarginNote from '@/components/MarginNote.astro';
 import SelfCheck from '@/components/SelfCheck.astro';
+import Source from '@/components/Source.astro';
 import Term from '@/components/Term.astro';
 import '@/styles/audio-math.css';
 
@@ -570,28 +571,28 @@ $$
 
 ## Источники {#sources}
 
-- [Julius O. Smith III. Spectral Audio Signal Processing, White Noise](https://www.dsprelated.com/freebooks/sasp/White_Noise.html) — некоррелированные отсчёты, постоянная PSD и независимость цвета шума от распределения амплитуд.
-- [OpenStax. Introductory Statistics 2e, §3.2: Independent and Mutually Exclusive Events](https://openstax.org/books/introductory-statistics-2e/pages/3-2-independent-and-mutually-exclusive-events) — смысл независимости.
+- <Source id="smith-2011">[White Noise](https://www.dsprelated.com/freebooks/sasp/White_Noise.html)</Source> — некоррелированные отсчёты, постоянная PSD и независимость цвета шума от распределения амплитуд.
+- <Source id="illowsky-2023">[§3.2: Independent and Mutually Exclusive Events](https://openstax.org/books/introductory-statistics-2e/pages/3-2-independent-and-mutually-exclusive-events)</Source> — смысл независимости.
 
-- [Barbara Illowsky, Susan Dean. OpenStax, Introductory Statistics 2e, §4.2: Mean or Expected Value and Standard Deviation](https://openstax.org/books/introductory-statistics-2e/pages/4-2-mean-or-expected-value-and-standard-deviation) — среднее по вероятностям и отличие от результатов короткого опыта.
+- <Source id="illowsky-2023">[§4.2: Mean or Expected Value and Standard Deviation](https://openstax.org/books/introductory-statistics-2e/pages/4-2-mean-or-expected-value-and-standard-deviation)</Source> — среднее по вероятностям и отличие от результатов короткого опыта.
 
-- [Steven W. Smith. Глава 2.3: Signal vs. Underlying Process](https://www.dspguide.com/ch2/3.htm), [2.4: Histogram, Pmf and Pdf](https://www.dspguide.com/ch2/4.htm) и [2.6: Digital Noise Generation](https://www.dspguide.com/ch2/6.htm) — распределение, измеренные статистики, равномерные случайные числа.
-- [Robin Whittle. DSP Generation of Pink Noise](https://www.firstpr.com.au/dsp/pink-noise/) — PSD, закон $1/f$ и сравнение мощности октав.
+- <Source id="smith-1997">[Гл. 2.3: Signal vs. Underlying Process](https://www.dspguide.com/ch2/3.htm), [2.4: Histogram, Pmf and Pdf](https://www.dspguide.com/ch2/4.htm) и [2.6: Digital Noise Generation](https://www.dspguide.com/ch2/6.htm)</Source> — распределение, измеренные статистики, равномерные случайные числа.
+- <Source id="whittle-pink-noise" /> — PSD, закон $1/f$ и сравнение мощности октав.
 - [SciPy. Welch](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.welch.html) — смысл плотности мощности и нормирование спектральных оценок.
 
 - [Рабочий текст стандарта C++: побитовый AND](https://eel.is/c++draft/expr.bit.and), [OR](https://eel.is/c++draft/expr.or), [унарные операторы](https://eel.is/c++draft/expr.unary.op), [сдвиги](https://eel.is/c++draft/expr.shift), [умножение и деление](https://eel.is/c++draft/expr.mul) — операции с битами целых, ограничения типов, частное и остаток при делении целых.
 
 - [Wikipedia. Finite difference](https://en.wikipedia.org/wiki/Finite_difference) — разности назад, разности высших порядков и постоянная разность многочлена (раздел Polynomials).
-- [Jay Abramson и соавторы. OpenStax, Precalculus 2e, §1.1: Functions and Function Notation](https://openstax.org/books/precalculus-2e/pages/1-1-functions-and-function-notation) — функция и её аргумент.
-- [OpenStax, §5.1: Angles](https://openstax.org/books/precalculus-2e/pages/5-1-angles) — радианы, дуга и перевод градусов.
-- [OpenStax, §5.4: Right Triangle Trigonometry](https://openstax.org/books/precalculus-2e/pages/5-4-right-triangle-trigonometry) и [§5.2: Unit Circle, Sine and Cosine Functions](https://openstax.org/books/precalculus-2e/pages/5-2-unit-circle-sine-and-cosine-functions) — отношения сторон и координаты на окружности.
-- [OpenStax, §4.3: Logarithmic Functions](https://openstax.org/books/precalculus-2e/pages/4-3-logarithmic-functions), [§4.5: Logarithmic Properties](https://openstax.org/books/precalculus-2e/pages/4-5-logarithmic-properties) и [§4.1: Exponential Functions](https://openstax.org/books/precalculus-2e/pages/4-1-exponential-functions) — основания логарифмов, обратная операция и экспонента.
-- [Stephen Davies. A Cool Brisk Walk Through Discrete Mathematics, §7.3: Hexadecimal (base 16)](https://math.libretexts.org/Bookshelves/Combinatorics_and_Discrete_Mathematics/A_Cool_Brisk_Walk_Through_Discrete_Mathematics_(Davies)/07:_Counting/7.3:_Hexadecimal_(base_16)) и [§7.4: Binary (base 2)](https://math.libretexts.org/Bookshelves/Combinatorics_and_Discrete_Mathematics/A_Cool_Brisk_Walk_Through_Discrete_Mathematics_(Davies)/07:_Counting/7.4:_Binary_(base_2)) — позиционная запись, биты, байт из 8 бит, шестнадцатеричная цифра как 4 бита, дополнительный код.
-- [Julius O. Smith III. Mathematics of the DFT: Decibels](https://ccrma.stanford.edu/~jos/mdft/Decibels.html), [Signal Metrics](https://ccrma.stanford.edu/~jos/mdft/Signal_Metrics.html) и [Sampling Theorem](https://ccrma.stanford.edu/~jos/mdft/Sampling_Theorem.html) — децибелы, RMS и идеальная интерполяция через sinc.
+- <Source id="abramson-2021">[§1.1: Functions and Function Notation](https://openstax.org/books/precalculus-2e/pages/1-1-functions-and-function-notation)</Source> — функция и её аргумент.
+- <Source id="abramson-2021">[§5.1: Angles](https://openstax.org/books/precalculus-2e/pages/5-1-angles)</Source> — радианы, дуга и перевод градусов.
+- <Source id="abramson-2021">[§5.4: Right Triangle Trigonometry](https://openstax.org/books/precalculus-2e/pages/5-4-right-triangle-trigonometry) и [§5.2: Unit Circle, Sine and Cosine Functions](https://openstax.org/books/precalculus-2e/pages/5-2-unit-circle-sine-and-cosine-functions)</Source> — отношения сторон и координаты на окружности.
+- <Source id="abramson-2021">[§4.3: Logarithmic Functions](https://openstax.org/books/precalculus-2e/pages/4-3-logarithmic-functions), [§4.5: Logarithmic Properties](https://openstax.org/books/precalculus-2e/pages/4-5-logarithmic-properties) и [§4.1: Exponential Functions](https://openstax.org/books/precalculus-2e/pages/4-1-exponential-functions)</Source> — основания логарифмов, обратная операция и экспонента.
+- <Source id="davies-2023">[§7.3: Hexadecimal (base 16)](https://math.libretexts.org/Bookshelves/Combinatorics_and_Discrete_Mathematics/A_Cool_Brisk_Walk_Through_Discrete_Mathematics_(Davies)/07:_Counting/7.3:_Hexadecimal_(base_16)) и [§7.4: Binary (base 2)](https://math.libretexts.org/Bookshelves/Combinatorics_and_Discrete_Mathematics/A_Cool_Brisk_Walk_Through_Discrete_Mathematics_(Davies)/07:_Counting/7.4:_Binary_(base_2))</Source> — позиционная запись, биты, байт из 8 бит, шестнадцатеричная цифра как 4 бита, дополнительный код.
+- <Source id="smith-2007">[Decibels](https://ccrma.stanford.edu/~jos/mdft/Decibels.html), [Signal Metrics](https://ccrma.stanford.edu/~jos/mdft/Signal_Metrics.html) и [Sampling Theorem](https://ccrma.stanford.edu/~jos/mdft/Sampling_Theorem.html)</Source> — децибелы, RMS и идеальная интерполяция через sinc.
 - [MathWorks. compressor, Algorithms](https://www.mathworks.com/help/audio/ref/compressor-system-object.html) — статическая характеристика и коэффициенты сглаживания атаки и восстановления.
 
-- [OpenStax. Precalculus 2e, §7.2: Sum and Difference Identities](https://openstax.org/books/precalculus-2e/pages/7-2-sum-and-difference-identities) — формулы сложения углов.
-- [OpenStax. Precalculus 2e, §7.4: Sum-to-Product and Product-to-Sum Formulas](https://openstax.org/books/precalculus-2e/pages/7-4-sum-to-product-and-product-to-sum-formulas) — сумма синусов как произведение.
-- [Carl R. Nave. HyperPhysics, Cents](https://hyperphysics.gsu.edu/hbase/Music/cents.html) и [Beats](https://hyperphysics.gsu.edu/hbase/Sound/beat.html) — цент как сотая доля темперированного полутона и частота биений как разность частот.
-- [Julius O. Smith III. Sinusoids at the Same Frequency](https://www.dsprelated.com/freebooks/mdft/Sinusoids_Same_Frequency.html) — сумма синусоид через две перпендикулярные составляющие.
-- [Steven W. Smith. Глава 15.1: Implementation by Convolution](https://www.dspguide.com/ch15/1.htm) — скользящее среднее как среднее последних отсчётов с одинаковыми весами.
+- <Source id="abramson-2021">[§7.2: Sum and Difference Identities](https://openstax.org/books/precalculus-2e/pages/7-2-sum-and-difference-identities)</Source> — формулы сложения углов.
+- <Source id="abramson-2021">[§7.4: Sum-to-Product and Product-to-Sum Formulas](https://openstax.org/books/precalculus-2e/pages/7-4-sum-to-product-and-product-to-sum-formulas)</Source> — сумма синусов как произведение.
+- <Source id="hyperphysics">[Cents](https://hyperphysics.gsu.edu/hbase/Music/cents.html) и [Beats](https://hyperphysics.gsu.edu/hbase/Sound/beat.html)</Source> — цент как сотая доля темперированного полутона и частота биений как разность частот.
+- <Source id="smith-2007">[Sinusoids at the Same Frequency](https://www.dsprelated.com/freebooks/mdft/Sinusoids_Same_Frequency.html)</Source> — сумма синусоид через две перпендикулярные составляющие.
+- <Source id="smith-1997">[Гл. 15.1: Implementation by Convolution](https://www.dspguide.com/ch15/1.htm)</Source> — скользящее среднее как среднее последних отсчётов с одинаковыми весами.

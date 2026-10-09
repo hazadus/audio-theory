@@ -1,0 +1,672 @@
+---
+import Icon from '@/components/Icon.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { topics } from '@/data/topics';
+import {
+  arrange,
+  authorHref,
+  authorStat,
+  countLabel,
+  defaultState,
+  editionTypeLabels,
+  usedInLabel,
+} from '@/lib/literature';
+import { loadLiteratureList } from '@/lib/literature-list';
+import { withBase } from '@/lib/urls';
+
+const { literature, entries, authors } = await loadLiteratureList();
+// Без JS остаётся этот вид: все издания по авторам с буквенными заголовками.
+const groups = arrange(
+  entries.map((entry) => ({ ...entry, id: entry.edition.id, authors: entry.edition.authors })),
+  defaultState,
+);
+const topicOptions = [
+  { id: 'all', label: 'Все темы', count: entries.length },
+  ...topics.map((topic) => ({
+    id: topic.id as string,
+    label: topic.title as string,
+    count: entries.filter((entry) => entry.topic === topic.id).length,
+  })),
+].filter((option) => option.count > 0);
+const sorts = [
+  { id: 'author', label: 'По авторам' },
+  { id: 'topic', label: 'По темам' },
+];
+---
+
+<BaseLayout
+  title="Литература"
+  description="Книги, статьи и веб-публикации, на которые опираются материалы сайта, со ссылками на статьи, где они используются."
+>
+  <main id="content" class="literature" data-literature data-pagefind-body>
+    <div class="head">
+      <h1>Литература</h1>
+      <p class="lead">
+        Книги, журнальные статьи и веб-публикации, на которые опираются материалы сайта. У каждого
+        издания указано, в каких статьях оно используется.
+      </p>
+      <p class="count" data-count aria-live="polite">
+        {countLabel(entries.map(({ edition }) => edition.type))}
+      </p>
+    </div>
+
+    <div class="controls" data-controls data-pagefind-ignore hidden>
+      <div class="control">
+        <span class="control-label" id="literature-sort-label">
+          Порядок
+        </span>
+        <div class="segments" role="radiogroup" aria-labelledby="literature-sort-label">
+          {sorts.map((sort) => (
+            <button
+              type="button"
+              role="radio"
+              class="segment"
+              data-sort-option={sort.id}
+              aria-checked={sort.id === defaultState.sort ? 'true' : 'false'}
+              tabindex={sort.id === defaultState.sort ? 0 : -1}
+            >
+              {sort.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div class="control">
+        <span class="control-label" id="literature-topics-label">
+          Темы
+        </span>
+        <div class="topics" role="group" aria-labelledby="literature-topics-label">
+          {topicOptions.map((option) => (
+            <button
+              type="button"
+              class="topic"
+              data-topic-option={option.id}
+              aria-pressed={option.id === defaultState.topic ? 'true' : 'false'}
+            >
+              <span class="topic-name">{option.label}</span>
+              <span class="topic-count">{option.count}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <div class="cards" data-pagefind-ignore>
+      {authors.map((author) => (
+        <section
+          class="author-card"
+          data-author-card={author.id}
+          aria-labelledby={`author-${author.id}`}
+          hidden
+        >
+          <div class="author-head">
+            <div class="author-name">
+              <span class="overline">Автор</span>
+              <h2 id={`author-${author.id}`} tabindex="-1">
+                {author.name}
+              </h2>
+              <span class="author-stat">{authorStat(author.editions, author.articles.length)}</span>
+            </div>
+            <button type="button" class="reset" data-author-reset>
+              <Icon name="circle-x" size={16} />
+              Все издания
+            </button>
+          </div>
+          <div class="author-articles">
+            <p>Статьи сайта, где используются эти издания</p>
+            <ul>
+              {author.articles.map((article) => (
+                <li>
+                  <a href={withBase(`/${article.slug}/#sources`)}>{article.title}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      ))}
+    </div>
+
+    {entries.length === 0 ? (
+      <div class="empty">
+        <p>Список появится вместе с первыми статьями, которые ссылаются на издания.</p>
+      </div>
+    ) : (
+      <div class="list" data-list>
+        {groups.map((group) => (
+          <>
+            <h2 class="group-title">{group.title}</h2>
+            <ol class="entries">
+              {group.items.map((item) => (
+                <li
+                  class="entry"
+                  id={item.id}
+                  data-entry={item.id}
+                  data-letter={item.letter}
+                  data-topic={item.topic}
+                  data-authors={item.authors.join(' ')}
+                  data-type={item.edition.type}
+                >
+                  <div class="entry-head">
+                    <span class="entry-authors">
+                      {item.authors.map((id, index) => (
+                        <>
+                          {index > 0 && ', '}
+                          <a
+                            class="author-link"
+                            href={withBase(authorHref(id))}
+                            data-author-link={id}
+                          >
+                            {literature.authors[id]}
+                          </a>
+                        </>
+                      ))}
+                      {item.edition.etAl && ' и др.'}
+                      {item.edition.editors && ' (ред.)'}
+                    </span>
+                    <span class="entry-type">{editionTypeLabels[item.edition.type]}</span>
+                  </div>
+                  <h3 class="entry-title">
+                    {item.edition.url ? (
+                      <a href={item.edition.url}>
+                        {item.edition.title}
+                        <Icon name="external-link" size={16} />
+                      </a>
+                    ) : (
+                      item.edition.title
+                    )}
+                  </h3>
+                  <p class="entry-publication">{item.edition.publication}</p>
+                  {item.edition.translation && (
+                    <p class="entry-translation">
+                      <span>Перевод:</span> {item.edition.translation}
+                    </p>
+                  )}
+                  <details class="entry-uses">
+                    <summary>
+                      {usedInLabel(item.uses.length)}
+                      <Icon name="chevron-down" size={14} />
+                    </summary>
+                    <ul>
+                      {item.uses.map((use) => (
+                        <li>
+                          <a href={withBase(`/${use.slug}/#sources`)}>{use.title}</a>
+                          {use.locators.length > 0 && (
+                            <span class="locator"> · {use.locators.join('; ')}</span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                </li>
+              ))}
+            </ol>
+          </>
+        ))}
+      </div>
+    )}
+  </main>
+</BaseLayout>
+
+<script>
+  import { initLiterature } from '@/lib/literature-controller';
+
+  initLiterature();
+</script>
+
+<style>
+  .literature {
+    --header-h: 57px;
+    display: grid;
+    grid-template-areas: 'head' 'cards' 'controls' 'list';
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-6);
+    width: min(var(--container-max), 100% - 2 * var(--page-gutter));
+    margin: 0 auto;
+    padding-top: var(--space-8);
+    padding-bottom: var(--space-10);
+    font-family: var(--font-ui);
+  }
+
+  .head {
+    grid-area: head;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  h1 {
+    margin: 0;
+    font-family: var(--font-text);
+    font-size: var(--text-3xl);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: var(--tracking-tight);
+  }
+
+  .lead {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-family: var(--font-text);
+    font-size: var(--text-lg);
+    line-height: 1.5;
+    text-wrap: pretty;
+  }
+
+  .count {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+  }
+
+  .controls {
+    grid-area: controls;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    min-width: 0;
+  }
+
+  .controls[hidden] {
+    display: none;
+  }
+
+  .control {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .control-label,
+  .overline {
+    color: var(--color-text-muted);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+  }
+
+  /* На смартфоне подписи групп не нужны: порядок и чипы тем узнаются по виду. */
+  .control-label {
+    display: none;
+  }
+
+  .segments {
+    display: flex;
+    align-self: flex-start;
+    gap: 2px;
+    padding: 2px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: 8px;
+  }
+
+  .segment {
+    min-height: 36px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text-muted);
+    font: 400 0.9375rem var(--font-ui);
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .segment[aria-checked='true'] {
+    background: var(--color-accent-soft);
+    color: var(--color-text);
+    font-weight: 600;
+  }
+
+  .topics {
+    display: flex;
+    gap: var(--space-2);
+    overflow-x: auto;
+    /* Лента чипов прокручивается до края экрана; запас под рамку фокуса. */
+    margin-inline: calc(-1 * var(--page-gutter));
+    padding: 4px var(--page-gutter);
+    scrollbar-width: none;
+  }
+
+  .topic {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 0 14px;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-full);
+    background: transparent;
+    color: var(--color-text);
+    font: 400 0.9375rem var(--font-ui);
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .topic:hover {
+    border-color: var(--color-border-strong);
+  }
+
+  .topic[aria-pressed='true'] {
+    border-color: var(--color-accent);
+    background: var(--color-accent-soft);
+    font-weight: 600;
+  }
+
+  .topic-count {
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cards {
+    grid-area: cards;
+  }
+
+  .cards:not(:has(.author-card:not([hidden]))) {
+    display: none;
+  }
+
+  .author-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 20px;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+  }
+
+  .author-card[hidden] {
+    display: none;
+  }
+
+  .author-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .author-name {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .author-name h2 {
+    margin: 0;
+    font-family: var(--font-text);
+    font-size: var(--text-2xl);
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .author-name h2:focus {
+    outline: none;
+  }
+
+  .author-stat {
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+  }
+
+  .reset {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 0 12px;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font: 500 0.875rem var(--font-ui);
+    cursor: pointer;
+  }
+
+  .reset:hover {
+    border-color: var(--color-border-strong);
+  }
+
+  .author-articles {
+    font-size: 0.875rem;
+  }
+
+  .author-articles p {
+    margin: 0 0 6px;
+    font-weight: 600;
+  }
+
+  .author-articles ul {
+    margin: 0;
+    padding-left: 18px;
+    line-height: 1.75;
+  }
+
+  .list {
+    grid-area: list;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .list :global(.group-title) {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin: var(--space-3) 0 0;
+    padding-bottom: 8px;
+    border-bottom: var(--border-width) solid var(--color-border);
+    font-family: var(--font-text);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .list :global(.group-title:not(:first-child)) {
+    margin-top: var(--space-6);
+  }
+
+  .list :global(.entries) {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .entry {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0 -12px;
+    padding: 18px 12px;
+    border-bottom: var(--border-width) solid var(--color-border);
+    scroll-margin-top: calc(var(--header-h) + 16px);
+    transition: background-color var(--duration-slow) var(--ease-standard);
+  }
+
+  /* Переход из статьи по #ключу: запись выделяется, как термин в глоссарии. */
+  .entry:target {
+    border-radius: 6px;
+    background: var(--color-accent-soft);
+    box-shadow: inset 3px 0 0 var(--color-accent);
+  }
+
+  .entry-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 12px;
+  }
+
+  .entry-authors {
+    font-size: 0.9375rem;
+    font-weight: 600;
+  }
+
+  .author-link {
+    color: var(--color-text);
+    text-decoration-color: var(--color-border-strong);
+  }
+
+  .author-link:hover,
+  .author-link[aria-current='true'] {
+    color: var(--color-accent);
+    text-decoration-color: currentColor;
+  }
+
+  .entry-type {
+    color: var(--color-text-muted);
+    font-size: 0.8125rem;
+  }
+
+  .entry-title {
+    margin: 0;
+    font-family: var(--font-text);
+    font-size: var(--text-lg);
+    font-weight: 500;
+    line-height: 1.35;
+    text-wrap: pretty;
+  }
+
+  .entry-title a {
+    color: var(--color-text);
+    text-decoration-color: var(--color-border-strong);
+  }
+
+  .entry-title a:hover {
+    color: var(--color-link);
+  }
+
+  .entry-title :global(svg) {
+    margin-left: 4px;
+    color: var(--color-text-muted);
+    vertical-align: -1px;
+  }
+
+  .entry-publication,
+  .entry-translation {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  .entry-publication,
+  .entry-translation span {
+    color: var(--color-text-muted);
+  }
+
+  .entry-uses summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    color: var(--color-link);
+    font-size: 0.875rem;
+    font-weight: 500;
+    list-style: none;
+    cursor: pointer;
+  }
+
+  .entry-uses summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .entry-uses[open] summary :global(svg) {
+    transform: rotate(180deg);
+  }
+
+  .entry-uses ul {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 0.875rem;
+    line-height: 1.75;
+  }
+
+  .locator {
+    color: var(--color-text-muted);
+  }
+
+  .empty {
+    grid-area: list;
+    padding: var(--space-5);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+  }
+
+  .empty p {
+    margin: 0;
+  }
+
+  @media (width >= 1024px) {
+    .literature {
+      --header-h: 65px;
+      grid-template-areas: 'controls head' 'controls cards' 'controls list';
+      grid-template-columns: 248px minmax(0, 680px);
+      grid-template-rows: auto auto 1fr;
+      column-gap: 56px;
+      padding-top: var(--space-10);
+    }
+
+    h1 {
+      font-size: var(--text-4xl);
+    }
+
+    .controls {
+      align-self: start;
+      position: sticky;
+      top: calc(var(--header-h) + var(--space-6));
+      gap: var(--space-6);
+      padding-top: 6px;
+    }
+
+    .control-label {
+      display: block;
+    }
+
+    .topics {
+      flex-direction: column;
+      gap: 2px;
+      overflow: visible;
+      margin: 0 -10px;
+      padding: 0;
+    }
+
+    .topic {
+      justify-content: space-between;
+      min-height: 36px;
+      padding: 0 10px;
+      border: 0;
+      border-radius: var(--radius-md);
+      text-align: left;
+      white-space: normal;
+    }
+
+    .topic:hover {
+      background: var(--color-surface);
+    }
+
+    .topic[aria-pressed='true'] {
+      background: var(--color-surface);
+      box-shadow: inset 3px 0 0 var(--color-accent);
+    }
+
+    .author-articles ul {
+      columns: 2;
+      column-gap: 32px;
+    }
+
+    .entry {
+      margin: 0 -16px;
+      padding-inline: 16px;
+    }
+  }
+</style>

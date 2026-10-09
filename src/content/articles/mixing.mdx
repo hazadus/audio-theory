@@ -29,6 +29,7 @@ import Equation from '@/components/Equation.astro';
 import MarginNote from '@/components/MarginNote.astro';
 import MixingDemo from '@/components/MixingDemo.astro';
 import SelfCheck from '@/components/SelfCheck.astro';
+import Source from '@/components/Source.astro';
 import Term from '@/components/Term.astro';
 
 Два источника по отдельности могут звучать без перегрузки, а вместе дать слишком большой уровень. Например, два <Term id="sample" firstMention>отсчёта</Term> по 0,8 складываются в 1,6. Чтобы собрать несколько генераторов в синтезатор, нужно выбрать уровень каждого источника, сложить их отсчёты и оставить место для пиков.
@@ -277,8 +278,8 @@ $0{,}8 \cdot 0{,}75 + 0{,}4 \cdot 0{,}5 = 0{,}6 + 0{,}2 = 0{,}8$. Хотя су�
 
 ## Источники {#sources}
 
-- [Steven W. Smith. The Scientist and Engineer's Guide to Digital Signal Processing, глава 5.2: Requirements for Linearity](https://www.dspguide.com/ch5/2.htm) — масштабирование и сложение сигналов.
-- [Steven W. Smith. Глава 5.3: Static Linearity and Sinusoidal Fidelity](https://www.dspguide.com/ch5/3.htm) — постоянное усиление и линейная обработка.
-- [Julius O. Smith III. Physical Audio Signal Processing: Clipping Nonlinearity](https://www.dsprelated.com/freebooks/pasp/Clipping_Nonlinearity.html) — жёсткое ограничение и его необратимость.
-- [Julius O. Smith III. Mathematics of the DFT: Sinusoids at the Same Frequency](https://www.dsprelated.com/freebooks/mdft/Sinusoids_Same_Frequency.html) — сложение синусоид одной частоты; авторская версия на DSPRelated.
+- <Source id="smith-1997">[Гл. 5.2: Requirements for Linearity](https://www.dspguide.com/ch5/2.htm)</Source> — масштабирование и сложение сигналов.
+- <Source id="smith-1997">[Гл. 5.3: Static Linearity and Sinusoidal Fidelity](https://www.dspguide.com/ch5/3.htm)</Source> — постоянное усиление и линейная обработка.
+- <Source id="smith-2010">[Clipping Nonlinearity](https://www.dsprelated.com/freebooks/pasp/Clipping_Nonlinearity.html)</Source> — жёсткое ограничение и его необратимость.
+- <Source id="smith-2007">[Sinusoids at the Same Frequency](https://www.dsprelated.com/freebooks/mdft/Sinusoids_Same_Frequency.html)</Source> — сложение синусоид одной частоты; авторская версия на DSPRelated.
 - [JUCE 9.0.3. AudioSampleBuffer](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_basics/buffers/juce_AudioSampleBuffer.h) — очистка буфера, добавление источника с усилением и изменение общего уровня: `clear`, `addFrom`, `applyGain`.

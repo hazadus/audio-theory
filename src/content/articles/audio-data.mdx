@@ -39,6 +39,7 @@ import Equation from '@/components/Equation.astro';
 import Figure from '@/components/Figure.astro';
 import MarginNote from '@/components/MarginNote.astro';
 import SelfCheck from '@/components/SelfCheck.astro';
+import Source from '@/components/Source.astro';
 import Term from '@/components/Term.astro';
 
 Аудиопрограмма получает числа, меняет их и передаёт дальше. В <Term id="mono" firstMention>моно</Term> каждому моменту <Term id="sampling" firstMention>дискретизации</Term> соответствует одно число, в <Term id="stereo" firstMention>стерео</Term> — два. Если аудиодрайвер передаёт «512 сэмплов», нужно уточнить, считает ли он значения одного канала или все числа вместе. От этого зависят границы массивов, объём памяти и расчёт времени.
@@ -376,8 +377,8 @@ void attenuateBlock (juce::AudioBuffer<float>& buffer)
 
 ## Источники {#sources}
 
-- [Steven W. Smith. The Scientist and Engineer's Guide to Digital Signal Processing, глава 4.3: Floating Point (Real Numbers)](https://www.dspguide.com/ch4/3.htm) — знак, значащая часть и степень в двоичном представлении; форматы одинарной и двойной точности.
-- [Steven W. Smith. Глава 4.4: Number Precision](https://www.dspguide.com/ch4/4.htm) — конечная точность, округление результатов вычислений и неравномерный шаг представимых чисел.
+- <Source id="smith-1997">[Гл. 4.3: Floating Point (Real Numbers)](https://www.dspguide.com/ch4/3.htm)</Source> — знак, значащая часть и степень в двоичном представлении; форматы одинарной и двойной точности.
+- <Source id="smith-1997">[Гл. 4.4: Number Precision](https://www.dspguide.com/ch4/4.htm)</Source> — конечная точность, округление результатов вычислений и неравномерный шаг представимых чисел.
 - [ALSA Project. PCM (digital audio) interface](https://www.alsa-project.org/alsa-doc/alsa-lib/pcm.html) — определения отсчёта и кадра, чередование каналов и отдельные массивы, опустошение и переполнение буфера.
 - [PortAudio. API Overview](https://portaudio.com/docs/v19-doxydocs/api_overview.html) — форматы данных, раскладки каналов, передача блоков, требования к обработчику реального времени и отдельные параметры задержки.
 - [JUCE. AudioBuffer](https://docs.juce.com/master/classjuce_1_1AudioBuffer.html) — число каналов и отсчётов на канал, инициализация, доступ к массивам и запись значений. API сверено с [исходниками версии 9.0.3](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_basics/buffers/juce_AudioSampleBuffer.h).
