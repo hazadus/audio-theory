@@ -1,4 +1,4 @@
-// Глоссарий: список из общего источника, одинаковые с подсказками определения, цели ссылок, поиск и указатель букв.
+// Глоссарий: список из общего источника, английские карточки, одинаковые с подсказками определения, цели ссылок, поиск и указатель букв.
 import { expect, test } from '@playwright/test';
 import glossary from '../../src/data/glossary.json' with { type: 'json' };
 
@@ -11,14 +11,41 @@ test(
     await page.goto('glossary/');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Глоссарий');
     const ids = await page.locator('dl > .term').evaluateAll((items) => items.map((i) => i.id));
-    expect(ids).toEqual(sorted.map((e) => e.id));
+    const main = new Set(glossary.map((e) => e.id));
+    expect(ids.filter((id) => main.has(id))).toEqual(sorted.map((e) => e.id));
+    expect(ids.length).toBeGreaterThan(glossary.length);
     await expect(page.locator('header nav a[aria-current="page"]')).toHaveText('Глоссарий');
     const first = page.locator(`#${sorted[0].id}`);
     await expect(first.locator('dfn')).toHaveText(/^[А-ЯЁ]/);
-    await expect(first.locator('.en')).toHaveText(`(${sorted[0].en})`);
+    await expect(first.locator('.other')).toHaveText(`(${sorted[0].en})`);
     await expect(first.locator('dd p')).toHaveText(sorted[0].definition);
   },
 );
+
+test('термин повторяется под английской буквой с тем же определением', async ({ page }) => {
+  await page.goto('glossary/#en-adc');
+  const card = page.locator('#en-adc');
+  await expect(card).toBeInViewport();
+  await expect(card.locator('dfn')).toHaveText('ADC');
+  await expect(card.locator('dfn')).toHaveAttribute('lang', 'en');
+  await expect(card.locator('.other')).toHaveText('(АЦП)');
+  await expect(card.locator('dd p')).toHaveText(await page.locator('#adc dd p').innerText());
+  await expect(page.locator('#en-analog-to-digital-converter dfn')).toHaveText(
+    'Analog-to-digital converter',
+  );
+  // Английская карточка — под латинской «A»; русская «А» и латинская «A» в разных строках.
+  const current = page.locator('[data-letter-link][aria-current="location"]');
+  await expect(current).toHaveText('A');
+  const rows = page.getByRole('group');
+  await expect(rows).toHaveCount(2);
+  await expect(rows.nth(1)).toHaveAccessibleName('Латинские буквы');
+  await expect(rows.nth(1).locator('[aria-current="location"]')).toHaveCount(1);
+  const [ru, latin] = await Promise.all([rows.nth(0).boundingBox(), rows.nth(1).boundingBox()]);
+  expect(latin!.y).toBeGreaterThanOrEqual(ru!.y + ru!.height);
+  // Запись с латинским названием выводится один раз.
+  await expect(page.locator('#lufs')).toHaveCount(1);
+  await expect(page.locator('[id^="en-loudness-units"]')).toHaveCount(0);
+});
 
 test('определения совпадают с подсказками в статье', async ({ page }) => {
   await page.goto('glossary/');
@@ -45,8 +72,8 @@ test('цели «Подробнее» ведут на существующие �
   const hrefs = await page
     .locator('dd a.more')
     .evaluateAll((links) => links.map((l) => (l as HTMLAnchorElement).href));
-  expect(hrefs).toHaveLength(glossary.length);
-  // Каждая страница открывается один раз: терминов больше сотни, целей — около полутора десятков.
+  expect(hrefs).toHaveLength(await page.locator('dl > .term').count());
+  // Каждая страница открывается один раз: карточек несколько сотен, целей — несколько десятков.
   const anchorsByPage = new Map<string, string[]>();
   for (const href of hrefs) {
     const { hash } = new URL(href);
@@ -56,7 +83,8 @@ test('цели «Подробнее» ведут на существующие �
   for (const [pageUrl, hashes] of anchorsByPage) {
     const response = await page.goto(pageUrl);
     expect(response?.status(), pageUrl).toBe(200);
-    for (const hash of hashes.filter(Boolean)) {
+    // Английские карточки повторяют цели основных: каждый якорь проверяется один раз.
+    for (const hash of new Set(hashes.filter(Boolean))) {
       expect(await page.locator(`[id="${hash.slice(1)}"]`).count(), pageUrl + hash).toBe(1);
     }
   }

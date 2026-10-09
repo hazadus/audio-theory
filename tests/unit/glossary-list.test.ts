@@ -1,4 +1,4 @@
-// Проверяет порядок, группы, указатель букв, подписи ссылок и выбор текущей буквы глоссария.
+// Проверяет порядок, английские карточки, группы, указатель букв, подписи ссылок и выбор текущей буквы глоссария.
 import { describe, expect, it } from 'vitest';
 import glossary from '@/data/glossary.json';
 import type { GlossaryEntry } from '@/lib/glossary';
@@ -7,7 +7,10 @@ import {
   currentLetter,
   describeTarget,
   displayName,
+  englishId,
+  englishNames,
   firstLetter,
+  glossaryCards,
   groupThreshold,
   letterId,
   sortGlossary,
@@ -51,59 +54,134 @@ describe('firstLetter, displayName, letterId', () => {
     expect(displayName('АЦП')).toBe('АЦП');
   });
 
-  it('даёт английский адрес группы', () => {
+  it('даёт английский адрес группы; латинская буква не совпадает с русской', () => {
     expect(letterId('Щ')).toBe('letter-sch');
     expect(letterId('Ч')).toBe('letter-ch');
     expect(letterId('Ъ')).toBe('letter-44a');
+    expect(letterId('А')).toBe('letter-a');
+    expect(letterId('A')).toBe('letter-en-a');
+    expect(letterId('3')).toBe('letter-33');
+  });
+});
+
+describe('glossaryCards', () => {
+  it('делит английское название на варианты и строит из них якоря', () => {
+    expect(englishNames('analog-to-digital converter, ADC')).toEqual([
+      'analog-to-digital converter',
+      'ADC',
+    ]);
+    expect(englishNames('return / aux')).toEqual(['return / aux']);
+    expect(englishId('two’s complement')).toBe('en-two-s-complement');
+    expect(englishId('dry/wet')).toBe('en-dry-wet');
+  });
+
+  it('повторяет запись под каждым английским вариантом с русским названием в скобках', () => {
+    const cards = glossaryCards([make('adc', 'АЦП', 'analog-to-digital converter, ADC')]);
+    expect(cards.map(({ id, name, other, lang }) => [id, name, other, lang])).toEqual([
+      ['adc', 'АЦП', 'analog-to-digital converter, ADC', 'ru'],
+      ['en-analog-to-digital-converter', 'Analog-to-digital converter', 'АЦП', 'en'],
+      ['en-adc', 'ADC', 'АЦП', 'en'],
+    ]);
+    expect(cards.every((c) => c.entry.definition === 'Определение.')).toBe(true);
+  });
+
+  it('запись с латинским названием выводится один раз', () => {
+    const cards = glossaryCards([make('lufs', 'LUFS', 'loudness units relative to full scale')]);
+    expect(cards.map((c) => c.id)).toEqual(['lufs']);
+  });
+
+  it('повторный якорь английской карточки останавливает сборку', () => {
+    expect(() =>
+      glossaryCards([make('a', 'задержка', 'delay'), make('b', 'эффект задержки', 'delay')]),
+    ).toThrow(/en-delay/);
   });
 });
 
 describe('buildGlossaryView', () => {
-  it('малый список не делится на группы; указатель ведёт на первую запись буквы', () => {
+  it('малый список не делится на группы; указатель ведёт на первую карточку буквы', () => {
     const view = buildGlossaryView([
-      make('s2', 'сигнал'),
-      make('s1', 'сэмпл'),
-      make('a', 'амплитуда'),
+      make('s2', 'сигнал', 'signal'),
+      make('s1', 'сэмпл', 'sample'),
+      make('a', 'амплитуда', 'amplitude'),
     ]);
     expect(view.grouped).toBe(false);
-    expect(view.letters).toHaveLength(29);
-    const active = view.letters.filter((l) => l.active);
+    expect(view.rows.map((r) => [r.label, r.letters.length])).toEqual([
+      ['Русские буквы', 29],
+      ['Латинские буквы', 26],
+    ]);
+    const active = view.rows.flatMap((r) => r.letters).filter((l) => l.active);
     expect(active.map((l) => [l.letter, l.href])).toEqual([
       ['А', '#a'],
       ['С', '#s2'],
+      ['A', '#en-amplitude'],
+      ['S', '#en-sample'],
     ]);
-    expect(view.groups.map((g) => g.items.map((i) => i.startsLetter))).toEqual([
-      ['А'],
-      ['С', undefined],
+    expect(view.groups.map((g) => g.items.map((i) => [i.card.id, i.startsLetter]))).toEqual([
+      [['a', 'А']],
+      [
+        ['s2', 'С'],
+        ['s1', undefined],
+      ],
+      [['en-amplitude', 'A']],
+      [
+        ['en-sample', 'S'],
+        ['en-signal', undefined],
+      ],
     ]);
+  });
+
+  it('латинская группа сортирует английские карточки и латинские названия вместе', () => {
+    const view = buildGlossaryView([
+      make('lufs', 'LUFS', 'loudness units relative to full scale'),
+      make('loudness', 'громкость', 'loudness'),
+      make('limiter', 'лимитер', 'limiter'),
+    ]);
+    const latin = view.groups.find((g) => g.letter === 'L')!;
+    expect(latin.id).toBe('letter-en-l');
+    expect(latin.items.map((i) => i.card.name)).toEqual(['Limiter', 'Loudness', 'LUFS']);
   });
 
   it(`список больше ${groupThreshold} записей делится на группы, указатель ведёт на заголовки`, () => {
     const many = Array.from({ length: groupThreshold + 1 }, (_, i) =>
       make(`t${i}`, `б${String(i).padStart(2, '0')}`),
     );
-    const view = buildGlossaryView([...many, make('z', 'вектор')]);
+    const view = buildGlossaryView([...many, make('z', 'вектор', 'vector')]);
     expect(view.grouped).toBe(true);
-    expect(view.groups.map((g) => g.id)).toEqual(['letter-b', 'letter-v']);
-    expect(view.letters.find((l) => l.letter === 'Б')?.href).toBe('#letter-b');
+    expect(view.groups.map((g) => g.id)).toEqual([
+      'letter-b',
+      'letter-v',
+      'letter-en-t',
+      'letter-en-v',
+    ]);
+    expect(view.rows[0].letters.find((l) => l.letter === 'Б')?.href).toBe('#letter-b');
+    expect(view.rows[1].letters.find((l) => l.letter === 'V')?.href).toBe('#letter-en-v');
     expect(view.groups[0].items.every((i) => i.startsLetter === undefined)).toBe(true);
   });
 
-  it('буква вне алфавита добавляется в конец указателя', () => {
-    const view = buildGlossaryView([make('p', 'pH-метр'), make('a', 'амплитуда')]);
-    expect(view.letters.at(-1)).toMatchObject({ letter: 'P', active: true });
+  it('буква вне обоих алфавитов добавляется в конец латинской строки', () => {
+    const view = buildGlossaryView([make('d', '3D-звук'), make('a', 'амплитуда', 'amplitude')]);
+    expect(view.rows[1].letters.at(-1)).toMatchObject({ letter: '3', active: true });
+    expect(view.groups.at(-1)?.letter).toBe('3');
   });
 
   it('пустой список даёт пустое представление без активных букв', () => {
     const view = buildGlossaryView([]);
     expect(view.groups).toEqual([]);
-    expect(view.letters.every((l) => !l.active)).toBe(true);
+    expect(view.rows.flatMap((r) => r.letters).every((l) => !l.active)).toBe(true);
   });
 
-  it('каждая запись данных попадает ровно в одну группу', () => {
-    const view = buildGlossaryView(glossary as GlossaryEntry[]);
-    const ids = view.groups.flatMap((g) => g.items.map((i) => i.entry.id));
-    expect(ids.sort()).toEqual(glossary.map((e) => e.id).sort());
+  it('каждая карточка данных попадает ровно в одну группу, основная — по записи', () => {
+    const entries = glossary as GlossaryEntry[];
+    const view = buildGlossaryView(entries);
+    const cards = view.groups.flatMap((g) => g.items.map((i) => i.card));
+    expect(
+      cards
+        .filter((c) => c.lang === 'ru')
+        .map((c) => c.id)
+        .sort(),
+    ).toEqual(entries.map((e) => e.id).sort());
+    expect(cards).toHaveLength(glossaryCards(entries).length);
+    expect(cards.filter((c) => c.lang === 'en').every((c) => /^[A-Z]/.test(c.name))).toBe(true);
   });
 });
 

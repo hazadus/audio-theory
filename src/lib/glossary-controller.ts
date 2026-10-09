@@ -1,11 +1,10 @@
-// Указатель букв глоссария: отмечает текущую букву при прокрутке и держит её в видимой части полосы.
+// Указатель букв глоссария: отмечает текущую букву при прокрутке и держит её в видимой части своей строки.
 import { currentLetter } from '@/lib/glossary-list';
 
 export function initGlossary(): void {
   const nav = document.querySelector<HTMLElement>('[data-letterbar]');
-  const row = nav?.querySelector<HTMLElement>('[data-letterrow]');
-  if (!nav || !row) return;
-  const links = [...row.querySelectorAll<HTMLAnchorElement>('a[data-letter-link]')];
+  if (!nav) return;
+  const links = [...nav.querySelectorAll<HTMLAnchorElement>('a[data-letter-link]')];
   const marks = [...document.querySelectorAll<HTMLElement>('[data-letter]')];
   if (links.length === 0 || marks.length === 0) return;
 
@@ -29,7 +28,8 @@ export function initGlossary(): void {
     for (const link of links) {
       if (link.dataset.letterLink === letter) {
         link.setAttribute('aria-current', 'location');
-        // Прокрутка только внутри полосы, не страницы.
+        // Прокрутка только внутри строки букв, не страницы.
+        const row = link.parentElement!;
         if (row.scrollWidth > row.clientWidth) {
           row.scrollLeft = link.offsetLeft - (row.clientWidth - link.offsetWidth) / 2;
         }
@@ -71,4 +71,11 @@ export function initGlossary(): void {
   window.addEventListener('scroll', schedule, { passive: true });
   window.addEventListener('resize', schedule);
   update();
+  // Плавная прокрутка общих стилей включается после загрузки, когда начальный переход к якорю уже выполнен.
+  const ready = () =>
+    requestAnimationFrame(() => {
+      document.documentElement.dataset.glossaryReady = '';
+    });
+  if (document.readyState === 'complete') ready();
+  else window.addEventListener('load', ready, { once: true });
 }

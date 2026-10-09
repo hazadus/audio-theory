@@ -4,12 +4,7 @@ import Icon from '@/components/Icon.astro';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import glossary from '@/data/glossary.json';
 import { glossarySchema, parseGlossary } from '@/lib/glossary';
-import {
-  buildGlossaryView,
-  describeTarget,
-  displayName,
-  type ArticleInfo,
-} from '@/lib/glossary-list';
+import { buildGlossaryView, describeTarget, type ArticleInfo } from '@/lib/glossary-list';
 import { resolveTarget } from '@/lib/links';
 import { withBase } from '@/lib/urls';
 
@@ -32,11 +27,11 @@ const info = new Map<string, ArticleInfo>(
 const view = buildGlossaryView(entries);
 const rows = view.groups.map((group) => ({
   ...group,
-  items: group.items.map((item) => ({
-    ...item,
-    name: displayName(item.entry.ru),
-    href: resolveTarget(item.entry.target),
-    label: describeTarget(item.entry.target, info),
+  items: group.items.map(({ card, startsLetter }) => ({
+    ...card,
+    startsLetter,
+    href: resolveTarget(card.entry.target),
+    label: describeTarget(card.entry.target, info),
   })),
 }));
 ---
@@ -68,17 +63,19 @@ const rows = view.groups.map((group) => ({
           data-letterbar
           data-pagefind-ignore
         >
-          <div class="letterrow" data-letterrow>
-            {view.letters.map((item) =>
-              item.active ? (
-                <a href={item.href} data-letter-link={item.letter}>
-                  {item.letter}
-                </a>
-              ) : (
-                <span aria-hidden="true">{item.letter}</span>
-              ),
-            )}
-          </div>
+          {view.rows.map((row) => (
+            <div class="letterrow" role="group" aria-label={row.label} data-letterrow>
+              {row.letters.map((item) =>
+                item.active ? (
+                  <a href={item.href} data-letter-link={item.letter}>
+                    {item.letter}
+                  </a>
+                ) : (
+                  <span aria-hidden="true">{item.letter}</span>
+                ),
+              )}
+            </div>
+          ))}
         </nav>
 
         <div class="list">
@@ -93,18 +90,19 @@ const rows = view.groups.map((group) => ({
                 {group.items.map((item) => (
                   <div
                     class="term"
-                    id={item.entry.id}
+                    id={item.id}
                     data-letter={item.startsLetter}
                     data-term-letter={group.letter}
+                    data-pagefind-ignore={item.lang === 'en' ? 'all' : undefined}
                   >
                     <dt>
-                      <dfn>{item.name}</dfn>
-                      <span class="en" lang="en">
-                        ({item.entry.en})
+                      <dfn lang={item.lang === 'en' ? 'en' : undefined}>{item.name}</dfn>
+                      <span class="other" lang={item.lang === 'en' ? undefined : 'en'}>
+                        ({item.other})
                       </span>
                       <a
                         class="anchor"
-                        href={`#${item.entry.id}`}
+                        href={`#${item.id}`}
                         aria-label={`Ссылка на термин «${item.name}»`}
                         data-pagefind-ignore
                       >
@@ -160,7 +158,8 @@ const rows = view.groups.map((group) => ({
 <style>
   main {
     --header-h: 57px;
-    --bar-h: 42px;
+    /* Две строки букв, линия между ними и рамки полосы. */
+    --bar-h: calc(2 * var(--letter-h) + 3 * var(--border-width));
     --letter-w: 36px;
     --letter-h: 40px;
     --link-h: 32px;
@@ -208,9 +207,14 @@ const rows = view.groups.map((group) => ({
 
   .letterrow {
     display: flex;
+    position: relative;
     overflow-x: auto;
     padding-inline: calc(var(--page-gutter) - 12px);
     scrollbar-width: thin;
+  }
+
+  .letterrow + .letterrow {
+    border-top: var(--border-width) solid var(--color-border);
   }
 
   .letterrow a,
@@ -304,7 +308,7 @@ const rows = view.groups.map((group) => ({
     line-height: 1.3;
   }
 
-  .en {
+  .other {
     color: var(--color-text-muted);
     font-family: var(--font-text);
     font-size: var(--text-base);
@@ -430,7 +434,6 @@ const rows = view.groups.map((group) => ({
 
   @media (width < 768px), (hover: none) {
     main {
-      --bar-h: 46px;
       --letter-w: 44px;
       --letter-h: 44px;
       --link-h: 44px;
@@ -443,9 +446,8 @@ const rows = view.groups.map((group) => ({
     }
   }
 
-  @media (prefers-reduced-motion: no-preference) {
-    :global(html) {
-      scroll-behavior: smooth;
-    }
+  /* До загрузки переход по адресу записи мгновенный: карточка может быть в десятках тысяч пикселей от начала. */
+  :global(html:not([data-glossary-ready])) {
+    scroll-behavior: auto;
   }
 </style>
