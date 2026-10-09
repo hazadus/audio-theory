@@ -1,5 +1,5 @@
 ---
-// Общий каркас страницы: тема до CSS, ссылка перехода к содержимому, шапка и подвал.
+// Общий каркас страницы: тема до CSS, ссылка перехода к содержимому, шапка и подвал (кроме графа).
 // Страница выводит основное содержимое в <main id="content">.
 import '@/styles/base.css';
 import SearchDialog from '@/components/SearchDialog.astro';
@@ -14,9 +14,11 @@ interface Props {
   description?: string;
   /** Раздел сайта для активного пункта навигации (например, `materials` на странице статьи). */
   section?: string;
+  /** Подвал; страница графа во всю высоту окна выводится без него. */
+  footer?: boolean;
 }
 
-const { title, description, section } = Astro.props;
+const { title, description, section, footer = true } = Astro.props;
 ---
 
 <!doctype html>
@@ -35,7 +37,7 @@ const { title, description, section } = Astro.props;
     </a>
     <SiteHeader {section} />
     <slot />
-    <SiteFooter />
+    {footer && <SiteFooter />}
     <SearchDialog />
   </body>
 </html>

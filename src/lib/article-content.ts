@@ -330,6 +330,53 @@ export function findDemos(body: string): { component: DemoComponent; id: string 
   );
 }
 
+/** Строковые значения свойств `article` в выражении атрибута MDX (дерево estree). */
+function collectArticleProperties(node: unknown, slugs: Set<string>): void {
+  if (Array.isArray(node)) {
+    for (const item of node) collectArticleProperties(item, slugs);
+    return;
+  }
+  if (!node || typeof node !== 'object') return;
+  const record = node as Record<string, unknown>;
+  if (record.type === 'Property') {
+    const key = record.key as { name?: string; value?: unknown } | undefined;
+    const value = record.value as { type?: string; value?: unknown } | undefined;
+    if (
+      (key?.name ?? key?.value) === 'article' &&
+      value?.type === 'Literal' &&
+      typeof value.value === 'string'
+    ) {
+      slugs.add(value.value);
+    }
+  }
+  for (const [name, child] of Object.entries(record)) {
+    if (name !== 'loc' && name !== 'range') collectArticleProperties(child, slugs);
+  }
+}
+
+/**
+ * Статьи, на которые ссылается текст: внутренние Markdown-ссылки и цели заметок «Подробнее».
+ * Ссылки на свои разделы, страницы треков и внешние адреса не учитываются; slug не проверяется.
+ */
+export function findArticleLinks(body: string): string[] {
+  const slugs = new Set<string>();
+  function walk(node: MdNode) {
+    if (node.type === 'link' && node.url !== undefined) {
+      const target = internalTarget(node.url);
+      if (target?.slug) slugs.add(target.slug);
+    }
+    if (node.type === 'mdxJsxFlowElement' && node.name === 'MarginNote') {
+      for (const attribute of node.attributes ?? []) {
+        const value = attribute.value as { data?: { estree?: unknown } } | undefined;
+        collectArticleProperties(value?.data?.estree, slugs);
+      }
+    }
+    for (const child of node.children ?? []) walk(child);
+  }
+  walk(parser.parse(body) as MdNode);
+  return [...slugs];
+}
+
 /** Все цели разделов и учебных блоков, включая стандартные id визуализаций. */
 export function getArticleAnchors(body: string, headings: Pick<Heading, 'slug'>[]): Set<string> {
   const headingIds = new Set(headings.map((heading) => heading.slug));

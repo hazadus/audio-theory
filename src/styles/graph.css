@@ -1,0 +1,129 @@
+/* Узлы, связи и подписи графа связей: блок «Связи» в статье и страница /graph/. */
+.graph-svg {
+  display: block;
+  overflow: visible;
+  font-family: var(--font-ui);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.graph-svg .edge {
+  stroke: var(--color-border-strong);
+  stroke-width: 1;
+  opacity: 0.5;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+  transition: opacity var(--duration-fast) var(--ease-standard);
+}
+
+.graph-svg .edge.is-side {
+  opacity: 0.25;
+}
+
+.graph-svg .edge.is-far {
+  opacity: 0.18;
+}
+
+.graph-svg .edge.is-tag {
+  stroke-dasharray: 3 3;
+}
+
+.graph-svg .node {
+  cursor: pointer;
+  outline: none;
+  transition: opacity var(--duration-fast) var(--ease-standard);
+}
+
+.graph-svg .node.is-center {
+  cursor: default;
+}
+
+.graph-svg .node.is-far {
+  opacity: 0.6;
+}
+
+.graph-svg .label {
+  fill: var(--color-text);
+  font-size: 13px;
+  font-weight: 400;
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: var(--graph-bg, var(--chart-bg));
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+
+.graph-svg .node.is-far .label,
+.graph-svg .node.is-tag .label {
+  fill: var(--color-text-muted);
+}
+
+.graph-svg .node.is-center .label,
+.graph-svg .node.is-selected .label,
+.graph-svg .node:focus-visible .label {
+  font-weight: 600;
+}
+
+.graph-svg .label.is-culled {
+  display: none;
+}
+
+.graph-svg .ring {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.graph-svg .tag-box {
+  fill: var(--color-surface-raised);
+  stroke: var(--color-text-muted);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.graph-svg .node:focus-visible .dot,
+.graph-svg .node:focus-visible .tag-box {
+  stroke: var(--color-focus);
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Выделение: статья и её соседи остаются яркими, остальное бледнеет до 18 %. */
+.graph-svg.has-focus .node:not(.in-focus) {
+  opacity: 0.18;
+}
+
+.graph-svg.has-focus .edge {
+  opacity: 0.08;
+}
+
+.graph-svg.has-focus .edge.is-active {
+  stroke: var(--color-accent);
+  stroke-width: 1.5;
+  opacity: 0.9;
+}
+
+/* Первое появление: узлы выходят из центра; при prefers-reduced-motion граф появляется сразу. */
+@media (prefers-reduced-motion: no-preference) {
+  .graph-svg.is-entering .node {
+    animation: graph-node-in var(--duration-slow) var(--ease-out) both;
+  }
+
+  .graph-svg.is-entering .edge {
+    animation: graph-edge-in var(--duration-slow) var(--ease-out) both;
+  }
+}
+
+@keyframes graph-node-in {
+  from {
+    opacity: 0;
+    transform: translate(var(--from-x, 0), var(--from-y, 0));
+  }
+}
+
+@keyframes graph-edge-in {
+  from {
+    opacity: 0;
+  }
+}

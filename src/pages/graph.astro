@@ -1,0 +1,1062 @@
+---
+// Общий граф связей /graph/: фильтры тем и вида слева, холст справа, карточка выбранной статьи,
+// «Связи списком» ниже холста. Без JS — статичная раскладка со ссылками на статьи и список связей.
+import Icon from '@/components/Icon.astro';
+import MaterialsViews from '@/components/MaterialsViews.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { tags } from '@/data/tags';
+import { buildGlobalGraph } from '@/lib/graph';
+import { loadGraph } from '@/lib/graph-data';
+import { labelBaseline, labelSize, linksLabel, nodeName } from '@/lib/graph-view';
+import { articlesLabel } from '@/lib/materials';
+import { tagHref } from '@/lib/tags';
+import { withBase } from '@/lib/urls';
+import '@/styles/graph.css';
+
+const graph = buildGlobalGraph(await loadGraph(), tags);
+const titles = new Map(graph.articles.map((a) => [a.slug, a.title]));
+const plain = new Map(graph.articles.map((a) => [a.slug, a.plain]));
+const tagged = new Map([
+  ...graph.articles.map((a) => [a.slug, a.tagged] as const),
+  ...graph.tags.map((t) => [`tag:${t.id}`, t.tagged] as const),
+]);
+const radius = (degree: number) => Math.round((4 + 2 * Math.sqrt(degree)) * 10) / 10;
+const isolated = graph.articles.filter((a) => a.degree === 0).length;
+const lead = `${articlesLabel(graph.articles.length)} и ${linksLabel(graph.links.length)}. Связь — ссылка из текста одной статьи на другую.`;
+const clientData = {
+  articles: graph.articles.map((a) => ({
+    slug: a.slug,
+    title: a.title,
+    question: a.question,
+    topic: a.topic,
+    color: a.color,
+    minutes: a.minutes,
+    degree: a.degree,
+    out: a.out,
+    in: a.in,
+    plain: a.plain,
+    tagged: a.tagged,
+    r: radius(a.degree),
+    href: withBase(`/${a.slug}/`),
+  })),
+  tags: graph.tags.map((t) => ({
+    id: t.id,
+    title: t.title,
+    description: t.description,
+    articles: t.articles,
+    tagged: t.tagged,
+    href: withBase(tagHref(t.id)),
+  })),
+  links: graph.links,
+  tagLinks: graph.tagLinks,
+  topics: graph.topics,
+};
+const byTopic = graph.topics.map((topic) => ({
+  ...topic,
+  articles: graph.articles
+    .filter((a) => a.topic === topic.id)
+    .sort((a, b) => new Intl.Collator('ru').compare(a.title, b.title)),
+}));
+---
+
+<BaseLayout
+  title="Граф связей"
+  description="Связи между статьями учебника: какие статьи ссылаются друг на друга."
+  section="materials"
+  footer={false}
+>
+  <main id="content" class="graph-page" data-graph>
+    <div class="intro">
+      <div class="views-desktop">
+        <MaterialsViews current="graph" />
+      </div>
+      <div class="title-row">
+        <h1>Граф связей</h1>
+        <div class="views-mobile">
+          <MaterialsViews current="graph" />
+        </div>
+      </div>
+      <p class="lead">{lead}</p>
+      <div class="find" data-graph-tools hidden>
+        <label class="search">
+          <Icon name="search" size={18} />
+          <span class="visually-hidden">Найти статью</span>
+          <input type="search" placeholder="Найти статью" autocomplete="off" data-graph-search />
+        </label>
+        <button
+          type="button"
+          class="filters-button"
+          aria-expanded="false"
+          aria-controls="graph-filters"
+          data-graph-filters-toggle
+        >
+          <Icon name="sliders-horizontal" size={18} />
+          <span data-graph-filters-label>Фильтры · {graph.topics.length}</span>
+        </button>
+      </div>
+      <p class="search-status" role="status" data-graph-search-status></p>
+    </div>
+
+    <div class="filters" id="graph-filters" data-graph-filters hidden>
+      <div class="sheet-head">
+        <span class="sheet-title">Фильтры</span>
+        <button
+          type="button"
+          class="icon-button"
+          aria-label="Закрыть фильтры"
+          data-graph-filters-close
+        >
+          <Icon name="x" size={18} />
+        </button>
+      </div>
+      <fieldset>
+        <legend>Темы</legend>
+        {graph.topics.map((topic) => (
+          <label class="topic">
+            <input type="checkbox" checked data-graph-topic={topic.id} />
+            <span class="swatch" style={`background: var(--chart-series-${topic.color})`} />
+            <span class="topic-title">{topic.title}</span>
+            <span class="count">{topic.count}</span>
+          </label>
+        ))}
+      </fieldset>
+      <fieldset>
+        <legend>Показать</legend>
+        <label class="switch">
+          <span>Подписи</span>
+          <input type="checkbox" role="switch" checked data-graph-option="labels" />
+        </label>
+        <label class="switch">
+          <span>Теги как узлы</span>
+          <input type="checkbox" role="switch" data-graph-option="tags" />
+        </label>
+        {isolated > 0 && (
+          <label class="switch">
+            <span>Статьи без связей</span>
+            <input type="checkbox" role="switch" checked data-graph-option="isolated" />
+          </label>
+        )}
+      </fieldset>
+      <a class="list-link" href="#graph-list">
+        Связи списком
+      </a>
+    </div>
+
+    <div class="stage" data-graph-stage>
+      <div class="canvas" data-graph-canvas>
+        <svg
+          class="graph-svg is-static"
+          viewBox={`0 0 ${graph.width} ${graph.height}`}
+          role="group"
+          aria-label="Граф связей всех статей"
+          data-graph-svg
+        >
+          <g class="world" data-graph-world>
+            <g class="edges">
+              {graph.links.map(([a, b]) => (
+                <line
+                  class="edge"
+                  data-a={a}
+                  data-b={b}
+                  x1={plain.get(a)!.x}
+                  y1={plain.get(a)!.y}
+                  x2={plain.get(b)!.x}
+                  y2={plain.get(b)!.y}
+                />
+              ))}
+              {graph.tagLinks.map(([slug, tag]) => (
+                <line
+                  class="edge is-tag is-hidden"
+                  data-a={slug}
+                  data-b={`tag:${tag}`}
+                  x1={tagged.get(slug)!.x}
+                  y1={tagged.get(slug)!.y}
+                  x2={tagged.get(`tag:${tag}`)!.x}
+                  y2={tagged.get(`tag:${tag}`)!.y}
+                />
+              ))}
+            </g>
+            <g class="nodes">
+              {graph.tags.map((tag) => (
+                <a
+                  class="node is-tag is-hidden"
+                  data-id={`tag:${tag.id}`}
+                  href={withBase(tagHref(tag.id))}
+                  aria-label={`Тег «${tag.title}», ${articlesLabel(tag.articles.length)}`}
+                >
+                  <rect
+                    class="tag-box"
+                    x={tag.tagged.x - 5}
+                    y={tag.tagged.y - 5}
+                    width="10"
+                    height="10"
+                    rx="2"
+                  />
+                  <text class="label" x={tag.tagged.x} y={labelBaseline(tag.tagged.y, 5)}>
+                    #{tag.title}
+                  </text>
+                </a>
+              ))}
+              {graph.articles.map((article) => (
+                <a
+                  class="node"
+                  data-id={article.slug}
+                  data-topic={article.topic}
+                  href={withBase(`/${article.slug}/`)}
+                  aria-label={nodeName(article.title, article.degree)}
+                >
+                  <circle
+                    class="ring"
+                    cx={article.plain.x}
+                    cy={article.plain.y}
+                    r={radius(article.degree) + 4}
+                  />
+                  <circle
+                    class="dot"
+                    cx={article.plain.x}
+                    cy={article.plain.y}
+                    r={radius(article.degree)}
+                    style={`fill: var(--chart-series-${article.color})`}
+                  />
+                  <text
+                    class="label"
+                    x={article.plain.x}
+                    y={labelBaseline(article.plain.y, radius(article.degree), labelSize)}
+                  >
+                    {article.label}
+                  </text>
+                </a>
+              ))}
+            </g>
+          </g>
+        </svg>
+      </div>
+      <p class="hint hint-desktop" data-graph-hint hidden>
+        Колесо — масштаб, перетаскивание — сдвиг, Tab — по статьям
+      </p>
+      <div class="zoom" role="group" aria-label="Масштаб" data-graph-zoom hidden>
+        <button type="button" class="icon-button" aria-label="Приблизить" data-graph-zoom-in>
+          <Icon name="plus" size={18} />
+        </button>
+        <button type="button" class="icon-button" aria-label="Отдалить" data-graph-zoom-out>
+          <Icon name="minus" size={18} />
+        </button>
+        <button type="button" class="icon-button" aria-label="Вписать в экран" data-graph-fit>
+          <Icon name="maximize-2" size={18} />
+        </button>
+      </div>
+
+      <section class="card" aria-labelledby="graph-card-title" data-graph-card hidden>
+        <div class="card-top">
+          <span class="card-meta">
+            <span class="swatch" data-card-swatch></span>
+            <span data-card-meta></span>
+          </span>
+          <button type="button" class="icon-button" aria-label="Закрыть" data-card-close>
+            <Icon name="x" size={18} />
+          </button>
+        </div>
+        <h2 id="graph-card-title" data-card-title></h2>
+        <p class="card-question" data-card-question></p>
+        <div class="card-columns">
+          <div data-card-column="out">
+            <h3 data-card-heading></h3>
+            <ul data-card-list></ul>
+          </div>
+          <div data-card-column="in">
+            <h3 data-card-heading></h3>
+            <ul data-card-list></ul>
+          </div>
+        </div>
+        <a class="card-open" href="#" data-card-open></a>
+      </section>
+      <div class="mobile-hint" data-graph-mobile-hint hidden>
+        <p>Нажмите на точку, чтобы увидеть связи статьи. Два пальца — масштаб.</p>
+        <a href="#graph-list">Связи списком</a>
+      </div>
+    </div>
+
+    <section class="graph-list" id="graph-list" aria-labelledby="graph-list-title">
+      <h2 id="graph-list-title">Связи списком</h2>
+      {byTopic.map((topic) => (
+        <section class="list-topic" aria-labelledby={`graph-list-${topic.id}`}>
+          <h3 id={`graph-list-${topic.id}`}>
+            <span class="swatch" style={`background: var(--chart-series-${topic.color})`} />
+            {topic.title}
+          </h3>
+          <ul class="list-articles">
+            {topic.articles.map((article) => (
+              <li>
+                <a class="list-title" href={withBase(`/${article.slug}/`)}>
+                  {article.title}
+                </a>
+                <dl>
+                  {[
+                    { term: 'Ссылается на', items: article.out },
+                    { term: 'Ссылаются сюда', items: article.in },
+                  ].map((row) => (
+                    <div>
+                      <dt>{row.term}</dt>
+                      <dd>
+                        {row.items.length === 0
+                          ? 'нет'
+                          : row.items.map((slug, i) => (
+                              <>
+                                {i > 0 && ', '}
+                                <a href={withBase(`/${slug}/`)}>{titles.get(slug)}</a>
+                              </>
+                            ))}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </section>
+  </main>
+  <script
+    type="application/json"
+    data-graph-data
+    set:html={JSON.stringify(clientData).replace(/</g, '\\u003c')}
+  />
+</BaseLayout>
+
+<script>
+  import { initGraph } from '@/lib/graph-controller';
+
+  initGraph();
+</script>
+
+<style>
+  .graph-page {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'intro'
+      'stage'
+      'list';
+    border-top: var(--border-width) solid var(--color-border);
+    font-family: var(--font-ui);
+  }
+
+  .intro {
+    grid-area: intro;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-5) var(--page-gutter) var(--space-1);
+  }
+
+  .views-desktop {
+    display: none;
+  }
+
+  .title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+
+  h1 {
+    margin: 0;
+    font-family: var(--font-text);
+    font-size: var(--text-2xl);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: var(--tracking-tight);
+  }
+
+  .lead {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-family: var(--font-text);
+    font-size: 1rem;
+    line-height: 1.5;
+    text-wrap: pretty;
+  }
+
+  .find {
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  .find[hidden] {
+    display: none;
+  }
+
+  .search {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    align-items: center;
+    gap: var(--space-2);
+    height: 44px;
+    padding: 0 12px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-raised);
+    color: var(--color-text-muted);
+  }
+
+  .search:focus-within {
+    box-shadow: var(--focus-ring);
+  }
+
+  .search input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-text);
+    font: 400 var(--text-ui) var(--font-ui);
+    outline: none;
+  }
+
+  .search input::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  .filters-button {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: var(--space-2);
+    height: 44px;
+    padding: 0 14px;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font: 500 var(--text-ui) var(--font-ui);
+    cursor: pointer;
+  }
+
+  .search-status {
+    margin: calc(-1 * var(--space-1)) 0 0;
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+  }
+
+  .search-status:empty {
+    display: none;
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .filters {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  /* Смартфон и планшет: фильтры — нижняя панель по кнопке «Фильтры». */
+  .filters,
+  .filters[hidden] {
+    display: none;
+  }
+
+  .filters.is-open {
+    position: fixed;
+    z-index: var(--z-modal);
+    inset: auto 0 0;
+    display: flex;
+    max-height: min(80dvh, 640px);
+    overflow-y: auto;
+    padding: var(--space-5) var(--page-gutter) calc(var(--space-6) + env(safe-area-inset-bottom));
+    border-top: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .sheet-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: calc(-1 * var(--space-3));
+  }
+
+  .sheet-title {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  fieldset {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  legend {
+    padding: 0 0 8px;
+    color: var(--color-text-muted);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+  }
+
+  .topic,
+  .switch {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    font-size: var(--text-ui);
+    cursor: pointer;
+  }
+
+  .topic input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: var(--color-accent);
+  }
+
+  .swatch {
+    display: inline-block;
+    flex: none;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .topic-title {
+    flex: 1;
+  }
+
+  .count {
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+  }
+
+  .switch {
+    justify-content: space-between;
+  }
+
+  .switch input {
+    position: relative;
+    flex: none;
+    width: 36px;
+    height: 20px;
+    margin: 0;
+    border-radius: var(--radius-full);
+    background: var(--color-border-strong);
+    appearance: none;
+    cursor: pointer;
+    transition: background var(--duration-fast) var(--ease-standard);
+  }
+
+  .switch input::after {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-sm);
+    content: '';
+    transition: transform var(--duration-fast) var(--ease-standard);
+  }
+
+  .switch input:checked {
+    background: var(--color-accent);
+  }
+
+  .switch input:checked::after {
+    transform: translateX(16px);
+  }
+
+  .switch input:focus-visible,
+  .topic input:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+
+  .list-link {
+    display: inline-flex;
+    align-self: flex-start;
+    align-items: center;
+    min-height: 44px;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  .icon-button {
+    display: inline-grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+  }
+
+  .icon-button:hover {
+    color: var(--color-text);
+  }
+
+  .icon-button:focus-visible,
+  .filters-button:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+
+  .stage {
+    position: relative;
+    grid-area: stage;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    background: var(--color-bg);
+    --graph-bg: var(--color-bg);
+  }
+
+  .canvas {
+    position: relative;
+    height: clamp(360px, 62dvh, 560px);
+    overflow: hidden;
+  }
+
+  .canvas .graph-svg {
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+  }
+
+  .canvas .graph-svg.is-static {
+    touch-action: auto;
+  }
+
+  /* Статичная раскладка без JS: подписи и узлы в единицах viewBox. */
+  .graph-svg.is-static .label {
+    font-size: 13px;
+  }
+
+  .graph-svg .ring {
+    display: none;
+  }
+
+  .graph-svg .node.is-selected .ring {
+    display: inline;
+  }
+
+  .graph-svg .is-hidden {
+    display: none;
+  }
+
+  .graph-svg:not(.is-static) .label {
+    font-size: calc(13px / var(--k, 1));
+    stroke-width: calc(4px / var(--k, 1));
+  }
+
+  .graph-svg.is-panning {
+    cursor: grabbing;
+  }
+
+  .hint {
+    position: absolute;
+    bottom: 16px;
+    left: 20px;
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 0.8125rem;
+    pointer-events: none;
+  }
+
+  .hint-desktop {
+    display: none;
+  }
+
+  .zoom {
+    position: absolute;
+    top: calc(clamp(360px, 62dvh, 560px) - 136px);
+    right: 12px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .zoom[hidden],
+  .hint[hidden] {
+    display: none;
+  }
+
+  .zoom .icon-button {
+    border-radius: 0;
+    color: var(--color-text);
+  }
+
+  .zoom .icon-button + .icon-button {
+    border-top: var(--border-width) solid var(--color-border);
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    hyphens: manual;
+    padding: var(--space-5);
+    border-top: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-md);
+  }
+
+  .card[hidden],
+  .mobile-hint[hidden] {
+    display: none;
+  }
+
+  .card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    margin: -6px -8px -6px 0;
+  }
+
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--color-text-muted);
+    font-size: 0.8125rem;
+  }
+
+  .card-meta .swatch[data-shape='tag'] {
+    border-radius: 2px;
+    background: var(--color-surface-raised);
+    box-shadow: inset 0 0 0 1.5px var(--color-text-muted);
+  }
+
+  .card h2 {
+    margin: 0;
+    font-family: var(--font-text);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    line-height: 1.25;
+    text-wrap: balance;
+  }
+
+  .card-question {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-family: var(--font-text);
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    text-wrap: pretty;
+  }
+
+  .card-question:empty {
+    display: none;
+  }
+
+  .card-columns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3) var(--space-5);
+    font-size: 0.875rem;
+  }
+
+  .card-columns [hidden] {
+    display: none;
+  }
+
+  .card-columns:has([data-card-column='in'][hidden]) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .card h3 {
+    margin: 0 0 var(--space-1);
+    font-family: var(--font-ui);
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .card ul {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .card ul :global(button) {
+    min-height: 32px;
+    padding: 4px 0;
+    border: 0;
+    background: none;
+    color: var(--color-link);
+    font: 400 0.875rem / 1.35 var(--font-ui);
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .card ul :global(button:hover) {
+    text-decoration: underline;
+  }
+
+  .card ul :global(button:focus-visible) {
+    outline: none;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--focus-ring);
+  }
+
+  .card ul :global(.empty) {
+    color: var(--color-text-muted);
+  }
+
+  .card-open {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    border-radius: var(--radius-md);
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+    font-size: var(--text-ui);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .card-open:hover {
+    background: var(--color-accent-hover);
+    color: var(--color-on-accent);
+  }
+
+  .card-open:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+
+  .mobile-hint {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: var(--space-4) var(--page-gutter) var(--space-6);
+    border-top: var(--border-width) solid var(--color-border);
+    background: var(--color-surface);
+  }
+
+  .mobile-hint p {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-ui);
+    line-height: 1.45;
+  }
+
+  .mobile-hint a {
+    display: inline-flex;
+    align-self: flex-start;
+    align-items: center;
+    min-height: 44px;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  .graph-list {
+    grid-area: list;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    width: min(var(--wide-width), 100% - 2 * var(--page-gutter));
+    margin: 0 auto;
+    padding: var(--space-8) 0 var(--space-10);
+    border-top: var(--border-width) solid var(--color-border);
+  }
+
+  .graph-list h2 {
+    margin: 0;
+    font-family: var(--font-text);
+    font-size: var(--text-2xl);
+    font-weight: 600;
+  }
+
+  .list-topic h3 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0 0 var(--space-2);
+    font-family: var(--font-text);
+    font-size: var(--text-xl);
+    font-weight: 600;
+  }
+
+  .list-articles {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .list-articles > li {
+    padding: var(--space-3) 0;
+    border-top: var(--border-width) solid var(--color-border);
+  }
+
+  .list-title {
+    font-family: var(--font-text);
+    font-size: 1.0625rem;
+    font-weight: 600;
+  }
+
+  dl {
+    display: grid;
+    gap: var(--space-1);
+    margin: var(--space-2) 0 0;
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  dl div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  dt {
+    color: var(--color-text-muted);
+    font-weight: 600;
+  }
+
+  dd {
+    margin: 0;
+    color: var(--color-text-muted);
+  }
+
+  @media (width >= 600px) {
+    dl div {
+      grid-template-columns: 9.5rem minmax(0, 1fr);
+      gap: var(--space-3);
+    }
+  }
+
+  /* Десктоп: фильтры слева, холст на всю оставшуюся высоту окна под шапкой 64 px. */
+  @media (width >= 1024px) {
+    .graph-page {
+      grid-template-columns: 300px minmax(0, 1fr);
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      grid-template-areas:
+        'intro stage'
+        'filters stage'
+        'list list';
+    }
+
+    .intro,
+    .filters {
+      border-right: var(--border-width) solid var(--color-border);
+      background: var(--color-bg);
+    }
+
+    .intro {
+      gap: var(--space-5);
+      padding: 28px 28px 0;
+    }
+
+    .views-desktop {
+      display: block;
+    }
+
+    .views-mobile,
+    .filters-button,
+    .sheet-head {
+      display: none;
+    }
+
+    h1 {
+      font-size: var(--text-3xl);
+    }
+
+    .search {
+      height: 40px;
+    }
+
+    .filters,
+    .filters.is-open {
+      position: static;
+      grid-area: filters;
+      display: flex;
+      max-height: none;
+      overflow: visible;
+      padding: var(--space-6) 28px 28px;
+      border-top: 0;
+      border-radius: 0;
+      background: var(--color-bg);
+      box-shadow: none;
+    }
+
+    .filters[hidden] {
+      display: none;
+    }
+
+    .topic,
+    .switch {
+      min-height: 36px;
+    }
+
+    .stage {
+      height: calc(100dvh - 65px);
+      min-height: 520px;
+      position: sticky;
+      top: 64px;
+    }
+
+    .canvas {
+      flex: 1;
+      height: auto;
+    }
+
+    .hint-desktop {
+      display: block;
+    }
+
+    .zoom {
+      top: auto;
+      right: 16px;
+      bottom: 16px;
+    }
+
+    .card {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 340px;
+      max-height: calc(100% - 40px);
+      overflow-y: auto;
+      border: var(--border-width) solid var(--color-border);
+      border-radius: var(--radius-lg);
+    }
+
+    .mobile-hint,
+    .mobile-hint[hidden] {
+      display: none;
+    }
+  }
+</style>

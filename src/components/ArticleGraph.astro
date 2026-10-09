@@ -1,0 +1,234 @@
+---
+// Блок «Связи» в конце статьи: локальный граф, глубина «1 шаг · 2 шага», связи списком и вход в общий граф.
+// Без JS — граф первого шага в исходной ширине и раскрывающийся список; с JS граф строится по ширине блока.
+import { localLayout, type LocalGraph } from '@/lib/graph';
+import { localGraphSvg } from '@/lib/graph-view';
+import { withBase } from '@/lib/urls';
+import '@/styles/graph.css';
+
+interface Props {
+  title: string;
+  local: LocalGraph;
+  outs: { title: string; href: string }[];
+  ins: { title: string; href: string }[];
+}
+
+const { title, local, outs, ins } = Astro.props;
+const svg = localGraphSvg(localLayout(local, 1, 680), title);
+const depths = [
+  { value: 1, label: '1 шаг' },
+  { value: 2, label: '2 шага' },
+];
+---
+
+<section
+  class="article-graph"
+  aria-labelledby="article-graph-title"
+  data-local-graph
+  data-title={title}
+  data-pagefind-ignore
+>
+  <div class="head">
+    <h2 id="article-graph-title">Связи</h2>
+    {local.second.length > 0 && (
+      <div class="segments" role="radiogroup" aria-label="Глубина" data-graph-depth hidden>
+        {depths.map((depth) => (
+          <button
+            type="button"
+            role="radio"
+            class="segment"
+            data-depth={depth.value}
+            aria-checked={depth.value === 1 ? 'true' : 'false'}
+            tabindex={depth.value === 1 ? 0 : -1}
+          >
+            {depth.label}
+          </button>
+        ))}
+      </div>
+    )}
+  </div>
+  <div class="canvas" data-graph-canvas set:html={svg} />
+  <script
+    type="application/json"
+    data-local-graph-data
+    set:html={JSON.stringify(local).replace(/</g, '\\u003c')}
+  />
+  <div class="foot">
+    <details class="list">
+      <summary>Связи списком</summary>
+      <div class="columns">
+        {[
+          { heading: 'Ссылается на', items: outs },
+          { heading: 'Ссылаются сюда', items: ins },
+        ].map((column) => (
+          <div>
+            <h3>{column.heading}</h3>
+            {column.items.length > 0 ? (
+              <ul>
+                {column.items.map((item) => (
+                  <li>
+                    <a href={item.href}>{item.title}</a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>Нет</p>
+            )}
+          </div>
+        ))}
+      </div>
+    </details>
+    <a class="open" href={withBase(`/graph/?focus=${local.center}`)}>
+      Открыть в общем графе
+    </a>
+  </div>
+</section>
+
+<script>
+  import { initLocalGraphs } from '@/lib/graph-local-controller';
+
+  initLocalGraphs();
+</script>
+
+<style>
+  .article-graph {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: var(--space-7);
+    font-family: var(--font-ui);
+  }
+
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+
+  h2 {
+    margin: 0;
+    font-family: var(--font-text);
+    font-size: var(--text-xl);
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .segments {
+    display: flex;
+    gap: 2px;
+    padding: 3px;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-surface);
+  }
+
+  .segments[hidden] {
+    display: none;
+  }
+
+  .segment {
+    min-height: 38px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text-muted);
+    font: 500 0.875rem var(--font-ui);
+    cursor: pointer;
+  }
+
+  .segment[aria-checked='true'] {
+    background: var(--color-bg);
+    box-shadow: 0 0 0 1px var(--color-border);
+    color: var(--color-text);
+    font-weight: 600;
+  }
+
+  .segment:focus-visible {
+    box-shadow: var(--focus-ring);
+  }
+
+  .canvas {
+    overflow: hidden;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--chart-bg);
+  }
+
+  /* Без JS граф собран для ширины 680 px и уменьшается вместе с колонкой. */
+  .canvas :global(.graph-svg) {
+    width: 100%;
+    height: auto;
+  }
+
+  .foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-1) var(--space-5);
+    font-size: 0.875rem;
+  }
+
+  .list {
+    flex: 1 1 18rem;
+    color: var(--color-text-muted);
+  }
+
+  summary {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--color-link);
+    cursor: pointer;
+  }
+
+  .columns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3) var(--space-7);
+    padding: 4px 0 8px;
+  }
+
+  h3 {
+    margin: 0;
+    color: var(--color-text);
+    font-family: var(--font-ui);
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  ul {
+    margin: 6px 0 0;
+    padding-left: 18px;
+    line-height: 1.7;
+  }
+
+  .columns p {
+    margin: 6px 0 0;
+  }
+
+  .open {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-weight: 500;
+  }
+
+  @media (width < 600px) {
+    /* Граф выходит до краёв экрана, как другие графики статьи. */
+    .canvas {
+      margin-inline: calc(-1 * var(--page-gutter));
+      border-inline: 0;
+      border-radius: 0;
+    }
+  }
+
+  @media print {
+    .article-graph {
+      display: none;
+    }
+  }
+</style>

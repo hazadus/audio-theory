@@ -53,6 +53,7 @@
   --chart-series-4: light-dark(oklch(55% 0.13 340), oklch(75% 0.12 340));
   --chart-series-5: light-dark(oklch(60% 0.13 70), oklch(83% 0.13 85));
   --chart-series-6: light-dark(oklch(30% 0.015 265), oklch(92% 0.01 85));
+  --chart-series-7: light-dark(oklch(50% 0.15 295), oklch(76% 0.12 295));
   --chart-signal: var(--chart-series-1);
   --chart-sample: var(--chart-series-2);
   --chart-result: var(--chart-series-3);

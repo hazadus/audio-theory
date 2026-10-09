@@ -91,7 +91,9 @@ const graphics: [string, string][] = [
   ['--color-border-strong', '--color-bg'],
   ['--color-border-strong', '--color-surface'],
   ['--chart-axis', '--chart-bg'],
-  ...[1, 2, 3, 4, 5, 6].map((n): [string, string] => [`--chart-series-${n}`, '--chart-bg']),
+  ...[1, 2, 3, 4, 5, 6, 7].map((n): [string, string] => [`--chart-series-${n}`, '--chart-bg']),
+  // Узлы общего графа связей лежат на фоне страницы.
+  ...[1, 2, 3, 4, 5, 6, 7].map((n): [string, string] => [`--chart-series-${n}`, '--color-bg']),
 ];
 
 describe.each<Theme>(['light', 'dark'])('токены, тема %s', (theme) => {

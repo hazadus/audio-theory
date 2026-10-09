@@ -300,7 +300,7 @@ try {
   const realArticles = (
     await readdir(join(root, 'src/content/articles'), { recursive: true })
   ).filter((file) => file.endsWith('.mdx')).length;
-  // HTML-страниц: главная, материалы, визуализации, обновления, каталог треков, глоссарий, «О проекте», 404, статьи и теги; Pagefind
+  // HTML-страниц: главная, материалы, граф связей, визуализации, обновления, каталог треков, глоссарий, «О проекте», 404, статьи и теги; Pagefind
   // считает их все, а фрагменты строит только для страниц с `data-pagefind-body` (проверяется ниже).
   // К ним добавляются страницы треков и годов журнала: по одной на трек и непустой год.
   const updateYears = new Set(
@@ -321,7 +321,7 @@ try {
     )?.[1];
     for (const tag of tags?.split(',') ?? []) usedTags.add(tag.trim());
   }
-  const pages = 8 + realArticles + realTracks + updateYears + 1 + usedTags.size;
+  const pages = 9 + realArticles + realTracks + updateYears + 1 + usedTags.size;
   assert.match(
     published.stdout + published.stderr,
     new RegExp(`Артефакт проверен: ${pages} страниц; индекс Pagefind: ${pages} страниц`),

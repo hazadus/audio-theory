@@ -13,6 +13,9 @@ import { resolveReadingMinutes } from '@/lib/reading-time';
 import { loadTrackData } from '@/lib/track-data';
 import { getArticleTracks } from '@/lib/tracks';
 import { buildNavData } from '@/lib/track-navigation';
+import { localGraph, minLocalLinks, neighborsOf } from '@/lib/graph';
+import { loadGraph } from '@/lib/graph-data';
+import { withBase } from '@/lib/urls';
 
 export async function getStaticPaths() {
   const articles = await getCollection('articles');
@@ -50,6 +53,19 @@ const tracks = await loadTrackData();
 const articleTracks = getArticleTracks(tracks, article.data.slug);
 const trackNav = buildNavData(tracks, article.data.slug);
 const series = seriesPosition(await loadFirstSteps(), article.data.slug);
+const graphData = await loadGraph();
+const articleHref = (slug: string) => withBase(`/${slug}/`);
+const graphArticle = graphData.articles.find(({ slug }) => slug === article.data.slug)!;
+const titleOf = (slug: string) => graphData.articles.find((item) => item.slug === slug)!.title;
+// Блок «Связи» выводится, если у статьи не меньше трёх соседей.
+const graph =
+  neighborsOf(graphData, article.data.slug).length >= minLocalLinks
+    ? {
+        local: localGraph(graphData, article.data.slug, articleHref),
+        outs: graphArticle.out.map((slug) => ({ title: titleOf(slug), href: articleHref(slug) })),
+        ins: graphArticle.in.map((slug) => ({ title: titleOf(slug), href: articleHref(slug) })),
+      }
+    : null;
 ---
 
 <ArticleLayout
@@ -60,6 +76,7 @@ const series = seriesPosition(await loadFirstSteps(), article.data.slug);
   {articleTracks}
   {trackNav}
   {series}
+  {graph}
 >
   <Content />
 </ArticleLayout>

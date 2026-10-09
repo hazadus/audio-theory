@@ -1,5 +1,6 @@
 ---
 import Icon from '@/components/Icon.astro';
+import MaterialsViews from '@/components/MaterialsViews.astro';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { topics } from '@/data/topics';
 import { loadArticleList } from '@/lib/article-list';
@@ -32,7 +33,10 @@ const sorts = [
   section="materials"
 >
   <main id="content" data-materials>
-    <h1>Все материалы</h1>
+    <div class="title-row">
+      <h1>Все материалы</h1>
+      <MaterialsViews current="list" />
+    </div>
 
     <div class="controls" data-controls hidden>
       <div class="filters">
@@ -156,6 +160,14 @@ const sorts = [
     padding-top: var(--space-8);
     padding-bottom: var(--space-10);
     font-family: var(--font-ui);
+  }
+
+  .title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3) var(--space-6);
   }
 
   h1 {

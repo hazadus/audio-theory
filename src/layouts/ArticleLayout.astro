@@ -1,6 +1,7 @@
 ---
 // Страница статьи: хлебные крошки, заголовок, вопрос, метаданные, оглавление, тело, источники и связанные темы.
 // Раздел «Источники» — часть тела MDX; предварительные знания и связанные темы берутся из frontmatter.
+import ArticleGraph from '@/components/ArticleGraph.astro';
 import Icon from '@/components/Icon.astro';
 import TagList from '@/components/TagList.astro';
 import BaseLayout from '@/layouts/BaseLayout.astro';
@@ -10,6 +11,7 @@ import { resolveTarget } from '@/lib/links';
 import { tags } from '@/data/tags';
 import { topics } from '@/data/topics';
 import type { ArticleDates } from '@/lib/article-dates';
+import type { LocalGraph } from '@/lib/graph';
 import type { SeriesPosition } from '@/lib/first-steps';
 import type { NavTrack } from '@/lib/track-navigation';
 import { formatUpdatedDate } from '@/lib/format-date';
@@ -36,6 +38,12 @@ interface Props {
   trackNav?: NavTrack[];
   /** Положение в серии «Первое знакомство»; у статей вне серии не задаётся. */
   series?: SeriesPosition | null;
+  /** Блок «Связи»: окрестность статьи и связи списком; без трёх соседей не задаётся. */
+  graph?: {
+    local: LocalGraph;
+    outs: { title: string; href: string }[];
+    ins: { title: string; href: string }[];
+  } | null;
 }
 
 const {
@@ -46,6 +54,7 @@ const {
   articleTracks = [],
   trackNav = [],
   series = null,
+  graph = null,
 } = Astro.props;
 const group = topics.find((topic) => topic.id === data.topic)!;
 const prerequisites = data.prerequisites ?? [];
@@ -196,6 +205,7 @@ const links = (items: typeof data.related) =>
             />
           </>
         )}
+        {graph && <ArticleGraph title={data.title} {...graph} />}
         <section class="related" aria-labelledby="related-title" data-pagefind-ignore>
           <h2 id="related-title">Связанные темы</h2>
           <ul>
@@ -737,7 +747,8 @@ const links = (items: typeof data.related) =>
       max-width: none;
     }
 
-    .page:has(:global(.margin-note)) :is(.breadcrumbs, .head, .prerequisites, .related) {
+    .page:has(:global(.margin-note)) :is(.breadcrumbs, .head, .prerequisites, .related),
+    .page:has(:global(.margin-note)) :global(.article-graph) {
       max-width: min(var(--content-width), 100% - 256px);
     }
 

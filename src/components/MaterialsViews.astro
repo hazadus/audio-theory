@@ -1,0 +1,68 @@
+---
+// Переключатель «Список · Граф» между «Всеми материалами» и общим графом связей; работает без JS.
+import { withBase } from '@/lib/urls';
+
+interface Props {
+  current: 'list' | 'graph';
+}
+
+const { current } = Astro.props;
+const views = [
+  { id: 'list', label: 'Список', href: '/materials/' },
+  { id: 'graph', label: 'Граф', href: '/graph/' },
+] as const;
+---
+
+<nav class="views" aria-label="Вид материалов" data-pagefind-ignore>
+  {views.map((view) => (
+    <a
+      class="view"
+      href={withBase(view.href)}
+      aria-current={view.id === current ? 'page' : undefined}
+    >
+      {view.label}
+    </a>
+  ))}
+</nav>
+
+<style>
+  .views {
+    display: flex;
+    align-self: flex-start;
+    gap: 2px;
+    padding: 3px;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-surface);
+    font-family: var(--font-ui);
+  }
+
+  .view {
+    display: flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 14px;
+    border-radius: var(--radius-md);
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .view:hover {
+    color: var(--color-text);
+  }
+
+  .view[aria-current='page'] {
+    background: var(--color-bg);
+    box-shadow: 0 0 0 1px var(--color-border);
+    color: var(--color-text);
+    font-weight: 600;
+  }
+
+  @media (width >= 1024px) {
+    .view {
+      min-height: 32px;
+    }
+  }
+</style>
