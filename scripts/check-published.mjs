@@ -20,5 +20,5 @@ for (const file of files.filter((file) => /\.(html|xml|js)$/.test(file))) {
 const articles = (await readdir(join(root, 'src/content/articles'))).filter((file) =>
   file.endsWith('.mdx'),
 ).length;
-assert.equal(files.filter((file) => file.endsWith('.pf_fragment')).length, articles + 3);
+assert.equal(files.filter((file) => file.endsWith('.pf_fragment')).length, articles + 4);
 console.log('Публичная сборка: служебных материалов нет в страницах, RSS и индексе — OK');
