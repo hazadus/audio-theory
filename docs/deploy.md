@@ -1,6 +1,6 @@
 # CI и GitHub Pages
 
-Основная ветка репозитория `hazadus/audio-theory` — `main`. GitHub Pages включён с источником **GitHub Actions** (`build_type: workflow`, HTTPS включён). Целевой публичный адрес — https://hazadus.github.io/audio-theory/. Первый деплой проверен 1 октября 2026 года для коммита `65fdac87331e4dda885ea42c8c6e0a73ff9f501b`: [CI и деплой](https://github.com/hazadus/audio-theory/actions/runs/36903493614) прошли успешно. Задание проверки и сборки заняло 1 минуту 40 секунд, деплой — 18 секунд. Публичная страница, ресурсы и API Pagefind проверены в браузере.
+Основная ветка репозитория `hazadus/audio-theory` — `main`. GitHub Pages включён с источником **GitHub Actions** (`build_type: workflow`, HTTPS включён). Публичный адрес — https://hazadus.github.io/audio-theory/.
 
 Workflow [`.github/workflows/pages.yml`](../.github/workflows/pages.yml) называется **GitHub Pages**. Он запускается при пуше в `main`, для pull request в `main` и вручную через Actions. PR проверяется без публикации; ручной запуск публикует только `main`. Публикация обычной задачи не требует PR.
 
