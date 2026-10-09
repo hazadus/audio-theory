@@ -197,6 +197,18 @@
 
 Применение: врезка об RMS и разделы об измерителях в статье об уровне сигнала, сложение уровней в статье о микшировании, аналоговые уровни в материалах для звукорежиссёра.
 
+## Digido — Bob Katz
+
+Статьи Боба Каца на сайте его студии Digital Domain. Все страницы раздела [Articles](https://www.digido.com/articles/) помечены 6 апреля 2017 года — это дата переноса на сайт; год первой публикации брать из текста страницы или оригинала. Позиция Каца — мнение практика: подавать как мнение и подкреплять вторым источником. Прочитаны для статьи `/level-practices/`:
+
+- [Level Practices (Part 1)](https://www.digido.com/portfolio-item/level-practices-part-1/) — дата первой публикации на странице не указана, по тексту конец 1990-х. Пик-фактор аналоговой (около 14 дБ) и несжатой цифровой (до 20 дБ) записи, разница громкости около 6 дБ при одинаковом пике; стандарт OVER Sony 1630 в три отсчёта (на странице указано 33 мкс, расчёт для 44,1 кГц даёт 68 мкс); отсутствие передачи OVER по AES/EBU и S/PDIF; опорные уровни 0 VU = −20, −18 и −14 dBFS с рекомендациями для вещания, студий записи и перезаписи; запас 5 дБ для аналогового PPM.
+- [Level Practices (Part 2)](https://www.digido.com/portfolio-item/level-practices-part-2/) — «Updated from the article published in the September 2000 issue of the AES Journal», примечание от 05.12.2007. Недостатки VU-метра (300 мс, шкала около 13 дБ, ровная АЧХ); 83 дБ SPL Айоана Аллена (Dolby, середина 1970-х); измерения Каца 1993–1996 годов; шкалы K-20, K-14, K-12, калибровка розовым шумом −20 dBFS RMS на канал, коррекция C, Slow, узкополосный шум 500–2000 Гц; AES-17, интеграция 600 мс; цвета шкалы; версии K/ITU с фильтрами BS.1770.
+- [Loudness War: Peace is Almost here!](https://www.digido.com/portfolio-item/loudness-war-peace-is-almost-here/) — обзор видео и докладов о войне громкости без технических подробностей; о K-системе, LUFS и R 128 не пишет. Для статьи не использована.
+
+Русский перевод частей 1 и 2 — «Стыковка уровней в звукозаписи» (перевод В. А. Назарова), см. [каталог книг](books.md); при цитировании чисел сверять с оригиналом.
+
+Второй источник по K-системе и OVER: [Hugh Robjohns. MeterPlugs K-Meter, Sound On Sound, 2014](https://www.soundonsound.com/reviews/meterplugs-k-meter) (83 дБ C, назначение шкал, режимы BS.1770 без интегральной громкости), [FabFilter Pro-L 2: Metering](https://www.fabfilter.com/help/pro-l/using/metering) (85 дБ SPL в своей реализации, соотношение с R 128), [Apogee Symphony I/O: Level Meters](https://knowledge.apogeedigital.com/symphony-i/o-working-with-front-panel-and-maestro-level-meters) (Over при трёх и более отсчётах), [ProSoundWeb. What Engineers Should Know About Meters, 2012](https://www.prosoundweb.com/in-the-studio-what-engineers-should-know-about-meters/2/) (счётчики отсчётов только для АЦП, пики между отсчётами). [EBU R68-2000](https://tech.ebu.ch/docs/r/r068.pdf) — опорный уровень на 18 дБ ниже наибольшего кодируемого значения. Документация Sony с порогом OVER PCM-1630 не найдена; [Wikipedia. PCM adaptor](https://en.wikipedia.org/wiki/PCM_adaptor) — назначение серии 1600 для мастеринга CD.
+
 ## Кривые равной громкости и слух
 
 - [NERC Vocabulary Server. Sound pressure level in air](https://vocab.nerc.ac.uk/collection/P07/current/CFSN0309/) — прочитано определение SPL: 20 lg(p/p₀), среднеквадратичное давление, опора 2 × 10⁻⁵ Па в воздухе.

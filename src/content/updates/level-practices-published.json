@@ -1,0 +1,23 @@
+{
+  "id": "level-practices-published",
+  "date": "2026-10-09",
+  "order": 1,
+  "type": "new",
+  "article": "level-practices",
+  "summary": "Что пришло на смену VU-метру в цифровой студии: индикатор OVER и его пределы, соглашения 0 VU = −20, −18 и −14 dBFS, K-система Боба Каца с калибровкой мониторов на 83 дБ SPL и её место после BS.1770 и EBU R 128.",
+  "items": [
+    {
+      "text": "Индикатор OVER и счёт отсчётов на полной шкале",
+      "target": { "article": "level-practices", "anchor": "over-figure" }
+    },
+    {
+      "text": "Опорные уровни 0 VU в dBFS",
+      "target": { "article": "level-practices", "anchor": "reference-levels" }
+    },
+    {
+      "text": "Шкалы K-20, K-14 и K-12",
+      "target": { "article": "level-practices", "anchor": "k-scales-figure" }
+    },
+    { "text": "Термин «K-система»", "target": { "glossary": "k-system" } }
+  ]
+}

@@ -28,6 +28,7 @@ const slugs = [
   'dry-wet-bypass',
   'cpp-ownership',
   'cpp-audio-thread',
+  'level-practices',
 ];
 
 const entry = {
