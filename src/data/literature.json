@@ -32,6 +32,7 @@
     "lobato": "Lobato T.",
     "luff": "Luff G.",
     "macaulay": "Macaulay E. J.",
+    "mcpherson": "McPherson A. P.",
     "nam": "Nam J.",
     "nave": "Nave C. R.",
     "painter": "Painter T.",
@@ -39,6 +40,7 @@
     "peterson": "Peterson J.",
     "puckette": "Puckette M.",
     "raissi": "Raissi R.",
+    "reiss": "Reiss J. D.",
     "robjohns": "Robjohns H.",
     "russell": "Russell D. A.",
     "senior": "Senior M.",
@@ -57,6 +59,7 @@
     "wannamaker": "Wannamaker R. A.",
     "whittle": "Whittle R.",
     "wright": "Wright J. N.",
+    "zolzer": "Zölzer U.",
     "zwicker": "Zwicker E."
   },
   "editions": [
@@ -391,6 +394,20 @@
       "title": "Learn C++",
       "publication": "learncpp.com.",
       "url": "https://www.learncpp.com/"
+    },
+    {
+      "id": "reiss-2026",
+      "type": "book",
+      "authors": ["reiss", "mcpherson"],
+      "title": "Audio Effects: Theory, Implementation and Application",
+      "publication": "2nd ed. Routledge, 2026. ISBN 978-1-032-97428-6."
+    },
+    {
+      "id": "zolzer-2022",
+      "type": "book",
+      "authors": ["zolzer"],
+      "title": "Digital Audio Signal Processing",
+      "publication": "3rd ed. Wiley, 2022. ISBN 978-1-119-83267-6."
     },
     {
       "id": "cpp-core-guidelines",

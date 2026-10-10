@@ -1,0 +1,23 @@
+{
+  "id": "mixing-clipping-spectrum",
+  "date": "2026-10-10",
+  "order": 2,
+  "type": "updated",
+  "article": "mixing",
+  "items": [
+    {
+      "text": "Новые частоты после среза суммы: интермодуляция, передискретизация и метод антипроизводной",
+      "target": {
+        "article": "mixing",
+        "anchor": "clipping-spectrum"
+      }
+    },
+    {
+      "text": "Таблица составляющих после среза суммы C4 и E4",
+      "target": {
+        "article": "mixing",
+        "anchor": "clipping-table"
+      }
+    }
+  ]
+}

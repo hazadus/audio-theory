@@ -233,6 +233,7 @@ $$
 
 <MarginNote items={[
   { label: 'Принцип работы компрессора → Устройство', description: 'Как детектор уровня управляет ослаблением сигнала.', target: { article: 'compressor', anchor: 'structure' } },
+  { label: 'Принцип работы компрессора → Детектор уровня', description: 'Пиковый и RMS-детекторы как рекуррентные формулы и ошибка аналоговой модели.', target: { article: 'compressor', anchor: 'detector' } },
 ]}>
 
 Огибающая нужна устройствам, которые меняют усиление в зависимости от уровня: <Term id="compressor" firstMention>компрессору</Term>, <Term id="limiter" firstMention>лимитеру</Term>, <Term id="noise-gate" firstMention>шумовому гейту</Term>. Они сравнивают огибающую с <Term id="threshold" firstMention>порогом</Term> и решают, насколько ослабить сигнал в каждый момент.

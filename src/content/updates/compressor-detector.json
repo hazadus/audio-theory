@@ -1,0 +1,37 @@
+{
+  "id": "compressor-detector",
+  "date": "2026-10-10",
+  "order": 1,
+  "type": "updated",
+  "article": "compressor",
+  "items": [
+    {
+      "text": "Новый раздел о детекторе уровня: RMS, аналоговая модель и детектор с переключением",
+      "target": {
+        "article": "compressor",
+        "anchor": "detector"
+      }
+    },
+    {
+      "text": "Рисунок: три пиковых детектора на ступеньке уровня",
+      "target": {
+        "article": "compressor",
+        "anchor": "detector-figure"
+      }
+    },
+    {
+      "text": "Прямая и обратная связь: почему обратная не даёт идеального лимитера",
+      "target": {
+        "article": "compressor",
+        "anchor": "feedback"
+      }
+    },
+    {
+      "text": "Накачка и другие артефакты неудачных атаки и восстановления",
+      "target": {
+        "article": "compressor",
+        "anchor": "attack-release"
+      }
+    }
+  ]
+}
