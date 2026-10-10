@@ -1,0 +1,26 @@
+{
+  "id": "loudness-war-published",
+  "date": "2026-10-10",
+  "order": 6,
+  "type": "new",
+  "article": "loudness-war",
+  "summary": "Почему записи с конца 1980-х становились громче при том же пике 0 dBFS: хронология по измерениям тысяч треков, причины, цена в микродинамике и искажениях, спор об усталости слушателя и о том, что изменила нормализация громкости.",
+  "items": [
+    {
+      "text": "Опыт: громкий мастер до и после выравнивания громкости",
+      "target": { "article": "loudness-war", "anchor": "loudness-war-demo" }
+    },
+    {
+      "text": "Хронология от компакт-диска до 2013 года",
+      "target": { "article": "loudness-war", "anchor": "timeline" }
+    },
+    {
+      "text": "Спор о причинах и последствиях",
+      "target": { "article": "loudness-war", "anchor": "debate" }
+    },
+    {
+      "text": "Термин «отношение пика к громкости»",
+      "target": { "glossary": "peak-to-loudness-ratio" }
+    }
+  ]
+}

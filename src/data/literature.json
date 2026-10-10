@@ -62,7 +62,20 @@
     "whittle": "Whittle R.",
     "wright": "Wright J. N.",
     "zolzer": "Zölzer U.",
-    "zwicker": "Zwicker E."
+    "zwicker": "Zwicker E.",
+    "atkinson": "Atkinson J.",
+    "bissas": "Bissas S.",
+    "deruty": "Deruty E.",
+    "hjortkjaer": "Hjortkjær J.",
+    "lund": "Lund T.",
+    "mourgela": "Mourgela A.",
+    "pachet": "Pachet F.",
+    "quinton": "Quinton E.",
+    "rogers-s": "Rogers S. E.",
+    "ronan": "Ronan D.",
+    "serinus": "Serinus J. V.",
+    "vickers": "Vickers E.",
+    "walther-hansen": "Walther-Hansen M."
   },
   "editions": [
     {
@@ -268,6 +281,101 @@
       "title": "Level Practices (Part 1)",
       "publication": "Digital Domain.",
       "url": "https://www.digido.com/portfolio-item/level-practices-part-1/"
+    },
+    {
+      "id": "katz-loudness-war",
+      "type": "web",
+      "authors": ["katz"],
+      "title": "Loudness War: Peace is Almost here!",
+      "publication": "Digital Domain.",
+      "url": "https://www.digido.com/portfolio-item/loudness-war-peace-is-almost-here/"
+    },
+    {
+      "id": "atkinson-2003",
+      "type": "article",
+      "authors": ["atkinson"],
+      "title": "Dark Side of the Disc",
+      "publication": "Stereophile. 2003, 18 мая.",
+      "url": "https://www.stereophile.com/content/dark-side-disc"
+    },
+    {
+      "id": "vickers-2010",
+      "type": "article",
+      "authors": ["vickers"],
+      "title": "The Loudness War: Background, Speculation and Recommendations",
+      "publication": "AES 129th Convention. San Francisco, 2010. Convention Paper 8175.",
+      "url": "https://www.sfxmachine.com/docs/loudnesswar/loudness_war.pdf"
+    },
+    {
+      "id": "deruty-2011",
+      "type": "article",
+      "authors": ["deruty"],
+      "title": "‘Dynamic Range’ & The Loudness War",
+      "publication": "Sound On Sound. 2011, сентябрь.",
+      "url": "https://www.soundonsound.com/sound-advice/dynamic-range-loudness-war"
+    },
+    {
+      "id": "atkinson-2011",
+      "type": "article",
+      "authors": ["atkinson"],
+      "title": "Squeezing the Music ’till the Bits Squeak",
+      "publication": "Презентация на 131-й конвенции AES. Нью-Йорк, 2011. Копия в Internet Archive.",
+      "url": "https://web.archive.org/web/2016/http://www.digido.com/phocadownload/Atkinson%20slides%201-20%20smaller.pdf"
+    },
+    {
+      "id": "lund-2011",
+      "type": "article",
+      "authors": ["lund"],
+      "title": "The Tides Have Changed: Peak Level, Loudness & iTunes",
+      "publication": "Презентация на 131-й конвенции AES. Нью-Йорк, 22 октября 2011. Копия в Internet Archive.",
+      "url": "https://web.archive.org/web/2016/http://www.digido.com/phocadownload/The%20Tides%20Have%20Changed%20Lund%20AES131.pdf"
+    },
+    {
+      "id": "rogers-2011",
+      "type": "article",
+      "authors": ["rogers-s"],
+      "title": "The loudness war is fought with (and over) compression",
+      "publication": "Презентация на 131-й конвенции AES. Нью-Йорк, 2011. Копия в Internet Archive.",
+      "url": "https://web.archive.org/web/2016/http://www.digido.com/phocadownload/Rogers_AES_presentation_Oct11.pdf"
+    },
+    {
+      "id": "serinus-2012",
+      "type": "article",
+      "authors": ["serinus"],
+      "title": "Winning the Loudness Wars",
+      "publication": "Stereophile. 2012, 23 ноября.",
+      "url": "https://www.stereophile.com/content/winning-loudness-wars"
+    },
+    {
+      "id": "robjohns-2014-loudness",
+      "type": "article",
+      "authors": ["robjohns"],
+      "title": "The End Of The Loudness War?",
+      "publication": "Sound On Sound. 2014, февраль.",
+      "url": "https://www.soundonsound.com/techniques/end-loudness-war"
+    },
+    {
+      "id": "hjortkjaer-2014",
+      "type": "article",
+      "authors": ["hjortkjaer", "walther-hansen"],
+      "title": "Perceptual Effects of Dynamic Range Compression in Popular Music Recordings",
+      "publication": "Journal of the Audio Engineering Society. 2014. Vol. 62, № 1/2. P. 37–41."
+    },
+    {
+      "id": "deruty-2015",
+      "type": "article",
+      "authors": ["deruty", "pachet"],
+      "title": "The MIR Perspective on the Evolution of Dynamics in Mainstream Music",
+      "publication": "Proceedings of the 16th ISMIR Conference. Málaga, 2015. P. 722–727.",
+      "url": "https://www.ismir2015.uma.es/articles/136_Paper.pdf"
+    },
+    {
+      "id": "mourgela-2024",
+      "type": "article",
+      "authors": ["mourgela", "quinton", "bissas", "reiss", "ronan"],
+      "title": "Exploring trends in audio mixes and masters: Insights from a dataset analysis",
+      "publication": "AES 157th Convention. New York, 2024. Convention Paper 10186.",
+      "url": "https://arxiv.org/abs/2412.03373"
     },
     {
       "id": "robjohns-2014",

@@ -20,7 +20,7 @@
 | Компрессор, гейт, лимитер | Reiss, McPherson «Audio Effects» гл. 7; Zölzer гл. 8; DAFX 2-е изд. §4.2; Pirkle «Designing Audio Effect Plugins in C++» гл. 18; Izhaki гл. 15–20; Senior гл. 9–10, 13–14; `GatingSampleSettings.pdf`; Мануалы «Компрессоры и компрессия» |
 | Эквалайзер, фильтры частот | Zölzer гл. 6; Reiss, McPherson гл. 4–5; DAFX гл. 2; Pirkle (эффекты) гл. 11–12; Izhaki гл. 14; Senior гл. 11–12; Мануалы «Основы тембровой коррекции», «Фильтры частот», таблицы частот |
 | Реверберация, задержка, модуляционные эффекты | Reiss, McPherson гл. 3, 6, 10; DAFX гл. 2–3 и §5.6; Pirkle (эффекты) гл. 13–15, 17; Zölzer гл. 7; Izhaki (разделы об эффектах); Senior гл. 16–18; «Thoughts on Reverb», «Delay Tips» |
-| Громкость, максимайзеры, мастеринг | Кац; Мануалы «Максимайзеры»; Boden |
+| Громкость, максимайзеры, мастеринг | Кац; Мануалы «Максимайзеры»; Boden; Vickers 2010; Deruty, Pachet 2015 |
 | Фаза, панорама, пространственный звук | Reiss, McPherson гл. 11–12; DAFX гл. 5; Izhaki гл. 11, 13; Gibson |
 | Акустика помещений, мониторинг | Senior гл. 1–3; Izhaki гл. 7; Meerzon |
 | Форматы файлов и кодеки: AIFF, FLAC, MP3 | Zölzer гл. 9; RFC 9639; Apple AIFF 1.3 и AIFF-C; Brandenburg; Raissi; сравнение van Beurden; RFC 6716 (Opus); ReadMe ALAC |
@@ -309,6 +309,46 @@ HTML, английский. Побитовая схема 32-битного за
 2 стр., текст, английский. Впервые выпущена в 1992 году, пересмотрена в 1995–2000. Опорный уровень на 18 дБ ниже наибольшего кодируемого значения (1:8, 18,06 дБ) независимо от разрядности; коды для 16–24 бит; занижение пиков квазипиковыми измерителями на 3 дБ, до 6 дБ с ошибками оператора.
 
 Взять: опорный уровень −18 dBFS в вещании для статей об уровне сигнала и об измерителях.
+
+## Война громкости
+
+Скачаны при подготовке [статьи о войне громкости](../../src/content/articles/loudness-war.mdx) (issue #41). Ссылки на оригиналы и прочитанные места — в [sources.md](sources.md#война-громкости). Презентации AES 2011 года с Digido доступны только как копии в Internet Archive: на самом сайте раздел загрузок требует входа.
+
+### `Vickers-Loudness-War-Background-Speculation-Recommendations-AES129-2010.pdf` — Earl Vickers, «The Loudness War: Background, Speculation and Recommendations» (AES 129th Convention, 2010, Convention Paper 8175)
+
+27 стр., текст, английский. Обзор истории (грампластинки, радио, ТВ, кино, CD), нелинейность слуха и многополосная компрессия, эстетические претензии и утомляемость, теория игр, сопоставление динамического диапазона и продаж (173 альбома Billboard 200, 2002–2009), рекомендации по деэскалации.
+
+Взять: аккуратный обзор с разделением фактов и предположений; числа из вторичных ссылок (рост громкости CD «почти на 20 дБ за 20 лет») сверять с первоисточниками.
+
+### `Deruty-Pachet-MIR-Perspective-Evolution-of-Dynamics-ISMIR-2015.pdf` — Emmanuel Deruty, François Pachet, «The MIR Perspective on the Evolution of Dynamics in Mainstream Music» (ISMIR 2015)
+
+6 стр., текст, английский, CC BY 4.0. 7 200 треков 1967–2014 годов: RMS, громкость по Tech 3341, пик-фактор, PRRC, HLSD, LRA по годам; пик войны громкости в 2007 году, экстраполяция возврата, зависимость от года сильнее зависимости от жанра.
+
+Взять: количественная хронология войны громкости и довод о сохранении макродинамики. Графики — изображения; числа брать из таблиц 1–2 и текста.
+
+### `Rogers-Loudness-war-fought-with-compression-AES131-2011.pdf` — Susan E. Rogers, «The loudness war is fought with (and over) compression» (AES 131st Convention, 2011)
+
+8 стр. слайдов, текст, английский. Доводы за и против связи гиперсжатия с усталостью слушателя со ссылками на Stone и др. (2009), Fleischer (2008), Epstein (2011), Melnick (1991).
+
+Взять: карту аргументов об утомляемости; исследования из ссылок читать отдельно, слайды их только пересказывают.
+
+### `Lund-The-Tides-Have-Changed-AES131-2011.pdf` — Thomas Lund, «The Tides Have Changed: Peak Level, Loudness & iTunes» (AES 131st Convention, 22 октября 2011)
+
+53 стр. слайдов, текст частично, английский. Истинный пик и межотсчётные перегрузки в ЦАП, ЦПЧД и кодеках, перегрузка AAC 128 кбит/с, громкость по BS.1770-1 и -2, LRA против микродинамики, Sound Check (около −16,5 LUFS) и его отклонения от BS.1770-2, рекомендации для мастеринга.
+
+Взять: аргументы перехода к нормализации громкости в 2011 году; графики PLR по годам в этих слайдах нет, он показан на панели 2012 года.
+
+### `Atkinson-Squeezing-the-Music-AES131-2011.pdf` — John Atkinson, «Squeezing the Music ’till the Bits Squeak» (AES 131st Convention, 2011)
+
+20 стр. слайдов, изображения без текстового слоя, английский. Формы волны записей Delbert McClinton и Red Hot Chili Peppers, «Money» в слоях SACD и CD юбилейного «The Dark Side of the Moon», тезисы о громкости и динамике.
+
+Взять: подтверждение, что сравнивались слои одного диска 2003 года; числа брать из статьи Stereophile «Dark Side of the Disc» (2003). Формы волны коммерческих записей не воспроизводить.
+
+### `Mourgela-et-al-Trends-in-mixes-and-masters-AES157-2024.pdf` — Angeliki Mourgela, Elio Quinton, Spyridon Bissas, Joshua D. Reiss, David Ronan, «Exploring trends in audio mixes and masters: Insights from a dataset analysis» (AES 157th Convention, 2024, Convention Paper 10186)
+
+11 стр., текст, английский. 218 109 загрузок в MixCheck Studio: громкость и истинный пик сведений и мастеров, клиппинг, моно-совместимость, фаза, компрессия и тональный баланс по жанрам.
+
+Взять: распределение громкости мастеров после распространения нормализации; выборка любительская, о коммерческих релизах говорит косвенно.
 
 ## Архивы
 

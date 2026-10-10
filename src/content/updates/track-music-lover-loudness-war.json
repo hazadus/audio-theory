@@ -1,0 +1,16 @@
+{
+  "id": "track-music-lover-loudness-war",
+  "date": "2026-10-10",
+  "order": 8,
+  "type": "updated",
+  "track": "music-lover",
+  "items": [
+    {
+      "text": "Этап «Громкость прослушивания»: по желанию — война громкости",
+      "target": {
+        "track": "music-lover",
+        "anchor": "stage-listening-level"
+      }
+    }
+  ]
+}

@@ -1,0 +1,810 @@
+---
+// Опыт о войне громкости: формы волны динамичного и громкого вариантов, таблица измерений, статус,
+// ползунок усиления перед лимитером, шкала «как записано / выровнено по громкости», плеер и подпись.
+// При сборке рисуется начальное состояние; скрипт включает параметры и звук и перерисовывает тот же SVG.
+// Без JS, во время загрузки и при ошибке параметры неактивны, а сообщение объясняет почему.
+import { demoCaptions } from '@/lib/demo-captions';
+import Icon from '@/components/Icon.astro';
+import { createExperiment, defaultGain, gainStep, maxGain, minGain } from '@/lib/loudness-war';
+import {
+  gainFill,
+  gainText,
+  loudnessWarCaption,
+  loudnessWarStatus,
+  loudnessWarWarning,
+  metricsBody,
+  metricsColumns,
+  waveSvg,
+} from '@/lib/loudness-war-view';
+import { initialVolume } from '@/lib/sampling-audio';
+import { volumeStep, volumeText } from '@/lib/sampling-player';
+
+interface Props {
+  /** Номер рисунка: визуализации и рисунки нумеруются одной последовательностью. */
+  figure: number;
+  /** Якорь для ссылок `#id`; английский kebab-case. */
+  id?: string;
+}
+
+const { figure, id = demoCaptions.LoudnessWarDemo.defaultId } = Astro.props;
+const experiment = createExperiment(defaultGain);
+const status = loudnessWarStatus(experiment, 'recorded');
+---
+
+<figure
+  class="loudness-war-demo"
+  id={id}
+  aria-labelledby={`${id}-name`}
+  data-loudness-war-demo
+  data-state="static"
+>
+  <div class="loudness-war-demo-head">
+    <span class="loudness-war-demo-label">Визуализация {figure}</span>
+    <span class="loudness-war-demo-name" id={`${id}-name`}>
+      {demoCaptions.LoudnessWarDemo.name}
+    </span>
+  </div>
+  <div class="loudness-war-demo-plot" data-chart set:html={waveSvg(experiment, 'recorded', id)} />
+  <div class="loudness-war-demo-body">
+    <ul class="loudness-war-demo-legend" aria-label="Легенда">
+      <li>
+        <span class="loudness-war-demo-key dynamic" aria-hidden="true"></span>динамичный вариант
+      </li>
+      <li>
+        <span class="loudness-war-demo-key loud" aria-hidden="true"></span>громкий вариант
+      </li>
+      <li>
+        <span class="loudness-war-demo-key ceiling" aria-hidden="true"></span>потолок −1 dBFS
+      </li>
+    </ul>
+    <div
+      class="loudness-war-demo-table"
+      role="region"
+      aria-label="Измерения двух вариантов"
+      tabindex="0"
+    >
+      <table>
+        <caption>Измерения в выбранной шкале</caption>
+        <thead>
+          <tr>
+            {metricsColumns.map((column) => (
+              <th scope="col">{column}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody data-metrics set:html={metricsBody(experiment, 'recorded')} />
+      </table>
+    </div>
+    <p class="loudness-war-demo-status" data-status>
+      <span class="loudness-war-demo-icon">
+        <Icon name="info" size={18} />
+      </span>
+      <span>
+        <b data-status-title>{status.title}</b> <span data-status-text>{status.text}</span>
+      </span>
+    </p>
+  </div>
+  <p class="visually-hidden" aria-live="polite" data-announce></p>
+  <fieldset class="loudness-war-demo-controls" data-controls disabled>
+    <legend class="visually-hidden">Параметры опыта</legend>
+    <div class="loudness-war-demo-params">
+      <div class="loudness-war-demo-param">
+        <div class="loudness-war-demo-param-head">
+          <label for={`${id}-gain`}>Усиление перед лимитером</label>
+          <output for={`${id}-gain`} data-gain-value>
+            {gainText(experiment.gain)}
+          </output>
+        </div>
+        <input
+          id={`${id}-gain`}
+          class="loudness-war-demo-range"
+          type="range"
+          min={minGain}
+          max={maxGain}
+          step={gainStep}
+          value={experiment.gain}
+          aria-valuetext={gainText(experiment.gain)}
+          style={`--fill: ${gainFill(experiment.gain)}`}
+          data-gain
+        />
+        <div class="loudness-war-demo-scale" aria-hidden="true">
+          <span>{gainText(minGain)}</span>
+          <span>{gainText(maxGain)}</span>
+        </div>
+      </div>
+      <div class="loudness-war-demo-choice" role="radiogroup" aria-label="Шкала">
+        <span class="loudness-war-demo-choice-label" aria-hidden="true">
+          Шкала:
+        </span>
+        <label>
+          <input type="radio" name={`${id}-scale`} value="recorded" checked data-scale />
+          Как записано
+        </label>
+        <label>
+          <input type="radio" name={`${id}-scale`} value="matched" data-scale />
+          Выровнено по громкости
+        </label>
+      </div>
+    </div>
+    <div class="loudness-war-demo-actions">
+      <button type="button" class="loudness-war-demo-reset" data-reset>
+        <Icon name="rotate-ccw" size={16} />
+        Сбросить
+      </button>
+    </div>
+    <div class="loudness-war-demo-audio">
+      <p class="loudness-war-demo-warning" role="note">
+        <Icon name="volume-2" size={18} />
+        <span>
+          <b>Громкость.</b> <span>{loudnessWarWarning}</span>
+        </span>
+      </p>
+      <div
+        class="loudness-war-demo-player"
+        role="group"
+        aria-label="Аудиопример: динамичный и громкий варианты"
+        data-player-group
+        data-mode="ready"
+      >
+        <button type="button" class="loudness-war-demo-play" aria-label="Воспроизвести" data-play>
+          <span class="loudness-war-demo-play-icon start">
+            <Icon name="play" size={18} />
+          </span>
+          <span class="loudness-war-demo-play-icon stop">
+            <Icon name="square" size={16} />
+          </span>
+        </button>
+        <div class="loudness-war-demo-choice" role="radiogroup" aria-label="Что слушать">
+          <label>
+            <input type="radio" name={`${id}-listen`} value="dynamic" data-listen />
+            Динамичный
+          </label>
+          <label>
+            <input type="radio" name={`${id}-listen`} value="loud" checked data-listen />
+            Громкий
+          </label>
+        </div>
+        <div class="loudness-war-demo-volume">
+          <button
+            type="button"
+            class="loudness-war-demo-mute"
+            aria-label="Выключить звук"
+            data-mute
+          >
+            <span class="loudness-war-demo-mute-icon on">
+              <Icon name="volume-2" size={18} />
+            </span>
+            <span class="loudness-war-demo-mute-icon off">
+              <Icon name="volume-x" size={18} />
+            </span>
+          </button>
+          <input
+            class="loudness-war-demo-range compact"
+            type="range"
+            min="0"
+            max="100"
+            step={volumeStep}
+            value={initialVolume * 100}
+            aria-label="Громкость"
+            aria-valuetext={volumeText(initialVolume * 100)}
+            style={`--fill: ${initialVolume * 100}`}
+            data-volume
+          />
+          <span class="loudness-war-demo-volume-text" data-volume-text>
+            {volumeText(initialVolume * 100)}
+          </span>
+        </div>
+      </div>
+      <p class="loudness-war-demo-player-state" role="status" data-player-state>
+        Остановлен
+      </p>
+    </div>
+    <p class="loudness-war-demo-note" data-controls-note>
+      Параметры и звук работают с включённым JavaScript. График показывает начальное состояние.
+    </p>
+  </fieldset>
+  <figcaption class="loudness-war-demo-caption">
+    <b>Рис. {figure}.</b>{' '}
+    <span data-caption>{loudnessWarCaption(experiment.gain, 'recorded')}</span>
+  </figcaption>
+</figure>
+
+<script>
+  import { initLoudnessWarDemos } from '@/lib/loudness-war-controller';
+
+  initLoudnessWarDemos();
+</script>
+
+<style is:global>
+  .loudness-war-demo {
+    container-type: inline-size;
+    margin: var(--space-6) 0;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    overflow: hidden;
+    font-family: var(--font-ui);
+    scroll-margin-top: 88px;
+  }
+
+  .loudness-war-demo-head {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 14px 20px;
+  }
+
+  .loudness-war-demo-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  .loudness-war-demo-name {
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  /* Отступы — место для подписей делений: они выходят за область построения. */
+  .loudness-war-demo-plot {
+    padding: 30px 14px 30px 36px;
+    border-block: var(--border-width) solid var(--color-border);
+    background: var(--chart-bg);
+  }
+
+  .loudness-war-demo-svg {
+    display: block;
+    width: 100%;
+    height: 260px;
+    overflow: visible;
+    font-size: var(--text-chart);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .loudness-war-demo-grid line {
+    stroke: var(--chart-grid);
+    stroke-width: 1;
+  }
+
+  .loudness-war-demo-zero {
+    stroke: var(--chart-axis);
+    stroke-width: 1;
+  }
+
+  .loudness-war-demo-ceiling {
+    stroke: var(--chart-label);
+    stroke-width: 1.5;
+    stroke-dasharray: 2 3;
+  }
+
+  .loudness-war-demo-section {
+    stroke: var(--chart-axis);
+    stroke-width: 1.5;
+    stroke-dasharray: 6 4;
+  }
+
+  .loudness-war-demo-dynamic {
+    fill: color-mix(in oklab, var(--chart-signal) 55%, transparent);
+    stroke: var(--chart-signal);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+
+  /* Громкий вариант отличается не только цветом: заливка прозрачнее, контур толще, подпись полосы своя. */
+  .loudness-war-demo-loud {
+    fill: color-mix(in oklab, var(--chart-result) 35%, transparent);
+    stroke: var(--chart-result);
+    stroke-width: 1.75;
+    vector-effect: non-scaling-stroke;
+  }
+
+  /* Подпись полосы лежит поверх огибающей: подложка цвета фона сохраняет контраст. */
+  .loudness-war-demo-band-label {
+    fill: var(--chart-label);
+    font-weight: 600;
+    paint-order: stroke;
+    stroke: var(--chart-bg);
+    stroke-width: 4px;
+    stroke-linejoin: round;
+  }
+
+  .loudness-war-demo-ticks {
+    fill: var(--chart-label);
+  }
+
+  .loudness-war-demo-section-label {
+    font-style: italic;
+  }
+
+  .loudness-war-demo-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 20px;
+  }
+
+  .loudness-war-demo-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 14px;
+  }
+
+  .loudness-war-demo-legend li {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .loudness-war-demo-key {
+    flex: none;
+    width: 18px;
+    height: 12px;
+  }
+
+  .loudness-war-demo-key.dynamic {
+    border: 1px solid var(--chart-signal);
+    background: color-mix(in oklab, var(--chart-signal) 55%, transparent);
+  }
+
+  .loudness-war-demo-key.loud {
+    border: 1.75px solid var(--chart-result);
+    background: color-mix(in oklab, var(--chart-result) 35%, transparent);
+  }
+
+  .loudness-war-demo-key.ceiling {
+    height: 0;
+    border-top: 2px dotted var(--chart-label);
+  }
+
+  .loudness-war-demo-table {
+    overflow-x: auto;
+  }
+
+  .loudness-war-demo-table:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .loudness-war-demo-table table {
+    width: 100%;
+    min-width: 520px;
+    border-collapse: collapse;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .loudness-war-demo-table caption {
+    padding-bottom: 6px;
+    text-align: left;
+    font-size: 13px;
+    color: var(--color-text-muted);
+  }
+
+  .loudness-war-demo-table :is(th, td) {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--color-border);
+    text-align: right;
+    font-weight: 400;
+  }
+
+  .loudness-war-demo-table thead th {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    vertical-align: bottom;
+  }
+
+  .loudness-war-demo-table :is(thead th:first-child, tbody th) {
+    text-align: left;
+  }
+
+  .loudness-war-demo-table tbody th {
+    font-weight: 600;
+  }
+
+  .loudness-war-demo-status {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin: 0;
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    box-shadow: inset 0 0 0 1px var(--color-border-strong);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .loudness-war-demo-icon {
+    display: flex;
+    flex: none;
+    margin-top: 1px;
+    color: var(--color-text-muted);
+  }
+
+  .loudness-war-demo .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .loudness-war-demo-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+    margin: 0;
+    padding: 14px 20px 16px;
+    border: 0;
+    border-top: var(--border-width) solid var(--color-border);
+  }
+
+  .loudness-war-demo-params {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 28px;
+    align-items: center;
+  }
+
+  .loudness-war-demo-param {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .loudness-war-demo-param-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 14px;
+  }
+
+  .loudness-war-demo-param-head output {
+    font-size: 15px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* Ползунок: дорожка 4 px с заливкой до значения, бегунок 20 px, как у других визуализаций.
+     `--fill` — положение в процентах без единицы: длину нельзя умножать на проценты. */
+  .loudness-war-demo-range {
+    --half-thumb: 10px;
+    --track: linear-gradient(
+        to right,
+        var(--color-accent)
+          calc(var(--half-thumb) + (100% - 2 * var(--half-thumb)) * var(--fill) / 100),
+        var(--color-border) 0
+      )
+      center / 100% 4px no-repeat;
+
+    width: 100%;
+    height: 28px;
+    margin: 0;
+    background: transparent;
+    appearance: none;
+    cursor: pointer;
+    touch-action: pan-y;
+  }
+
+  .loudness-war-demo-range::-webkit-slider-runnable-track {
+    height: 28px;
+    background: var(--track);
+  }
+
+  .loudness-war-demo-range::-moz-range-track {
+    height: 28px;
+    background: var(--track);
+  }
+
+  .loudness-war-demo-range::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+    margin-top: 4px;
+    border: 2px solid var(--color-accent);
+    border-radius: 50%;
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-sm);
+    appearance: none;
+  }
+
+  .loudness-war-demo-range::-moz-range-thumb {
+    box-sizing: border-box;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--color-accent);
+    border-radius: 50%;
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .loudness-war-demo-range:focus-visible {
+    box-shadow: none;
+    outline: none;
+  }
+
+  .loudness-war-demo-range:focus-visible::-webkit-slider-thumb {
+    box-shadow: var(--focus-ring);
+  }
+
+  .loudness-war-demo-range:focus-visible::-moz-range-thumb {
+    box-shadow: var(--focus-ring);
+  }
+
+  .loudness-war-demo-scale {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .loudness-war-demo-choice {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    align-items: center;
+    font-size: 14px;
+  }
+
+  .loudness-war-demo-choice-label {
+    font-size: 13px;
+    color: var(--color-text-muted);
+  }
+
+  .loudness-war-demo-choice label {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    min-height: 32px;
+    cursor: pointer;
+  }
+
+  .loudness-war-demo-choice input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: var(--color-accent);
+  }
+
+  .loudness-war-demo-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .loudness-war-demo-reset {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    height: 36px;
+    padding: 0 12px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text);
+    font: 500 14px var(--font-ui);
+    cursor: pointer;
+  }
+
+  .loudness-war-demo-audio {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .loudness-war-demo-warning {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin: 0 0 4px;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    background: var(--color-warning-bg);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .loudness-war-demo-warning > svg {
+    flex: none;
+    margin-top: 1px;
+    color: var(--color-warning);
+  }
+
+  .loudness-war-demo-warning b {
+    color: var(--color-warning);
+  }
+
+  .loudness-war-demo-player {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    align-items: center;
+    padding: 8px 14px 8px 8px;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+  }
+
+  .loudness-war-demo-play {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+    cursor: pointer;
+  }
+
+  .loudness-war-demo-mute {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+  }
+
+  .loudness-war-demo-play-icon,
+  .loudness-war-demo-mute-icon {
+    display: flex;
+  }
+
+  .loudness-war-demo-play:not([data-playing]) .loudness-war-demo-play-icon.stop,
+  .loudness-war-demo-play[data-playing] .loudness-war-demo-play-icon.start,
+  .loudness-war-demo-mute:not([data-muted]) .loudness-war-demo-mute-icon.off,
+  .loudness-war-demo-mute[data-muted] .loudness-war-demo-mute-icon.on {
+    display: none;
+  }
+
+  .loudness-war-demo-volume {
+    display: flex;
+    flex: 1 1 140px;
+    gap: 6px;
+    align-items: center;
+    max-width: 280px;
+  }
+
+  .loudness-war-demo-volume-text {
+    width: 36px;
+    font-size: 13px;
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Компактный ползунок громкости: та же дорожка, бегунок 14 px. */
+  .loudness-war-demo-range.compact {
+    --half-thumb: 7px;
+
+    flex: 1;
+    min-width: 0;
+    height: 24px;
+  }
+
+  .loudness-war-demo-range.compact::-webkit-slider-runnable-track {
+    height: 24px;
+  }
+
+  .loudness-war-demo-range.compact::-moz-range-track {
+    height: 24px;
+  }
+
+  .loudness-war-demo-range.compact::-webkit-slider-thumb {
+    width: 14px;
+    height: 14px;
+    margin-top: 5px;
+    border: 0;
+    background: var(--color-accent);
+  }
+
+  .loudness-war-demo-range.compact::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border: 0;
+    background: var(--color-accent);
+  }
+
+  .loudness-war-demo-player-state {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+  }
+
+  .loudness-war-demo-player[data-mode='error'] + .loudness-war-demo-player-state,
+  .loudness-war-demo-player[data-mode='unavailable'] + .loudness-war-demo-player-state {
+    color: var(--color-error);
+  }
+
+  .loudness-war-demo-player :disabled {
+    opacity: 0.45;
+  }
+
+  @media (hover: hover) {
+    .loudness-war-demo-reset:hover,
+    .loudness-war-demo-mute:not(:disabled):hover {
+      background: var(--color-bg);
+    }
+  }
+
+  /* Неактивные параметры не выглядят рабочими: приглушены, без указателя; сообщение объясняет причину. */
+  .loudness-war-demo-controls:disabled .loudness-war-demo-params,
+  .loudness-war-demo-controls:disabled .loudness-war-demo-actions,
+  .loudness-war-demo-controls:disabled .loudness-war-demo-player {
+    opacity: 0.5;
+  }
+
+  .loudness-war-demo-controls:disabled * {
+    cursor: not-allowed;
+  }
+
+  .loudness-war-demo-note {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+  }
+
+  .loudness-war-demo[data-state='ready'] .loudness-war-demo-note {
+    display: none;
+  }
+
+  .loudness-war-demo[data-state='error'] .loudness-war-demo-note {
+    color: var(--color-error);
+  }
+
+  .loudness-war-demo-caption {
+    padding: 10px 20px 14px;
+    border-top: var(--border-width) solid var(--color-border);
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+  }
+
+  .loudness-war-demo-caption b {
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  @container (max-width: 559px) {
+    .loudness-war-demo-head,
+    .loudness-war-demo-body,
+    .loudness-war-demo-controls,
+    .loudness-war-demo-caption {
+      padding-inline: 16px;
+    }
+
+    .loudness-war-demo-plot {
+      padding-right: 10px;
+    }
+
+    .loudness-war-demo-svg {
+      height: 220px;
+    }
+
+    .loudness-war-demo-params {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

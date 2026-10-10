@@ -1,0 +1,16 @@
+{
+  "id": "track-sound-engineer-loudness-war",
+  "date": "2026-10-10",
+  "order": 7,
+  "type": "updated",
+  "track": "sound-engineer",
+  "items": [
+    {
+      "text": "Этап «Форматы и объём записи»: по желанию — война громкости",
+      "target": {
+        "track": "sound-engineer",
+        "anchor": "stage-delivery"
+      }
+    }
+  ]
+}

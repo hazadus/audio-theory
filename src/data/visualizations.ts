@@ -82,6 +82,14 @@ export const visualizations: readonly Visualization[] = [
     preview: 'compressor',
   },
   {
+    id: 'loudness-war-demo',
+    slug: 'loudness-war',
+    name: 'Громкий мастер до и после выравнивания громкости',
+    what: 'Усиление перед лимитером, шкала «как записано» или «выровнено по громкости», звучание двух вариантов.',
+    sound: true,
+    preview: 'loudness',
+  },
+  {
     id: 'lfo-waveforms',
     slug: 'lfo',
     name: 'Четыре формы LFO из одной фазы',

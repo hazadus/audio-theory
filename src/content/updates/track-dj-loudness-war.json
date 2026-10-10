@@ -1,0 +1,16 @@
+{
+  "id": "track-dj-loudness-war",
+  "date": "2026-10-10",
+  "order": 10,
+  "type": "updated",
+  "track": "dj",
+  "items": [
+    {
+      "text": "Этап «Сигнал и уровень»: по желанию — что изменила нормализация громкости",
+      "target": {
+        "track": "dj",
+        "anchor": "stage-levels"
+      }
+    }
+  ]
+}

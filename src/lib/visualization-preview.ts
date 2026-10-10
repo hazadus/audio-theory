@@ -14,6 +14,7 @@ export type PreviewKind =
   | 'phase'
   | 'sampling'
   | 'compressor'
+  | 'loudness'
   | 'lfo'
   | 'bytes'
   | 'pcm'
@@ -38,6 +39,7 @@ export const previewKinds: readonly PreviewKind[] = [
   'phase',
   'sampling',
   'compressor',
+  'loudness',
   'lfo',
   'bytes',
   'pcm',
@@ -356,6 +358,7 @@ const builders: Record<PreviewKind, () => Preview> = {
   phase: phasePreview,
   sampling: samplingPreview,
   compressor: compressorPreview,
+  loudness: loudnessPreview,
   lfo: lfoPreview,
   bytes: bytesPreview,
   pcm: () => {
@@ -388,6 +391,30 @@ const builders: Record<PreviewKind, () => Preview> = {
     dots: [],
   }),
 };
+
+function loudnessPreview(): Preview {
+  // Сверху динамичная огибающая: тихий куплет и удары припева; снизу та же музыка после лимитера —
+  // почти ровный брусок под пунктирным потолком.
+  let dynamic = '';
+  let loud = '';
+  for (let i = 0; i < 40; i += 1) {
+    const x = f1(20 + 6 * i);
+    const chorus = i >= 20;
+    const hit = i % 5 === 0 ? 1 : i % 5 === 1 ? 0.7 : 0.45;
+    const top = (chorus ? 26 : 13) * hit + (chorus ? 4 : 3);
+    dynamic += `M${x} ${f1(42 - top)}V${f1(42 + top)}`;
+    const flat = (chorus ? 26 : 23) - (i % 5 === 0 ? 0 : 1.5);
+    loud += `M${x} ${f1(112 - flat)}V${f1(112 + flat)}`;
+  }
+  return {
+    paths: [
+      { d: dynamic, color: 'signal', width: 3 },
+      { d: 'M16 84H264M16 140H264', color: 'axis', width: 1, dash: '3 3' },
+      { d: loud, color: 'result', width: 3 },
+    ],
+    dots: [],
+  };
+}
 
 function voicePreview(): Preview {
   // Сверху сумма двух пил с небольшой расстройкой, снизу гармоники 1/k и отражения кольцами.

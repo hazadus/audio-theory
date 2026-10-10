@@ -40,6 +40,10 @@ export const demoCaptions = {
     defaultId: 'compressor-demo',
     name: 'Компрессор: характеристика и уровни во времени',
   },
+  LoudnessWarDemo: {
+    defaultId: 'loudness-war-demo',
+    name: 'Громкий мастер до и после выравнивания громкости',
+  },
   LfoDemo: { defaultId: 'lfo-waveforms', name: 'Четыре формы LFO из одной фазы' },
   WavDumpDemo: { defaultId: 'wav-dump', name: 'Байты WAV-файла по полям' },
   PcmSampleDemo: { defaultId: 'pcm-sample', name: '24-битный отсчёт: байты, знак и float' },

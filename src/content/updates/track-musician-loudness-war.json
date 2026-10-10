@@ -1,0 +1,16 @@
+{
+  "id": "track-musician-loudness-war",
+  "date": "2026-10-10",
+  "order": 9,
+  "type": "updated",
+  "track": "musician",
+  "items": [
+    {
+      "text": "Этап «Запись и динамика»: по желанию — цена громкого мастера",
+      "target": {
+        "track": "musician",
+        "anchor": "stage-recording"
+      }
+    }
+  ]
+}
