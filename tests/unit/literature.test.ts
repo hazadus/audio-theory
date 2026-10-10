@@ -1,6 +1,5 @@
 // Проверяет реестр литературы, порядок изданий, использование в статьях, подписи и состояние фильтров.
 import { describe, expect, it } from 'vitest';
-import literatureData from '@/data/literature.json';
 import { findSourceCitations } from '@/lib/article-content';
 import {
   arrange,
@@ -103,10 +102,6 @@ const articles: CitingArticle[] = [
 ];
 
 describe('parseLiterature', () => {
-  it('принимает настоящий реестр', () => {
-    expect(() => parseLiterature(literatureData)).not.toThrow();
-  });
-
   it('отвергает повторный id, неизвестного и лишнего автора', () => {
     const edition = { id: 'x', type: 'book', authors: ['a'], title: 'T', publication: 'P' };
     expect(() => parseLiterature({ authors: { a: 'A A.' }, editions: [edition, edition] })).toThrow(

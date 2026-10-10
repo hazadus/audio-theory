@@ -2,7 +2,7 @@
 import { expect, test } from '@playwright/test';
 
 test(
-  'тремоло: графики доступны без JS, подписи читаются, прежние якоря LFO сохранены',
+  'тремоло: графики доступны без JS, подписи не выходят за рисунок, прежние якоря LFO сохранены',
   { tag: ['@placement'] },
   async ({ browser }, testInfo) => {
     const base = testInfo.project.metadata.base as string;
@@ -32,7 +32,6 @@ test(
               const svg = text.ownerSVGElement!.getBoundingClientRect();
               return {
                 label: text.textContent,
-                size: parseFloat(getComputedStyle(text).fontSize) * text.getScreenCTM()!.a,
                 left: box.x,
                 right: box.x + box.width,
                 top: bounds.top - svg.top,
@@ -43,8 +42,6 @@ test(
           expect(labels.length).toBeGreaterThan(0);
           for (const label of labels) {
             const description = `${colorScheme}, ${width} px: ${label.label}`;
-            expect(label.size, description).toBeGreaterThanOrEqual(12);
-            expect(label.size, description).toBeLessThanOrEqual(16);
             expect(label.left, description).toBeGreaterThanOrEqual(0);
             expect(label.right, description).toBeLessThanOrEqual(480);
             expect(label.top, description).toBeGreaterThanOrEqual(0);

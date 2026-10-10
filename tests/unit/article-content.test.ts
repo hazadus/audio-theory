@@ -48,6 +48,7 @@ describe('assertValidArticles', () => {
     expect(check(article('[x](/missing/)'))).toThrow(/неизвестную статью «missing»/);
     expect(check(article('[x](/a/#nope)'))).toThrow(/несуществующий раздел «a#nope»/);
     expect(check(article('[x](#sources)'))).not.toThrow();
+    expect(check(article('[x](#nope)'))).toThrow(/несуществующий раздел «a#nope»/);
     expect(check(article('[x](https://example.com/#nope)'))).not.toThrow();
     expect(
       check(
@@ -70,40 +71,34 @@ describe('assertValidArticles', () => {
     expect(check(article('[Ошибка](/tracks/musician/extra/)'))).toThrow(/неизвестную статью/);
   });
 
-  it('вводные опыты участвуют в общей нумерации и проверке якорей', () => {
-    const body =
-      '<IntroToneDemo id="tone" figure={1} />\n\n<IntroOscillatorDemo id="osc" figure={2} />\n\n<IntroEnvelopeDemo id="adsr" figure={3} />\n\n<IntroLfoDemo id="lfo" figure={4} />\n\n[x](#adsr)';
+  it.each([
+    [
+      'вводные',
+      [
+        'IntroToneDemo id="tone"',
+        'IntroOscillatorDemo id="osc"',
+        'IntroEnvelopeDemo id="adsr"',
+        'IntroLfoDemo id="lfo"',
+      ],
+      ['tone', 'osc', 'adsr', 'lfo'],
+    ],
+    ['музыкальные', ['MusicNotesDemo', 'MusicRhythmDemo'], ['music-notes', 'music-rhythm']],
+    [
+      'DAW',
+      ['DawProjectDemo', 'DawPianoRollDemo', 'DawClipsDemo', 'DawSignalChainDemo'],
+      ['daw-project', 'daw-piano-roll', 'daw-clips', 'daw-signal-chain'],
+    ],
+  ])('%s опыты входят в реестр блоков и общую нумерацию', (_name, tags, ids) => {
+    const blocks = tags.map((tag, i) => `<${tag} figure={${i + 1}} />`).join('\n\n');
+    // Явный id опыта становится якорем: ссылка на него проходит проверку.
+    const link = tags[0].includes(' id=') ? `\n\n[x](#${ids.at(-1)})` : '';
+    const body = blocks + link;
     expect(check(article(body))).not.toThrow();
-    expect(check(article(body.replace('figure={4}', 'figure={3}')))).toThrow(
-      /рисунков ожидался номер 4/,
+    const last = tags.length;
+    expect(check(article(body.replace(`figure={${last}}`, `figure={${last + 1}}`)))).toThrow(
+      `рисунков ожидался номер ${last}`,
     );
-  });
-
-  it('музыкальные опыты входят в реестр блоков и общую нумерацию', () => {
-    const body = '<MusicNotesDemo figure={1} />\n\n<MusicRhythmDemo figure={2} />';
-    expect(check(article(body))).not.toThrow();
-    expect(check(article(body.replace('figure={2}', 'figure={3}')))).toThrow(
-      /рисунков ожидался номер 2/,
-    );
-    expect(findDemos(body)).toEqual([
-      { component: 'MusicNotesDemo', id: 'music-notes' },
-      { component: 'MusicRhythmDemo', id: 'music-rhythm' },
-    ]);
-  });
-
-  it('опыты DAW входят в реестр блоков и общую нумерацию', () => {
-    const body =
-      '<DawProjectDemo figure={1} />\n\n<DawPianoRollDemo figure={2} />\n\n<DawClipsDemo figure={3} />\n\n<DawSignalChainDemo figure={4} />';
-    expect(check(article(body))).not.toThrow();
-    expect(check(article(body.replace('figure={4}', 'figure={5}')))).toThrow(
-      /рисунков ожидался номер 4/,
-    );
-    expect(findDemos(body).map((demo) => demo.id)).toEqual([
-      'daw-project',
-      'daw-piano-roll',
-      'daw-clips',
-      'daw-signal-chain',
-    ]);
+    expect(findDemos(body).map((demo) => demo.id)).toEqual(ids);
   });
 
   it('рисунки и визуализации образуют одну последовательность', () => {

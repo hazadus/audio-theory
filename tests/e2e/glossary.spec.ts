@@ -1,4 +1,4 @@
-// Глоссарий: список из общего источника, английские карточки, одинаковые с подсказками определения, цели ссылок, поиск и указатель букв.
+// Глоссарий: список из общего источника, английские карточки, одинаковые с подсказками определения, поиск и указатель букв.
 import { expect, test } from '@playwright/test';
 import glossary from '../../src/data/glossary.json' with { type: 'json' };
 
@@ -67,29 +67,6 @@ test('определения совпадают с подсказками в с�
   }
 });
 
-test('цели «Подробнее» ведут на существующие страницы и якоря под префиксом', async ({ page }) => {
-  await page.goto('glossary/');
-  const hrefs = await page
-    .locator('dd a.more')
-    .evaluateAll((links) => links.map((l) => (l as HTMLAnchorElement).href));
-  expect(hrefs).toHaveLength(await page.locator('dl > .term').count());
-  // Каждая страница открывается один раз: карточек несколько сотен, целей — несколько десятков.
-  const anchorsByPage = new Map<string, string[]>();
-  for (const href of hrefs) {
-    const { hash } = new URL(href);
-    const pageUrl = href.replace(hash, '');
-    anchorsByPage.set(pageUrl, [...(anchorsByPage.get(pageUrl) ?? []), hash]);
-  }
-  for (const [pageUrl, hashes] of anchorsByPage) {
-    const response = await page.goto(pageUrl);
-    expect(response?.status(), pageUrl).toBe(200);
-    // Английские карточки повторяют цели основных: каждый якорь проверяется один раз.
-    for (const hash of new Set(hashes.filter(Boolean))) {
-      expect(await page.locator(`[id="${hash.slice(1)}"]`).count(), pageUrl + hash).toBe(1);
-    }
-  }
-});
-
 test('якорь записи подсвечивает её, указатель отмечает текущую букву', async ({ page }) => {
   await page.goto('glossary/#sample-rate');
   await expect(page.locator('#sample-rate')).toBeInViewport();
@@ -107,14 +84,6 @@ test('якорь записи подсвечивает её, указатель 
   const bar = await page.locator('[data-letterbar]').boundingBox();
   const header = await page.locator('header').boundingBox();
   expect(Math.abs(bar!.y - (header!.y + header!.height))).toBeLessThan(2);
-});
-
-test('«Найти статью или термин» открывает поиск', async ({ page }) => {
-  await page.goto('glossary/');
-  const trigger = page.locator('.foot [data-search-open]');
-  await expect(trigger).toBeVisible();
-  await trigger.click();
-  await expect(page.getByRole('dialog', { name: 'Поиск' })).toBeVisible();
 });
 
 test('термин находится глобальным поиском', async ({ page }, testInfo) => {

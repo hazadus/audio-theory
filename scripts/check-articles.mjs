@@ -259,29 +259,14 @@ try {
   const contentHtml = await readFile(join(contentDir, 'test-content', 'index.html'), 'utf8');
   assert.match(contentHtml, /id="rules"/);
 
+  // По одной ошибочной статье на каждую проверку, подключённую к сборке: схема, уникальность slug,
+  // якоря заголовков и содержимое. Сами правила подробно проверяют unit-тесты
+  // (articles, heading-anchors, article-content).
   const failures = [
     ['duplicate-slug', /Повторный slug «same»/],
-    ['unknown-topic', /topic/],
     ['unknown-tag', /неизвестный тег «missing-tag»/],
-    ['empty-field', /title/],
-    ['bad-reading', /readingMinutes/],
     ['duplicate-anchor', /Повторный якорь «same»/],
-    ['bad-anchor', /английского kebab-case/],
-    ['misplaced-anchor', /только в конце заголовка/],
-    ['no-sources', /нет раздела «Источники»/],
-    ['empty-sources', /в разделе «Источники» нет ссылок/],
     ['unknown-link', /неизвестную статью «missing»/],
-    ['bad-link-anchor', /несуществующий раздел «test-bad-link-anchor#nope»/],
-    ['bad-same-page', /несуществующий раздел «test-bad-same-page#nope»/],
-    ['bad-related', /related «Сама статья» ведёт на неизвестную статью «missing»/],
-    ['untyped-code', /блок кода без указания языка/],
-    ['bad-id', /id «Fig_1» не в формате английского kebab-case/],
-    ['duplicate-id', /повторный идентификатор «same»/],
-    ['figure-gap', /последовательности рисунков ожидался номер 2, указан 3/],
-    ['shared-sequence', /последовательности рисунков ожидался номер 2, указан 1/],
-    ['table-gap', /последовательности таблиц ожидался номер 1, указан 2/],
-    ['equation-gap', /последовательности формул ожидался номер 2, указан 3/],
-    ['no-number', /без номера \(number\)/],
   ];
   for (const [fixture, message] of failures) {
     const result = build(join(temporary, fixture), fixture);
@@ -330,16 +315,12 @@ try {
   const fragments = files.filter((file) => file.endsWith('.pf_fragment'));
   assert.equal(fragments.length, 4 + realArticles);
   console.log('Коллекция статей: маршруты из slug — OK');
-  console.log(
-    'Повторный slug, неизвестная группа или тег, пустые поля и readingMinutes блокируют сборку — OK',
-  );
+  console.log('Схема, уникальность slug, якоря и содержимое подключены к сборке — OK');
   console.log('Главная: пустые группы скрыты, лимит четырёх карточек и «Все N» — OK');
   console.log('Список материалов: 0, 3 и 6 статей, равные даты, пустые темы — OK');
   console.log('Теги: ссылки в статье, страницы использованных тегов, счётчики и префикс — OK');
   console.log('Layout статьи: крошки, метаданные, предварительные знания и связанные темы — OK');
   console.log('Якоря {#anchor}, оглавление H2/H3 и ссылки на разделы под префиксом — OK');
-  console.log('Повторный, неверный и неуместный якорь блокируют сборку — OK');
-  console.log('Источники, ссылки, язык листингов, идентификаторы и нумерация блоков — OK');
   console.log('Лимиты тегов, врезок и длины кода сборку не блокируют — OK');
   console.log('Файл без коммита: «Черновик» локально, ошибка в публикуемой сборке — OK');
   console.log('Служебные статьи не попадают в публичную сборку — OK');

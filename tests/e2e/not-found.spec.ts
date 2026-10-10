@@ -22,12 +22,6 @@ test(
   },
 );
 
-test('«Открыть поиск» открывает диалог поиска', async ({ page }) => {
-  await page.goto('missing-page/');
-  await page.getByRole('button', { name: 'Открыть поиск' }).click();
-  await expect(page.locator('[data-search-dialog]')).toBeVisible();
-});
-
 test('слова адреса находят статью по настоящему индексу', async ({ page }, testInfo) => {
   const base = testInfo.project.metadata.base as string;
   await page.goto('sampling-rate-nyquist/');

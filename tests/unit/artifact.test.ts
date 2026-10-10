@@ -91,4 +91,5 @@ test('несуществующая внутренняя страница бло�
   expect(build.status).not.toBe(0);
   expect(build.stdout + build.stderr).toContain('отсутствует страница или ресурс');
   expect(build.stdout + build.stderr).toContain('/audio-theory/missing/');
-});
+  // Полная сборка Astro занимает 5–10 с: стандартного лимита Vitest в 5 с не хватает.
+}, 60_000);

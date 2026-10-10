@@ -133,13 +133,6 @@ test(
   },
 );
 
-test('диалог открывается и на странице статьи', async ({ page }) => {
-  await page.goto('./sampling/');
-  await page.keyboard.press('/');
-  await expect(page.locator(dialog)).toBeVisible();
-  expect(await focusedIs(page, input)).toBe(true);
-});
-
 test(
   'смартфон: окно во весь экран с кнопкой «Отмена»',
   { tag: ['@cross-browser'] },

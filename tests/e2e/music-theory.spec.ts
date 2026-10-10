@@ -235,26 +235,21 @@ test(
 );
 
 test(
-  'размеры, темы, увеличение текста и состояния без горизонтального выхода',
+  'размеры, увеличение текста и состояния без горизонтального выхода',
   { tag: '@music-theory' },
-  async ({ page }, info) => {
+  async ({ page }) => {
     await page.goto('music-theory-intro/');
-    for (const theme of ['light', 'dark']) {
-      await page.evaluate(
-        (theme) => document.documentElement.setAttribute('data-theme', theme),
-        theme,
+    // Ширина раскладки от темы не зависит, поэтому одна тема.
+    for (const width of [320, 390, 599, 600, 1023, 1024, 1279, 1280, 1440]) {
+      await page.setViewportSize({ width, height: 1000 });
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+        width,
       );
-      for (const width of [320, 390, 599, 600, 1023, 1024, 1279, 1280, 1440]) {
-        await page.setViewportSize({ width, height: 1000 });
-        expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
-          width,
+      for (const root of await page.locator('[data-music-demo]').all()) {
+        await root.scrollIntoViewIfNeeded();
+        expect(await root.evaluate((element) => element.scrollWidth)).toBeLessThanOrEqual(
+          await root.evaluate((element) => element.clientWidth),
         );
-        for (const root of await page.locator('[data-music-demo]').all()) {
-          await root.scrollIntoViewIfNeeded();
-          expect(await root.evaluate((element) => element.scrollWidth)).toBeLessThanOrEqual(
-            await root.evaluate((element) => element.clientWidth),
-          );
-        }
       }
     }
     await page.setViewportSize({ width: 390, height: 1000 });
@@ -266,34 +261,5 @@ test(
       page.locator('#music-circle').getByRole('button', { name: 'C мажор', exact: true }),
     ).toBeVisible();
     await page.evaluate(() => (document.documentElement.style.fontSize = ''));
-    if (info.project.name === 'prefixed-webkit') {
-      await setRange(page.locator('#music-swing').getByRole('slider', { name: /Свинг/ }), '67');
-      await page
-        .locator('#music-circle')
-        .getByRole('button', { name: 'G мажор', exact: true })
-        .click();
-      for (const theme of ['light', 'dark'])
-        for (const width of [390, 1440]) {
-          await page.setViewportSize({ width, height: 1000 });
-          await page.evaluate(
-            (theme) => document.documentElement.setAttribute('data-theme', theme),
-            theme,
-          );
-          for (const id of [
-            'music-notes',
-            'music-intervals',
-            'music-swing',
-            'music-triads',
-            'music-progression',
-            'music-circle',
-            'music-arpeggio',
-            'music-rhythm',
-          ])
-            await page.locator(`#${id}`).screenshot({
-              path: `/tmp/issue30-${id}-${theme}-${width}.png`,
-              style: 'header, [data-back-to-top] { visibility: hidden; }',
-            });
-        }
-    }
   },
 );

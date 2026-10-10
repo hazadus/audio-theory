@@ -40,14 +40,7 @@ test(
           await page.locator(selector).evaluate((el) => getComputedStyle(el).fontFamily),
         ).toContain('Literata');
       }
-      // В навигации только существующие страницы: «Материалы», «Треки», «Глоссарий», «Литература» и «О проекте».
-      await expect(header.getByRole('navigation').getByRole('link')).toHaveText([
-        'Материалы',
-        'Треки',
-        'Глоссарий',
-        'Литература',
-        'О проекте',
-      ]);
+      // Состав и порядок пунктов навигации проверяет track-navigation.spec.ts.
       const footer = page.locator('footer');
       await expect(footer.getByRole('link', { name: 'GitHub' })).toHaveAttribute(
         'href',

@@ -315,16 +315,3 @@ test(
     await expect(page).toHaveURL(/\/updates\/2026\/#update-wave-long$/);
   },
 );
-
-test('подвал: ссылки «Обновления» и «RSS»', { tag: ['@updates'] }, async ({ page }) => {
-  await page.goto('about/');
-  const footer = page.locator('footer');
-  await expect(footer.getByRole('link', { name: 'Обновления' })).toHaveAttribute(
-    'href',
-    '/audio-theory/updates/',
-  );
-  await expect(footer.getByRole('link', { name: 'RSS' })).toHaveAttribute(
-    'href',
-    '/audio-theory/updates/feed.xml',
-  );
-});

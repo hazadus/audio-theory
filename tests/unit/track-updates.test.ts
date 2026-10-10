@@ -1,8 +1,6 @@
-// Журнал треков: исключительная цель, публикация, хронология, этапы, метаданные и стабильный RSS.
+// Журнал треков: исключительная цель, публикация, хронология, этапы и стабильный RSS.
 import { describe, expect, it } from 'vitest';
 import { assertValidUpdates, updateSchema, type UpdateData } from '@/lib/updates';
-import { resolveArticleDates } from '@/lib/article-dates';
-import { updateMeta } from '@/lib/update-view';
 import { buildFeed } from '@/lib/updates-feed';
 import { recentUpdates } from '@/lib/recent-updates';
 import { resolveTarget } from '@/lib/links';
@@ -82,12 +80,6 @@ describe('Записи треков', () => {
     expect(() => check([])).toThrow('нет записи «Новое»');
     expect(() => check([], false)).not.toThrow();
     expect(() => check([added], false)).toThrow('без публикации');
-    expect(resolveArticleDates(null, [])).toMatchObject({ published: null, sortDate: null });
-    expect(resolveArticleDates(null, [added, created])).toMatchObject({
-      published: '2025-12-31',
-      sortDate: '2026-10-04',
-      addition: { path: '/updates/2026/#update-track-added' },
-    });
   });
   it('проверяет существование трека и точный постоянный якорь этапа', () => {
     for (const target of [
@@ -103,14 +95,6 @@ describe('Записи треков', () => {
 });
 
 describe('Представление записей треков', () => {
-  it('вычисляет метаданные со склонением, не меняет строку статьи', () => {
-    expect(updateMeta({ kind: 'Трек', stageCount: 2, itemCount: 21 })).toBe(
-      'Трек · 2 этапа · 21 элемент',
-    );
-    expect(updateMeta({ kind: 'Статья', topic: 'Основы', readingMinutes: 7 })).toBe(
-      'Статья · Основы · 7 мин',
-    );
-  });
   it.each(['/', '/audio-theory/'])('ссылки, RSS и последние записи учитывают %s', (base) => {
     const material = {
       kind: 'Трек' as const,

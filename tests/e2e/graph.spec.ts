@@ -190,12 +190,6 @@ test.describe('общий граф', () => {
       );
     },
   );
-
-  test('подвал ведёт на граф', { tag: ['@graph'] }, async ({ page }) => {
-    await page.goto('');
-    await page.getByRole('contentinfo').getByRole('link', { name: 'Граф связей' }).click();
-    await expect(page).toHaveURL(/\/graph\/$/);
-  });
 });
 
 test.describe('без JavaScript', () => {

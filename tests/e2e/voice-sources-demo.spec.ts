@@ -156,16 +156,6 @@ test('Web Audio недоступен: графики работают, плее�
   await expect(d.locator('[data-output="note"]')).toContainText('A6');
 });
 
-test('карточка визуализации ведёт на её якорь с учётом base @voice', async ({ page }, testInfo) => {
-  const base = testInfo.project.metadata.base as string;
-  await page.goto('visualizations/');
-  const card = page.getByRole('link', { name: /Источники голоса: сумма, спектр и пик/ });
-  await expect(card).toHaveAttribute('href', `${base}synth-oscillators/#voice-sources`);
-  await expect(card.getByText('Со звуком')).toHaveCount(1);
-  await card.click();
-  await expect(demo(page)).toBeInViewport();
-});
-
 test.describe('Статичный вариант', () => {
   test.use({ javaScriptEnabled: false, viewport: { width: 320, height: 720 } });
   test('без JS доступны графики, статус и подпись, параметры отключены @voice', async ({

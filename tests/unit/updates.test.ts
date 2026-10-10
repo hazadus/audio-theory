@@ -2,7 +2,6 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { getArticleAnchors } from '@/lib/article-content';
-import { resolveTarget } from '@/lib/links';
 import {
   assertValidUpdates,
   isCalendarDate,
@@ -136,16 +135,6 @@ describe('Коллекция обновлений', () => {
         ],
       },
     ]);
-  });
-
-  it('разрешает все виды внутренних целей в корне и под префиксом', () => {
-    for (const base of ['/', '/audio-theory/']) {
-      expect(resolveTarget({ article: 'test-wave' }, base)).toBe(`${base}test-wave/`);
-      expect(resolveTarget({ article: 'test-wave', anchor: 'plot' }, base)).toBe(
-        `${base}test-wave/#plot`,
-      );
-      expect(resolveTarget({ glossary: 'test-term' }, base)).toBe(`${base}glossary/#test-term`);
-    }
   });
 
   it('учитывает високосные годы и смену календарного дня в Москве', () => {

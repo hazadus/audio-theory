@@ -83,10 +83,9 @@ try {
       /Черновик/,
     );
     console.log('Публикация обязательна; локальный трек без журнала — Черновик — OK');
+    // Схема и связи подключены к сборке; сами правила подробно проверяет tests/unit/tracks.test.ts.
     for (const [fixture, message] of [
       ['missing-article', /неизвестная статья/],
-      ['missing-heading', /несуществующий раздел/],
-      ['duplicate-item', /повторный id элемента/],
       ['empty-stage', /stages/],
     ]) {
       const result = build(fixture, '/audio-theory/', fixture);

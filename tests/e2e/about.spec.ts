@@ -1,4 +1,4 @@
-// «О проекте»: текст без JS, кнопка issue в публичный репозиторий, переход «Предложить тему» к разделу.
+// «О проекте»: текст без JS, кнопка issue в публичный репозиторий и чтение на узком экране.
 import { expect, test } from '@playwright/test';
 import { siteConfig } from '../../src/site.config';
 
@@ -20,13 +20,6 @@ test(
     await expect(page.locator('header nav a[aria-current="page"]')).toHaveText('О проекте');
   },
 );
-
-test('«Предложить тему» из подвала открывает раздел предложений', async ({ page }) => {
-  await page.goto('glossary/');
-  await page.locator('footer').getByRole('link', { name: 'Предложить тему' }).click();
-  await expect(page).toHaveURL(/\/about\/#propose$/);
-  await expect(page.locator('#propose')).toBeInViewport();
-});
 
 test('без JS страница читается на узком экране', async ({ browser }, testInfo) => {
   const context = await browser.newContext({

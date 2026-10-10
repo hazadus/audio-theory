@@ -26,13 +26,6 @@ test('микширование: перегрузка, фаза, независи
   await expect(demo.locator('[data-chart] svg')).toHaveAttribute('role', 'img');
 });
 
-test('карточка ведёт к микшированию под фактическим base @mixing', async ({ page }) => {
-  await page.goto('visualizations/');
-  await page.getByRole('link', { name: /Два источника: усиление, фаза и сумма/ }).click();
-  await expect(page).toHaveURL(/\/mixing\/#mixing-demo$/);
-  await expect(page.locator('#mixing-demo')).toBeInViewport();
-});
-
 test('ошибка обновления возвращает исходный рисунок и отключает управление @mixing', async ({
   page,
 }) => {

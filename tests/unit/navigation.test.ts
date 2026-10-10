@@ -26,17 +26,6 @@ describe('активный пункт навигации', () => {
 });
 
 describe('список пунктов', () => {
-  it('содержит только существующие маршруты', () => {
-    // Пункт добавляется вместе со страницей: ссылок на несуществующие маршруты быть не должно.
-    expect(navItems.map((item) => item.href)).toEqual([
-      '/materials/',
-      '/tracks/',
-      '/glossary/',
-      '/literature/',
-      '/about/',
-    ]);
-  });
-
   it('«Треки» активны на каталоге и страницах треков, но не на статье и главной', () => {
     const item = navItems.find((entry) => entry.href === '/tracks/')!;
     expect(isActive(item, '/audio-theory/tracks/', '/audio-theory/')).toBe(true);

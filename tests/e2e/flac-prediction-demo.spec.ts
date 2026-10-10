@@ -1,13 +1,6 @@
 // Предсказание FLAC: выбор сигнала и порядка, согласованность статуса, расчёта и таблицы, сброс и статичный рисунок без JS.
 import { expect, test } from '@playwright/test';
 
-test('карточка визуализации ведёт к предсказанию FLAC с фактическим base', async ({ page }) => {
-  await page.goto('visualizations/');
-  await page.getByRole('link', { name: /Предсказание FLAC: остаток и коды Райса/ }).click();
-  await expect(page).toHaveURL(/\/audio-compression\/#flac-prediction$/);
-  await expect(page.locator('#flac-prediction')).toBeInViewport();
-});
-
 test('сигнал и порядок меняют остаток и размер, сброс возвращает тон 1 кГц и порядок 2', async ({
   page,
 }) => {

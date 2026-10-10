@@ -195,16 +195,17 @@ tests/                               # Unit-тесты и браузерные �
   e2e/search-results.spec.ts         # Состояния выдачи, задержка, ошибка, устаревшие ответы
   e2e/search.spec.ts                 # Настоящий API Pagefind в корне и под префиксом
   fixtures/artifact/                # Контрольная сборка с ошибочной внутренней ссылкой
-  unit/margin-note.test.ts           # Количество, поля и общий контракт целей заметки
+  unit/margin-note.test.ts           # Количество и поля заметки
   e2e/margin-notes.spec.ts            # Сетка, печать, увеличение текста, переходы без JS
   unit/articles.test.ts              # Схема статьи, slug и группы
-  unit/glossary.test.ts              # Схема глоссария и разрешение целей
+  unit/glossary.test.ts              # Схема глоссария и проверка целей
+  unit/links.test.ts                 # Адрес цели ссылки в корне и под префиксом
   unit/glossary-list.test.ts         # Порядок, группы, указатель, подписи ссылок
   unit/tags.test.ts                  # Словарь, подсчёт, группы, совместные теги, порядок в query
   unit/graph.test.ts                 # Ссылки из текста, связи, соседи, теги и раскладки графа
   unit/graph-view.test.ts            # Подписи, SVG блока «Связи», масштаб, поиск и ?focus=
   e2e/not-found.spec.ts              # 404: путь текстом, подсказки, без индекса и без JS
-  e2e/about.spec.ts                  # О проекте: текст, кнопка issue, переход из подвала
+  e2e/about.spec.ts                  # О проекте: текст, кнопка issue, узкий экран без JS
   e2e/glossary.spec.ts               # Глоссарий: список, цели, подсказки, поиск, указатель
   unit/git-date.test.ts              # Git-дата во временном репозитории
   unit/headings.test.ts              # Оглавление и повтор якорей

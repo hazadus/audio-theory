@@ -1,13 +1,6 @@
 // Ввод числа и байтов PCM, ошибки без потери результата, клавиатура, сброс и статичный разбор без JS.
 import { expect, test } from '@playwright/test';
 
-test('карточка визуализации ведёт к разбору PCM с фактическим base', async ({ page }) => {
-  await page.goto('visualizations/');
-  await page.getByRole('link', { name: /24-битный отсчёт: байты, знак и float/ }).click();
-  await expect(page).toHaveURL(/\/integer-pcm\/#pcm-sample$/);
-  await expect(page.locator('#pcm-sample')).toBeInViewport();
-});
-
 test('два ввода синхронизируют разбор; ошибка сохраняет результат, сброс возвращает всё', async ({
   page,
 }) => {

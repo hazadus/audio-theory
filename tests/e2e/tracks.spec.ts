@@ -60,21 +60,19 @@ test('якорь этапа и неизвестный трек', { tag: ['@track
   expect(response?.status()).toBe(404);
 });
 
-for (const colorScheme of ['light', 'dark'] as const) {
-  test(`без горизонтальной прокрутки, ${colorScheme}`, { tag: ['@tracks'] }, async ({ page }) => {
-    await page.emulateMedia({ colorScheme });
-    for (const width of widths) {
-      await page.setViewportSize({ width, height: 900 });
-      for (const path of ['tracks/', 'tracks/programmer/']) {
-        await page.goto(path);
-        const overflow = await page.evaluate(
-          () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-        );
-        expect(overflow, `${path} при ${width}px`).toBeLessThanOrEqual(0);
-      }
+// Ширина раскладки от темы не зависит, поэтому одна тема.
+test('без горизонтальной прокрутки', { tag: ['@tracks'] }, async ({ page }) => {
+  for (const width of widths) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const path of ['tracks/', 'tracks/programmer/']) {
+      await page.goto(path);
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow, `${path} при ${width}px`).toBeLessThanOrEqual(0);
     }
-  });
-}
+  }
+});
 
 test.describe('без JS', () => {
   test.use({ javaScriptEnabled: false });

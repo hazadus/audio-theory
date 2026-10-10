@@ -200,25 +200,23 @@ test('целевой раздел выделяется фоном якоря', {
   expect(plain).toBe('rgba(0, 0, 0, 0)');
 });
 
-for (const colorScheme of ['light', 'dark'] as const) {
-  test(
-    `главная и статья с блоком без горизонтальной прокрутки, ${colorScheme}`,
-    { tag: ['@tracks'] },
-    async ({ page }) => {
-      await page.emulateMedia({ colorScheme });
-      for (const width of widths) {
-        await page.setViewportSize({ width, height: 900 });
-        for (const path of ['', context('frequency', '#frequency')]) {
-          await page.goto(path);
-          const overflow = await page.evaluate(
-            () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-          );
-          expect(overflow, `${path} при ${width}px`).toBeLessThanOrEqual(0);
-        }
+// Ширина раскладки от темы не зависит, поэтому одна тема.
+test(
+  'главная и статья с блоком без горизонтальной прокрутки',
+  { tag: ['@tracks'] },
+  async ({ page }) => {
+    for (const width of widths) {
+      await page.setViewportSize({ width, height: 900 });
+      for (const path of ['', context('frequency', '#frequency')]) {
+        await page.goto(path);
+        const overflow = await page.evaluate(
+          () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        );
+        expect(overflow, `${path} при ${width}px`).toBeLessThanOrEqual(0);
       }
-    },
-  );
-}
+    }
+  },
+);
 
 test.describe('без JS', () => {
   test.use({ javaScriptEnabled: false });

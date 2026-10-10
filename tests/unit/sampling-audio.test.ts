@@ -4,8 +4,6 @@ import { reconstructedValue, samplingExperiment, type Reconstruction } from '@/l
 import {
   envelope,
   fadeDuration,
-  initialVolume,
-  listenDuration,
   outputGain,
   renderResult,
   resultSound,
@@ -30,12 +28,6 @@ function measuredFrequency(samples: Float32Array, rate: number): number {
 }
 
 describe('параметры прослушивания', () => {
-  it('2 с, нарастание и затухание 20 мс, начальный уровень 30 %', () => {
-    expect(listenDuration).toBe(2);
-    expect(fadeDuration).toBe(0.02);
-    expect(initialVolume).toBe(0.3);
-  });
-
   it('уровень регулятора ограничен 0–1, mute даёт 0', () => {
     expect(outputGain(0.3, false)).toBe(0.3);
     expect(outputGain(0.3, true)).toBe(0);

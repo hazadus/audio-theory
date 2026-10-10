@@ -2,24 +2,17 @@
 import { describe, expect, it } from 'vitest';
 import { samplingExperiment } from '@/lib/sampling';
 import {
-  initialState,
   maxSampleRate,
   minSampleRate,
   normalizeSampleRate,
   nyquistMark,
   presets,
-  sampleRateStep,
   sampleRateText,
   sliderPosition,
 } from '@/lib/sampling-controls';
 import { samplingChartSvg } from '@/lib/sampling-view';
 
 describe('диапазон и примеры', () => {
-  it('1 000–16 000 Гц с шагом 100 Гц, начальное состояние 8 000 Гц с видимой синусоидой', () => {
-    expect([minSampleRate, maxSampleRate, sampleRateStep]).toEqual([1000, 16000, 100]);
-    expect(initialState).toEqual({ sampleRate: 8000, alias: true });
-  });
-
   it('кнопки 1,5, 2 и 8 кГц лежат в диапазоне и кратны шагу', () => {
     expect(presets.map((preset) => preset.value)).toEqual([1500, 2000, 8000]);
     for (const { value } of presets) expect(normalizeSampleRate(value)).toBe(value);

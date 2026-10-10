@@ -31,16 +31,6 @@ test(
           expect(
             await page.evaluate(() => document.documentElement.scrollWidth),
           ).toBeLessThanOrEqual(width);
-          const sizes = await page.locator('#unit-circle svg text').evaluateAll((elements) =>
-            elements.map((element) => {
-              const text = element as SVGTextElement;
-              return parseFloat(getComputedStyle(text).fontSize) * text.getScreenCTM()!.a;
-            }),
-          );
-          expect(sizes.length).toBeGreaterThan(0);
-          for (const size of sizes) {
-            expect(size, `${colorScheme}, ${width} px`).toBeGreaterThanOrEqual(12);
-          }
         }
 
         const question = page.locator('.self-check summary').filter({

@@ -1,8 +1,8 @@
-// Проверяет статичные рисунки психоакустики без JS: подписи читаются и не выходят за рисунок.
+// Проверяет статичные рисунки психоакустики без JS: подписи не выходят за рисунок (кегль — в figure-font-size.spec.ts).
 // Без метки @ci: обязательный набор CI ограничен, сценарий выполняется в just test-e2e-full.
 import { expect, test } from '@playwright/test';
 
-test('психоакустика: рисунки доступны без JS, подписи читаются в обеих темах', async ({
+test('психоакустика: рисунки доступны без JS, подписи не выходят за рисунок', async ({
   browser,
   browserName,
 }, testInfo) => {
@@ -33,7 +33,6 @@ test('психоакустика: рисунки доступны без JS, п�
             const viewBox = text.ownerSVGElement!.viewBox.baseVal;
             return {
               label: text.textContent,
-              size: parseFloat(getComputedStyle(text).fontSize) * text.getScreenCTM()!.a,
               left: box.x,
               right: box.x + box.width,
               top: box.y,
@@ -46,8 +45,6 @@ test('психоакустика: рисунки доступны без JS, п�
         expect(labels.length).toBeGreaterThan(0);
         for (const label of labels) {
           const description = `${colorScheme}, ${width} px: ${label.label}`;
-          expect(label.size, description).toBeGreaterThanOrEqual(12);
-          expect(label.size, description).toBeLessThanOrEqual(16);
           expect(label.left, description).toBeGreaterThanOrEqual(0);
           expect(label.right, description).toBeLessThanOrEqual(label.width);
           expect(label.top, description).toBeGreaterThanOrEqual(0);

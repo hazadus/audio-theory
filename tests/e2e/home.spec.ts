@@ -1,6 +1,8 @@
 // Проверяет начальную страницу, навигацию, ресурсы и чтение без JavaScript в корне и под префиксом.
 import { expect, test } from '@playwright/test';
 import { siteConfig } from '@/site.config';
+import { visualizations } from '@/data/visualizations';
+import { visualizationCardLimit } from '@/lib/visualizations';
 
 test(
   'начальная страница, навигация и локальные ресурсы',
@@ -361,25 +363,13 @@ for (const [name, viewport] of [
   );
 }
 
-test('кнопка поиска на главной открывает диалог', async ({ page }) => {
-  await page.goto('./');
-  const button = page.locator('main [data-search-open]');
-  await expect(button).toBeVisible();
-  await button.click();
-  await expect(page.getByRole('dialog')).toBeVisible();
-});
-
 test(
   'главная: карточки визуализаций ведут на якоря, звуковая метка, раскладка и «Все N»',
   { tag: ['@placement'] },
   async ({ browser }, testInfo) => {
     const base = testInfo.project.metadata.base as string;
-    const expected = [
-      { id: 'tone-demo', slug: 'sound-wave', sound: true },
-      { id: 'phase-demo', slug: 'sound-wave', sound: false },
-      { id: 'sampling-demo', slug: 'sampling', sound: true },
-      { id: 'compressor-demo', slug: 'compressor', sound: true },
-    ];
+    // Ожидания берутся из реестра, а не из перечня в тесте: новая визуализация его не ломает.
+    const expected = visualizations.slice(0, visualizationCardLimit);
     for (const viewport of [
       { width: 1440, height: 900 },
       { width: 599, height: 800 },
@@ -414,40 +404,24 @@ test(
           expect(style.overflowX).toBe('visible');
         }
         if (viewport.width === 1440) {
-          // Визуализаций больше четырёх: «Все N» ведёт на страницу со всеми карточками.
-          const all = page.getByRole('link', { name: /^Все 11/ });
+          // Визуализаций больше лимита: «Все N» ведёт на страницу со всеми карточками.
+          const all = page.getByRole('link', { name: new RegExp(`^Все ${visualizations.length}`) });
           await expect(all).toHaveAttribute('href', `${base}visualizations/`);
           const tops = await cards.evaluateAll((els) =>
             els.map((el) => el.getBoundingClientRect().top),
           );
           expect(new Set(tops.map(Math.round)).size).toBe(1);
-          await cards.nth(2).click();
-          await expect(page).toHaveURL(`${base}sampling/#sampling-demo`);
-          await expect(page.locator('#sampling-demo')).toBeVisible();
+          await cards.first().click();
+          await expect(page).toHaveURL(`${base}${expected[0].slug}/#${expected[0].id}`);
+          await expect(page.locator(`#${expected[0].id}`)).toBeVisible();
           await page.goto('visualizations/');
           const allCards = page.locator('a.viz-card');
-          await expect(allCards).toHaveCount(11);
-          await expect(allCards.nth(4)).toHaveAttribute('href', `${base}lfo/#lfo-waveforms`);
-          await expect(allCards.nth(4).getByText('Со звуком')).toHaveCount(0);
-          await allCards.nth(4).click();
-          await expect(page.locator('#lfo-waveforms')).toBeVisible();
-          await page.goBack();
-          await expect(allCards.nth(5)).toHaveAttribute('href', `${base}wav-file/#wav-dump`);
-          await expect(allCards.nth(6)).toHaveAttribute('href', `${base}integer-pcm/#pcm-sample`);
-          await expect(allCards.nth(7)).toHaveAttribute(
-            'href',
-            `${base}audio-compression/#flac-prediction`,
-          );
-          await expect(allCards.nth(5).getByText('Со звуком')).toHaveCount(0);
-          await expect(allCards.nth(8)).toHaveAttribute('href', `${base}mixing/#mixing-demo`);
-          await expect(allCards.nth(8).getByText('Со звуком')).toHaveCount(0);
-          await expect(allCards.nth(9)).toHaveAttribute('href', `${base}noise/#noise-demo`);
-          await expect(allCards.nth(9).getByText('Со звуком')).toHaveCount(1);
-          await expect(allCards.nth(10)).toHaveAttribute(
-            'href',
-            `${base}synth-oscillators/#voice-sources`,
-          );
-          await expect(allCards.nth(10).getByText('Со звуком')).toHaveCount(1);
+          await expect(allCards).toHaveCount(visualizations.length);
+          for (const [index, item] of visualizations.entries()) {
+            const card = allCards.nth(index);
+            await expect(card).toHaveAttribute('href', `${base}${item.slug}/#${item.id}`);
+            await expect(card.getByText('Со звуком')).toHaveCount(item.sound ? 1 : 0);
+          }
         }
       } finally {
         await context.close();

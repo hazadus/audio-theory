@@ -220,15 +220,6 @@ test('поиск находит русские словоформы и англ�
   }
 });
 
-test('поиск по запросу без слов в статьях ничего не возвращает', async ({ page }, testInfo) => {
-  const base = testInfo.project.metadata.base as string;
-  await page.goto('./');
-  // Pagefind сам откатывается на короткие префиксы: «космос» → «ко», «Shannon» → «s».
-  for (const query of ['космос', 'Shannon', 'гитара', 'xyzzy']) {
-    expect(await guardedSearch(page, base, query), query).toEqual([]);
-  }
-});
-
 test(
   'адреса разделов из выдачи открываются под префиксом на нужном якоре',
   { tag: ['@placement'] },

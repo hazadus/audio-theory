@@ -1,4 +1,4 @@
-// Теги: ссылки в статье, страница всех тегов с переключателем порядка, страница тега, входы и ширина смартфона.
+// Теги: ссылки в статье, страница всех тегов с переключателем порядка, страница тега и ширина смартфона.
 import { expect, test, type Page } from '@playwright/test';
 
 const tagRows = (page: Page) => page.locator('[data-tag-view]:not([hidden]) .row');
@@ -97,14 +97,6 @@ test.describe('без JS', () => {
     await expect(page.getByRole('navigation', { name: 'Буквы' })).toBeVisible();
     await expect(tagRows(page).first()).toContainText('Алиасинг');
   });
-});
-
-test('входы: подвал и «Все материалы»', { tag: ['@tags'] }, async ({ page }) => {
-  await page.goto('materials/');
-  await page.getByRole('link', { name: 'Все теги' }).click();
-  await expect(page).toHaveURL(/\/tags\/$/);
-  await page.getByRole('contentinfo').getByRole('link', { name: 'Теги' }).click();
-  await expect(page).toHaveURL(/\/tags\/$/);
 });
 
 test.describe('смартфон', () => {

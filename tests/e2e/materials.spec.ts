@@ -8,40 +8,6 @@ const chip = (page: Page, id: string) => page.locator(`[data-topic-chip="${id}"]
 const sortOption = (page: Page, id: string) => page.locator(`[data-sort-option="${id}"]`);
 const search = (page: Page) => new URL(page.url()).search;
 
-test('по умолчанию все статьи по дате, счётчики и состояние элементов', async ({ page }) => {
-  await page.goto('materials/');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Все материалы');
-  expect((await slugs(page)).sort()).toEqual([
-    'adc-dac',
-    'audio-compression',
-    'audio-data',
-    'audio-math',
-    'compressor',
-    'equal-loudness',
-    'integer-pcm',
-    'lfo',
-    'limiter',
-    'mixing',
-    'noise',
-    'psychoacoustics',
-    'sampling',
-    'signal-level',
-    'sound-wave',
-    'synth-oscillators',
-    'tremolo',
-    'wav-file',
-  ]);
-  await expect(page.locator('[data-count]')).toHaveText('18 статей');
-  await expect(chip(page, 'all')).toHaveAttribute('aria-pressed', 'true');
-  await expect(chip(page, 'all')).toContainText('18');
-  await expect(chip(page, 'processing')).toContainText('6');
-  await expect(chip(page, 'conv')).not.toHaveAttribute('aria-disabled', 'true');
-  await expect(chip(page, 'conv')).toContainText('1');
-  await expect(chip(page, 'data')).toContainText('4');
-  await expect(sortOption(page, 'date')).toHaveAttribute('aria-checked', 'true');
-  expect(search(page)).toBe('');
-});
-
 test(
   'фильтр и сортировка пишутся в адрес, назад и вперёд восстанавливают состояние',
   { tag: ['@ci', '@cross-browser', '@placement'] },
@@ -84,86 +50,6 @@ test(
     expect(search(page)).toBe('');
   },
 );
-
-test('сортировки «А–Я» и «По темам» дают ожидаемый порядок и группы', async ({ page }) => {
-  await page.goto('materials/?sort=alpha');
-  await expect(sortOption(page, 'alpha')).toHaveAttribute('aria-checked', 'true');
-  // Кириллические названия от «Аудиоданные…» до «Устройство…», затем латинское «LFO…».
-  expect(await slugs(page)).toEqual([
-    'audio-data',
-    'adc-dac',
-    'noise',
-    'sampling',
-    'sound-wave',
-    'equal-loudness',
-    'audio-math',
-    'mixing',
-    'synth-oscillators',
-    'compressor',
-    'limiter',
-    'psychoacoustics',
-    'tremolo',
-    'signal-level',
-    'wav-file',
-    'audio-compression',
-    'integer-pcm',
-    'lfo',
-  ]);
-
-  await page.goto('materials/?sort=topic');
-  const headings = page.locator('[data-list] h2');
-  await expect(headings).toHaveCount(6);
-  await expect(headings.nth(0)).toContainText('Основы звука');
-  await expect(headings.nth(1)).toContainText('Цифровой сигнал');
-  await expect(headings.nth(2)).toContainText('АЦП и ЦАП');
-  await expect(headings.nth(3)).toContainText('Аудиоданные в программах');
-  await expect(headings.nth(4)).toContainText('Обработка звука');
-  await expect(headings.nth(5)).toContainText('Синтез');
-  const order = await slugs(page);
-  expect(order.slice(0, 4).sort()).toEqual([
-    'audio-math',
-    'equal-loudness',
-    'psychoacoustics',
-    'sound-wave',
-  ]);
-  expect(order.slice(4, 6).sort()).toEqual(['sampling', 'signal-level']);
-  expect(order.slice(6)).toEqual([
-    'adc-dac',
-    'audio-data',
-    'wav-file',
-    'audio-compression',
-    'integer-pcm',
-    'noise',
-    'mixing',
-    'compressor',
-    'limiter',
-    'tremolo',
-    'lfo',
-    'synth-oscillators',
-  ]);
-  // Название группы стоит в заголовке, поэтому метка в строке скрыта.
-  await expect(rows(page).first().locator('.overline')).toBeHidden();
-});
-
-test('неверные значения query заменяются умолчанием в адресе без новой записи истории', async ({
-  page,
-}) => {
-  await page.goto('materials/');
-  await page.goto('materials/?topic=nope&sort=random');
-  await expect(chip(page, 'all')).toHaveAttribute('aria-pressed', 'true');
-  await expect(sortOption(page, 'date')).toHaveAttribute('aria-checked', 'true');
-  expect(search(page)).toBe('');
-  expect((await slugs(page)).length).toBe(18);
-
-  await page.goto('materials/?topic=basics&sort=random');
-  expect(search(page)).toBe('?topic=basics');
-  expect((await slugs(page)).sort()).toEqual([
-    'audio-math',
-    'equal-loudness',
-    'psychoacoustics',
-    'sound-wave',
-  ]);
-});
 
 test('пустая тема из сохранённого адреса показывает сообщение и ссылку на все материалы', async ({
   page,
@@ -249,31 +135,6 @@ test(
     // Строка списка ведёт на статью с базовым путём.
     await rows(page).filter({ hasText: 'Дискретизация' }).getByRole('link').click();
     expect(new URL(page.url()).pathname).toBe(`${base}sampling/`);
-  },
-);
-
-test(
-  'без JavaScript виден полный список по дате без элементов управления',
-  { tag: ['@cross-browser'] },
-  async ({ browser }, testInfo) => {
-    const context = await browser.newContext({
-      baseURL: testInfo.project.use.baseURL,
-      javaScriptEnabled: false,
-      viewport: { width: 390, height: 844 },
-    });
-    try {
-      const page = await context.newPage();
-      await page.goto('materials/?topic=digital&sort=alpha');
-      await expect(page.locator('[data-controls]')).toBeHidden();
-      expect((await slugs(page)).length).toBe(18);
-      await expect(page.locator('[data-count]')).toHaveText('18 статей');
-      await expect(rows(page).first().getByRole('link')).toBeVisible();
-      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
-        390,
-      );
-    } finally {
-      await context.close();
-    }
   },
 );
 

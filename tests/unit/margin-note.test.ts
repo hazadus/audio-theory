@@ -1,7 +1,6 @@
-// Проверка объёма и полей заметок, совместимости внутренних и внешних целей ссылок.
+// Проверка объёма и полей заметок «Подробнее».
 import { describe, expect, it } from 'vitest';
 import { marginNoteItems } from '@/lib/margin-note';
-import { resolveTarget } from '@/lib/links';
 
 const item = {
   label: 'Дискретизация → Период',
@@ -28,19 +27,6 @@ describe('Заметка «Подробнее»', () => {
       { ...item, target: { article: 'sampling', anchor: ' ' } },
     ]) {
       expect(marginNoteItems.safeParse([invalid]).success).toBe(false);
-    }
-  });
-
-  it('использует общий контракт адресов в корне и под префиксом', () => {
-    const [section, article, external] = marginNoteItems.parse([
-      item,
-      { ...item, target: { article: 'audio-math' } },
-      { ...item, target: { url: 'https://example.org/audio' } },
-    ]);
-    for (const base of ['/', '/audio-theory/']) {
-      expect(resolveTarget(section!.target, base)).toBe(`${base}sampling/#sampling-period`);
-      expect(resolveTarget(article!.target, base)).toBe(`${base}audio-math/`);
-      expect(resolveTarget(external!.target, base)).toBe('https://example.org/audio');
     }
   });
 });

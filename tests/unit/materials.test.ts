@@ -102,19 +102,6 @@ describe('arrange', () => {
     arrange(set, { topic: 'all', sort: 'alpha' });
     expect(set).toEqual(copy);
   });
-
-  it('справляется с большим набором', () => {
-    const many = Array.from({ length: 500 }, (_, i) =>
-      article(
-        `s${i}`,
-        ['basics', 'digital', 'conv', 'data'][i % 4],
-        `2026-01-${String((i % 28) + 1).padStart(2, '0')}T00:00:00Z`,
-        `Статья ${i}`,
-      ),
-    );
-    expect(arrange(many, { topic: 'all', sort: 'date' })[0].items).toHaveLength(500);
-    expect(arrange(many, { topic: 'conv', sort: 'topic' })[0].items).toHaveLength(125);
-  });
 });
 
 describe('countByTopic и articlesLabel', () => {

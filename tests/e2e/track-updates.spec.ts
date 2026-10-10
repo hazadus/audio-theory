@@ -64,22 +64,16 @@ test(
 );
 
 test(
-  'обе темы и узкие экраны, ссылки без JS',
+  'узкие экраны без прокрутки вбок, ссылки без JS',
   { tag: ['@track-updates'] },
-  async ({ page, browser, baseURL }, info) => {
-    for (const theme of ['light', 'dark']) {
-      for (const width of [320, 390, 1440]) {
-        await page.setViewportSize({ width, height: 900 });
-        await page.goto('updates/');
-        await page.evaluate(
-          (value) => document.documentElement.setAttribute('data-theme', value),
-          theme,
-        );
-        expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(
-          false,
-        );
-        await page.screenshot({ path: info.outputPath(`${theme}-${width}.png`), fullPage: true });
-      }
+  async ({ page, browser, baseURL }) => {
+    // Ширина раскладки от темы не зависит, поэтому одна тема.
+    for (const width of [320, 390, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto('updates/');
+      expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(
+        false,
+      );
     }
     const context = await browser.newContext({ javaScriptEnabled: false, baseURL });
     const noJs = await context.newPage();

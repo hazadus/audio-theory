@@ -245,25 +245,20 @@ test('без JS исходные опыты читаются на 320 px', { tag
 });
 
 test(
-  'размеры, темы и увеличение текста без горизонтального выхода',
+  'размеры и увеличение текста без горизонтального выхода',
   { tag: '@daw' },
-  async ({ page }, info) => {
+  async ({ page }) => {
     await page.goto('daw-intro/');
-    for (const theme of ['light', 'dark']) {
-      await page.evaluate(
-        (theme) => document.documentElement.setAttribute('data-theme', theme),
-        theme,
+    // Ширина раскладки от темы не зависит, поэтому одна тема.
+    for (const width of [320, 390, 599, 600, 1023, 1024, 1279, 1280, 1440]) {
+      await page.setViewportSize({ width, height: 1000 });
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+        width,
       );
-      for (const width of [320, 390, 599, 600, 1023, 1024, 1279, 1280, 1440]) {
-        await page.setViewportSize({ width, height: 1000 });
-        expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
-          width,
+      for (const root of await page.locator('[data-daw-demo]').all())
+        expect(await root.evaluate((element) => element.scrollWidth)).toBeLessThanOrEqual(
+          await root.evaluate((element) => element.clientWidth),
         );
-        for (const root of await page.locator('[data-daw-demo]').all())
-          expect(await root.evaluate((element) => element.scrollWidth)).toBeLessThanOrEqual(
-            await root.evaluate((element) => element.clientWidth),
-          );
-      }
     }
     await page.setViewportSize({ width: 390, height: 1000 });
     await page.evaluate(() => (document.documentElement.style.fontSize = '200%'));
@@ -271,19 +266,5 @@ test(
       390,
     );
     await page.evaluate(() => (document.documentElement.style.fontSize = ''));
-    if (process.env.DAW_SCREENSHOTS && info.project.name === 'prefixed-webkit')
-      for (const theme of ['light', 'dark'])
-        for (const width of [390, 1440]) {
-          await page.setViewportSize({ width, height: 1000 });
-          await page.evaluate(
-            (theme) => document.documentElement.setAttribute('data-theme', theme),
-            theme,
-          );
-          for (const id of ['daw-project', 'daw-piano-roll', 'daw-clips', 'daw-signal-chain'])
-            await page.locator(`#${id}`).screenshot({
-              path: `${process.env.DAW_SCREENSHOTS}/${id}-${theme}-${width}.png`,
-              style: 'header, [data-back-to-top] { visibility: hidden; }',
-            });
-        }
   },
 );

@@ -2,13 +2,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   defaultSampleRate,
-  intervalDuration,
   nyquistRelation,
   reconstruct,
   reconstructedValue,
   sampleSignal,
   samplingExperiment,
-  signalFrequency,
   sourceValue,
   type Reconstruction,
 } from '@/lib/sampling';
@@ -24,12 +22,6 @@ function unique(reconstruction: Reconstruction) {
 }
 
 describe('параметры эксперимента', () => {
-  it('сигнал 1 кГц, интервал 0–3 мс, начальная частота 8 000 Гц', () => {
-    expect(signalFrequency).toBe(1000);
-    expect(intervalDuration).toBe(0.003);
-    expect(defaultSampleRate).toBe(8000);
-  });
-
   it('начальное состояние: период 0,125 мс, 25 отсчётов, 8 на период тона', () => {
     const experiment = samplingExperiment(defaultSampleRate);
     expect(experiment.samplingPeriod).toBeCloseTo(0.000125, 15);

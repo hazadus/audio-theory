@@ -94,20 +94,9 @@ test('seed, повторение фрагмента, неверный ввод �
   expect(await chart.innerHTML()).toBe(original);
   await demo.getByText('Мощность октав числами', { exact: true }).click();
   await expect(demo.locator('tbody tr')).toHaveCount(7);
+  // Кегль подписей проверяет figure-font-size.spec.ts.
   for (const width of [320, 390, 1440]) {
     await page.setViewportSize({ width, height: 900 });
-    await expect
-      .poll(async () =>
-        page.locator('#noise-demo svg text').evaluateAll((elements) =>
-          Math.min(
-            ...elements.map((element) => {
-              const text = element as SVGTextElement;
-              return parseFloat(getComputedStyle(text).fontSize) * text.getScreenCTM()!.a;
-            }),
-          ),
-        ),
-      )
-      .toBeGreaterThanOrEqual(12);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
@@ -220,15 +209,8 @@ test('сброс отменяет ожидающий запуск Web Audio @noi
   expect((await audioLog(page)).starts).toBe(0);
 });
 
-test('карточка и навигация трека используют фактический base @noise', async ({
-  page,
-}, testInfo) => {
+test('навигация трека использует фактический base @noise', async ({ page }, testInfo) => {
   const base = testInfo.project.metadata.base as string;
-  await page.goto('visualizations/');
-  const card = page.getByRole('link', { name: /Белый и розовый шум: спектр и звучание/ });
-  await expect(card).toHaveAttribute('href', `${base}noise/#noise-demo`);
-  await card.click();
-  await expect(page.locator('#noise-demo')).toBeInViewport();
   await page.goto('noise/?track=programmer&item=noise');
   await expect(page.getByRole('link', { name: /Тремоло/ }).first()).toBeVisible();
   await page.goto('tracks/programmer/');
