@@ -41,7 +41,13 @@ import TremoloPlot from '@/components/TremoloPlot.astro';
 
 </MarginNote>
 
+<MarginNote items={[
+  { label: 'Огибающая ADSR → VCA', description: 'То же умножение, но усиление задаёт огибающая ноты, а не периодический LFO.', target: { article: 'adsr', anchor: 'vca' } },
+]}>
+
 Входной <Term id="sample" firstMention>отсчёт</Term> $x[n]$ умножается на текущее усиление: $y[n] = g[n]x[n]$. Например, при $x[n] = -0{,}8$ и $g[n] = 0{,}5$ получаем $y[n] = -0{,}4$. При неотрицательном усилении знак отсчёта сохраняется.
+
+</MarginNote>
 
 <MarginNote items={[
   { label: 'Математика для аудио → Синусоида во времени', description: 'Как частота, время и начальная фаза задают колебание.', target: { article: 'audio-math', anchor: 'sinusoid' } },

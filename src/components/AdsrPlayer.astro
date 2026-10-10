@@ -1,0 +1,61 @@
+---
+// Плеер одной ноты для визуализаций статьи /adsr/: предупреждение о громкости, запуск и остановка,
+// mute и громкость 30 %. Поведение подключает `adsr-controller`; до готовности элементы неактивны
+// вместе с полем параметров.
+import Icon from '@/components/Icon.astro';
+import { initialVolume } from '@/lib/sampling-audio';
+import { volumeStep, volumeText } from '@/lib/sampling-player';
+
+interface Props {
+  /** Доступное имя группы плеера. */
+  label: string;
+}
+
+const { label } = Astro.props;
+---
+
+<div class="adsr-demo-audio">
+  <p class="adsr-demo-warning" role="note">
+    <Icon name="volume-2" size={18} />
+    <span>
+      <slot />
+    </span>
+  </p>
+  <div class="adsr-demo-player" role="group" aria-label={label} data-player-group data-mode="ready">
+    <button type="button" class="adsr-demo-play" aria-label="Воспроизвести" data-play>
+      <span class="adsr-demo-play-icon start">
+        <Icon name="play" size={18} />
+      </span>
+      <span class="adsr-demo-play-icon stop">
+        <Icon name="square" size={16} />
+      </span>
+    </button>
+    <div class="adsr-demo-volume">
+      <button type="button" class="adsr-demo-mute" aria-label="Выключить звук" data-mute>
+        <span class="adsr-demo-mute-icon on">
+          <Icon name="volume-2" size={18} />
+        </span>
+        <span class="adsr-demo-mute-icon off">
+          <Icon name="volume-x" size={18} />
+        </span>
+      </button>
+      <input
+        class="adsr-demo-range compact"
+        type="range"
+        min="0"
+        max="100"
+        step={volumeStep}
+        value={initialVolume * 100}
+        aria-label="Громкость"
+        aria-valuetext={volumeText(initialVolume * 100)}
+        data-volume
+      />
+      <span class="adsr-demo-volume-text" data-volume-text>
+        {volumeText(initialVolume * 100)}
+      </span>
+    </div>
+  </div>
+  <p class="adsr-demo-player-state" role="status" data-player-state>
+    Остановлен
+  </p>
+</div>

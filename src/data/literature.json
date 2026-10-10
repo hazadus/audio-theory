@@ -75,7 +75,8 @@
     "ronan": "Ronan D.",
     "serinus": "Serinus J. V.",
     "vickers": "Vickers E.",
-    "walther-hansen": "Walther-Hansen M."
+    "walther-hansen": "Walther-Hansen M.",
+    "redmon": "Redmon N."
   },
   "editions": [
     {
@@ -550,6 +551,14 @@
       "title": "C++ Core Guidelines",
       "publication": "Standard C++ Foundation.",
       "url": "https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines"
+    },
+    {
+      "id": "redmon-2013",
+      "type": "web",
+      "authors": ["redmon"],
+      "title": "Envelope generators — ADSR code",
+      "publication": "EarLevel Engineering, 2013.",
+      "url": "https://www.earlevel.com/main/2013/06/03/envelope-generators-adsr-code/"
     }
   ]
 }

@@ -1,0 +1,13 @@
+{
+  "id": "track-musician-adsr",
+  "date": "2026-10-10",
+  "order": 13,
+  "type": "updated",
+  "track": "musician",
+  "items": [
+    {
+      "text": "Этап «Огибающая, LFO и тремоло»: по желанию — стадии ADSR и щелчки на краях ноты",
+      "target": { "track": "musician", "anchor": "stage-modulation" }
+    }
+  ]
+}

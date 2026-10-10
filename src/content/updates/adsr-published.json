@@ -1,0 +1,26 @@
+{
+  "id": "adsr-published",
+  "date": "2026-10-10",
+  "order": 11,
+  "type": "new",
+  "article": "adsr",
+  "summary": "Вторая статья серии о простом синтезаторе: события нажатия и отпускания клавиши, перевод секунд в отсчёты, четыре стадии ADSR, линейные и экспоненциальные участки с целью с перелётом, машина состояний и граничные случаи, VCA как умножение на огибающую и защита от щелчков. Класс AdsrEnvelope на C++20, голос в аудиоблоке JUCE и сравнение с juce::ADSR.",
+  "items": [
+    {
+      "text": "Огибающая ADSR: стадии и сигнал после VCA со звуком",
+      "target": { "article": "adsr", "anchor": "adsr-demo" }
+    },
+    {
+      "text": "Откуда берётся щелчок: края 0 и 5 мс",
+      "target": { "article": "adsr", "anchor": "adsr-click" }
+    },
+    {
+      "text": "Машина состояний и граничные случаи",
+      "target": { "article": "adsr", "anchor": "state-machine" }
+    },
+    {
+      "text": "Класс AdsrEnvelope на C++",
+      "target": { "article": "adsr", "anchor": "cpp" }
+    }
+  ]
+}

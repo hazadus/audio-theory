@@ -2080,6 +2080,66 @@
     }
   },
   {
+    "id": "adsr",
+    "ru": "огибающая ADSR",
+    "en": "ADSR envelope",
+    "definition": "Управляющий сигнал от 0 до 1, который задаёт форму ноты во времени: атака и спад после нажатия, уровень sustain, пока клавиша нажата, и release после отпускания.",
+    "target": {
+      "article": "adsr",
+      "anchor": "stages"
+    }
+  },
+  {
+    "id": "vca",
+    "ru": "VCA",
+    "en": "voltage-controlled amplifier",
+    "definition": "Усилитель голоса синтезатора, коэффициент которого задаёт управляющий сигнал. В цифровом голосе — умножение каждого отсчёта на значение огибающей.",
+    "target": {
+      "article": "adsr",
+      "anchor": "vca"
+    }
+  },
+  {
+    "id": "envelope-attack",
+    "ru": "атака огибающей",
+    "en": "attack",
+    "definition": "Первая стадия огибающей ADSR: после нажатия клавиши уровень растёт до полного за время A. Не путать с временем атаки компрессора.",
+    "target": {
+      "article": "adsr",
+      "anchor": "stages"
+    }
+  },
+  {
+    "id": "envelope-decay",
+    "ru": "спад огибающей",
+    "en": "decay",
+    "definition": "Стадия огибающей ADSR после атаки: уровень опускается от полного до уровня sustain за время D.",
+    "target": {
+      "article": "adsr",
+      "anchor": "stages"
+    }
+  },
+  {
+    "id": "envelope-sustain",
+    "ru": "sustain",
+    "en": "sustain",
+    "definition": "Стадия огибающей ADSR и её параметр: уровень, который держится, пока клавиша нажата. Это уровень, а не время.",
+    "target": {
+      "article": "adsr",
+      "anchor": "stages"
+    }
+  },
+  {
+    "id": "envelope-release",
+    "ru": "release огибающей",
+    "en": "release",
+    "definition": "Последняя стадия огибающей ADSR: после отпускания клавиши уровень уходит от текущего значения к нулю за время R. Не путать с временем восстановления компрессора.",
+    "target": {
+      "article": "adsr",
+      "anchor": "stages"
+    }
+  },
+  {
     "id": "loudness-normalization",
     "ru": "нормализация громкости",
     "en": "loudness normalization",

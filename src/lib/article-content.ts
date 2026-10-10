@@ -194,6 +194,18 @@ const blockRules: Record<string, BlockRule> = {
     idRequired: false,
     numberRequired: true,
   },
+  AdsrDemo: {
+    sequence: 'figure',
+    numberAttribute: 'figure',
+    idRequired: false,
+    numberRequired: true,
+  },
+  AdsrClickDemo: {
+    sequence: 'figure',
+    numberAttribute: 'figure',
+    idRequired: false,
+    numberRequired: true,
+  },
   SynthChain: {
     sequence: 'figure',
     numberAttribute: 'number',

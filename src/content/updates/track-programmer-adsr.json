@@ -1,0 +1,13 @@
+{
+  "id": "track-programmer-adsr",
+  "date": "2026-10-10",
+  "order": 12,
+  "type": "updated",
+  "track": "programmer",
+  "items": [
+    {
+      "text": "Этап «Синтезатор»: огибающая ADSR и VCA после источников голоса",
+      "target": { "track": "programmer", "anchor": "stage-synthesizer" }
+    }
+  ]
+}

@@ -1,0 +1,598 @@
+---
+slug: adsr
+title: 'Огибающая ADSR и VCA: как нота начинается и затихает'
+question: Что происходит с громкостью ноты от нажатия до отпускания и почему резкий скачок усиления щёлкает?
+topic: synthesis
+tags: [synthesis, samples, midi, cpp-juce]
+prerequisites:
+  - label: Источники голоса
+    description: Осцилляторы, шум и микшер, которые дают сигнал x[n] для VCA.
+    target: { article: synth-oscillators, anchor: voice }
+  - label: Усиление как множитель
+    description: Отсчёт умножается на текущий коэффициент усиления.
+    target: { article: tremolo, anchor: principle }
+  - label: Рекуррентная формула
+    description: Новое значение через предыдущее и коэффициент сглаживания.
+    target: { article: audio-math, anchor: recurrence }
+related:
+  - label: Осцилляторы синтезатора
+    description: 'Первая статья серии: фазы, PolyBLEP, частота ноты и микшер голоса.'
+    target: { article: synth-oscillators }
+  - label: Тремоло
+    description: Тот же умножитель усиления, но управляемый периодическим LFO.
+    target: { article: tremolo, anchor: principle }
+  - label: Атака и восстановление компрессора
+    description: Однополюсное сглаживание и коэффициент через экспоненту.
+    target: { article: compressor, anchor: attack-release }
+  - label: Огибающая как измерение уровня
+    description: Пиковая и RMS-огибающие, которые следуют за готовым сигналом.
+    target: { article: signal-level, anchor: envelope }
+  - label: Первый обзор ADSR
+    description: Четыре регулятора огибающей на слух, без кода.
+    target: { article: audio-intro, anchor: adsr }
+---
+
+import AdsrClickDemo from '@/components/AdsrClickDemo.astro';
+import AdsrDemo from '@/components/AdsrDemo.astro';
+import AdsrPlot from '@/components/AdsrPlot.astro';
+import Callout from '@/components/Callout.astro';
+import CalloutCase from '@/components/CalloutCase.astro';
+import DataTable from '@/components/DataTable.astro';
+import Equation from '@/components/Equation.astro';
+import Figure from '@/components/Figure.astro';
+import MarginNote from '@/components/MarginNote.astro';
+import SelfCheck from '@/components/SelfCheck.astro';
+import Source from '@/components/Source.astro';
+import SynthChain from '@/components/SynthChain.astro';
+import Term from '@/components/Term.astro';
+
+[Источники голоса](/synth-oscillators/) выдают непрерывный сигнал: пока программа вызывает `nextSample`, <Term id="oscillator" firstMention>осцилляторы</Term> звучат с постоянным уровнем. Нота же начинается с нажатия клавиши и заканчивается после отпускания. Эту форму во времени задаёт <Term id="adsr" firstMention>огибающая ADSR</Term>, а применяет к сигналу <Term id="vca" firstMention>VCA</Term> — умножитель усиления. Здесь разбирается вторая часть одноголосного синтезатора: события ноты, четыре стадии огибающей, их расчёт по <Term id="sample" firstMention>отсчётам</Term>, щелчки на краях ноты и класс на C++20.
+
+## Голос и огибающая {#voice}
+
+<SynthChain
+  id="voice-chain"
+  number={1}
+  highlight="envelope"
+  caption="Цепочка одного голоса. Четыре источника складываются в микшере, сигнал проходит фильтр нижних частот и попадает в VCA. Коэффициент усиления VCA на каждом отсчёте задаёт огибающая ADSR; результат записывается в WAV. Эта статья разбирает выделенную часть: огибающую и VCA."
+/>
+
+<MarginNote items={[
+  { label: 'Осцилляторы синтезатора → Голос и его источники', description: 'Из каких блоков состоит голос и откуда названия VCO, VCF и VCA.', target: { article: 'synth-oscillators', anchor: 'voice' } },
+]}>
+
+На вход VCA приходит сигнал $x[n]$ после микшера и фильтра, на выход — тот же сигнал, умноженный на значение огибающей $e[n]$. Фильтр в серии разбирается отдельно; пока его можно считать проводом. Огибающая — самостоятельный генератор: на вход ей подаются только события ноты, а звук она не видит.
+
+</MarginNote>
+
+## Нота как события {#note-events}
+
+<MarginNote items={[
+  { label: 'Знакомство с DAW → MIDI', description: 'Ноты как команды: номер клавиши, нажатие и отпускание.', target: { article: 'daw-intro', anchor: 'midi' } },
+  { label: 'Осцилляторы синтезатора → Частота ноты', description: 'Частота по номеру ноты MIDI при A4 = 440 Гц.', target: { article: 'synth-oscillators', anchor: 'note-frequency' } },
+]}>
+
+Для огибающей нота состоит из двух событий. `note_on` приходит при нажатии клавиши: вместе с ним известен номер ноты, а значит и <Term id="frequency" firstMention>частота</Term> осцилляторов ([по номеру ноты MIDI](/synth-oscillators/#note-frequency)). `note_off` приходит при отпускании. Время между ними — длительность нажатия; сколько нота будет звучать после отпускания, решает огибающая. В MIDI это сообщения Note On и Note Off, в JUCE — объекты `juce::MidiMessage` с позицией внутри аудиоблока.
+
+</MarginNote>
+
+Программа отмеряет время номерами отсчётов. Время события и длительность стадии переводятся в целое число отсчётов один раз:
+
+<Equation id="eq-samples" number={1}>
+
+$$
+N = \operatorname{round}(t \cdot f_s)
+$$
+
+<Fragment slot="symbols">
+  <dt>$N$</dt>
+  <dd>число отсчётов, целое;</dd>
+  <dt>$t$</dt>
+  <dd>длительность, с;</dd>
+  <dt>$f_s$</dt>
+  <dd>
+    <Term id="sample-rate" firstMention>частота дискретизации</Term>, Гц.
+  </dd>
+</Fragment>
+
+</Equation>
+
+При 48 кГц атака 10 мс занимает $0{,}01 \cdot 48\,000 = 480$ отсчётов ровно. Длительность 0,1234 с даёт $5923{,}2$, и <Term id="rounding" firstMention>округление</Term> оставляет 5923 отсчёта. Ошибка — 0,2 отсчёта, около 4,2 мкс; в худшем случае она равна половине <Term id="sampling-period" firstMention>периода дискретизации</Term>, 10,4 мкс при 48 кГц. На слух такая разница не определяется.
+
+Ошибки округления складываются, если округлять длительности одну за другой. Сто нот по 0,1234 с, каждая округлённая до 5923 отсчётов, займут 592 300 отсчётов, а точное время 12,34 с соответствует 592 320. Последняя нота опоздает на 20 отсчётов, 0,42 мс, и сдвиг растёт с каждой нотой. Поэтому в отсчёты переводят абсолютное время события от начала записи, а длительность считают разностью уже округлённых моментов: ошибка каждого события остаётся не больше половины отсчёта.
+
+## Четыре стадии {#stages}
+
+<MarginNote items={[
+  { label: 'Первый обзор → ADSR', description: 'Те же четыре регулятора на слух: щипок, плавный звук и орган.', target: { article: 'audio-intro', anchor: 'adsr' } },
+]}>
+
+ADSR называется по четырём стадиям (stages). Значение огибающей — доля полного усиления от 0 до 1.
+
+</MarginNote>
+
+- <Term id="envelope-attack" firstMention define>Атака</Term> начинается с `note_on`: уровень растёт до 1 за время A.
+- <Term id="envelope-decay" firstMention define>Спад</Term> идёт сразу после атаки: уровень опускается от 1 до уровня S за время D.
+- <Term id="envelope-sustain" firstMention define>Sustain</Term> держит уровень S, пока клавиша нажата.
+- <Term id="envelope-release" firstMention define>Release</Term> начинается с `note_off`: уровень уходит к нулю за время R.
+
+Пакетт описывает тот же генератор с пятым параметром — уровнем вершины атаки; здесь он равен 1 ([Puckette, §4.1](http://msp.ucsd.edu/techniques/latest/book-html/node59.html)). A, D и R — времена в секундах, S — уровень без единиц. Если `note_on` и `note_off` разделены большим промежутком, огибающая с прямыми участками записывается <Term id="piecewise-function" firstMention>кусочной функцией</Term> времени:
+
+<Equation id="eq-adsr" number={2}>
+
+$$
+e(t) = \begin{cases}
+t/A, & 0 \le t < A, \\
+1 - (1 - S)\,(t - A)/D, & A \le t < A + D, \\
+S, & A + D \le t < t_\text{off}, \\
+S\,\bigl(1 - (t - t_\text{off})/R\bigr), & t_\text{off} \le t < t_\text{off} + R, \\
+0, & t \ge t_\text{off} + R
+\end{cases}
+$$
+
+<Fragment slot="symbols">
+  <dt>$e(t)$</dt>
+  <dd>значение огибающей, доля полного усиления от 0 до 1;</dd>
+  <dt>$A$, $D$, $R$</dt>
+  <dd>времена атаки, спада и release, с;</dd>
+  <dt>$S$</dt>
+  <dd>уровень sustain, от 0 до 1;</dd>
+  <dt>$t_\text{off}$</dt>
+  <dd>время отпускания от нажатия, с; здесь $t_\text{off} \ge A + D$.</dd>
+</Fragment>
+
+</Equation>
+
+Длительность sustain в параметрах не задаётся: она равна времени нажатия минус A и D. Формула (2) описывает только случай, когда клавишу держат дольше атаки и спада. Ранний `note_off`, повторное нажатие и нулевые времена в неё не укладываются; их разбирает [машина состояний](#state-machine).
+
+<Callout type="mistake" title="Sustain — время удержания">
+
+<CalloutCase kind="wrong">
+
+Sustain = 0,6 значит, что нота держится 0,6 с, а потом начинается release.
+
+</CalloutCase>
+
+<CalloutCase kind="right">
+
+Sustain — уровень, а не время: 0,6 значит 60 % полного усиления. Нота стоит на этом уровне, пока нажата клавиша, сколько бы это ни длилось. Release начинается только с `note_off`.
+
+</CalloutCase>
+
+</Callout>
+
+Для A, D и R нужно уточнять, от какого и до какого уровня отсчитывается время. Здесь, как в `juce::ADSR`, атака — время от 0 до 1, спад — от 1 до S, release — от текущего уровня до 0. В моделях аналоговых огибающих спад и release часто задают для полного размаха от 1 до 0. Тогда при высоком S слышимый спад короче D, а release от S короче R ([Pirkle, гл. 7.1](#sources)).
+
+## Огибающая как управляющий сигнал {#control-signal}
+
+<MarginNote items={[
+  { label: 'Уровень сигнала → Огибающая', description: 'Огибающая-измерение: пиковая и RMS по готовому сигналу.', target: { article: 'signal-level', anchor: 'envelope' } },
+]}>
+
+Слово «огибающая» на сайте встречается в двух значениях. В [статье об уровне сигнала](/signal-level/#envelope) <Term id="envelope" firstMention>огибающая</Term> — измерение: кривая вычисляется по уже готовому сигналу и следует за его размахом. Огибающая ADSR работает в обратном направлении: она не знает о сигнале, а вычисляется по событиям ноты и параметрам, и уже потом задаёт размах.
+
+</MarginNote>
+
+Поэтому $e[n]$ — управляющий сигнал: последовательность чисел от 0 до 1 с той же частотой дискретизации, что и звук. Её можно направить не только в VCA, но и на частоту среза фильтра или высоту тона ([Puckette, §4.1](http://msp.ucsd.edu/techniques/latest/book-html/node59.html)). Если измерить огибающую сигнала на выходе VCA, она повторит $e[n]$, умноженную на размах источника, но с погрешностью детектора: пиковый детектор запаздывает и сглаживает быстрые изменения.
+
+## Линейные и экспоненциальные участки {#segments}
+
+Внутри стадии уровень меняется от начального значения $L$ к цели $T$: для атаки $T = 1$, для спада $T = S$, для release $T = 0$. Проще всего пройти этот путь за $N$ отсчётов равными шагами:
+
+<Equation id="eq-linear-step" number={3}>
+
+$$
+e[n] = e[n-1] + \Delta, \qquad \Delta = \frac{T - L}{N}
+$$
+
+<Fragment slot="symbols">
+  <dt>$\Delta$</dt>
+  <dd>шаг на отсчёт, без единиц;</dd>
+  <dt>$L$, $T$</dt>
+  <dd>уровень в начале стадии и её цель;</dd>
+  <dt>$N$</dt>
+  <dd>длина стадии в отсчётах по формуле (1).</dd>
+</Fragment>
+
+</Equation>
+
+Атака 10 мс при 48 кГц: $N = 480$, шаг $1/480 \approx 0{,}00208$. Спад от 1 до 0,6 за 250 мс: $N = 12\,000$, шаг $-0{,}4/12\,000 \approx -3{,}33 \cdot 10^{-5}$. Шаги складываются в числах с плавающей точкой, поэтому после $N$-го шага уровень может отличаться от цели в последних знаках. В коде на последнем отсчёте стадии уровень присваивается цели точно.
+
+<MarginNote items={[
+  { label: 'Математика для аудио → Натуральный логарифм и экспонента', description: 'Функция e^u, её убывание к нулю и коэффициент α.', target: { article: 'audio-math', anchor: 'exponential' } },
+  { label: 'Математика для аудио → Рекуррентная формула', description: 'Взвешенное среднее прошлого значения и цели, установившееся значение.', target: { article: 'audio-math', anchor: 'recurrence' } },
+]}>
+
+Прямые участки хорошо видны на графике, но слух оценивает <Term id="loudness" firstMention>громкость</Term> примерно по <Term id="logarithmic-scale" firstMention>логарифмической шкале</Term>. Пакетт разбирает нарастание за 10 с по прямой от 0 до 1: за первую секунду уровень поднимается до −20 дБ, за следующие четыре — ещё на 14 дБ, а за последние пять — только на 6 дБ ([Puckette, §4.2](http://msp.ucsd.edu/techniques/latest/book-html/node60.html)). Прямой спад, наоборот, долго звучит громко и быстро исчезает в конце. Аналоговые генераторы огибающих заряжали и разряжали конденсатор, поэтому их участки экспоненциальные ([Pirkle, гл. 7.5](#sources)).
+
+</MarginNote>
+
+Экспоненциальный участок вычисляется той же <Term id="recurrence-relation" firstMention>рекуррентной формулой</Term>, что [сглаживание](/compressor/#attack-release) в <Term id="compressor" firstMention>компрессоре</Term>: $e[n] = u + b\,(e[n-1] - u)$, где $u$ — цель, к которой стремится уровень, а $0 < b < 1$. Расстояние до цели на каждом отсчёте умножается на $b$: после $n$ шагов оно равно $(L - u)\,b^n$. Это число уменьшается, но при конечном $n$ не становится нулём. Если взять $u = T$, стадия никогда не закончится: спад к S будет бесконечно приближаться к нему, а release — к нулю.
+
+Это решают порогом или целью с перелётом. Порог: стадия считается законченной, когда до цели остаётся меньше заданного $\varepsilon$, например $10^{-4}$ (−80 дБ), и уровню присваивается цель. Тогда реальная длина стадии зависит от $\varepsilon$ и от формы кривой. Цель с перелётом использует генератор огибающих Найджела Редмона ([Redmon](#sources); [Pirkle, гл. 7.5.1](#sources)). Уровень стремится к точке $u$, которая лежит чуть дальше $T$, поэтому пересекает $T$ за конечное число шагов. В этой точке стадия и заканчивается.
+
+<Equation id="eq-exponential" number={4}>
+
+$$
+e[n] = u + b\,(e[n-1] - u), \qquad u = T + r\,(T - L), \qquad b = \left(\frac{r}{1 + r}\right)^{1/N} = e^{-\ln\left((1 + r)/r\right)/N}
+$$
+
+<Fragment slot="symbols">
+  <dt>$u$</dt>
+  <dd>цель с перелётом: за $T$ на долю $r$ высоты участка;</dd>
+  <dt>$r$</dt>
+  <dd>перелёт, без единиц, $r > 0$;</dd>
+  <dt>$b$</dt>
+  <dd>коэффициент на отсчёт, $0 < b < 1$.</dd>
+</Fragment>
+
+</Equation>
+
+Проверка: начальное расстояние до $u$ равно $(1 + r)(T - L)$, после $N$ шагов оно умножается на $b^N = r/(1 + r)$ и становится $r\,(T - L)$. Значит, уровень находится ровно в $T$. Длина стадии та же $N$, что у прямого участка, меняется только изгиб. Для release с $r = 0{,}01$ и $N = 480$ получается $b = (0{,}01/1{,}01)^{1/480} \approx 0{,}990431$. Малый $r$ даёт почти чистую <Term id="exponential-function" firstMention>экспоненту</Term> с крутым началом, большой — почти прямую ([Redmon](#sources)). Здесь для спада и release взято $r = 0{,}01$, для атаки $r = 0{,}3$: аналоговая микросхема CEM3310 заряжает конденсатор примерно до 77 % асимптоты, и верх атаки остаётся заметно изогнутым, без долгого подхода к 1 ([Pirkle, гл. 7.5](#sources)).
+
+Формула коэффициента совпадает по виду с [коэффициентом компрессора](/compressor/#eq-smoothing) $\alpha = e^{-\ln 9/(f_s t)}$: там $f_s t$ — число отсчётов, а $\ln 9$ соответствует $(1 + r)/r = 9$, то есть $r = 1/8$. Различаются соглашения: время компрессора описывает переход от 10 до 90 % пути к цели, которой он не достигает, а здесь $N$ — отсчёт, на котором стадия заканчивается.
+
+<Figure
+  id="adsr-curves"
+  number={2}
+  name="Одна огибающая с линейными и экспоненциальными участками"
+  caption="A = 150 мс, D = 250 мс, S = 0,5, R = 400 мс, note_off через 0,8 с. Границы стадий у обоих вариантов одинаковые: экспоненциальная атака (перелёт 0,3) сначала растёт быстрее и замедляется у вершины, спад и release (перелёт 0,01) начинаются круто и долго подходят к цели."
+  alt="Две огибающие на интервале от 0 до 1,2 секунды. Обе поднимаются до 1 к 0,15 секунды, опускаются до уровня 0,5 к 0,4 секунды, держат его до note_off на 0,8 секунды и уходят в ноль к 1,2 секунды. Линейная состоит из отрезков. Экспоненциальная, пунктирная, на атаке выпукла вверх, на спаде и release сначала резко падает, потом медленно приближается к цели."
+>
+  <AdsrPlot kind="curves" />
+</Figure>
+
+## Машина состояний {#state-machine}
+
+Формула (2) отвечает на вопрос «какое значение в момент $t$», если известны оба события заранее. Синтезатор их заранее не знает: `note_off` может прийти во время атаки, а новый `note_on` — во время release. Поэтому огибающую строят как машину состояний (finite state machine): текущая стадия и уровень хранятся между отсчётами, а события и счётчик отсчётов переключают стадию ([Pirkle, гл. 7.2](#sources)).
+
+```cpp
+enum class EnvelopeStage { idle, attack, decay, sustain, release };
+```
+
+Стадия `idle` — покой: огибающая выдаёт 0 и голос можно отдать другой ноте. Переходы собраны в таблицу.
+
+<DataTable
+  id="adsr-transitions"
+  number={1}
+  caption="Переходы огибающей ADSR. Счётчик — число отсчётов, оставшихся до конца стадии."
+  columns={[
+    { label: 'Стадия' },
+    { label: 'На каждом отсчёте' },
+    { label: 'Счётчик дошёл до нуля' },
+    { label: 'note_on' },
+    { label: 'note_off' },
+  ]}
+  rows={[
+    ['idle', 'выдаёт 0', '—', 'attack с уровня 0', 'ничего'],
+    ['attack', 'шаг к 1', 'decay', 'attack заново с текущего уровня', 'release с текущего уровня'],
+    ['decay', 'шаг к S', 'sustain; при S = 0 — idle', 'attack с текущего уровня', 'release с текущего уровня'],
+    ['sustain', 'держит S', '—', 'attack с уровня S', 'release с уровня S'],
+    ['release', 'шаг к 0', 'idle', 'attack с текущего уровня', 'release заново с текущего уровня'],
+  ]}
+/>
+
+### Граничные случаи {#edge-cases}
+
+Если `note_off` приходит во время атаки или спада, огибающая не доигрывает оставшиеся стадии и сразу переходит в release с того уровня, на котором её застало событие ([Puckette, §4.1](http://msp.ucsd.edu/techniques/latest/book-html/node59.html), рис. 4.2). Если начать release с S, уровень скачком перейдёт от текущего значения к S, а это щелчок. На рисунке 3а release начинается с 0,5 и длится те же 300 мс, что и от S.
+
+Повторный `note_on` во время release запускает атаку с текущего уровня. Наклон сохраняется: от уровня $L$ атака длится $A\,(1 - L)$. Pirkle называет и второй режим — сброс в ноль перед атакой (reset to zero): он подчёркивает раздельность нот, но может щёлкать в момент сброса ([Pirkle, гл. 7.1.2](#sources)).
+
+При нулевых временах уровень меняется сразу: $A = 0$ — уровень становится 1, $D = 0$ — сразу S, $R = 0$ — сразу 0. В коде стадия длиной 0 отсчётов пропускается в момент перехода. Огибающая при этом работает правильно, но усиление меняется скачком: о последствиях — в [разделе о щелчках](#clicks).
+
+При $S = 0$ спад доводит уровень до нуля, и держать нечего: огибающая переходит в `idle` и не ждёт `note_off`. Так звучат щипковые и ударные звуки. При $S = 1$ спаду некуда опускаться: после атаки сразу sustain на полном уровне.
+
+<Figure
+  id="adsr-edge-cases"
+  number={3}
+  name="Ранний note_off и повторный note_on"
+  caption="а) A = 400 мс, D = 200 мс, S = 0,6, R = 300 мс. note_off на 0,2 с застаёт атаку на уровне 0,5, и release за 300 мс идёт от 0,5; пунктир — та же нота, удержанная до 0,8 с. б) A = D = 100 мс, S = 0,6, R = 400 мс; note_off на 0,4 с, новый note_on на 0,6 с, когда release дошёл до 0,3. Сплошная линия продолжает с 0,3, пунктир сбрасывает уровень в 0 и даёт скачок."
+  alt="Два графика огибающей от 0 до 1,2 секунды. На первом сплошная линия растёт до 0,5 к 0,2 секунды и сразу спадает к нулю к 0,5 секунды; пунктирная растёт до 1, спадает до 0,6, держит его до 0,8 секунды и затухает. На втором обе линии одинаковы до 0,6 секунды: подъём до 1, спад до 0,6, после note_off на 0,4 секунды снижение до 0,3. Дальше сплошная линия поднимается от 0,3 без разрыва, а пунктирная падает вертикально до нуля и растёт оттуда."
+>
+  <AdsrPlot kind="edge" />
+</Figure>
+
+## VCA: умножение на огибающую {#vca}
+
+<MarginNote items={[
+  { label: 'Тремоло → Как управляющее колебание меняет звук', description: 'Умножение отсчёта на усиление g[n] и пример с числами.', target: { article: 'tremolo', anchor: 'principle' } },
+]}>
+
+<Term id="vca" define>VCA</Term> (voltage-controlled amplifier) в аналоговом синтезаторе — усилитель, коэффициент которого задаёт управляющее напряжение. В цифровом голосе от него остаётся умножение:
+
+</MarginNote>
+
+<Equation id="eq-vca" number={5}>
+
+$$
+y[n] = x[n] \cdot e[n]
+$$
+
+<Fragment slot="symbols">
+  <dt>$x[n]$</dt>
+  <dd>сигнал на входе VCA, без единиц, в пределах ±1;</dd>
+  <dt>$y[n]$</dt>
+  <dd>сигнал на выходе VCA.</dd>
+</Fragment>
+
+</Equation>
+
+При $x[n] = -0{,}8$ и $e[n] = 0{,}25$ выход $y[n] = -0{,}2$. Значение огибающей здесь — <Term id="linear-gain" firstMention>линейный коэффициент усиления</Term>: 0,5 уменьшает <Term id="amplitude" firstMention>амплитуду</Term> вдвое, около −6 дБ. Поскольку $0 \le e[n] \le 1$, VCA не поднимает пик: оценка запаса из [раздела о микшере](/synth-oscillators/#mixer) остаётся верной и после него.
+
+Та же операция стоит в <Term id="tremolo" firstMention>тремоло</Term> ([принцип](/tremolo/#principle)). Разница — в управляющем сигнале. У тремоло он периодичен: <Term id="lfo" firstMention>LFO</Term> повторяет цикл независимо от нажатий, и одинаковое усиление возвращается через каждый период. Огибающая привязана к событиям ноты: она начинается с `note_on`, ветвится по `note_off` и после release не повторяется, пока не придёт новая нота.
+
+## Посмотреть и послушать {#listen}
+
+Визуализация считает огибающую и сигнал после VCA тем же кодом, что приведён в [разделе C++](#cpp), при 48 кГц. Сверху — огибающая с подписанными стадиями, снизу — сигнал после VCA на той же оси времени; длина графика равна длительности нажатия плюс R. Нота звучит один раз; при изменении параметров звук останавливается, чтобы новая нота прозвучала с начала.
+
+<AdsrDemo figure={4} id="adsr-demo" />
+
+Пример «Щипок» использует S = 0: нота затихает до `note_off`, и статус сообщает, что держать нечего. «note_off во время атаки» показывает release с уровня 0,40 вместо S. Переключите участки на экспоненциальные и сравните на слух: экспоненциальный release звучит как плавное затухание, линейный дольше остаётся громким. «Без атаки и release» включает пилу скачком; щелчки в начале и в конце слышны даже на 30 % громкости.
+
+## Защита от щелчков {#clicks}
+
+<MarginNote items={[
+  { label: 'Осцилляторы синтезатора → Формы и алиасинг', description: 'Гармоники пилы убывают как 1/k, у треугольника — как 1/k².', target: { article: 'synth-oscillators', anchor: 'aliasing' } },
+]}>
+
+Щелчок возникает, когда выход меняется скачком между соседними отсчётами. Скачок — ступенька, а у ступеньки составляющие на всех частотах, с амплитудой, которая убывает только как $1/f$: на 6 дБ на октаву. Слух воспринимает её как короткий широкополосный удар поверх ноты. Излом — резкая смена наклона без разрыва — даёт составляющие, убывающие как $1/f^2$, на 12 дБ на октаву. Это та же разница, что между гармониками пилы со скачком и треугольника с изломом ([Puckette, §10.2](http://msp.ucsd.edu/techniques/latest/book-html/node188.html)): излом слышен заметно меньше.
+
+</MarginNote>
+
+Разрыв амплитуды возникает на краях ноты и при смене стадий:
+
+- В начале ноты: при $A = 0$ усиление прыгает от 0 к 1. Если в этот момент сигнал не равен нулю — например, пила начинается со значения −1, — выход скачет на всю величину сигнала.
+- В конце ноты: при $R = 0$ усиление падает от текущего уровня к 0 в произвольной <Term id="phase" firstMention>фазе</Term> волны. <Term id="sine" firstMention>Синус</Term>, отпущенный на вершине, обрывается с 1 до 0.
+- При смене стадий: $D = 0$ даёт скачок от 1 к S; сброс в ноль при повторном `note_on` — скачок от текущего уровня к 0. Release с S вместо текущего уровня тоже создаёт разрыв.
+
+По Пакетту, разрывное изменение фазы осциллятора или амплитуды сигнала даёт слышимый артефакт, а скачок приращения фазы, то есть высоты тона, проходит без него ([Puckette, §4.3](http://msp.ucsd.edu/techniques/latest/book-html/node61.html)). Короткая линейная атака заменяет ступеньку двумя изломами: в начале и в конце нарастания. Для приглушения перед разрывным изменением Пакетт берёт 5 мс ([Puckette, §4.3.1](http://msp.ucsd.edu/techniques/latest/book-html/node62.html)); на практике минимальные атаку и release ограничивают несколькими миллисекундами, а дальше выбирают на слух.
+
+Отдельный случай — конец рендера. Если записать в WAV только время нажатия, release обрежется, и последний отсчёт файла останется ненулевым: проигрыватель после него выдаёт тишину, и разрыв окажется на границе файла. Длина рендера должна быть не меньше длительности нажатия плюс R, тогда огибающая успевает дойти до нуля.
+
+<AdsrClickDemo figure={5} id="adsr-click" />
+
+С фазой 90° вариант 0 мс прыгает от 0 к 1 на `note_on` и от 1 к 0 на `note_off`, а вариант 5 мс поднимается за 240 отсчётов: наибольший шаг между соседними отсчётами меньше 0,005. Выберите фазу 0°: у синуса в этот момент значение 0, и даже атака 0 мс не даёт скачка. Полагаться на это нельзя: фаза в момент `note_off` зависит от длительности нажатия и частоты, а у пилы и прямоугольника значение 0 бывает только в отдельных точках.
+
+## Код на C++ {#cpp}
+
+Класс `AdsrEnvelope` повторяет устройство [осциллятора](/synth-oscillators/#cpp-oscillator): структура `Parameters` отдельно от изменяемого состояния — стадии, уровня, шага и счётчика. `prepare` задаёт частоту дискретизации, `setParameters` — времена и уровень, `noteOn` и `noteOff` переключают стадию, `nextSample` выдаёт следующее значение, `isActive` сообщает, нужен ли ещё голос. Используется только стандартная библиотека C++20.
+
+```cpp
+// Огибающая ADSR: параметры отдельно от состояния, стадии — счётчики отсчётов.
+#include <cassert>
+#include <cmath>
+
+enum class EnvelopeStage { idle, attack, decay, sustain, release };
+enum class Curve { linear, exponential };
+
+class AdsrEnvelope
+{
+public:
+    struct Parameters
+    {
+        double attack = 0.01, decay = 0.2, sustain = 0.6, release = 0.3; // с, доля, с
+        Curve curve = Curve::linear;
+    };
+
+    void prepare (double newSampleRate) noexcept
+    {
+        assert (std::isfinite (newSampleRate) && newSampleRate > 0.0);
+        sampleRate = newSampleRate;
+        reset();
+    }
+
+    // Вызывать между нотами: новые времена действуют со следующей стадии.
+    void setParameters (const Parameters& p) noexcept
+    {
+        assert (p.attack >= 0.0 && p.decay >= 0.0 && p.release >= 0.0);
+        assert (p.sustain >= 0.0 && p.sustain <= 1.0);
+        params = p;
+    }
+
+    void reset() noexcept { stage = EnvelopeStage::idle; level = 0.0; }
+    void noteOn() noexcept { start (EnvelopeStage::attack); }
+    void noteOff() noexcept
+    {
+        if (stage != EnvelopeStage::idle)
+            start (EnvelopeStage::release);
+    }
+    bool isActive() const noexcept { return stage != EnvelopeStage::idle; }
+
+    double nextSample() noexcept
+    {
+        if (stage == EnvelopeStage::idle || stage == EnvelopeStage::sustain)
+            return level;
+        level = params.curve == Curve::linear ? level + step
+                                              : aim + (level - aim) * coef;
+        if (--remaining == 0)
+        {
+            level = target; // точно на цели, без накопленной ошибки
+            start (following (stage));
+        }
+        return level;
+    }
+
+private:
+    static EnvelopeStage following (EnvelopeStage s) noexcept
+    {
+        return s == EnvelopeStage::attack ? EnvelopeStage::decay
+             : s == EnvelopeStage::decay  ? EnvelopeStage::sustain
+                                          : EnvelopeStage::idle;
+    }
+
+    void start (EnvelopeStage next) noexcept;
+
+    Parameters params;
+    double sampleRate = 48000.0;
+    // Состояние: стадия, уровень и участок, который сейчас проходится.
+    EnvelopeStage stage = EnvelopeStage::idle;
+    double level = 0.0, target = 0.0, step = 0.0, aim = 0.0, coef = 0.0;
+    long long remaining = 0;
+};
+```
+
+`nextSample` на стадиях `idle` и `sustain` только возвращает уровень. На движущихся стадиях он делает шаг по формуле (3) или (4) и уменьшает счётчик. Когда счётчик доходит до нуля, уровень приравнивается цели и начинается следующая стадия. Все переходы, в том числе по событиям, проходят через `start`:
+
+```cpp
+// Начало стадии: число отсчётов и шаг; стадии нулевой длины пропускаются.
+void AdsrEnvelope::start (EnvelopeStage next) noexcept
+{
+    for (;;)
+    {
+        stage = next;
+        if (stage == EnvelopeStage::idle)
+        {
+            level = 0.0;
+            return;
+        }
+        if (stage == EnvelopeStage::sustain)
+        {
+            level = params.sustain;
+            if (level == 0.0)
+                stage = EnvelopeStage::idle; // держать нечего: голос свободен
+            return;
+        }
+        double seconds = params.release, overshoot = 0.01;
+        target = 0.0;
+        if (stage == EnvelopeStage::attack)
+        {
+            target = 1.0;
+            seconds = params.attack * (1.0 - level); // с прежним наклоном от 0 до 1
+            overshoot = 0.3;
+        }
+        else if (stage == EnvelopeStage::decay)
+        {
+            target = params.sustain;
+            seconds = params.decay;
+        }
+        remaining = std::llround (seconds * sampleRate);
+        if (remaining > 0 && level != target)
+        {
+            step = (target - level) / static_cast<double> (remaining);
+            aim = target + overshoot * (target - level); // цель с перелётом
+            coef = std::pow (overshoot / (1.0 + overshoot), 1.0 / static_cast<double> (remaining));
+            return;
+        }
+        level = target; // нулевая длина: скачок к цели и следующая стадия
+        next = following (stage);
+    }
+}
+```
+
+Release и повторная атака всегда начинаются с текущего `level`: `start` не обнуляет его, а только вычисляет новый шаг. Цикл нужен для цепочки нулевых стадий: при $A = D = 0$ один вызов `noteOn` проходит атаку и спад и останавливается на sustain. Шаг и коэффициент вычисляются один раз на стадию, а `std::pow` не вызывается на каждом отсчёте. Код собран `clang++ -std=c++20 -Wall -Wextra -Wconversion` без предупреждений. Для A = 100 мс, D = 250 мс, S = 0,6, R = 400 мс и `note_off` через 0,8 с он даёт те же отсчёты, что визуализация: прямые участки совпадают точно, экспоненциальные — до $10^{-13}$, из-за разных реализаций `pow`.
+
+### Голос в аудиоблоке JUCE {#juce-block}
+
+<MarginNote items={[
+  { label: 'C++ в аудиопотоке → Данные для интерфейса', description: 'Как передать новые параметры из интерфейса в аудиопоток без блокировки.', target: { article: 'cpp-audio-thread', anchor: 'ui-exchange' } },
+]}>
+
+В JUCE события ноты приходят в `juce::MidiBuffer` вместе с аудиоблоком, и у каждого есть `samplePosition` — номер отсчёта внутри блока. Чтобы нота начиналась точно, блок заполняется кусками между событиями. `VoiceSources`, `VoiceLevels` и `noteFrequency` взяты из [статьи об осцилляторах](/synth-oscillators/#cpp-voice); нужен модуль `juce_audio_basics`.
+
+</MarginNote>
+
+```cpp
+// Голос в аудиоблоке JUCE: события ноты на своих отсчётах, VCA — умножение на огибающую.
+#include <juce_audio_basics/juce_audio_basics.h>
+
+void startNote (VoiceSources& voice, AdsrEnvelope& envelope, int midiNote)
+{
+    if (envelope.isActive()) // голос звучит: меняется шаг фазы, фаза продолжается
+    {
+        const double f = noteFrequency (midiNote);
+        voice.osc1.setFrequency (f);
+        voice.osc2.setFrequency (f * std::exp2 (7.0 / 1200.0));
+        voice.sub.setFrequency (f / 2.0);
+    }
+    else
+        voice.noteOn (midiNote, 0, 7.0); // в тишине фазы можно сбросить
+    envelope.noteOn();
+}
+
+void renderBlock (VoiceSources& voice, const VoiceLevels& levels, AdsrEnvelope& envelope,
+                  int& currentNote, const juce::MidiBuffer& midi,
+                  juce::AudioBuffer<float>& output) noexcept
+{
+    auto render = [&] (int from, int to)
+    {
+        for (int n = from; n < to; ++n)
+        {
+            const auto y = static_cast<float> (voice.nextSample (levels) * envelope.nextSample());
+            for (int channel = 0; channel < output.getNumChannels(); ++channel)
+                output.setSample (channel, n, y);
+        }
+    };
+
+    int done = 0;
+    for (const auto metadata : midi)
+    {
+        render (done, metadata.samplePosition);
+        done = metadata.samplePosition;
+        const auto message = metadata.getMessage();
+        if (message.isNoteOn())
+        {
+            currentNote = message.getNoteNumber();
+            startNote (voice, envelope, currentNote);
+        }
+        else if (message.isNoteOff() && message.getNoteNumber() == currentNote)
+            envelope.noteOff();
+    }
+    render (done, output.getNumSamples());
+}
+```
+
+`VoiceSources::noteOn` сбрасывает фазы осцилляторов. В тишине это безопасно, но во время release уровень не равен нулю, и сброс фазы дал бы скачок сигнала на входе VCA — тот же щелчок. Поэтому у звучащего голоса меняется только частота: скачок шага фазы, как отмечает Пакетт, слышимого разрыва не даёт. <Term id="detune" firstMention>Расстройка</Term> +7 <Term id="cent" firstMention>центов</Term> — пример из статьи об осцилляторах. `note_off` другой клавиши игнорируется: одноголосный синтезатор отпускает только последнюю нажатую ноту. Когда `envelope.isActive()` возвращает `false`, голос молчит, и блок можно не считать.
+
+### Сравнение с juce::ADSR {#juce-adsr}
+
+<MarginNote items={[
+  { label: 'JUCE → ADSR', description: 'Документация класса: setParameters, noteOn, noteOff, getNextSample.', target: { url: 'https://docs.juce.com/master/classjuce_1_1ADSR.html' } },
+]}>
+
+В JUCE есть готовый класс `juce::ADSR` с той же структурой: `Parameters` с полями `attack`, `decay`, `sustain`, `release`, методы `setSampleRate`, `setParameters`, `noteOn`, `noteOff`, `getNextSample`, `isActive` и `applyEnvelopeToBuffer` для целого буфера. Ниже — сравнение с исходником JUCE 9.0.3 ([juce_ADSR.h](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_basics/utilities/juce_ADSR.h)).
+
+</MarginNote>
+
+Совпадает поведение стадий. Перечисление стадий то же: `idle`, `attack`, `decay`, `sustain`, `release`. `noteOff` во время атаки или спада начинает release с текущего значения, и release всегда длится R: шаг вычисляется в момент `noteOff` как текущий уровень, делённый на $R \cdot f_s$. `noteOn` не обнуляет уровень, поэтому повторная атака продолжает с текущего значения с наклоном $1/(A \cdot f_s)$. Нулевая атака сразу даёт 1, нулевые атака и спад — сразу S.
+
+Различия:
+
+- В `juce::ADSR` участки только линейные.
+- Стадия заканчивается сравнением уровня с целью: `envelopeVal >= 1.0f`, `<= sustain`, `<= 0.0f`. Шаги складываются во `float`, и длина стадии может отличаться от $\operatorname{round}(t \cdot f_s)$ на отсчёт. Здесь стадию заканчивает счётчик, и уровень приравнивается цели.
+- При $R = 0$ `noteOff` вызывает `reset()`: уровень обнуляется сразу, со скачком. Здесь то же самое, но через стадию нулевой длины.
+- При S = 0 огибающая JUCE остаётся в `sustain` с уровнем 0 и `isActive()` возвращает `true` до `noteOff`. Здесь она переходит в `idle` сразу после спада.
+- В стадии sustain JUCE каждый отсчёт берёт уровень из параметров, поэтому новое S применяется сразу, скачком. Документация JUCE просит не менять параметры во время звучания, а если они изменились до конца release — вызвать `reset()` перед следующим `noteOn`.
+
+## Самопроверка {#self-check}
+
+<SelfCheck question="Атака 7 мс, спад 0,1234 с при 48 кГц. Сколько отсчётов займёт каждая стадия?">
+
+$0{,}007 \cdot 48\,000 = 336$ отсчётов ровно. $0{,}1234 \cdot 48\,000 = 5923{,}2$, после округления 5923 отсчёта. Ошибка 0,2 отсчёта, около 4 мкс.
+
+</SelfCheck>
+
+<SelfCheck question="A = 400 мс, D = 200 мс, S = 0,6, R = 300 мс, линейные участки. note_off пришёл через 0,1 с после note_on. С какого уровня начнётся release и сколько он продлится?">
+
+За 0,1 с атака прошла четверть пути: уровень $0{,}1/0{,}4 = 0{,}25$. Release начнётся с 0,25, а не с S = 0,6, и продлится R = 300 мс: шаг на отсчёт $0{,}25/14\,400$.
+
+</SelfCheck>
+
+<SelfCheck question="Почему экспоненциальный спад с целью ровно S никогда не закончится и как это исправляет перелёт?">
+
+В формуле $e[n] = u + b\,(e[n-1] - u)$ расстояние до цели $u$ на каждом шаге умножается на $b < 1$ и при конечном числе шагов не становится нулём. Если $u = S$, уровень только приближается к S. Если цель отнести за S, на $r$ высоты участка, уровень пересечёт S; коэффициент $b = (r/(1 + r))^{1/N}$ выбирается так, чтобы это случилось ровно на $N$-м отсчёте.
+
+</SelfCheck>
+
+<SelfCheck question="Нота записывается в WAV: нажатие 1 с, R = 0,5 с, 48 кГц. Какой должна быть длина файла и что будет, если записать только 48 000 отсчётов?">
+
+Не меньше $48\,000 + 24\,000 = 72\,000$ отсчётов, чтобы огибающая дошла до нуля. При 48 000 отсчётах файл закончится в начале release, последний отсчёт будет ненулевым, и на конце записи прозвучит щелчок.
+
+</SelfCheck>
+
+## Источники {#sources}
+
+- <Source id="puckette-2007">[Гл. 4.1: Envelope generators](http://msp.ucsd.edu/techniques/latest/book-html/node59.html), [4.2: Linear and curved amplitude shapes](http://msp.ucsd.edu/techniques/latest/book-html/node60.html), [4.3: Continuous and discontinuous control changes](http://msp.ucsd.edu/techniques/latest/book-html/node61.html), [Muting](http://msp.ucsd.edu/techniques/latest/book-html/node62.html) и [10.2: Fourier series of the elementary waveforms](http://msp.ucsd.edu/techniques/latest/book-html/node188.html)</Source> — стадии ADSR и ранний `off`, повторная атака, восприятие линейного нарастания, слышимость разрывов амплитуды и фазы, приглушение за 5 мс, гармоники ступеньки и излома.
+- <Source id="pirkle-2021">Гл. 7: Envelope generators and DCA, с. 87–101</Source> — времена спада и release от полного размаха, перезапуск с текущего уровня и сброс в ноль, release с текущего уровня, машина состояний, линейный шаг, модель аналоговой огибающей CEM3310 и метод Редмона с перелётом цели.
+- <Source id="redmon-2013" /> — генератор огибающих с параметром перелёта: малые значения дают почти экспоненциальную форму, большие — почти линейную.
+- [JUCE 9.0.3. juce_ADSR.h](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_basics/utilities/juce_ADSR.h) и [juce_MidiBuffer.h](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_basics/midi/juce_MidiBuffer.h) — стадии, расчёт шагов, поведение при нулевых временах и S = 0, обход событий блока с `samplePosition`.
+- [Ableton. Live 12 Manual, Analog: Envelopes](https://www.ableton.com/en/live-manual/12/live-instrument-reference/#analog) — стадии ADSR в инструменте, переключатель линейных и экспоненциальных участков, крайние положения Sustain.

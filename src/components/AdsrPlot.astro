@@ -1,0 +1,259 @@
+---
+// Статичные SVG статьи /adsr/: линейные и экспоненциальные участки одной огибающей; граничные
+// случаи — note_off во время атаки и повторный note_on во время release. Кривые считает модель
+// `adsr.ts` тем же кодом, что визуализации. Кегль 16 в viewBox шириной 360, ширина до 360 px.
+import { envelopeCurve, type AdsrParameters, type NoteEvent } from '@/lib/adsr';
+
+interface Props {
+  kind: 'curves' | 'edge';
+}
+
+const { kind } = Astro.props;
+
+interface Series {
+  values: Float32Array;
+  dashed?: boolean;
+  label: string;
+}
+interface Panel {
+  title?: string;
+  duration: number;
+  sustain: number;
+  events: { time: number; label: string }[];
+  series: Series[];
+  ticks: number[];
+}
+
+const base: AdsrParameters = {
+  attack: 0.15,
+  decay: 0.25,
+  sustain: 0.5,
+  release: 0.4,
+  curve: 'linear',
+};
+const press: NoteEvent[] = [
+  { time: 0, type: 'on' },
+  { time: 0.8, type: 'off' },
+];
+
+const panels: Panel[] =
+  kind === 'curves'
+    ? [
+        {
+          duration: 1.2,
+          sustain: base.sustain,
+          events: [
+            { time: 0, label: 'note_on' },
+            { time: 0.8, label: 'note_off' },
+          ],
+          series: [
+            { values: envelopeCurve(base, press, 1.2), label: 'линейные участки' },
+            {
+              values: envelopeCurve({ ...base, curve: 'exponential' }, press, 1.2),
+              dashed: true,
+              label: 'экспоненциальные участки',
+            },
+          ],
+          ticks: [0, 0.4, 0.8, 1.2],
+        },
+      ]
+    : [
+        {
+          title: 'а) note_off во время атаки',
+          duration: 1.2,
+          sustain: 0.6,
+          events: [{ time: 0.2, label: 'note_off' }],
+          series: [
+            {
+              values: envelopeCurve(
+                { attack: 0.4, decay: 0.2, sustain: 0.6, release: 0.3, curve: 'linear' },
+                [
+                  { time: 0, type: 'on' },
+                  { time: 0.2, type: 'off' },
+                ],
+                1.2,
+              ),
+              label: 'отпущено через 0,2 с',
+            },
+            {
+              values: envelopeCurve(
+                { attack: 0.4, decay: 0.2, sustain: 0.6, release: 0.3, curve: 'linear' },
+                press,
+                1.2,
+              ),
+              dashed: true,
+              label: 'удержано до 0,8 с',
+            },
+          ],
+          ticks: [0, 0.4, 0.8, 1.2],
+        },
+        {
+          title: 'б) note_on во время release',
+          duration: 1.2,
+          sustain: 0.6,
+          events: [
+            { time: 0.4, label: 'off' },
+            { time: 0.6, label: 'on' },
+          ],
+          series: [
+            {
+              values: envelopeCurve(
+                { attack: 0.1, decay: 0.1, sustain: 0.6, release: 0.4, curve: 'linear' },
+                [
+                  { time: 0, type: 'on' },
+                  { time: 0.4, type: 'off' },
+                  { time: 0.6, type: 'on' },
+                  { time: 0.9, type: 'off' },
+                ],
+                1.2,
+              ),
+              label: 'с текущего уровня',
+            },
+            {
+              values: envelopeCurve(
+                { attack: 0.1, decay: 0.1, sustain: 0.6, release: 0.4, curve: 'linear' },
+                [
+                  { time: 0, type: 'on' },
+                  { time: 0.4, type: 'off' },
+                  { time: 0.6, type: 'restart' },
+                  { time: 0.9, type: 'off' },
+                ],
+                1.2,
+              ),
+              dashed: true,
+              label: 'сброс в ноль',
+            },
+          ],
+          ticks: [0, 0.4, 0.8, 1.2],
+        },
+      ];
+
+const left = 40;
+const right = 340;
+const header = kind === 'curves' ? 78 : 112;
+const plotHeight = 110;
+const panelHeight = header + plotHeight + 56;
+const height = panels.length * panelHeight + (kind === 'curves' ? 0 : 8);
+const format = (value: number) => value.toLocaleString('ru-RU');
+
+function path(values: Float32Array, y: (v: number) => number): string {
+  const steps = 600;
+  const count = values.length;
+  let d = '';
+  for (let i = 0; i <= steps; i++) {
+    const n = Math.min(count - 1, Math.floor((i / steps) * count));
+    d += `${i ? 'L' : 'M'}${(left + ((right - left) * n) / count).toFixed(2)},${y(values[n]).toFixed(2)}`;
+  }
+  return d;
+}
+const tx = (time: number, duration: number) => left + ((right - left) * time) / duration;
+---
+
+<svg
+  class="adsr-plot"
+  viewBox={`0 0 360 ${height}`}
+  style="max-width: 360px; margin-inline: auto"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  {panels.map((panel, index) => {
+    const y0 = index * panelHeight;
+    const top = y0 + header;
+    const bottom = top + plotHeight;
+    const y = (v: number) => bottom - plotHeight * v;
+    const legendTop = y0 + (panel.title ? 50 : 18);
+    return (
+      <g font-size="16">
+        {panel.title && (
+          <text x="4" y={y0 + 22} class="title">
+            {panel.title}
+          </text>
+        )}
+        {panel.series.map((series, i) => (
+          <>
+            <path
+              d={`M${left},${legendTop + i * 24 - 5} H${left + 34}`}
+              class={series.dashed ? 'curve dashed' : 'curve'}
+            />
+            <text x={left + 44} y={legendTop + i * 24}>
+              {series.label}
+            </text>
+          </>
+        ))}
+        {[0, 1].map((v) => (
+          <>
+            <path d={`M${left},${y(v)} H${right}`} class={v === 0 ? 'axis' : 'grid'} />
+            <text x={left - 8} y={y(v) + 6} text-anchor="end">
+              {v}
+            </text>
+          </>
+        ))}
+        <path d={`M${left},${y(panel.sustain)} H${right}`} class="target" />
+        <text x={right + 4} y={y(panel.sustain) + 6}>
+          S
+        </text>
+        {panel.events.map((event) => (
+          <>
+            <path d={`M${tx(event.time, panel.duration)},${top - 4} V${bottom}`} class="event" />
+            <text
+              x={tx(event.time, panel.duration) + 4}
+              y={top - 8}
+              text-anchor={event.time === 0 ? 'start' : 'middle'}
+            >
+              {event.label}
+            </text>
+          </>
+        ))}
+        {panel.series.map((series) => (
+          <path d={path(series.values, y)} class={series.dashed ? 'curve dashed' : 'curve'} />
+        ))}
+        {panel.ticks.map((tick) => (
+          <text
+            x={tx(tick, panel.duration)}
+            y={bottom + 24}
+            text-anchor={tick === 0 ? 'start' : tick === panel.duration ? 'end' : 'middle'}
+          >
+            {format(tick)}
+          </text>
+        ))}
+        <text x={right} y={bottom + 46} text-anchor="end">
+          t, с
+        </text>
+      </g>
+    );
+  })}
+</svg>
+
+<style is:global>
+  .adsr-plot text {
+    fill: currentColor;
+  }
+  .adsr-plot .title {
+    font-weight: 600;
+  }
+  .adsr-plot path {
+    fill: none;
+  }
+  .adsr-plot .axis {
+    stroke: var(--chart-axis);
+  }
+  .adsr-plot .grid {
+    stroke: var(--chart-grid);
+  }
+  .adsr-plot .target {
+    stroke: var(--chart-series-3);
+    stroke-dasharray: 2 4;
+  }
+  .adsr-plot .event {
+    stroke: var(--chart-series-6);
+    stroke-width: 1.5;
+  }
+  .adsr-plot .curve {
+    stroke: var(--chart-series-1);
+    stroke-width: 2.5;
+    stroke-linejoin: round;
+  }
+  .adsr-plot .dashed {
+    stroke: var(--chart-series-2);
+    stroke-dasharray: 6 4;
+  }
+</style>

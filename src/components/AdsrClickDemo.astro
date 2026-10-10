@@ -1,0 +1,122 @@
+---
+// «Откуда берётся щелчок»: одна нота синуса с краями 0 и 5 мс, увеличенные начало и конец, скачок
+// между соседними отсчётами и прослушивание выбранного варианта. Начальный рисунок и подпись
+// создаются при сборке; без JavaScript, во время загрузки и при ошибке параметры неактивны.
+import AdsrPlayer from '@/components/AdsrPlayer.astro';
+import Icon from '@/components/Icon.astro';
+import { clickPhases, clickVariants, defaultClick, renderClick } from '@/lib/adsr';
+import { clickCaption, clickStatus, clickSvg, variantNames } from '@/lib/adsr-view';
+import { demoCaptions } from '@/lib/demo-captions';
+import '@/styles/adsr.css';
+
+interface Props {
+  /** Номер рисунка: визуализации и рисунки нумеруются одной последовательностью. */
+  figure: number;
+  /** Якорь для ссылок `#id`; английский kebab-case. */
+  id?: string;
+}
+
+const { figure, id = demoCaptions.AdsrClickDemo.defaultId } = Astro.props;
+const p = defaultClick;
+const renders = { hard: renderClick(p, 'hard'), smooth: renderClick(p, 'smooth') };
+const status = clickStatus(renders);
+const phaseNames = { 0: '0° — переход через ноль', 90: '90° — вершина' } as const;
+const selects = [
+  { key: 'startPhase', label: 'Фаза при note_on' },
+  { key: 'offPhase', label: 'Фаза при note_off' },
+] as const;
+---
+
+<figure
+  id={id}
+  class="adsr-demo"
+  aria-labelledby={`${id}-name`}
+  data-click-demo
+  data-state="static"
+>
+  <div class="adsr-demo-head">
+    <span class="adsr-demo-label">Визуализация {figure}</span>
+    <span class="adsr-demo-name" id={`${id}-name`}>
+      {demoCaptions.AdsrClickDemo.name}
+    </span>
+  </div>
+  <div
+    class="adsr-demo-chart"
+    role="region"
+    aria-label="Начало и конец ноты для двух вариантов краёв"
+    tabindex="0"
+    data-chart
+    set:html={clickSvg(renders, p, id)}
+  />
+  <ul class="adsr-demo-legend" aria-label="Легенда">
+    <li>
+      <i></i>x[n] · e[n]
+    </li>
+    <li>
+      <i class="bound-env"></i>граница ±e[n]
+    </li>
+    <li>
+      <i class="event"></i>note_on или note_off
+    </li>
+  </ul>
+  <div class="adsr-demo-status">
+    {status.map((line, index) => (
+      <p data-status-line={index}>{line}</p>
+    ))}
+  </div>
+  <p class="visually-hidden" aria-live="polite" data-announce></p>
+  <fieldset class="adsr-demo-controls" data-controls disabled>
+    <legend class="visually-hidden">Параметры ноты и прослушивание</legend>
+    <div class="adsr-demo-grid">
+      {selects.map((s) => (
+        <div class="adsr-demo-select">
+          <label for={`${id}-${s.key}`}>{s.label}</label>
+          <select id={`${id}-${s.key}`} data-select={s.key}>
+            {clickPhases.map((phase) => (
+              <option value={String(phase)} selected={phase === p[s.key]}>
+                {phaseNames[phase]}
+              </option>
+            ))}
+          </select>
+        </div>
+      ))}
+    </div>
+    <div class="adsr-demo-actions">
+      <fieldset class="adsr-demo-choice">
+        <legend>Слушать:</legend>
+        {clickVariants.map((variant) => (
+          <label>
+            <input
+              type="radio"
+              name={`${id}-variant`}
+              value={variant}
+              checked={variant === 'hard'}
+              data-variant
+            />
+            {variantNames[variant]}
+          </label>
+        ))}
+      </fieldset>
+      <button type="button" class="adsr-demo-reset" data-reset>
+        <Icon name="rotate-ccw" size={16} />
+        Сбросить
+      </button>
+    </div>
+    <AdsrPlayer label="Аудиопример: нота с выбранными краями">
+      <b>Резкий звук.</b> Вариант 0 мс щёлкает в начале и в конце ноты. Уровень ноты ограничен
+      половиной полной шкалы, громкость плеера — 30 %; в наушниках убавьте её ещё до запуска.
+    </AdsrPlayer>
+    <p class="adsr-demo-note-text" data-controls-note>
+      Параметры и звук работают с включённым JavaScript. Показано начальное состояние.
+    </p>
+  </fieldset>
+  <figcaption class="adsr-demo-caption">
+    <b>Рис. {figure}.</b> <span data-caption>{clickCaption(p)}</span>
+  </figcaption>
+</figure>
+
+<script>
+  import { initClickDemos } from '@/lib/adsr-controller';
+
+  initClickDemos();
+</script>

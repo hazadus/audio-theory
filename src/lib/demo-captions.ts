@@ -51,6 +51,8 @@ export const demoCaptions = {
     defaultId: 'voice-sources',
     name: 'Источники голоса: сумма, спектр и пик',
   },
+  AdsrDemo: { defaultId: 'adsr-demo', name: 'Огибающая ADSR' },
+  AdsrClickDemo: { defaultId: 'adsr-click', name: 'Откуда берётся щелчок' },
   FlacPredictionDemo: {
     defaultId: 'flac-prediction',
     name: 'Предсказание FLAC: остаток и коды Райса',

@@ -146,6 +146,22 @@ export const visualizations: readonly Visualization[] = [
     preview: 'voice',
   },
   {
+    id: 'adsr-demo',
+    slug: 'adsr',
+    name: 'Огибающая ADSR',
+    what: 'Атака, спад, уровень S, release, момент note_off, форма участков и источник; звучание ноты.',
+    sound: true,
+    preview: 'adsr',
+  },
+  {
+    id: 'adsr-click',
+    slug: 'adsr',
+    name: 'Откуда берётся щелчок',
+    what: 'Края 0 и 5 мс, фаза синуса при note_on и note_off, звучание обоих вариантов.',
+    sound: true,
+    preview: 'adsr-click',
+  },
+  {
     id: 'intro-tone',
     slug: 'audio-intro',
     name: 'Звук: выше, ниже, громче, тише',

@@ -333,6 +333,16 @@
 - [Carl R. Nave. HyperPhysics, Cents](https://hyperphysics.gsu.edu/hbase/Music/cents.html) и [Beats](https://hyperphysics.gsu.edu/hbase/Sound/beat.html) — цент как сотая доля темперированного полутона, частота биений как модуль разности частот.
 - [OpenStax. Precalculus 2e, §7.4: Sum-to-Product and Product-to-Sum Formulas](https://openstax.org/books/precalculus-2e/pages/7-4-sum-to-product-and-product-to-sum-formulas) — сумма синусов как произведение для объяснения биений.
 
+## Огибающая ADSR и VCA
+
+Прочитаны при подготовке `/adsr/` по [issue #16](https://github.com/hazadus/audio-theory/issues/16):
+
+- [Miller Puckette. The Theory and Technique of Electronic Music, гл. 4](http://msp.ucsd.edu/techniques/latest/book-html/node58.html) — прочитаны 4.1 Envelope generators (пять параметров ADSR, ранний `off` во время атаки и спада, повторная атака, управление тембром), 4.2 Linear and curved amplitude shapes (линейное нарастание за 10 с: −20 дБ за первую секунду, квартичная кривая), 4.3 Continuous and discontinuous control changes, Muting (5 мс приглушения) и Switch-and-ramp; пример D01/D02 с `line~`. Темы: огибающие, щелчки, приглушение перед разрывом.
+- Will Pirkle. Designing Software Synthesizer Plugins in C++, 2nd ed., гл. 7, с. 87–101 (локальная копия, см. [каталог](books.md#pirkle-w-c--designing-software-synthesizer-plugins-in-c-with-audio-dsp-2nd-ed-routledge-2021)) — времена спада и release от полного размаха, перезапуск с текущего уровня и сброс в ноль со щелчком, legato, безусловный release, машина состояний с `switch`, линейный шаг, модель CEM3310 (заряд до 77 %), метод Редмона с перелётом цели (формулы 7.6–7.8).
+- [Nigel Redmon. Envelope generators — ADSR code, EarLevel Engineering, 2013](https://www.earlevel.com/main/2013/06/03/envelope-generators-adsr-code/) — прочитано описание интерфейса и параметра target ratio (малые значения — почти экспонента, большие — почти прямая); код в архиве не открывался, формулы метода сверены по Pirkle.
+- [JUCE 9.0.3. juce_ADSR.h](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_basics/utilities/juce_ADSR.h) — стадии, шаги `attackRate`, `decayRate` и `releaseRate` (release от текущего уровня), поведение при нулевых временах и S = 0, запрет менять параметры во время звучания. [juce_MidiBuffer.h](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_basics/midi/juce_MidiBuffer.h) — обход событий блока, `samplePosition`.
+- [Ableton. Live 12 Manual, Analog: Envelopes](https://www.ableton.com/en/live-manual/12/live-instrument-reference/#analog) — стадии ADSR, переключатель Slope линейных и экспоненциальных участков, крайние положения Sustain, Legato, Free и режимы петли.
+
 ## Белый и розовый шум
 
 Прочитаны при подготовке `/noise/`:

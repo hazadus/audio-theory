@@ -22,6 +22,8 @@ export type PreviewKind =
   | 'mixing'
   | 'noise'
   | 'voice'
+  | 'adsr'
+  | 'adsr-click'
   | 'intro-oscillator'
   | 'intro-envelope'
   | 'intro-lfo';
@@ -46,6 +48,8 @@ export const previewKinds: readonly PreviewKind[] = [
   'prediction',
   'mixing',
   'voice',
+  'adsr',
+  'adsr-click',
   'intro-oscillator',
   'intro-envelope',
   'intro-lfo',
@@ -382,6 +386,8 @@ const builders: Record<PreviewKind, () => Preview> = {
   },
   prediction: predictionPreview,
   voice: voicePreview,
+  adsr: adsrPreview,
+  'adsr-click': adsrClickPreview,
   mixing: () => ({
     paths: [
       { d: wave(16, 264, 75, 22, 2), color: 'signal', width: 1.5 },
@@ -441,6 +447,58 @@ function voicePreview(): Preview {
       { x: 141, y: 127, color: 'sample' },
       { x: 219, y: 129, color: 'sample' },
     ],
+  };
+}
+
+function adsrPreview(): Preview {
+  // Сверху огибающая ADSR с ровным sustain, снизу пила под той же огибающей.
+  const env = (t: number) =>
+    t < 0.15
+      ? t / 0.15
+      : t < 0.35
+        ? 1 - (0.4 * (t - 0.15)) / 0.2
+        : t < 0.7
+          ? 0.6
+          : 0.6 * (1 - (t - 0.7) / 0.3);
+  let curve = '';
+  let signal = '';
+  for (let i = 0; i <= 160; i += 1) {
+    const t = i / 160;
+    const x = f1(16 + 248 * t);
+    curve += `${i ? 'L' : 'M'}${x} ${f1(62 - 46 * env(t))}`;
+    const saw = 2 * ((14 * t) % 1) - 1;
+    signal += `${i ? 'L' : 'M'}${x} ${f1(112 - 26 * saw * env(t))}`;
+  }
+  return {
+    paths: [
+      { d: 'M16 62H264M16 112H264', color: 'grid', width: 1 },
+      { d: 'M53 16V140M102 16V140M189 16V140', color: 'axis', width: 1, dash: '3 4' },
+      { d: curve, color: 'sample', width: 2.5 },
+      { d: signal, color: 'signal', width: 1.5 },
+    ],
+    dots: [],
+  };
+}
+
+function adsrClickPreview(): Preview {
+  // Слева синус включается скачком на вершине, справа — с короткой атакой.
+  const panel = (x0: number, smooth: boolean) => {
+    let d = `M${x0} 75H${x0 + 30}`;
+    for (let i = 0; i <= 60; i += 1) {
+      const t = i / 60;
+      const gain = smooth ? Math.min(1, t / 0.25) : 1;
+      d += `L${f1(x0 + 30 + 80 * t)} ${f1(75 - 44 * gain * Math.cos(2 * Math.PI * 2.5 * t))}`;
+    }
+    return d;
+  };
+  return {
+    paths: [
+      { d: 'M16 75H264', color: 'grid', width: 1 },
+      { d: 'M46 20V130M180 20V130', color: 'axis', width: 1.25 },
+      { d: panel(16, false), color: 'signal', width: 2 },
+      { d: panel(150, true), color: 'result', width: 2 },
+    ],
+    dots: [{ x: 46, y: 31, color: 'sample' }],
   };
 }
 

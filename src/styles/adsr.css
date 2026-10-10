@@ -1,0 +1,543 @@
+/* Визуализации статьи /adsr/: «Огибающая ADSR» и «Откуда берётся щелчок». Контейнер со звуком
+   повторяет VoiceSourcesDemo; графики строятся в пикселях контейнера. */
+.adsr-demo {
+  container-type: inline-size;
+  margin: var(--space-6) 0;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  overflow: hidden;
+  font-family: var(--font-ui);
+  scroll-margin-top: 88px;
+}
+
+.adsr-demo-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 20px;
+}
+
+.adsr-demo-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.adsr-demo-name {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.adsr-demo-chart {
+  position: relative;
+  border-block: var(--border-width) solid var(--color-border);
+  background: var(--chart-bg);
+  overflow-x: auto;
+}
+
+.adsr-demo-chart:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.adsr-demo svg {
+  display: block;
+  font-size: 12px;
+}
+
+.adsr-demo svg path {
+  fill: none;
+}
+
+.adsr-demo svg .label {
+  fill: var(--color-text);
+  font-weight: 600;
+}
+
+.adsr-demo svg .tick {
+  fill: var(--chart-label);
+  font-variant-numeric: tabular-nums;
+}
+
+.adsr-demo svg .stage {
+  fill: var(--color-text);
+  font-weight: 600;
+}
+
+.adsr-demo svg .grid {
+  stroke: var(--chart-grid);
+  stroke-width: 1;
+}
+
+.adsr-demo svg .zero {
+  stroke: var(--chart-axis);
+  stroke-width: 1;
+}
+
+.adsr-demo svg .bound {
+  stroke: var(--chart-axis);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.adsr-demo svg .event {
+  stroke: var(--chart-series-6);
+  stroke-width: 1.5;
+}
+
+.adsr-demo svg .target {
+  stroke: var(--chart-series-3);
+  stroke-width: 1;
+  stroke-dasharray: 6 4;
+}
+
+.adsr-demo svg .env {
+  stroke: var(--chart-series-2);
+  stroke-width: 2.2;
+  stroke-linejoin: round;
+}
+
+.adsr-demo svg .bound-env {
+  stroke: var(--chart-series-2);
+  stroke-width: 1.2;
+  stroke-dasharray: 5 4;
+}
+
+.adsr-demo svg .out {
+  stroke: var(--chart-series-1);
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+}
+
+.adsr-demo svg .playhead {
+  stroke: var(--color-accent);
+  stroke-width: 2;
+}
+
+.adsr-demo-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0;
+  padding: 12px 20px 0;
+  list-style: none;
+  font-size: 14px;
+}
+
+.adsr-demo-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.adsr-demo-legend i {
+  width: 18px;
+  height: 0;
+  border-top: 2px solid var(--chart-series-1);
+}
+
+.adsr-demo-legend .env {
+  border-top: 3px solid var(--chart-series-2);
+}
+
+.adsr-demo-legend .bound-env {
+  border-top: 1.5px dashed var(--chart-series-2);
+}
+
+.adsr-demo-legend .target {
+  border-top: 1.5px dashed var(--chart-series-3);
+}
+
+.adsr-demo-legend .event {
+  width: 0;
+  height: 14px;
+  border-top: 0;
+  border-left: 2px solid var(--chart-series-6);
+}
+
+.adsr-demo-legend .bound {
+  width: 0;
+  height: 14px;
+  border-top: 0;
+  border-left: 1px dashed var(--chart-axis);
+}
+
+.adsr-demo-status {
+  display: grid;
+  gap: 6px;
+  margin: 12px 20px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
+  font-size: 14px;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+}
+
+.adsr-demo-status p {
+  margin: 0;
+}
+
+.adsr-demo-edges {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.adsr-demo-edges > svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--color-text-muted);
+}
+
+.adsr-demo-status[data-jump='true'] {
+  background: var(--color-warning-bg);
+}
+
+.adsr-demo-status[data-jump='true'] .adsr-demo-edges {
+  font-weight: 600;
+  color: var(--color-warning);
+}
+
+.adsr-demo-status[data-jump='true'] .adsr-demo-edges > svg {
+  color: var(--color-warning);
+}
+
+.adsr-demo .visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.adsr-demo-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  margin: 0;
+  padding: 14px 20px 16px;
+  border: 0;
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.adsr-demo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 20px;
+}
+
+.adsr-demo-select {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.adsr-demo-select select {
+  min-width: 0;
+  min-height: 36px;
+  padding: 4px 8px;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: 16px var(--font-ui);
+}
+
+.adsr-demo-param {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.adsr-demo-param-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.adsr-demo-param-head output {
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.adsr-demo-range {
+  width: 100%;
+  min-height: 32px;
+  margin: 0;
+  accent-color: var(--color-accent);
+  touch-action: pan-y;
+}
+
+.adsr-demo-choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 14px;
+}
+
+.adsr-demo-choice legend {
+  float: left;
+  margin-right: 6px;
+  padding: 0;
+}
+
+.adsr-demo-choice label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+}
+
+.adsr-demo-choice input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--color-accent);
+}
+
+.adsr-demo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.adsr-demo-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.adsr-demo-presets-label {
+  margin-right: 2px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.adsr-demo-preset {
+  min-height: 32px;
+  padding: 0 12px;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-text);
+  font: 500 14px var(--font-ui);
+  cursor: pointer;
+}
+
+.adsr-demo-reset {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  height: 36px;
+  padding: 0 12px;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text);
+  font: 500 14px var(--font-ui);
+  cursor: pointer;
+}
+
+.adsr-demo :is(button, select, input):focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.adsr-demo-audio {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.adsr-demo-warning {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 0 0 4px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background: var(--color-warning-bg);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.adsr-demo-warning > svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--color-warning);
+}
+
+.adsr-demo-warning b {
+  color: var(--color-warning);
+}
+
+.adsr-demo-player {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 14px 8px 8px;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.adsr-demo-play {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  cursor: pointer;
+}
+
+.adsr-demo-mute {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.adsr-demo-play-icon,
+.adsr-demo-mute-icon {
+  display: flex;
+}
+
+.adsr-demo-play:not([data-playing]) .adsr-demo-play-icon.stop,
+.adsr-demo-play[data-playing] .adsr-demo-play-icon.start,
+.adsr-demo-mute:not([data-muted]) .adsr-demo-mute-icon.off,
+.adsr-demo-mute[data-muted] .adsr-demo-mute-icon.on {
+  display: none;
+}
+
+.adsr-demo-volume {
+  display: flex;
+  flex: 1 1 140px;
+  gap: 6px;
+  align-items: center;
+  max-width: 280px;
+}
+
+.adsr-demo-range.compact {
+  flex: 1;
+  min-width: 0;
+  min-height: 24px;
+}
+
+.adsr-demo-volume-text {
+  width: 36px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.adsr-demo-player-state {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+.adsr-demo-player[data-mode='error'] + .adsr-demo-player-state,
+.adsr-demo-player[data-mode='unavailable'] + .adsr-demo-player-state {
+  color: var(--color-error);
+}
+
+.adsr-demo-player :disabled {
+  opacity: 0.45;
+}
+
+@media (hover: hover) {
+  .adsr-demo-preset:hover,
+  .adsr-demo-reset:hover,
+  .adsr-demo-mute:not(:disabled):hover {
+    background: var(--color-bg);
+  }
+}
+
+.adsr-demo-controls:disabled > :not(.adsr-demo-note-text) {
+  opacity: 0.5;
+}
+
+.adsr-demo-controls:disabled * {
+  cursor: not-allowed;
+}
+
+.adsr-demo-note-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+.adsr-demo[data-state='ready'] .adsr-demo-note-text {
+  display: none;
+}
+
+.adsr-demo[data-state='error'] .adsr-demo-note-text {
+  color: var(--color-error);
+}
+
+.adsr-demo-caption {
+  padding: 10px 20px 14px;
+  border-top: var(--border-width) solid var(--color-border);
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+.adsr-demo-caption b {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+@container (max-width: 559px) {
+  .adsr-demo-head,
+  .adsr-demo-controls,
+  .adsr-demo-caption,
+  .adsr-demo-legend {
+    padding-inline: 16px;
+  }
+
+  .adsr-demo-status {
+    margin-inline: 16px;
+  }
+
+  .adsr-demo-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

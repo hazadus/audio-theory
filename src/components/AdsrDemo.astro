@@ -1,0 +1,166 @@
+---
+// «Огибающая ADSR»: огибающая со стадиями и сигнал после VCA на общей оси времени, статус по
+// отсчётам и однократное прослушивание ноты тем же алгоритмом. Начальный рисунок и подпись
+// создаются при сборке; без JavaScript, во время загрузки и при ошибке параметры неактивны.
+import AdsrPlayer from '@/components/AdsrPlayer.astro';
+import Icon from '@/components/Icon.astro';
+import { curves, defaultNote, limits, renderNote, sources } from '@/lib/adsr';
+import {
+  adsrCaption,
+  adsrPresets,
+  adsrStatus,
+  adsrSvg,
+  curveNames,
+  rangeText,
+  sourceNames,
+} from '@/lib/adsr-view';
+import { demoCaptions } from '@/lib/demo-captions';
+import '@/styles/adsr.css';
+
+interface Props {
+  /** Номер рисунка: визуализации и рисунки нумеруются одной последовательностью. */
+  figure: number;
+  /** Якорь для ссылок `#id`; английский kebab-case. */
+  id?: string;
+}
+
+const { figure, id = demoCaptions.AdsrDemo.defaultId } = Astro.props;
+const p = defaultNote;
+const render = renderNote(p);
+const status = adsrStatus(render);
+
+const ranges = [
+  { key: 'attack', label: 'Атака A' },
+  { key: 'decay', label: 'Спад D' },
+  { key: 'sustain', label: 'Уровень S' },
+  { key: 'release', label: 'Release R' },
+  { key: 'hold', label: 'note_off через' },
+] as const;
+const presets = Object.entries(adsrPresets).map(([key, preset]) => ({ key, label: preset.label }));
+---
+
+<figure id={id} class="adsr-demo" aria-labelledby={`${id}-name`} data-adsr-demo data-state="static">
+  <div class="adsr-demo-head">
+    <span class="adsr-demo-label">Визуализация {figure}</span>
+    <span class="adsr-demo-name" id={`${id}-name`}>
+      {demoCaptions.AdsrDemo.name}
+    </span>
+  </div>
+  <div
+    class="adsr-demo-chart"
+    role="region"
+    aria-label="Графики огибающей и сигнала после VCA"
+    tabindex="0"
+    data-chart
+    set:html={adsrSvg(render, id)}
+  />
+  <ul class="adsr-demo-legend" aria-label="Легенда">
+    <li>
+      <i class="env"></i>огибающая e[n]
+    </li>
+    <li>
+      <i></i>x[n] · e[n]
+    </li>
+    <li>
+      <i class="bound-env"></i>граница ±e[n]
+    </li>
+    <li>
+      <i class="target"></i>уровень S
+    </li>
+    <li>
+      <i class="event"></i>note_on и note_off
+    </li>
+    <li>
+      <i class="bound"></i>смена стадии
+    </li>
+  </ul>
+  <div class="adsr-demo-status" data-status-box data-jump={String(status.jump)}>
+    <p data-status-stages>{status.stages}</p>
+    <p data-status-off>{status.noteOff}</p>
+    <p class="adsr-demo-edges">
+      <Icon name="info" size={16} />
+      <span data-status-edges>{status.edges}</span>
+    </p>
+  </div>
+  <p class="visually-hidden" aria-live="polite" data-announce></p>
+  <fieldset class="adsr-demo-controls" data-controls disabled>
+    <legend class="visually-hidden">Параметры огибающей и ноты</legend>
+    <div class="adsr-demo-grid">
+      {ranges.map((r) => (
+        <div class="adsr-demo-param">
+          <div class="adsr-demo-param-head">
+            <label for={`${id}-${r.key}`}>{r.label}</label>
+            <output for={`${id}-${r.key}`} data-output={r.key}>
+              {rangeText(r.key, p[r.key])}
+            </output>
+          </div>
+          <input
+            id={`${id}-${r.key}`}
+            class="adsr-demo-range"
+            type="range"
+            min={limits[r.key].min}
+            max={limits[r.key].max}
+            step={limits[r.key].step}
+            value={p[r.key]}
+            aria-valuetext={rangeText(r.key, p[r.key])}
+            data-range={r.key}
+          />
+        </div>
+      ))}
+      <div class="adsr-demo-param">
+        <div class="adsr-demo-select">
+          <label for={`${id}-curve`}>Участки</label>
+          <select id={`${id}-curve`} data-select="curve">
+            {curves.map((curve) => (
+              <option value={curve} selected={curve === p.curve}>
+                {curveNames[curve]}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div class="adsr-demo-select">
+          <label for={`${id}-source`}>Источник</label>
+          <select id={`${id}-source`} data-select="source">
+            {sources.map((source) => (
+              <option value={source} selected={source === p.source}>
+                {sourceNames[source]}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="adsr-demo-actions">
+      <div class="adsr-demo-presets" role="group" aria-label="Примеры">
+        <span class="adsr-demo-presets-label" aria-hidden="true">
+          Примеры:
+        </span>
+        {presets.map((preset) => (
+          <button type="button" class="adsr-demo-preset" data-preset={preset.key}>
+            {preset.label}
+          </button>
+        ))}
+      </div>
+      <button type="button" class="adsr-demo-reset" data-reset>
+        <Icon name="rotate-ccw" size={16} />
+        Сбросить
+      </button>
+    </div>
+    <AdsrPlayer label="Аудиопример: нота с огибающей">
+      <b>Громкость.</b> Нота звучит один раз: нажатие и release. Пила и нулевые атака или release
+      дают резкий звук и щелчки: перед запуском убавьте громкость, особенно в наушниках.
+    </AdsrPlayer>
+    <p class="adsr-demo-note-text" data-controls-note>
+      Параметры и звук работают с включённым JavaScript. Показано начальное состояние.
+    </p>
+  </fieldset>
+  <figcaption class="adsr-demo-caption">
+    <b>Рис. {figure}.</b> <span data-caption>{adsrCaption(p)}</span>
+  </figcaption>
+</figure>
+
+<script>
+  import { initAdsrDemos } from '@/lib/adsr-controller';
+
+  initAdsrDemos();
+</script>
