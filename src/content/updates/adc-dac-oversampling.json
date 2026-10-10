@@ -1,0 +1,25 @@
+{
+  "id": "adc-dac-oversampling",
+  "date": "2026-10-10",
+  "order": 3,
+  "type": "updated",
+  "article": "adc-dac",
+  "items": [
+    {
+      "text": "Передискретизация в АЦП: мягкий входной фильтр и выигрыш 10 lg L дБ",
+      "target": { "article": "adc-dac", "anchor": "adc-oversampling" }
+    },
+    {
+      "text": "Дельта-сигма-модуляция и формирование спектра шума",
+      "target": { "article": "adc-dac", "anchor": "delta-sigma" }
+    },
+    {
+      "text": "Таблица выигрыша для модуляторов первого и второго порядка",
+      "target": { "article": "adc-dac", "anchor": "delta-sigma-gain" }
+    },
+    {
+      "text": "Термин «дельта-сигма-модуляция»",
+      "target": { "glossary": "delta-sigma" }
+    }
+  ]
+}

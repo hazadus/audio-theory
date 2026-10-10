@@ -4,6 +4,7 @@
     "abramson": "Abramson J.",
     "aldoshina": "Алдошина И. А.",
     "alex": "Alex",
+    "baker": "Baker B.",
     "becker": "Becker J.",
     "bencina": "Bencina R.",
     "bender": "Bender M.",
@@ -38,6 +39,7 @@
     "painter": "Painter T.",
     "pekonen": "Pekonen J.",
     "peterson": "Peterson J.",
+    "pirkle": "Pirkle W. C.",
     "puckette": "Puckette M.",
     "raissi": "Raissi R.",
     "reiss": "Reiss J. D.",
@@ -408,6 +410,29 @@
       "authors": ["zolzer"],
       "title": "Digital Audio Signal Processing",
       "publication": "3rd ed. Wiley, 2022. ISBN 978-1-119-83267-6."
+    },
+    {
+      "id": "pirkle-2021",
+      "type": "book",
+      "authors": ["pirkle"],
+      "title": "Designing Software Synthesizer Plugins in C++: With Audio DSP",
+      "publication": "2nd ed. Routledge, 2021. ISBN 978-0-367-51046-6."
+    },
+    {
+      "id": "baker-2011a",
+      "type": "article",
+      "authors": ["baker"],
+      "title": "How delta-sigma ADCs work, Part 1",
+      "publication": "Texas Instruments, Analog Applications Journal. 3Q 2011. SLYT423A.",
+      "url": "https://www.ti.com/lit/an/slyt423a/slyt423a.pdf"
+    },
+    {
+      "id": "baker-2011b",
+      "type": "article",
+      "authors": ["baker"],
+      "title": "How delta-sigma ADCs work, Part 2",
+      "publication": "Texas Instruments, Analog Applications Journal. 4Q 2011. SLYT438.",
+      "url": "https://www.ti.com/lit/an/slyt438/slyt438.pdf"
     },
     {
       "id": "cpp-core-guidelines",

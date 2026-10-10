@@ -1,0 +1,25 @@
+{
+  "id": "lfo-random-stepped",
+  "date": "2026-10-10",
+  "order": 4,
+  "type": "updated",
+  "article": "lfo",
+  "items": [
+    {
+      "text": "Случайный LFO: выборка с удержанием и пример на C++",
+      "target": { "article": "lfo", "anchor": "sample-and-hold" }
+    },
+    {
+      "text": "Ступенчатые формы: квантование значения и фазы",
+      "target": { "article": "lfo", "anchor": "stepped" }
+    },
+    {
+      "text": "Рисунок: случайный и ступенчатые LFO",
+      "target": { "article": "lfo", "anchor": "random-stepped-figure" }
+    },
+    {
+      "text": "Термин «выборка с удержанием»",
+      "target": { "glossary": "sample-and-hold" }
+    }
+  ]
+}
