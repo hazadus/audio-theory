@@ -24,6 +24,8 @@ export type PreviewKind =
   | 'voice'
   | 'adsr'
   | 'adsr-click'
+  | 'filter-step'
+  | 'filter-smoothing'
   | 'intro-oscillator'
   | 'intro-envelope'
   | 'intro-lfo';
@@ -50,6 +52,8 @@ export const previewKinds: readonly PreviewKind[] = [
   'voice',
   'adsr',
   'adsr-click',
+  'filter-step',
+  'filter-smoothing',
   'intro-oscillator',
   'intro-envelope',
   'intro-lfo',
@@ -388,6 +392,8 @@ const builders: Record<PreviewKind, () => Preview> = {
   voice: voicePreview,
   adsr: adsrPreview,
   'adsr-click': adsrClickPreview,
+  'filter-step': filterStepPreview,
+  'filter-smoothing': filterSmoothingPreview,
   mixing: () => ({
     paths: [
       { d: wave(16, 264, 75, 22, 2), color: 'signal', width: 1.5 },
@@ -499,6 +505,56 @@ function adsrClickPreview(): Preview {
       { d: panel(150, true), color: 'result', width: 2 },
     ],
     dots: [{ x: 46, y: 31, color: 'sample' }],
+  };
+}
+
+function filterStepPreview(): Preview {
+  // Ступенька входа пунктиром и отсчёты выхода на экспоненте с отметкой постоянной времени.
+  const dots: PreviewDot[] = [];
+  let curve = '';
+  for (let i = 0; i <= 120; i += 1) {
+    const t = i / 120;
+    curve += `${i ? 'L' : 'M'}${f1(20 + 240 * t)} ${f1(130 - 100 * (1 - Math.exp(-5 * t)))}`;
+  }
+  for (let n = 0; n <= 20; n += 1)
+    dots.push({
+      x: Number(f1(20 + 12 * n)),
+      y: Number(f1(130 - 100 * (1 - Math.exp(-n / 4)))),
+      color: 'result',
+    });
+  return {
+    paths: [
+      { d: 'M20 130H260', color: 'axis', width: 1 },
+      { d: 'M20 30H260', color: 'signal', width: 1.5, dash: '5 4' },
+      { d: 'M20 67H260M68 20V136', color: 'grid', width: 1.25, dash: '6 4' },
+      { d: curve, color: 'result', width: 1.5 },
+    ],
+    dots,
+  };
+}
+
+function filterSmoothingPreview(): Preview {
+  // Тонкая пила и скруглённый выход фильтра поверх неё.
+  let saw = '';
+  let smooth = '';
+  let y = 0;
+  const b = Math.exp(-1 / 14);
+  for (let i = 0; i <= 480; i += 1) {
+    const t = i / 480;
+    const x = 2 * ((3 * t + 0.5) % 1) - 1;
+    y = i === 0 ? -0.1 : x + b * (y - x);
+    if (i % 2 === 0) {
+      saw += `${i ? 'L' : 'M'}${f1(16 + 248 * t)} ${f1(75 - 50 * x)}`;
+      smooth += `${i ? 'L' : 'M'}${f1(16 + 248 * t)} ${f1(75 - 50 * y)}`;
+    }
+  }
+  return {
+    paths: [
+      { d: 'M16 75H264', color: 'grid', width: 1 },
+      { d: saw, color: 'signal', width: 1.25 },
+      { d: smooth, color: 'result', width: 2.5 },
+    ],
+    dots: [],
   };
 }
 

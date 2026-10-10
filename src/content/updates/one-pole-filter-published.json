@@ -1,0 +1,26 @@
+{
+  "id": "one-pole-filter-published",
+  "date": "2026-10-11",
+  "order": 1,
+  "type": "new",
+  "article": "one-pole-filter",
+  "summary": "Третья статья серии о простом синтезаторе: субтрактивный синтез и место фильтра после микшера, рекуррентная формула однополюсного фильтра нижних частот, коэффициент из частоты среза и постоянная времени, устойчивость, реакция на скачок, сглаживание пилы и шума и ограничения первого фильтра. Класс LowPassFilter на C++20 и сравнение с juce::dsp::FirstOrderTPTFilter.",
+  "items": [
+    {
+      "text": "Переходная характеристика: скачок по отсчётам и постоянная времени",
+      "target": { "article": "one-pole-filter", "anchor": "filter-step" }
+    },
+    {
+      "text": "Сглаживание фильтром: пила и шум до и после фильтра со звуком",
+      "target": { "article": "one-pole-filter", "anchor": "filter-smoothing" }
+    },
+    {
+      "text": "Частота среза, коэффициент и постоянная времени",
+      "target": { "article": "one-pole-filter", "anchor": "cutoff" }
+    },
+    {
+      "text": "Класс LowPassFilter на C++ и сравнение с TPT-фильтром JUCE",
+      "target": { "article": "one-pole-filter", "anchor": "cpp" }
+    }
+  ]
+}

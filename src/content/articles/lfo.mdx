@@ -78,6 +78,7 @@ import '@/styles/lfo.css';
 
 <MarginNote items={[
   { label: 'Ableton Live → Analog', description: 'Маршруты LFO на частоту генератора, фильтр и усиление.', target: { url: 'https://www.ableton.com/en/live-manual/12/live-instrument-reference/#analog' } },
+  { label: 'Однополюсный фильтр → Частота среза и коэффициент', description: 'Что такое частота среза фильтра и как из неё вычисляется коэффициент.', target: { article: 'one-pole-filter', anchor: 'cutoff' } },
 ]}>
 
 Для эффекта важны и форма LFO, и способ преобразования его выхода в нужные единицы. Число −1 на выходе LFO может означать крайнее левое положение <Term id="pan" firstMention>панорамы</Term>, но напрямую задать частоту среза −1 Гц нельзя. Значения управления нужно преобразовать в диапазон выбранного параметра; примеры ниже показывают, как это сделать.

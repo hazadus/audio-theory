@@ -2792,5 +2792,45 @@
       "article": "lfo",
       "anchor": "sample-and-hold"
     }
+  },
+  {
+    "id": "subtractive-synthesis",
+    "ru": "субтрактивный синтез",
+    "en": "subtractive synthesis",
+    "definition": "Способ синтеза, при котором сначала создают сигнал с большим числом гармоник, например пилу или шум, а затем фильтром ослабляют часть его частот.",
+    "target": {
+      "article": "one-pole-filter",
+      "anchor": "subtractive"
+    }
+  },
+  {
+    "id": "one-pole-filter",
+    "ru": "однополюсный фильтр",
+    "en": "one-pole filter",
+    "definition": "Простейший рекурсивный фильтр: новый выход вычисляется из входного отсчёта и одного предыдущего выхода, y[n] = y[n−1] + a·(x[n] − y[n−1]). При коэффициенте a от 0 до 1 работает как фильтр нижних частот.",
+    "target": {
+      "article": "one-pole-filter",
+      "anchor": "state"
+    }
+  },
+  {
+    "id": "cutoff-frequency",
+    "ru": "частота среза",
+    "en": "cutoff frequency",
+    "definition": "Частота, выше которой фильтр нижних частот заметно ослабляет сигнал. У однополюсного фильтра при частоте среза много ниже fs/2 синусоида этой частоты ослабляется примерно на 3 дБ.",
+    "target": {
+      "article": "one-pole-filter",
+      "anchor": "cutoff"
+    }
+  },
+  {
+    "id": "time-constant",
+    "ru": "постоянная времени",
+    "en": "time constant",
+    "definition": "Время τ, за которое экспоненциальный процесс проходит 1 − 1/e ≈ 63,2 % пути к установившемуся значению; у однополюсного фильтра τ = 1/(2π·fc).",
+    "target": {
+      "article": "audio-math",
+      "anchor": "exponential"
+    }
   }
 ]

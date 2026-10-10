@@ -324,6 +324,16 @@ $$
 
 При $f_s=48\,000$ Гц и $t=0{,}01$ с получается $f_st=480$, показатель примерно −0,004578, а $\alpha\approx0{,}995433$. Увеличение $t$ приближает коэффициент к 1. Как этот коэффициент замедляет изменение усиления, показано [ниже](#recurrence); значение времени 10–90 % соответствует модели [MathWorks, compressor](https://www.mathworks.com/help/audio/ref/compressor-system-object.html), принятой в статье о компрессоре.
 
+<MarginNote items={[
+  { label: 'Однополюсный фильтр → Частота среза и коэффициент', description: 'Постоянная времени, частота среза и коэффициент фильтра a = 1 − e^(−1/(fs·τ)).', target: { article: 'one-pole-filter', anchor: 'cutoff' } },
+]}>
+
+Затухание часто записывают как $e^{-t/\tau}$. Число $\tau>0$ в секундах — <Term id="time-constant" firstMention define>постоянная времени</Term>: за время $\tau$ показатель становится равным −1, и от начального значения остаётся $1/e\approx36{,}8$ %. За $3\tau$ остаётся $e^{-3}\approx5{,}0$ %, за $5\tau$ — около 0,7 % ([J. O. Smith, Exponentials](https://ccrma.stanford.edu/~jos/mdft/Exponentials.html)). Если процесс приближается к цели, то за $\tau$ он проходит $1-1/e\approx63{,}2$ % пути. В цифровой форме время считают отсчётами: за один отсчёт, $1/f_s$ секунды, расстояние умножается на $e^{-1/(f_s\tau)}$. При $f_s=48\,000$ Гц и $\tau=1$ мс это $e^{-1/48}\approx0{,}9794$.
+
+</MarginNote>
+
+Коэффициент компрессора записывается так же: $\alpha=e^{-\ln9/(f_st)}$ соответствует $\tau=t/\ln9\approx t/2{,}2$. Время атаки 10 мс даёт постоянную времени около 4,55 мс.
+
 ## Сумма Σ и среднеквадратичное значение {#sums-and-rms}
 
 <Term id="summation" firstMention define>Суммирование</Term> обозначают заглавной греческой буквой $\Sigma$ («сигма»). Запись $\sum_{n=0}^{N-1}x[n]$ означает сложить отсчёты с номерами от 0 до $N-1$ включительно. Таких отсчётов ровно $N$: при $N=4$ берутся номера 0, 1, 2, 3. Буква $n$ внутри суммы перебирает номера и не остаётся свободным аргументом результата.
@@ -435,6 +445,7 @@ $$
 
 <MarginNote items={[
   { label: 'Принцип работы компрессора → Атака и восстановление', description: 'Как предыдущее подавление и коэффициент сглаживания задают скорость реакции.', target: { article: 'compressor', anchor: 'attack-release' } },
+  { label: 'Однополюсный фильтр нижних частот', description: 'Та же формула для звуковых отсчётов: фильтр с частотой среза и переходной характеристикой.', target: { article: 'one-pole-filter', anchor: 'state' } },
 ]}>
 
 Возьмём учебный коэффициент $\alpha=0{,}75$ и постоянную цель $g_c[n]=-8$ дБ. На первом шаге получается $0{,}75\cdot0+0{,}25\cdot(-8)=-2$ дБ, на втором $0{,}75\cdot(-2)+0{,}25\cdot(-8)=-3{,}5$ дБ, на третьем −4,625 дБ. Значение постепенно приближается к −8 дБ. Чем ближе $\alpha$ к 1, тем больше вес прошлого и тем медленнее изменение. При $\alpha=0$ результат сразу равен цели, при $\alpha=1$ состояние остаётся прежним.
@@ -572,6 +583,7 @@ $$
 - [Компрессор](/compressor/#threshold-ratio): вычитание отрицательных уровней, кусочная характеристика, экспонента, использование предыдущего состояния и [установившееся значение](/compressor/#detector) рекуррентной формулы.
 - [Лимитер](/limiter/#lookahead): минимум и среднее по скользящему окну, логарифм модуля отсчёта, косинус в оценке пика между отсчётами.
 - [Осцилляторы синтезатора](/synth-oscillators/#note-frequency): дробные степени двойки для нот, интервалов и центов, остаток от деления при отражении частот, биения и верхняя граница суммы.
+- [Однополюсный фильтр нижних частот](/one-pole-filter/#cutoff): рекуррентная формула для звуковых отсчётов, экспонента и постоянная времени, степень $(1-a)^N$ в реакции на скачок.
 
 ## Источники {#sources}
 
@@ -592,7 +604,7 @@ $$
 - <Source id="abramson-2021">[§5.4: Right Triangle Trigonometry](https://openstax.org/books/precalculus-2e/pages/5-4-right-triangle-trigonometry) и [§5.2: Unit Circle, Sine and Cosine Functions](https://openstax.org/books/precalculus-2e/pages/5-2-unit-circle-sine-and-cosine-functions)</Source> — отношения сторон и координаты на окружности.
 - <Source id="abramson-2021">[§4.3: Logarithmic Functions](https://openstax.org/books/precalculus-2e/pages/4-3-logarithmic-functions), [§4.5: Logarithmic Properties](https://openstax.org/books/precalculus-2e/pages/4-5-logarithmic-properties) и [§4.1: Exponential Functions](https://openstax.org/books/precalculus-2e/pages/4-1-exponential-functions)</Source> — основания логарифмов, обратная операция и экспонента.
 - <Source id="davies-2023">[§7.3: Hexadecimal (base 16)](https://math.libretexts.org/Bookshelves/Combinatorics_and_Discrete_Mathematics/A_Cool_Brisk_Walk_Through_Discrete_Mathematics_(Davies)/07:_Counting/7.3:_Hexadecimal_(base_16)) и [§7.4: Binary (base 2)](https://math.libretexts.org/Bookshelves/Combinatorics_and_Discrete_Mathematics/A_Cool_Brisk_Walk_Through_Discrete_Mathematics_(Davies)/07:_Counting/7.4:_Binary_(base_2))</Source> — позиционная запись, биты, байт из 8 бит, шестнадцатеричная цифра как 4 бита, дополнительный код.
-- <Source id="smith-2007">[Decibels](https://ccrma.stanford.edu/~jos/mdft/Decibels.html), [Signal Metrics](https://ccrma.stanford.edu/~jos/mdft/Signal_Metrics.html) и [Sampling Theorem](https://ccrma.stanford.edu/~jos/mdft/Sampling_Theorem.html)</Source> — децибелы, RMS и идеальная интерполяция через sinc.
+- <Source id="smith-2007">[Decibels](https://ccrma.stanford.edu/~jos/mdft/Decibels.html), [Signal Metrics](https://ccrma.stanford.edu/~jos/mdft/Signal_Metrics.html), [Sampling Theorem](https://ccrma.stanford.edu/~jos/mdft/Sampling_Theorem.html) и [Exponentials](https://ccrma.stanford.edu/~jos/mdft/Exponentials.html)</Source> — децибелы, RMS, идеальная интерполяция через sinc и постоянная времени экспоненты.
 - [MathWorks. compressor, Algorithms](https://www.mathworks.com/help/audio/ref/compressor-system-object.html) — статическая характеристика и коэффициенты сглаживания атаки и восстановления.
 
 - <Source id="abramson-2021">[§7.2: Sum and Difference Identities](https://openstax.org/books/precalculus-2e/pages/7-2-sum-and-difference-identities)</Source> — формулы сложения углов.

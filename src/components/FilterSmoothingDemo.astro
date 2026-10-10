@@ -1,0 +1,220 @@
+---
+// «Сглаживание фильтром»: вход и выход однополюсного фильтра нижних частот на общей оси времени,
+// коэффициент, постоянная времени, RMS и прослушивание петли до и после фильтра тем же алгоритмом.
+// Начальный рисунок и подпись создаются при сборке; без JavaScript, во время загрузки и при ошибке
+// параметры неактивны.
+import Icon from '@/components/Icon.astro';
+import { demoCaptions } from '@/lib/demo-captions';
+import {
+  cutoffSteps,
+  defaultSmoothing,
+  filterSources,
+  renderSmoothing,
+  toneSteps,
+} from '@/lib/one-pole-filter';
+import {
+  coefficientText,
+  cutoffText,
+  filterSourceNames,
+  smoothingCaption,
+  smoothingStatus,
+  smoothingSvg,
+  tauText,
+  toneText,
+} from '@/lib/one-pole-filter-view';
+import { initialVolume } from '@/lib/sampling-audio';
+import { volumeStep, volumeText } from '@/lib/sampling-player';
+import '@/styles/one-pole-filter.css';
+
+interface Props {
+  /** Номер рисунка: визуализации и рисунки нумеруются одной последовательностью. */
+  figure: number;
+  /** Якорь для ссылок `#id`; английский kebab-case. */
+  id?: string;
+}
+
+const { figure, id = demoCaptions.FilterSmoothingDemo.defaultId } = Astro.props;
+const p = defaultSmoothing;
+const render = renderSmoothing(p);
+const status = smoothingStatus(render);
+---
+
+<figure
+  id={id}
+  class="filter-demo"
+  aria-labelledby={`${id}-name`}
+  data-filter-smoothing
+  data-state="static"
+>
+  <div class="filter-demo-head">
+    <span class="filter-demo-label">Визуализация {figure}</span>
+    <span class="filter-demo-name" id={`${id}-name`}>
+      {demoCaptions.FilterSmoothingDemo.name}
+    </span>
+  </div>
+  <div
+    class="filter-demo-chart"
+    role="region"
+    aria-label="График входа и выхода фильтра"
+    tabindex="0"
+    data-chart
+    set:html={smoothingSvg(render, id)}
+  />
+  <ul class="filter-demo-legend" aria-label="Легенда">
+    <li>
+      <i class="in"></i>вход x[n]
+    </li>
+    <li>
+      <i class="out"></i>выход y[n]
+    </li>
+  </ul>
+  <div class="filter-demo-status">
+    <p data-status-coefficient>{status.coefficient}</p>
+    <p data-status-rms>{status.rms}</p>
+    <p data-status-note>{status.note}</p>
+  </div>
+  <p class="visually-hidden" aria-live="polite" data-announce></p>
+  <fieldset class="filter-demo-controls" data-controls disabled>
+    <legend class="visually-hidden">Параметры фильтра и источника</legend>
+    <div class="filter-demo-grid">
+      <div class="filter-demo-param">
+        <div class="filter-demo-param-head">
+          <label for={`${id}-cutoff`}>
+            Частота среза f<sub>c</sub>
+          </label>
+          <output for={`${id}-cutoff`} data-output="cutoff">
+            {cutoffText(p.cutoffStep)}
+          </output>
+        </div>
+        <input
+          id={`${id}-cutoff`}
+          class="filter-demo-range"
+          type="range"
+          min="0"
+          max={cutoffSteps.length - 1}
+          step="1"
+          value={p.cutoffStep}
+          aria-valuetext={cutoffText(p.cutoffStep)}
+          aria-describedby={`${id}-derived`}
+          data-range="cutoff"
+        />
+        <p class="filter-demo-derived" id={`${id}-derived`} data-derived>
+          a = {coefficientText(render.a)}, τ = {tauText(render.tau, render.sampleRate)}
+        </p>
+      </div>
+      <div class="filter-demo-param">
+        <div class="filter-demo-select">
+          <label for={`${id}-source`}>Источник</label>
+          <select id={`${id}-source`} data-select="source">
+            {filterSources.map((source) => (
+              <option value={source} selected={source === p.source}>
+                {filterSourceNames[source]}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div class="filter-demo-param-head">
+          <label for={`${id}-tone`}>Частота тона</label>
+          <output for={`${id}-tone`} data-output="tone">
+            {toneText(p.toneStep)}
+          </output>
+        </div>
+        <input
+          id={`${id}-tone`}
+          class="filter-demo-range"
+          type="range"
+          min="0"
+          max={toneSteps.length - 1}
+          step="1"
+          value={p.toneStep}
+          aria-valuetext={toneText(p.toneStep)}
+          data-range="tone"
+        />
+        <p class="filter-demo-tone-note" data-tone-note hidden>
+          У шума нет частоты тона.
+        </p>
+      </div>
+    </div>
+    <div class="filter-demo-actions">
+      <span></span>
+      <button type="button" class="filter-demo-reset" data-reset>
+        <Icon name="rotate-ccw" size={16} />
+        Сбросить
+      </button>
+    </div>
+    <div class="filter-demo-audio">
+      <p class="filter-demo-warning" role="note">
+        <Icon name="volume-2" size={18} />
+        <span>
+          <b>Громкость.</b> Пила, прямоугольник и белый шум до фильтра звучат резко и громко: перед
+          запуском убавьте громкость, особенно в наушниках.
+        </span>
+      </p>
+      <div
+        class="filter-demo-player"
+        role="group"
+        aria-label="Аудиопример: сигнал до и после фильтра"
+        data-player-group
+        data-mode="ready"
+      >
+        <button type="button" class="filter-demo-play" aria-label="Воспроизвести" data-play>
+          <span class="filter-demo-play-icon start">
+            <Icon name="play" size={18} />
+          </span>
+          <span class="filter-demo-play-icon stop">
+            <Icon name="square" size={16} />
+          </span>
+        </button>
+        <div class="filter-demo-listen" role="radiogroup" aria-label="Что слушать">
+          <label>
+            <input type="radio" name={`${id}-listen`} value="dry" data-listen />
+            До фильтра
+          </label>
+          <label>
+            <input type="radio" name={`${id}-listen`} value="wet" checked data-listen />
+            После фильтра
+          </label>
+        </div>
+        <div class="filter-demo-volume">
+          <button type="button" class="filter-demo-mute" aria-label="Выключить звук" data-mute>
+            <span class="filter-demo-mute-icon on">
+              <Icon name="volume-2" size={18} />
+            </span>
+            <span class="filter-demo-mute-icon off">
+              <Icon name="volume-x" size={18} />
+            </span>
+          </button>
+          <input
+            class="filter-demo-range compact"
+            type="range"
+            min="0"
+            max="100"
+            step={volumeStep}
+            value={initialVolume * 100}
+            aria-label="Громкость"
+            aria-valuetext={volumeText(initialVolume * 100)}
+            data-volume
+          />
+          <span class="filter-demo-volume-text" data-volume-text>
+            {volumeText(initialVolume * 100)}
+          </span>
+        </div>
+      </div>
+      <p class="filter-demo-player-state" role="status" data-player-state>
+        Остановлен
+      </p>
+    </div>
+    <p class="filter-demo-note-text" data-controls-note>
+      Параметры и звук работают с включённым JavaScript. Показано начальное состояние.
+    </p>
+  </fieldset>
+  <figcaption class="filter-demo-caption">
+    <b>Рис. {figure}.</b> <span data-caption>{smoothingCaption(p)}</span>
+  </figcaption>
+</figure>
+
+<script>
+  import { initSmoothingDemos } from '@/lib/one-pole-filter-controller';
+
+  initSmoothingDemos();
+</script>

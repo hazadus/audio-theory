@@ -1,0 +1,13 @@
+{
+  "id": "track-musician-one-pole-filter",
+  "date": "2026-10-11",
+  "order": 3,
+  "type": "updated",
+  "track": "musician",
+  "items": [
+    {
+      "text": "Этап «Огибающая, LFO и тремоло»: по желанию — субтрактивный синтез и сглаживание фильтром",
+      "target": { "track": "musician", "anchor": "stage-modulation" }
+    }
+  ]
+}

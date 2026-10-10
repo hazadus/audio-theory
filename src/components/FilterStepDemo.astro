@@ -1,0 +1,104 @@
+---
+// «Переходная характеристика»: выход однополюсного фильтра после скачка входа от 0 к 1 по отсчётам,
+// уровень 1 − 1/e и момент τ. Без звука. Начальный рисунок и подпись создаются при сборке; без
+// JavaScript, во время загрузки и при ошибке ползунок неактивен.
+import Icon from '@/components/Icon.astro';
+import { demoCaptions } from '@/lib/demo-captions';
+import { cutoffSteps, defaultCutoffStep, renderStep } from '@/lib/one-pole-filter';
+import { cutoffText, stepCaption, stepStatus, stepSvg } from '@/lib/one-pole-filter-view';
+import '@/styles/one-pole-filter.css';
+
+interface Props {
+  /** Номер рисунка: визуализации и рисунки нумеруются одной последовательностью. */
+  figure: number;
+  /** Якорь для ссылок `#id`; английский kebab-case. */
+  id?: string;
+}
+
+const { figure, id = demoCaptions.FilterStepDemo.defaultId } = Astro.props;
+const render = renderStep(defaultCutoffStep);
+const status = stepStatus(render);
+---
+
+<figure
+  id={id}
+  class="filter-demo filter-demo-step"
+  aria-labelledby={`${id}-name`}
+  data-filter-step
+  data-state="static"
+>
+  <div class="filter-demo-head">
+    <span class="filter-demo-label">Визуализация {figure}</span>
+    <span class="filter-demo-name" id={`${id}-name`}>
+      {demoCaptions.FilterStepDemo.name}
+    </span>
+  </div>
+  <div
+    class="filter-demo-chart"
+    role="region"
+    aria-label="График реакции фильтра на скачок"
+    tabindex="0"
+    data-chart
+    set:html={stepSvg(render, id)}
+  />
+  <ul class="filter-demo-legend" aria-label="Легенда">
+    <li>
+      <i class="in-step"></i>вход после скачка, 1
+    </li>
+    <li>
+      <i class="dot"></i>выход после N отсчётов
+    </li>
+    <li>
+      <i class="mark"></i>уровень 63,2 % и момент τ
+    </li>
+  </ul>
+  <div class="filter-demo-status">
+    {status.map((line) => (
+      <p data-status-line>{line}</p>
+    ))}
+  </div>
+  <p class="visually-hidden" aria-live="polite" data-announce></p>
+  <fieldset class="filter-demo-controls" data-controls disabled>
+    <legend class="visually-hidden">Частота среза</legend>
+    <div class="filter-demo-param">
+      <div class="filter-demo-param-head">
+        <label for={`${id}-cutoff`}>
+          Частота среза f<sub>c</sub>
+        </label>
+        <output for={`${id}-cutoff`} data-output="cutoff">
+          {cutoffText(defaultCutoffStep)}
+        </output>
+      </div>
+      <input
+        id={`${id}-cutoff`}
+        class="filter-demo-range"
+        type="range"
+        min="0"
+        max={cutoffSteps.length - 1}
+        step="1"
+        value={defaultCutoffStep}
+        aria-valuetext={cutoffText(defaultCutoffStep)}
+        data-range="cutoff"
+      />
+    </div>
+    <div class="filter-demo-actions">
+      <span></span>
+      <button type="button" class="filter-demo-reset" data-reset>
+        <Icon name="rotate-ccw" size={16} />
+        Сбросить
+      </button>
+    </div>
+    <p class="filter-demo-note-text" data-controls-note>
+      Ползунок работает с включённым JavaScript. Показано начальное состояние.
+    </p>
+  </fieldset>
+  <figcaption class="filter-demo-caption">
+    <b>Рис. {figure}.</b> <span data-caption>{stepCaption(render)}</span>
+  </figcaption>
+</figure>
+
+<script>
+  import { initStepDemos } from '@/lib/one-pole-filter-controller';
+
+  initStepDemos();
+</script>

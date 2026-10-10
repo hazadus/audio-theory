@@ -343,6 +343,17 @@
 - [JUCE 9.0.3. juce_ADSR.h](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_basics/utilities/juce_ADSR.h) — стадии, шаги `attackRate`, `decayRate` и `releaseRate` (release от текущего уровня), поведение при нулевых временах и S = 0, запрет менять параметры во время звучания. [juce_MidiBuffer.h](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_basics/midi/juce_MidiBuffer.h) — обход событий блока, `samplePosition`.
 - [Ableton. Live 12 Manual, Analog: Envelopes](https://www.ableton.com/en/live-manual/12/live-instrument-reference/#analog) — стадии ADSR, переключатель Slope линейных и экспоненциальных участков, крайние положения Sustain, Legato, Free и режимы петли.
 
+## Однополюсный фильтр нижних частот
+
+Прочитаны при подготовке `/one-pole-filter/` по [issue #17](https://github.com/hazadus/audio-theory/issues/17):
+
+- [Steven W. Smith. The Scientist and Engineer's Guide to DSP, гл. 19: Recursive Filters](https://www.dspguide.com/CH19.PDF) — прочитаны с. 319–325: рекурсивное уравнение, однополюсные фильтры нижних и верхних частот ($a_0 = 1 - x$, $b_1 = x$), $x = e^{-1/d}$ для постоянной времени и $x = e^{-2\pi f_c}$ для частоты среза по уровню −3 дБ, сравнение с RC-цепью, неустойчивость при $x > 1$, слабое разделение частот и каскад из четырёх фильтров. Страница главы на сайте содержит только ссылку на PDF.
+- [Julius O. Smith III. Introduction to Digital Filters with Audio Applications, One-Pole](https://ccrma.stanford.edu/~jos/filters/One_Pole.html) — разностное уравнение, передаточная функция, условие $|a_1| < 1$, нижние частоты при полюсе возле 1, нормировка $b_0 = 1 - |a_1|$. [Mathematics of the DFT, Exponentials](https://ccrma.stanford.edu/~jos/mdft/Exponentials.html) — постоянная времени как время затухания в $e$ раз.
+- D. Sundararajan. Digital Signal Processing: An Introduction, 2nd ed., Springer, 2024 (локальная копия, см. [каталог](books.md#sundararajan-d--digital-signal-processing-an-introduction-springer-2024)) — §2.1 (RC-цепь, разностное уравнение первого порядка, отклик с нулевым входом и нулевым состоянием), §2.3.2 (линейность), §2.5 (устойчивость BIBO), §8.2 (билинейное преобразование через формулу трапеций, искажение оси частот).
+- Will Pirkle. Designing Software Synthesizer Plugins in C++, 2nd ed., гл. 12, с. 173–186 (локальная копия) — подходы к цифровым фильтрам синтезатора, интегратор по формуле трапеций и предыскажение, фильтры первого порядка виртуального аналога с $G = g/(1 + g)$, ноль на частоте Найквиста, лестничный фильтр Moog из четырёх фильтров первого порядка с обратной связью.
+- [JUCE 9.0.3. juce_FirstOrderTPTFilter.h](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_dsp/processors/juce_FirstOrderTPTFilter.h) и [.cpp](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_dsp/processors/juce_FirstOrderTPTFilter.cpp) — `setType`, `setCutoffFrequency` с проверкой $0 < f_c < f_s/2$, `prepare`, `reset (value)`, `processSample`, `snapToZero`, расчёт `G` через `tan` и шаг TPT; [ProcessSpec](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_dsp/processors/juce_ProcessContext.h) — поля спецификации.
+- [Ableton. Live 12 Manual, Drift](https://www.ableton.com/en/live-manual/12/live-instrument-reference/#drift) — прочитаны 31.3.1 Subtractive Synthesis (определение) и 31.3.3 Filter Section (фильтры нижних частот 12 и 24 дБ на октаву, резонанс, слежение за клавиатурой).
+
 ## Белый и розовый шум
 
 Прочитаны при подготовке `/noise/`:

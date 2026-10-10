@@ -1,0 +1,13 @@
+{
+  "id": "track-programmer-one-pole-filter",
+  "date": "2026-10-11",
+  "order": 2,
+  "type": "updated",
+  "track": "programmer",
+  "items": [
+    {
+      "text": "Этап «Синтезатор»: однополюсный фильтр нижних частот после огибающей ADSR",
+      "target": { "track": "programmer", "anchor": "stage-synthesizer" }
+    }
+  ]
+}

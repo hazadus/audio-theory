@@ -51,6 +51,7 @@
     "sottek": "Sottek R.",
     "spanias": "Spanias A.",
     "stroustrup": "Stroustrup B.",
+    "sundararajan": "Sundararajan D.",
     "supurovic": "Supurovic P.",
     "sutter": "Sutter H.",
     "suzuki": "Suzuki Y.",
@@ -119,6 +120,14 @@
       "title": "Spectral Audio Signal Processing",
       "publication": "W3K Publishing, 2011.",
       "url": "https://ccrma.stanford.edu/~jos/sasp/"
+    },
+    {
+      "id": "smith-2007-filters",
+      "type": "book",
+      "authors": ["smith-jo"],
+      "title": "Introduction to Digital Filters with Audio Applications",
+      "publication": "W3K Publishing, 2007. ISBN 978-0-9745607-1-7.",
+      "url": "https://ccrma.stanford.edu/~jos/filters/"
     },
     {
       "id": "smith-1999",
@@ -519,6 +528,13 @@
       "authors": ["zolzer"],
       "title": "Digital Audio Signal Processing",
       "publication": "3rd ed. Wiley, 2022. ISBN 978-1-119-83267-6."
+    },
+    {
+      "id": "sundararajan-2024",
+      "type": "book",
+      "authors": ["sundararajan"],
+      "title": "Digital Signal Processing: An Introduction",
+      "publication": "2nd ed. Springer, 2024. ISBN 978-3-031-56739-1."
     },
     {
       "id": "pirkle-2021",

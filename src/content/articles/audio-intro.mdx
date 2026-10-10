@@ -123,6 +123,7 @@ import Term from '@/components/Term.astro';
 
 <MarginNote items={[
   { label: 'Звук в пространстве → Панорамирование и баланс', description: 'Положение моноисточника, стереобаланс и ширина.', target: { article: 'spatial-audio', anchor: 'panning' } },
+  { label: 'Однополюсный фильтр → Субтрактивный синтез', description: 'Как фильтр нижних частот ослабляет гармоники пилы и что такое частота среза.', target: { article: 'one-pole-filter', anchor: 'subtractive' } },
 ]}>
 
 «Фильтр» меняет яркость. В этом опыте <Term id="low-pass-filter" firstMention define>фильтр нижних частот</Term> ослабляет верхние частотные составляющие пилы. LFO поднимает и опускает **частоту среза (cutoff frequency)**, поэтому тембр становится то ярче, то приглушённее. «<Term id="pan" firstMention define>Панорама</Term>» перемещает звук между левым и правым каналами; её удобнее слушать в наушниках.

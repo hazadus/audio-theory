@@ -162,6 +162,22 @@ export const visualizations: readonly Visualization[] = [
     preview: 'adsr-click',
   },
   {
+    id: 'filter-step',
+    slug: 'one-pole-filter',
+    name: 'Переходная характеристика',
+    what: 'Частота среза: реакция на скачок по отсчётам, уровень 63,2 % и постоянная времени.',
+    sound: false,
+    preview: 'filter-step',
+  },
+  {
+    id: 'filter-smoothing',
+    slug: 'one-pole-filter',
+    name: 'Сглаживание фильтром',
+    what: 'Частота среза, пила, прямоугольник или шум, частота тона; RMS и звучание до и после фильтра.',
+    sound: true,
+    preview: 'filter-smoothing',
+  },
+  {
     id: 'intro-tone',
     slug: 'audio-intro',
     name: 'Звук: выше, ниже, громче, тише',

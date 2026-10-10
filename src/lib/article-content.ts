@@ -206,6 +206,18 @@ const blockRules: Record<string, BlockRule> = {
     idRequired: false,
     numberRequired: true,
   },
+  FilterStepDemo: {
+    sequence: 'figure',
+    numberAttribute: 'figure',
+    idRequired: false,
+    numberRequired: true,
+  },
+  FilterSmoothingDemo: {
+    sequence: 'figure',
+    numberAttribute: 'figure',
+    idRequired: false,
+    numberRequired: true,
+  },
   SynthChain: {
     sequence: 'figure',
     numberAttribute: 'number',
