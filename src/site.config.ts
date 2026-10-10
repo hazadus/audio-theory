@@ -10,6 +10,8 @@ export const siteConfig = {
   site: 'https://hazadus.github.io',
   base: '/audio-theory/',
   repository: 'https://github.com/hazadus/audio-theory',
+  /** Общая картинка превью ссылок (Open Graph и микроразметка статей). */
+  ogImage: '/og-image.png',
   /** Коды подтверждения владения сайтом в Яндекс Вебмастере и Google Search Console. */
   verification: {
     yandex: '76ad4b85306c6784',

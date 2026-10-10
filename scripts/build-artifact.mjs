@@ -1,9 +1,10 @@
-// Строит индекс Pagefind и проверяет готовый статический артефакт после сборки Astro.
+// Проверяет готовый статический артефакт и метаданные страниц, затем строит индекс Pagefind.
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { stat } from 'node:fs/promises';
 import * as pagefind from 'pagefind';
 import { checkArtifact } from './check-artifact.mjs';
+import { checkMetadata } from './check-metadata.mjs';
 
 function checked(result) {
   if (result.errors?.length) throw new Error(`Pagefind: ${result.errors.join('\n')}`);
@@ -21,6 +22,13 @@ export default function buildArtifact() {
       'astro:build:done': async ({ dir, logger }) => {
         const directory = fileURLToPath(dir).replace(/\/$/, '');
         const { pages } = await checkArtifact({ directory, site: config.site, base: config.base });
+        // Служебные статьи (ARTICLES_DIR) нарочно повторяют названия, чтобы проверить сортировку.
+        await checkMetadata({
+          directory,
+          site: config.site,
+          base: config.base,
+          uniqueTitles: !process.env.ARTICLES_DIR,
+        });
         try {
           const { index } = checked(await pagefind.createIndex());
           const { page_count } = checked(await index.addDirectory({ path: directory }));

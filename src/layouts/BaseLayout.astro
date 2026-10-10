@@ -1,7 +1,8 @@
 ---
 // Общий каркас страницы: тема до CSS, ссылка перехода к содержимому, шапка и подвал (кроме графа).
 // Страница выводит основное содержимое в <main id="content">.
-// В <head> — описание, канонический адрес и Open Graph для поисковиков и превью ссылок.
+// В <head> — описание, канонический адрес и Open Graph для поисковиков и превью ссылок;
+// слот `head` добавляет страничные элементы, например микроразметку статьи.
 import '@/styles/base.css';
 import SearchDialog from '@/components/SearchDialog.astro';
 import SiteFooter from '@/components/SiteFooter.astro';
@@ -29,7 +30,7 @@ const { title, description, section, footer = true, article, canonical = true } 
 const fullTitle = title === siteConfig.name ? title : `${title} — ${siteConfig.name}`;
 const pageUrl = new URL(Astro.url.pathname, Astro.site).href;
 const image = {
-  url: new URL(withBase('/og-image.png'), Astro.site).href,
+  url: new URL(withBase(siteConfig.ogImage), Astro.site).href,
   width: 1200,
   height: 630,
   alt: `${siteConfig.name}: учебник по теории аудио и цифровой обработке звука`,
@@ -64,6 +65,7 @@ const image = {
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="yandex-verification" content={siteConfig.verification.yandex} />
     <meta name="google-site-verification" content={siteConfig.verification.google} />
+    <slot name="head" />
     <link rel="alternate" type="application/rss+xml" title={feedTitle} href={withBase(feedPath)} />
     <script
       defer

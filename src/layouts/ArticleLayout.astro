@@ -15,8 +15,10 @@ import type { LocalGraph } from '@/lib/graph';
 import type { SeriesPosition } from '@/lib/first-steps';
 import type { NavTrack } from '@/lib/track-navigation';
 import { formatUpdatedDate } from '@/lib/format-date';
+import { articleStructuredData, serializeJsonLd } from '@/lib/structured-data';
 import { materialsHref } from '@/lib/materials';
 import { withBase } from '@/lib/urls';
+import { siteConfig } from '@/site.config';
 import '@/styles/code.css';
 import '@/styles/math.css';
 
@@ -67,6 +69,24 @@ const links = (items: typeof data.related) =>
     href: resolveTarget(item.target),
     external: 'url' in item.target,
   }));
+
+const absolute = (path: string) => new URL(withBase(path), Astro.site).href;
+const structuredData = articleStructuredData({
+  url: absolute(`/${data.slug}/`),
+  title: data.title,
+  description: data.question,
+  image: absolute(siteConfig.ogImage),
+  published: dates.published,
+  modified: dates.addition?.date,
+  keywords: articleTags.map((tag) => tag.title),
+  site: { name: siteConfig.name, url: absolute('/') },
+  // Те же ступени, что в видимых хлебных крошках, плюс сама статья.
+  breadcrumbs: [
+    { name: 'Главная', url: absolute('/') },
+    { name: group.title, url: absolute(materialsHref(group.id)) },
+    { name: data.title, url: absolute(`/${data.slug}/`) },
+  ],
+});
 ---
 
 <BaseLayout
@@ -75,6 +95,12 @@ const links = (items: typeof data.related) =>
   section="materials"
   article={{ published: dates.published, modified: dates.addition?.date }}
 >
+  <script
+    slot="head"
+    type="application/ld+json"
+    is:inline
+    set:html={serializeJsonLd(structuredData)}
+  />
   <div class="progress" data-reading-progress aria-hidden="true" hidden></div>
   <main id="content" data-pagefind-body>
     <div class="page">

@@ -93,6 +93,7 @@ src/
     search-controller.ts            # Состояния и выдача поиска в диалоге
     search-view.ts                  # Плоский список переходов и безопасный разбор фрагментов
     urls.ts                         # Построитель URL с базовым путём
+    structured-data.ts              # JSON-LD статьи: Article и BreadcrumbList
     <name>.ts                       # Модель визуализации или статичного графика статьи: расчёты без DOM
     <name>-view.ts                  # Тексты, подписи и разметка SVG визуализации
     <name>-controller.ts            # Параметры, примеры, сброс, объявления и ошибки визуализации
@@ -174,6 +175,7 @@ scripts/                             # Проверка контента и со
   check-tracks.mjs                 # Цели, журнал, черновики, сборки для браузера и изоляция фикстур
   check-articles.mjs                # Проверка коллекции статей
   check-artifact.mjs                # Локальные страницы, HTML-якоря и ресурсы HTML/CSS
+  check-metadata.mjs                # title, description, canonical и JSON-LD готовых страниц
   build-updates-fixture.mjs         # Служебная сборка журнала для сценариев @updates
   check-mdx.mjs                     # Проверка MDX, формул и ресурсов
   check-production.mjs              # Сетевая проверка публичной страницы и ресурсов
@@ -190,6 +192,8 @@ tests/                               # Unit-тесты и браузерные �
   e2e/track-navigation.spec.ts     # Шапка, главная, «В треках» и блок трека в статье на фикстурах
   unit/track-view.test.ts          # Склонения, заголовки и дата страниц треков
   unit/urls.test.ts                  # Контракт URL и базового пути
+  unit/metadata.test.ts              # Проверка title, description, canonical и JSON-LD артефакта
+  unit/structured-data.test.ts       # Микроразметка статьи: Article, даты и хлебные крошки
   unit/<name>.test.ts               # Модель и представление визуализации
   e2e/<name>-demo.spec.ts           # Визуализация в браузере: параметры, звук, сброс, без JS
   unit/artifact.test.ts              # Цели ссылок и блокировка неверной сборки
