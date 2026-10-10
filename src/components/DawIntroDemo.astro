@@ -900,7 +900,8 @@ const sliderId = (track: string, key: string) => `${id}-${track}-${key}`;
 
   .daw-chart {
     margin: 12px auto;
-    width: min(calc(100% - 24px), 360px);
+    /* SVG шириной 280 по viewBox: при 344 px кегль 13 даёт 16 px — верхнюю границу дизайн-системы. */
+    width: min(calc(100% - 24px), 344px);
     padding: 8px;
     background: var(--chart-bg);
     border-radius: var(--radius-sm);
