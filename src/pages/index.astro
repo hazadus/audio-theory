@@ -13,6 +13,7 @@ import { loadTracks } from '@/lib/track-list';
 import { loadVisualizationSection } from '@/lib/visualization-list';
 import { materialsHref } from '@/lib/materials';
 import { withBase } from '@/lib/urls';
+import { siteConfig } from '@/site.config';
 
 const articles = await loadArticleList();
 const groups = buildHomeGroups(articles, topics);
@@ -23,8 +24,8 @@ const visualizations = await loadVisualizationSection();
 ---
 
 <BaseLayout
-  title="Теория аудио"
-  description="Личный учебник по теории аудио и цифровой обработке звука."
+  title={siteConfig.name}
+  description="Учебник по теории аудио и цифровой обработке звука с интерактивными опытами: дискретизация, АЦП и ЦАП, громкость LUFS, компрессор, синтез, C++ для аудио."
 >
   <main id="content" data-pagefind-body>
     <div class="hero">

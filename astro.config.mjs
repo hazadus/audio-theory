@@ -1,5 +1,6 @@
 import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
+import sitemap from '@astrojs/sitemap';
 import { unified } from '@astrojs/markdown-remark';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
@@ -20,6 +21,8 @@ export default defineConfig({
   base: siteConfig.base,
   trailingSlash: 'always',
   integrations: [
+    // Карта сайта пишется до проверки артефакта: ссылка на неё в <head> должна вести на готовый файл.
+    sitemap(),
     buildArtifact(),
     {
       name: 'site-urls',

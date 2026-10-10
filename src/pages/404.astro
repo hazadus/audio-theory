@@ -4,7 +4,11 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import { withBase } from '@/lib/urls';
 ---
 
-<BaseLayout title="Страница не найдена" description="Такой страницы на сайте нет.">
+<BaseLayout
+  title="Страница не найдена"
+  description="Такой страницы на сайте нет."
+  canonical={false}
+>
   <main id="content">
     <div class="column">
       <span class="code">Ошибка 404</span>

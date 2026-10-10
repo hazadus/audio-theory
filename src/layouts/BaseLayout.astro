@@ -1,11 +1,12 @@
 ---
 // Общий каркас страницы: тема до CSS, ссылка перехода к содержимому, шапка и подвал (кроме графа).
 // Страница выводит основное содержимое в <main id="content">.
+// В <head> — описание, канонический адрес и Open Graph для поисковиков и превью ссылок.
 import '@/styles/base.css';
 import SearchDialog from '@/components/SearchDialog.astro';
 import SiteFooter from '@/components/SiteFooter.astro';
 import SiteHeader from '@/components/SiteHeader.astro';
-import { analyticsConfig } from '@/site.config';
+import { analyticsConfig, siteConfig } from '@/site.config';
 import { themeInitScript } from '@/lib/theme';
 import { feedPath, feedTitle } from '@/lib/updates-feed';
 import { withBase } from '@/lib/urls';
@@ -17,9 +18,22 @@ interface Props {
   section?: string;
   /** Подвал; страница графа во всю высоту окна выводится без него. */
   footer?: boolean;
+  /** Статья: `og:type` — `article`, даты в формате YYYY-MM-DD; у черновика дат нет. */
+  article?: { published: string | null; modified?: string };
+  /** Канонический адрес; 404.html отдаётся по любому неизвестному адресу, поэтому без него. */
+  canonical?: boolean;
 }
 
-const { title, description, section, footer = true } = Astro.props;
+const { title, description, section, footer = true, article, canonical = true } = Astro.props;
+// Главная называется именем сайта, остальные страницы получают его суффиксом.
+const fullTitle = title === siteConfig.name ? title : `${title} — ${siteConfig.name}`;
+const pageUrl = new URL(Astro.url.pathname, Astro.site).href;
+const image = {
+  url: new URL(withBase('/og-image.png'), Astro.site).href,
+  width: 1200,
+  height: 630,
+  alt: `${siteConfig.name}: учебник по теории аудио и цифровой обработке звука`,
+};
 ---
 
 <!doctype html>
@@ -29,7 +43,24 @@ const { title, description, section, footer = true } = Astro.props;
     <script is:inline set:html={themeInitScript} />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     {description && <meta name="description" content={description} />}
-    <title>{title}</title>
+    <title>{fullTitle}</title>
+    {canonical && <link rel="canonical" href={pageUrl} />}
+    <link rel="sitemap" href={withBase('/sitemap-index.xml')} />
+    <meta property="og:site_name" content={siteConfig.name} />
+    <meta property="og:locale" content="ru_RU" />
+    <meta property="og:type" content={article ? 'article' : 'website'} />
+    <meta property="og:title" content={title} />
+    {description && <meta property="og:description" content={description} />}
+    {canonical && <meta property="og:url" content={pageUrl} />}
+    <meta property="og:image" content={image.url} />
+    <meta property="og:image:width" content={String(image.width)} />
+    <meta property="og:image:height" content={String(image.height)} />
+    <meta property="og:image:alt" content={image.alt} />
+    {article?.published && <meta property="article:published_time" content={article.published} />}
+    {article?.modified && <meta property="article:modified_time" content={article.modified} />}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="yandex-verification" content={siteConfig.verification.yandex} />
+    <meta name="google-site-verification" content={siteConfig.verification.google} />
     <link rel="alternate" type="application/rss+xml" title={feedTitle} href={withBase(feedPath)} />
     <script
       defer

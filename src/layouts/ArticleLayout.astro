@@ -69,7 +69,12 @@ const links = (items: typeof data.related) =>
   }));
 ---
 
-<BaseLayout title={data.title} section="materials">
+<BaseLayout
+  title={data.title}
+  description={data.question}
+  section="materials"
+  article={{ published: dates.published, modified: dates.addition?.date }}
+>
   <div class="progress" data-reading-progress aria-hidden="true" hidden></div>
   <main id="content" data-pagefind-body>
     <div class="page">
