@@ -45,6 +45,21 @@ import { siteConfig } from '@/site.config';
           <Icon name="external-link" size={16} />
         </a>
       </div>
+
+      <h2 id="projects">Другие проекты автора</h2>
+      <a
+        class="project"
+        href={siteConfig.depot.url}
+        target="_blank"
+        rel="noopener"
+        data-pagefind-ignore
+      >
+        <span class="project-text">
+          <span class="project-name">{siteConfig.depot.name}</span>
+          <span class="project-host">{siteConfig.depot.host}</span>
+        </span>
+        <Icon name="external-link" size={18} />
+      </a>
     </article>
   </main>
 </BaseLayout>
@@ -126,6 +141,49 @@ import { siteConfig } from '@/site.config';
     font-size: 15px;
     font-weight: 500;
     text-decoration: none;
+  }
+
+  .project {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 20px;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: 10px;
+    color: var(--color-text);
+    font-family: var(--font-ui);
+    text-decoration: none;
+  }
+
+  .project:hover {
+    border-color: var(--color-border-strong);
+    background: var(--color-surface);
+  }
+
+  .project :global(svg) {
+    flex: none;
+    color: var(--color-text-muted);
+  }
+
+  .project-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .project-name {
+    font-size: var(--text-base);
+    font-weight: 500;
+    line-height: 1.4;
+    text-wrap: pretty;
+  }
+
+  .project-host {
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: 13px;
   }
 
   .button.primary {

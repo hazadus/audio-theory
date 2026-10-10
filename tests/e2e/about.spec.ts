@@ -12,7 +12,12 @@ test(
       'Как устроены материалы',
       'Кто пишет',
       'Как предложить тему или исправление',
+      'Другие проекты автора',
     ]);
+    const depot = page.locator('main').getByRole('link', { name: /Депо/ });
+    await expect(depot).toHaveAttribute('href', siteConfig.depot.url);
+    await expect(depot).toHaveAttribute('target', '_blank');
+    await expect(depot).toHaveAttribute('rel', /noopener/);
     await expect(page.getByRole('link', { name: 'Создать issue' })).toHaveAttribute(
       'href',
       `${siteConfig.repository}/issues/new`,

@@ -54,6 +54,9 @@ test(
         'href',
         /\/about\/#propose$/,
       );
+      const depot = footer.getByRole('link', { name: /Депо/ });
+      await expect(depot).toHaveAttribute('href', siteConfig.depot.url);
+      await expect(depot).toHaveAttribute('rel', /noopener/);
       for (const landmark of ['banner', 'main', 'contentinfo']) {
         await expect(page.getByRole(landmark as 'banner')).toHaveCount(1);
       }
