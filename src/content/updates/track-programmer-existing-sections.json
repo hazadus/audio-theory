@@ -1,0 +1,21 @@
+{
+  "id": "track-programmer-existing-sections",
+  "date": "2026-10-10",
+  "order": 5,
+  "type": "updated",
+  "track": "programmer",
+  "items": [
+    {
+      "text": "Этап обработки начинается с пути сигнала в DAW и дополнен гребенчатой фильтрацией по желанию",
+      "target": { "track": "programmer", "anchor": "stage-processing" }
+    },
+    {
+      "text": "Перед синтезатором по желанию — сообщения MIDI и равномерная темперация",
+      "target": { "track": "programmer", "anchor": "stage-synthesizer" }
+    },
+    {
+      "text": "Перед частотной маскировкой по желанию — критические полосы",
+      "target": { "track": "programmer", "anchor": "stage-files" }
+    }
+  ]
+}
