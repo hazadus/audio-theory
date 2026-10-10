@@ -5,6 +5,7 @@ import '@/styles/base.css';
 import SearchDialog from '@/components/SearchDialog.astro';
 import SiteFooter from '@/components/SiteFooter.astro';
 import SiteHeader from '@/components/SiteHeader.astro';
+import { analyticsConfig } from '@/site.config';
 import { themeInitScript } from '@/lib/theme';
 import { feedPath, feedTitle } from '@/lib/updates-feed';
 import { withBase } from '@/lib/urls';
@@ -30,6 +31,22 @@ const { title, description, section, footer = true } = Astro.props;
     {description && <meta name="description" content={description} />}
     <title>{title}</title>
     <link rel="alternate" type="application/rss+xml" title={feedTitle} href={withBase(feedPath)} />
+    <script
+      defer
+      src={`${analyticsConfig.host}/script.js`}
+      data-website-id={analyticsConfig.websiteId}
+      data-domains={analyticsConfig.domain}
+    ></script>
+    <script is:inline define:vars={{ analytics: analyticsConfig }}>
+      // recorder.js не читает data-domains, поэтому подключается только на боевом домене.
+      if (location.hostname === analytics.domain) {
+        const recorder = document.createElement('script');
+        recorder.defer = true;
+        recorder.src = `${analytics.host}/recorder.js`;
+        recorder.dataset.websiteId = analytics.websiteId;
+        document.head.append(recorder);
+      }
+    </script>
   </head>
   <body>
     <a class="skip-link" href="#content" data-pagefind-ignore>
