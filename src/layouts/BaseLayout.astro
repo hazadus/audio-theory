@@ -46,6 +46,9 @@ const image = {
     <title>{fullTitle}</title>
     {canonical && <link rel="canonical" href={pageUrl} />}
     <link rel="sitemap" href={withBase('/sitemap-index.xml')} />
+    <link rel="icon" href={withBase('/favicon.ico')} sizes="16x16 32x32 48x48" />
+    <link rel="icon" href={withBase('/icon-192.png')} type="image/png" sizes="192x192" />
+    <link rel="apple-touch-icon" href={withBase('/apple-touch-icon.png')} />
     <meta property="og:site_name" content={siteConfig.name} />
     <meta property="og:locale" content="ru_RU" />
     <meta property="og:type" content={article ? 'article' : 'website'} />

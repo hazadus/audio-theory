@@ -166,6 +166,9 @@ src/
 public/
   licenses/                         # Лицензии KaTeX, шрифтов и Lucide
   og-image.png                      # Картинка превью ссылок 1200×630 для Open Graph
+  favicon.ico                       # Фавиконка 16, 32 и 48 px
+  icon-192.png                      # Иконка 192 px для поисковой выдачи и Android
+  apple-touch-icon.png              # Иконка 180 px для iOS
 scripts/                             # Проверка контента и собранного сайта
   build-artifact.mjs                # Интеграция сборки индекса Pagefind и проверки артефакта
   check-tracks.mjs                 # Цели, журнал, черновики, сборки для браузера и изоляция фикстур
