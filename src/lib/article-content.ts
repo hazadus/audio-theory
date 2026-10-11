@@ -218,6 +218,12 @@ const blockRules: Record<string, BlockRule> = {
     idRequired: false,
     numberRequired: true,
   },
+  SynthVoiceDemo: {
+    sequence: 'figure',
+    numberAttribute: 'figure',
+    idRequired: false,
+    numberRequired: true,
+  },
   SynthChain: {
     sequence: 'figure',
     numberAttribute: 'number',

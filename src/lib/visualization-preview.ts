@@ -26,6 +26,7 @@ export type PreviewKind =
   | 'adsr-click'
   | 'filter-step'
   | 'filter-smoothing'
+  | 'synth-voice'
   | 'intro-oscillator'
   | 'intro-envelope'
   | 'intro-lfo';
@@ -54,6 +55,7 @@ export const previewKinds: readonly PreviewKind[] = [
   'adsr-click',
   'filter-step',
   'filter-smoothing',
+  'synth-voice',
   'intro-oscillator',
   'intro-envelope',
   'intro-lfo',
@@ -394,6 +396,7 @@ const builders: Record<PreviewKind, () => Preview> = {
   'adsr-click': adsrClickPreview,
   'filter-step': filterStepPreview,
   'filter-smoothing': filterSmoothingPreview,
+  'synth-voice': synthVoicePreview,
   mixing: () => ({
     paths: [
       { d: wave(16, 264, 75, 22, 2), color: 'signal', width: 1.5 },
@@ -481,6 +484,41 @@ function adsrPreview(): Preview {
       { d: 'M53 16V140M102 16V140M189 16V140', color: 'axis', width: 1, dash: '3 4' },
       { d: curve, color: 'sample', width: 2.5 },
       { d: signal, color: 'signal', width: 1.5 },
+    ],
+    dots: [],
+  };
+}
+
+function synthVoicePreview(): Preview {
+  // Сверху вся нота: плотная волна под огибающей и рамка фрагмента; снизу фрагмент крупно.
+  const env = (t: number) =>
+    t < 0.06
+      ? t / 0.06
+      : t < 0.25
+        ? 1 - (0.4 * (t - 0.06)) / 0.19
+        : t < 0.72
+          ? 0.6
+          : 0.6 * (1 - (t - 0.72) / 0.28);
+  let note = '';
+  for (let i = 0; i <= 124; i += 1) {
+    const t = i / 124;
+    const x = f1(16 + 248 * t);
+    const top = 30 * env(t);
+    note += `M${x} ${f1(44 - top)}V${f1(44 + top)}`;
+  }
+  let zoom = '';
+  for (let i = 0; i <= 160; i += 1) {
+    const t = i / 160;
+    const phase = (3 * t) % 1;
+    const soft = 2 * phase - 1 - 0.9 * Math.exp(-phase * 9);
+    zoom += `${i ? 'L' : 'M'}${f1(16 + 248 * t)} ${f1(116 - 22 * soft)}`;
+  }
+  return {
+    paths: [
+      { d: 'M16 44H264M16 116H264', color: 'grid', width: 1 },
+      { d: note, color: 'signal', width: 1.5 },
+      { d: 'M150 10H176V78H150Z', color: 'sample', width: 1.5 },
+      { d: zoom, color: 'signal', width: 2 },
     ],
     dots: [],
   };

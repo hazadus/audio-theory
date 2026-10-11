@@ -1,0 +1,286 @@
+---
+// «Голос синтезатора»: форма всей ноты, увеличенный фрагмент выбранной стадии, пик и длина
+// рендера; прослушивание и скачивание WAV тем же алгоритмом. Начальный рисунок и подпись
+// создаются при сборке; без JavaScript, во время загрузки и при ошибке параметры неактивны.
+import AdsrPlayer from '@/components/AdsrPlayer.astro';
+import Icon from '@/components/Icon.astro';
+import { curves } from '@/lib/adsr';
+import { demoCaptions } from '@/lib/demo-captions';
+import { intervals, noiseColors, subWaveforms, waveforms } from '@/lib/synth-oscillators';
+import {
+  defaultVoice,
+  renderVoice,
+  voicePresets,
+  wavBits,
+  zoomStages,
+  zoomStart,
+} from '@/lib/synth-voice';
+import {
+  curveNames,
+  rangeLimits,
+  rangeText,
+  rangeValue,
+  voiceCaption,
+  voiceStatus,
+  voiceSvg,
+  zoomNames,
+  type VoiceRangeKey,
+} from '@/lib/synth-voice-view';
+import {
+  intervalNames,
+  noiseColorNames,
+  subWaveformNames,
+  waveformNames,
+} from '@/lib/voice-sources-view';
+import '@/styles/adsr.css';
+import '@/styles/synth-voice.css';
+
+interface Props {
+  /** Номер рисунка: визуализации и рисунки нумеруются одной последовательностью. */
+  figure: number;
+  /** Якорь для ссылок `#id`; английский kebab-case. */
+  id?: string;
+}
+
+const { figure, id = demoCaptions.SynthVoiceDemo.defaultId } = Astro.props;
+const p = defaultVoice;
+const render = renderVoice(p);
+const status = voiceStatus(render, 'attack');
+
+type Control =
+  | { kind: 'range'; key: VoiceRangeKey; label: string }
+  | { kind: 'select'; key: string; label: string; options: { value: string; label: string }[] };
+
+const options = <T extends string | number>(values: readonly T[], names: Record<T, string>) =>
+  values.map((value) => ({ value: String(value), label: names[value] }));
+
+const groups: { title: string; controls: Control[] }[] = [
+  {
+    title: 'Нота',
+    controls: [
+      { kind: 'range', key: 'note', label: 'Нота' },
+      { kind: 'range', key: 'hold', label: 'Нажатие' },
+    ],
+  },
+  {
+    title: 'Осциллятор 1',
+    controls: [
+      {
+        kind: 'select',
+        key: 'shape1',
+        label: 'Форма',
+        options: options(waveforms, waveformNames),
+      },
+      { kind: 'range', key: 'level1', label: 'Уровень' },
+    ],
+  },
+  {
+    title: 'Осциллятор 2',
+    controls: [
+      {
+        kind: 'select',
+        key: 'shape2',
+        label: 'Форма',
+        options: options(waveforms, waveformNames),
+      },
+      { kind: 'range', key: 'level2', label: 'Уровень' },
+      {
+        kind: 'select',
+        key: 'interval',
+        label: 'Интервал',
+        options: options(intervals, intervalNames),
+      },
+      { kind: 'range', key: 'detune', label: 'Расстройка' },
+    ],
+  },
+  {
+    title: 'Саб-осциллятор и шум',
+    controls: [
+      {
+        kind: 'select',
+        key: 'subShape',
+        label: 'Форма саба',
+        options: options(subWaveforms, subWaveformNames),
+      },
+      { kind: 'range', key: 'subLevel', label: 'Уровень саба' },
+      {
+        kind: 'select',
+        key: 'noiseColor',
+        label: 'Цвет шума',
+        options: options(noiseColors, noiseColorNames),
+      },
+      { kind: 'range', key: 'noiseLevel', label: 'Уровень шума' },
+    ],
+  },
+  {
+    title: 'Фильтр и огибающая',
+    controls: [
+      { kind: 'range', key: 'cutoff', label: 'Частота среза' },
+      { kind: 'select', key: 'curve', label: 'Участки', options: options(curves, curveNames) },
+      { kind: 'range', key: 'attack', label: 'Атака A' },
+      { kind: 'range', key: 'decay', label: 'Спад D' },
+      { kind: 'range', key: 'sustain', label: 'Уровень S' },
+      { kind: 'range', key: 'release', label: 'Release R' },
+    ],
+  },
+];
+const presets = Object.entries(voicePresets).map(([key, preset]) => ({ key, label: preset.label }));
+---
+
+<figure
+  id={id}
+  class="adsr-demo synth-voice-demo"
+  aria-labelledby={`${id}-name`}
+  data-synth-voice-demo
+  data-state="static"
+>
+  <div class="adsr-demo-head">
+    <span class="adsr-demo-label">Визуализация {figure}</span>
+    <span class="adsr-demo-name" id={`${id}-name`}>
+      {demoCaptions.SynthVoiceDemo.name}
+    </span>
+  </div>
+  <div
+    class="adsr-demo-chart"
+    role="region"
+    aria-label="Форма волны ноты и увеличенный фрагмент"
+    tabindex="0"
+    data-chart
+    set:html={voiceSvg(render, 'attack', id)}
+  />
+  <ul class="adsr-demo-legend" aria-label="Легенда">
+    <li>
+      <i></i>отсчёты голоса
+    </li>
+    <li>
+      <i class="target"></i>пик ±
+    </li>
+    <li>
+      <i class="frame"></i>увеличенный фрагмент
+    </li>
+    <li>
+      <i class="event"></i>note_off
+    </li>
+    <li>
+      <i class="bound"></i>смена стадии
+    </li>
+  </ul>
+  <div class="adsr-demo-status" data-status-box data-jump={String(status.warning)}>
+    <p data-status-length>{status.length}</p>
+    <p data-status-peak>{status.peak}</p>
+    <p data-status-zoom>{status.zoom}</p>
+  </div>
+  <p class="visually-hidden" aria-live="polite" data-announce></p>
+  <fieldset class="adsr-demo-controls" data-controls disabled>
+    <legend class="visually-hidden">Параметры голоса и ноты</legend>
+    <fieldset class="adsr-demo-choice synth-voice-zoom">
+      <legend>Фрагмент:</legend>
+      {zoomStages.map((stage) => (
+        <label>
+          <input
+            type="radio"
+            name={`${id}-zoom`}
+            value={stage}
+            checked={stage === 'attack'}
+            disabled={zoomStart(render, stage) === undefined}
+            data-zoom
+          />
+          {zoomNames[stage]}
+        </label>
+      ))}
+    </fieldset>
+    <div class="synth-voice-groups">
+      {groups.map((group) => (
+        <fieldset class="synth-voice-group">
+          <legend>{group.title}</legend>
+          {group.controls.map((control) =>
+            control.kind === 'range' ? (
+              <div class="adsr-demo-param">
+                <div class="adsr-demo-param-head">
+                  <label for={`${id}-${control.key}`}>{control.label}</label>
+                  <output for={`${id}-${control.key}`} data-output={control.key}>
+                    {rangeText(control.key, p)}
+                  </output>
+                </div>
+                <input
+                  id={`${id}-${control.key}`}
+                  class="adsr-demo-range"
+                  type="range"
+                  min={rangeLimits(control.key).min}
+                  max={rangeLimits(control.key).max}
+                  step={rangeLimits(control.key).step}
+                  value={rangeValue(control.key, p)}
+                  aria-valuetext={rangeText(control.key, p)}
+                  data-range={control.key}
+                />
+              </div>
+            ) : (
+              <div class="adsr-demo-select">
+                <label for={`${id}-${control.key}`}>{control.label}</label>
+                <select id={`${id}-${control.key}`} data-select={control.key}>
+                  {control.options.map((option) => (
+                    <option
+                      value={option.value}
+                      selected={option.value === String(p[control.key as keyof typeof p])}
+                    >
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ),
+          )}
+        </fieldset>
+      ))}
+    </div>
+    <div class="adsr-demo-actions">
+      <div class="adsr-demo-presets" role="group" aria-label="Примеры">
+        <span class="adsr-demo-presets-label" aria-hidden="true">
+          Примеры:
+        </span>
+        {presets.map((preset) => (
+          <button type="button" class="adsr-demo-preset" data-preset={preset.key}>
+            {preset.label}
+          </button>
+        ))}
+      </div>
+      <button type="button" class="adsr-demo-reset" data-reset>
+        <Icon name="rotate-ccw" size={16} />
+        Сбросить
+      </button>
+    </div>
+    <AdsrPlayer label="Аудиопример: нота голоса синтезатора">
+      <b>Громкость.</b> Нота звучит один раз: нажатие и release. Пила, прямоугольник и шум с высокой
+      частотой среза звучат резко, нулевые атака или release дают щелчки: перед запуском убавьте
+      громкость, особенно в наушниках.
+    </AdsrPlayer>
+    <div class="synth-voice-download">
+      <fieldset class="adsr-demo-choice">
+        <legend>Файл WAV:</legend>
+        {wavBits.map((bits) => (
+          <label>
+            <input type="radio" name={`${id}-bits`} value={bits} checked={bits === 24} data-bits />
+            {bits} бит
+          </label>
+        ))}
+      </fieldset>
+      <button type="button" class="adsr-demo-reset" data-download>
+        <Icon name="download" size={16} />
+        Скачать WAV
+      </button>
+      <p class="synth-voice-file" role="status" data-file></p>
+    </div>
+    <p class="adsr-demo-note-text" data-controls-note>
+      Параметры, звук и скачивание работают с включённым JavaScript. Показано начальное состояние.
+    </p>
+  </fieldset>
+  <figcaption class="adsr-demo-caption">
+    <b>Рис. {figure}.</b> <span data-caption>{voiceCaption(p)}</span>
+  </figcaption>
+</figure>
+
+<script>
+  import { initSynthVoiceDemos } from '@/lib/synth-voice-controller';
+
+  initSynthVoiceDemos();
+</script>

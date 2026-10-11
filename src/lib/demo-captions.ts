@@ -55,6 +55,7 @@ export const demoCaptions = {
   AdsrClickDemo: { defaultId: 'adsr-click', name: 'Откуда берётся щелчок' },
   FilterStepDemo: { defaultId: 'filter-step', name: 'Переходная характеристика' },
   FilterSmoothingDemo: { defaultId: 'filter-smoothing', name: 'Сглаживание фильтром' },
+  SynthVoiceDemo: { defaultId: 'synth-voice-demo', name: 'Голос синтезатора' },
   FlacPredictionDemo: {
     defaultId: 'flac-prediction',
     name: 'Предсказание FLAC: остаток и коды Райса',

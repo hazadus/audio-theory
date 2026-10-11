@@ -333,6 +333,7 @@ private:
 
 <MarginNote items={[
   { label: 'Огибающая ADSR → Голос в аудиоблоке JUCE', description: 'События ноты внутри блока и startNote для звучащего голоса.', target: { article: 'adsr', anchor: 'juce-block' } },
+  { label: 'Голос синтезатора → SynthVoice', description: 'Источники, фильтр и огибающая в одном классе с общими параметрами.', target: { article: 'synth-voice', anchor: 'synth-voice' } },
 ]}>
 
 В голосе фильтр стоит между микшером и VCA. `VoiceSources` и `VoiceLevels` взяты из [статьи об осцилляторах](/synth-oscillators/#cpp-voice), `AdsrEnvelope` — из [статьи об огибающей](/adsr/#cpp). В `renderBlock` из статьи об огибающей вычисление отсчёта заменяется на `nextVoiceSample`.

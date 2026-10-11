@@ -1,0 +1,13 @@
+{
+  "id": "track-programmer-synth-voice",
+  "date": "2026-10-11",
+  "order": 5,
+  "type": "updated",
+  "track": "programmer",
+  "items": [
+    {
+      "text": "Этап «Синтезатор»: сборка голоса и рендер ноты в WAV",
+      "target": { "track": "programmer", "anchor": "stage-synthesizer" }
+    }
+  ]
+}

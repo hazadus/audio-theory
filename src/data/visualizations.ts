@@ -178,6 +178,14 @@ export const visualizations: readonly Visualization[] = [
     preview: 'filter-smoothing',
   },
   {
+    id: 'synth-voice-demo',
+    slug: 'synth-voice',
+    name: 'Голос синтезатора',
+    what: 'Нота и нажатие, формы и уровни осцилляторов, саб, шум, частота среза и ADSR; звук и файл WAV.',
+    sound: true,
+    preview: 'synth-voice',
+  },
+  {
     id: 'intro-tone',
     slug: 'audio-intro',
     name: 'Звук: выше, ниже, громче, тише',

@@ -47,13 +47,13 @@ export function notePlayerText(state: NotePlayerState, cursor = false): string {
   }[state];
 }
 
-function required<T extends Element>(root: Element, selector: string): T {
+export function required<T extends Element>(root: Element, selector: string): T {
   const element = root.querySelector<T>(selector);
   if (!element) throw new Error(`ADSR: нет элемента ${selector}`);
   return element;
 }
 
-function fail(root: HTMLElement, error: unknown): void {
+export function fail(root: HTMLElement, error: unknown): void {
   root.dataset.state = 'error';
   root.querySelector<HTMLFieldSetElement>('[data-controls]')?.setAttribute('disabled', '');
   const note = root.querySelector<HTMLElement>('[data-controls-note]');
@@ -61,8 +61,9 @@ function fail(root: HTMLElement, error: unknown): void {
   console.error(error);
 }
 
-/** Плеер одной ноты: кнопка, громкость, mute и строка состояния; `buffer` строит звук по запросу. */
-function initPlayer(
+/** Плеер одной ноты: кнопка, громкость, mute и строка состояния; `buffer` строит звук по запросу.
+ * Его же использует визуализация «Голос синтезатора». */
+export function initPlayer(
   root: HTMLElement,
   buffer: () => (sampleRate: number) => Float32Array,
   onFrame?: (position: number | undefined) => void,
@@ -167,7 +168,7 @@ function initPlayer(
 }
 
 /** Перерисовка по ширине контейнера не чаще кадра; `draw` получает ширину графика. */
-function observeWidth(chart: HTMLElement, redraw: () => void): () => number {
+export function observeWidth(chart: HTMLElement, redraw: () => void): () => number {
   let width = Math.round(chart.clientWidth);
   new ResizeObserver(() => {
     const next = Math.round(chart.clientWidth);
@@ -342,7 +343,7 @@ function initClickDemo(root: HTMLElement): void {
   root.dataset.state = 'ready';
 }
 
-function initAll(selector: string, init: (root: HTMLElement) => void): void {
+export function initAll(selector: string, init: (root: HTMLElement) => void): void {
   for (const root of document.querySelectorAll<HTMLElement>(selector)) {
     if (root.dataset.state !== 'static') continue;
     try {

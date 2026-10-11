@@ -1,0 +1,26 @@
+{
+  "id": "synth-voice-published",
+  "date": "2026-10-11",
+  "order": 4,
+  "type": "new",
+  "article": "synth-voice",
+  "summary": "Четвёртая статья серии о простом синтезаторе: порядок вычислений голоса, параметры отдельно от состояния, общий интерфейс компонентов и класс SynthVoice, рендер ноты в juce::AudioBuffer с остановкой по огибающей, запись WAV через juce::WavAudioFormat с выбором разрядности, консольное приложение JUCE на CMake и проверки файла. Визуализация со звуком и скачиванием WAV, совпадающего с файлом программы.",
+  "items": [
+    {
+      "text": "Голос синтезатора: форма ноты, фрагмент стадии, звук и файл WAV",
+      "target": { "article": "synth-voice", "anchor": "synth-voice-demo" }
+    },
+    {
+      "text": "Класс SynthVoice: что сбрасывается при noteOn",
+      "target": { "article": "synth-voice", "anchor": "synth-voice" }
+    },
+    {
+      "text": "Запись WAV через JUCE и перевод float в 16 и 24 бита",
+      "target": { "article": "synth-voice", "anchor": "wav" }
+    },
+    {
+      "text": "Проверки пика, последнего отсчёта, длины и повторяемости",
+      "target": { "article": "synth-voice", "anchor": "checks" }
+    }
+  ]
+}

@@ -1,0 +1,575 @@
+---
+slug: synth-voice
+title: 'Голос синтезатора: сборка и рендер ноты в WAV'
+question: Как соединить источники, фильтр и огибающую в программу, которая записывает ноту в файл?
+topic: synthesis
+tags: [synthesis, cpp-juce, file-formats]
+prerequisites:
+  - label: Источники голоса
+    description: Осцилляторы, саб-осциллятор, шум и микшер с оценкой пика.
+    target: { article: synth-oscillators, anchor: cpp }
+  - label: Огибающая ADSR
+    description: Машина состояний, noteOn, noteOff и isActive.
+    target: { article: adsr, anchor: cpp }
+  - label: Однополюсный фильтр
+    description: Коэффициент из частоты среза и состояние y[n−1].
+    target: { article: one-pole-filter, anchor: cpp }
+  - label: Запись WAV
+    description: Чанки RIFF, fmt и data, порядок байтов.
+    target: { article: wav-file, anchor: writing }
+related:
+  - label: Осцилляторы синтезатора
+    description: 'Первая статья серии: фазы, PolyBLEP, расстройка, саб и микшер.'
+    target: { article: synth-oscillators }
+  - label: Огибающая ADSR и VCA
+    description: 'Вторая статья серии: стадии ноты, VCA и щелчки на краях.'
+    target: { article: adsr }
+  - label: Однополюсный фильтр нижних частот
+    description: 'Третья статья серии: фильтр после микшера.'
+    target: { article: one-pole-filter }
+  - label: Целочисленный PCM
+    description: Округление и ограничение при переводе float в целые коды.
+    target: { article: integer-pcm, anchor: encoding }
+  - label: C++ в аудиопотоке
+    description: Почему код реального времени не выделяет память и не обращается к диску.
+    target: { article: cpp-audio-thread }
+---
+
+import DataTable from '@/components/DataTable.astro';
+import Equation from '@/components/Equation.astro';
+import MarginNote from '@/components/MarginNote.astro';
+import SelfCheck from '@/components/SelfCheck.astro';
+import Source from '@/components/Source.astro';
+import SynthChain from '@/components/SynthChain.astro';
+import SynthVoiceDemo from '@/components/SynthVoiceDemo.astro';
+import Term from '@/components/Term.astro';
+
+Три предыдущие статьи серии построили части одноголосного синтезатора по отдельности: [источники и микшер](/synth-oscillators/), [огибающую ADSR с VCA](/adsr/) и [фильтр нижних частот](/one-pole-filter/). Здесь они собираются в <Term id="synth-voice" firstMention>голос синтезатора</Term> — объект, который по событиям ноты выдаёт <Term id="sample" firstMention>отсчёты</Term>. Голос рендерит одну ноту в буфер JUCE, консольная программа записывает буфер в <Term id="wav-file" firstMention>WAV</Term>, а проверки подтверждают, что файл получился ожидаемым. Код на C++20 и JUCE 9.0.3 разбит на блоки по разделам; вместе с кодом предыдущих статей они собираются в работающий проект.
+
+## Цепочка голоса {#chain}
+
+<SynthChain
+  id="voice-chain"
+  number={1}
+  highlight="voice"
+  caption="Цепочка одного голоса. Четыре источника складываются в микшере, сумма проходит фильтр нижних частот и VCA, которым управляет огибающая ADSR, и записывается в WAV. Эта статья собирает всю цепочку и добавляет запись."
+/>
+
+Голос вычисляет отсчёт за отсчётом, и для каждого порядок одинаков:
+
+1. Три <Term id="oscillator" firstMention>осциллятора</Term> и генератор шума выдают по значению в пределах ±1 и продвигают своё состояние.
+2. Микшер умножает каждое значение на уровень источника и складывает: $x[n] = g_1 s_1[n] + g_2 s_2[n] + g_3 s_3[n] + g_4 s_4[n]$.
+3. <Term id="one-pole-filter" firstMention>Однополюсный фильтр</Term> превращает $x[n]$ в $y[n]$, используя своё прошлое значение $y[n-1]$.
+4. <Term id="vca" firstMention>VCA</Term> умножает $y[n]$ на очередное значение огибающей $e[n]$.
+
+Порядок фильтра и VCA важен. Фильтр стоит до умножения, поэтому его состояние не зависит от громкости ноты, а затихание задаёт только огибающая. Если поставить VCA первым, фильтр будет сглаживать уже затихающий сигнал и продолжит выдавать остаток после того, как огибающая дошла до нуля: конец ноты станет зависеть от частоты среза. В цепочке выше последний отсчёт release умножается на 0 и равен нулю точно.
+
+## Параметры отдельно от состояния {#parameters}
+
+Каждый класс серии делит свои данные на две группы. Параметры задаёт пользователь: форма волны, уровни, частота среза, времена огибающей. Состояние меняется на каждом отсчёте: фаза осциллятора, $y[n-1]$ фильтра, стадия и уровень огибающей, внутренние числа генератора шума. Для голоса это деление становится явным: все параметры собраны в одну структуру `VoiceParameters`, а состояние остаётся внутри компонентов.
+
+<DataTable
+  id="parameters-and-state"
+  number={1}
+  caption="Параметры и состояние компонентов голоса. Параметры приходят из VoiceParameters, состояние сбрасывает reset()."
+  columns={[
+    { label: 'Компонент' },
+    { label: 'Параметры' },
+    { label: 'Состояние' },
+  ]}
+  rows={[
+    ['Осцилляторы 1, 2 и саб', 'форма, уровень, интервал и расстройка второго', 'фаза в долях периода'],
+    ['Шум', 'цвет, уровень, начальное число генератора', 'состояние PRNG, ряды розового шума'],
+    ['Фильтр', 'частота среза', 'y[n−1]'],
+    ['Огибающая', 'A, D, S, R, форма участков', 'стадия, уровень, шаг, счётчик'],
+  ]}
+/>
+
+Так рендер становится повторяемым: одинаковые параметры и одинаковое начальное состояние дают одинаковые отсчёты, а значит и одинаковый файл. `reset()` знает, что возвращать в начало, и не трогает настройки. А параметры можно отдать нескольким голосам сразу: [полифонический синтезатор](#next) держит одну структуру настроек и много голосов, каждый со своим состоянием.
+
+```cpp
+// SynthVoice.h: параметры голоса — значения, которые задаёт пользователь, без состояния.
+#pragma once
+#include "AdsrEnvelope.h"
+#include "LowPassFilter.h"
+#include "Noise.h"
+#include "Oscillator.h"
+
+enum class NoiseColour { white, pink };
+
+struct VoiceParameters
+{
+    Waveform shape1 = Waveform::saw, shape2 = Waveform::saw;
+    Waveform subShape = Waveform::square; // синус или прямоугольник
+    double level1 = 0.35, level2 = 0.35, subLevel = 0.2, noiseLevel = 0.05;
+    int interval = 0;     // второй осциллятор, полутоны
+    double detune = 7.0;  // второй осциллятор, центы
+    NoiseColour noiseColour = NoiseColour::white;
+    double cutoff = 2000.0; // частота среза, Гц
+    AdsrEnvelope::Parameters envelope; // A, D, S, R и форма участков
+};
+```
+
+Уровни те же, что в [статье об осцилляторах](/synth-oscillators/#mixer), плюс немного белого шума. <Term id="headroom" firstMention>Запас уровня</Term> оценивается так же: каждый источник не выходит за ±1, поэтому пик суммы не больше $0{,}35 + 0{,}35 + 0{,}2 + 0{,}05 = 0{,}95$, около −0,45 <Term id="dbfs" firstMention>dBFS</Term>. Фильтр с $0 < a \le 1$ [не выводит сигнал за пределы входа](/one-pole-filter/#stability), а огибающая не больше 1, поэтому оценка остаётся верной и на выходе голоса. `AdsrEnvelope::Parameters` по умолчанию: A = 10 мс, D = 200 мс, S = 0,6, R = 300 мс, линейные участки.
+
+## Общий интерфейс компонентов {#interface}
+
+Компоненты серии устроены одинаково: `prepare (sampleRate)` сообщает <Term id="sample-rate" firstMention>частоту дискретизации</Term> и пересчитывает то, что от неё зависит; `reset()` возвращает состояние в начало; третий метод выдаёт следующий отсчёт. Различия продиктованы ролью компонента.
+
+<DataTable
+  id="component-interface"
+  number={2}
+  caption="Методы компонентов голоса. Генераторы выдают отсчёт без входа, фильтр обрабатывает входной отсчёт."
+  columns={[
+    { label: 'Тип' },
+    { label: 'Подготовка' },
+    { label: 'Сброс' },
+    { label: 'Следующий отсчёт' },
+  ]}
+  rows={[
+    ['Oscillator', 'prepare (fs)', 'reset (startPhase)', 'nextSample()'],
+    ['NoiseGenerator', '— от fs не зависит', 'reset()', 'nextSample()'],
+    ['LowPassFilter', 'prepare (fs)', 'reset (value)', 'processSample (x)'],
+    ['AdsrEnvelope', 'prepare (fs)', 'reset()', 'nextSample(); события noteOn(), noteOff()'],
+    ['SynthVoice', 'prepare (fs)', 'reset()', 'nextSample(); события noteOn (f), noteOff()'],
+  ]}
+/>
+
+Осциллятор и огибающая — генераторы: следующий отсчёт зависит только от их состояния. Фильтр — преобразователь: ему нужен входной отсчёт, поэтому метод называется `processSample` и принимает $x[n]$. Шуму частота дискретизации не нужна: <Term id="prng" firstMention>PRNG</Term> выдаёт следующее число независимо от того, как часто его вызывают ([подробнее в статье о шуме](/noise/#white-generator)).
+
+Генераторы белого и розового шума из статьи о шуме уже есть; не хватает переключения цвета. `NoiseGenerator` хранит оба генератора и <Term id="random-seed" firstMention>начальное число</Term>, чтобы `reset()` повторял последовательность с начала.
+
+```cpp
+// SynthVoice.h: шум голоса — цвет как параметр, PRNG и ряды розового шума как состояние.
+class NoiseGenerator
+{
+public:
+    explicit NoiseGenerator (juce::int64 seedToUse = 2026) noexcept
+        : seed (seedToUse), white (seedToUse), pink (seedToUse) {}
+
+    void reset() noexcept
+    {
+        white.reset (seed);
+        pink.reset (seed);
+    }
+
+    void setColour (NoiseColour value) noexcept { colour = value; }
+
+    double nextSample() noexcept
+    {
+        return colour == NoiseColour::white ? white.nextSample() : pink.nextSample();
+    }
+
+private:
+    juce::int64 seed;
+    WhiteNoise white;
+    PinkNoise pink;
+    NoiseColour colour = NoiseColour::white;
+};
+```
+
+<MarginNote items={[
+  { label: 'Learn C++ → 14.10 Constructor member initializer lists', description: 'Члены класса инициализируются в порядке объявления, а не в порядке списка.', target: { url: 'https://www.learncpp.com/cpp-tutorial/constructor-member-initializer-lists/' } },
+]}>
+
+Оба генератора получают начальное число из аргумента конструктора, а не из члена `seed`. Члены класса инициализируются в порядке объявления, а не в порядке записи в списке инициализации, поэтому значение одного члена лучше не выводить из другого: при перестановке объявлений `white` получил бы ещё не заданный `seed`.
+
+</MarginNote>
+
+## SynthVoice {#synth-voice}
+
+`SynthVoice` владеет компонентами и вызывает их в порядке [цепочки](#chain). Снаружи голосом управляют `noteOn (frequency)`, `noteOff()`, `nextSample()` и `isActive()`.
+
+```cpp
+// SynthVoice.h: голос — источники, микшер, фильтр и VCA с огибающей.
+#include <initializer_list>
+
+class SynthVoice
+{
+public:
+    void prepare (double sampleRate) noexcept
+    {
+        for (auto* osc : { &osc1, &osc2, &sub })
+            osc->prepare (sampleRate);
+        filter.prepare (sampleRate);
+        envelope.prepare (sampleRate);
+        reset();
+    }
+
+    // Всё состояние — в начальное: фазы, PRNG шума, y[n-1] фильтра, стадия огибающей.
+    void reset() noexcept
+    {
+        for (auto* osc : { &osc1, &osc2, &sub })
+            osc->reset();
+        noise.reset();
+        filter.reset();
+        envelope.reset();
+    }
+
+    // Вызывать между нотами: частоту осцилляторов задаёт noteOn.
+    void setParameters (const VoiceParameters& p) noexcept
+    {
+        params = p;
+        osc1.setWaveform (p.shape1);
+        osc2.setWaveform (p.shape2);
+        sub.setWaveform (p.subShape);
+        noise.setColour (p.noiseColour);
+        filter.setCutoff (p.cutoff);
+        envelope.setParameters (p.envelope);
+    }
+
+    void noteOn (double frequency) noexcept
+    {
+        osc1.setFrequency (frequency);
+        osc2.setFrequency (frequency * std::exp2 ((100.0 * params.interval + params.detune) / 1200.0));
+        sub.setFrequency (frequency / 2.0);
+        if (! envelope.isActive()) // голос молчал: начать с чистого состояния
+        {
+            for (auto* osc : { &osc1, &osc2, &sub })
+                osc->reset();
+            filter.reset();
+        }
+        envelope.noteOn();
+    }
+
+    void noteOff() noexcept { envelope.noteOff(); }
+    bool isActive() const noexcept { return envelope.isActive(); }
+
+    double nextSample() noexcept
+    {
+        const double mixed = params.level1 * osc1.nextSample() + params.level2 * osc2.nextSample()
+                           + params.subLevel * sub.nextSample() + params.noiseLevel * noise.nextSample();
+        return filter.processSample (mixed) * envelope.nextSample(); // фильтр, затем VCA
+    }
+
+private:
+    VoiceParameters params;
+    Oscillator osc1, osc2, sub;
+    NoiseGenerator noise;
+    LowPassFilter filter;
+    AdsrEnvelope envelope;
+};
+```
+
+<MarginNote items={[
+  { label: 'Огибающая ADSR → Голос в аудиоблоке JUCE', description: 'startNote: у звучащего голоса меняется только частота, фазы продолжаются.', target: { article: 'adsr', anchor: 'juce-block' } },
+]}>
+
+`noteOn` всегда задаёт частоты: второй осциллятор — через интервал и <Term id="detune" firstMention>расстройку</Term> по [формуле из статьи об осцилляторах](/synth-oscillators/#eq-detune), <Term id="sub-oscillator" firstMention>саб-осциллятор</Term> — на октаву ниже. Дальше всё зависит от того, звучит ли голос. Если огибающая в покое, фазы осцилляторов и состояние фильтра сбрасываются: нота начинается с одинакового сочетания фаз и без остатка прошлой. Если голос ещё в release, сброс дал бы скачок сигнала на входе VCA и щелчок, поэтому фазы и $y[n-1]$ продолжаются. Огибающая в обоих случаях начинает атаку с текущего уровня.
+
+</MarginNote>
+
+Шум в `noteOn` не сбрасывается: две ноты подряд получают разные отрезки шума, как у генератора, который работает непрерывно. Начальное состояние генератора восстанавливает только `reset()` — его вызывают перед рендером, чтобы файл повторялся. `setParameters` по той же причине, что [у огибающей](/adsr/#cpp), вызывают между нотами: новые времена ADSR применяются со следующей стадии, а новая частота среза меняет тембр сразу.
+
+`isActive()` повторяет огибающую: голос нужен, пока она не вернулась в покой. Для одноголосного рендера это признак конца ноты, для полифонического синтезатора — признак, что голос можно отдать следующей ноте.
+
+## Рендер ноты {#render}
+
+Рендер переводит длительность нажатия в номер отсчёта `note_off` и заполняет буфер, пока огибающая не дойдёт до нуля. Верхний предел длины известен заранее: release всегда длится R от текущего уровня, поэтому после `note_off` нужно не больше $\operatorname{round}(R f_s)$ отсчётов ([как огибающая считает стадии](/adsr/#note-events)).
+
+<Equation id="eq-render-length" number={1}>
+
+$$
+N_\text{max} = \operatorname{round}(t_\text{note} f_s) + \operatorname{round}(R f_s)
+$$
+
+<Fragment slot="symbols">
+  <dt>$N_\text{max}$</dt>
+  <dd>верхний предел длины рендера, отсчётов;</dd>
+  <dt>$t_\text{note}$</dt>
+  <dd>длительность нажатия, от `note_on` до `note_off`, с;</dd>
+  <dt>$R$</dt>
+  <dd>время release, с.</dd>
+</Fragment>
+
+</Equation>
+
+Для ноты 0,8 с и R = 300 мс при 48 кГц: $38\,400 + 14\,400 = 52\,800$ отсчётов, 1,1 с. Каждое слагаемое округляется отдельно, как в коде, — так номер `note_off` совпадает с тем, что огибающая отсчитает сама.
+
+```cpp
+// Main.cpp: рендер ноты в буфер — note_off на заданном отсчёте, конец по isActive().
+#include "SynthVoice.h"
+#include <juce_audio_basics/juce_audio_basics.h>
+
+juce::AudioBuffer<float> renderNote (SynthVoice& voice, const VoiceParameters& p,
+                                     double frequency, double noteSeconds, double sampleRate)
+{
+    const auto noteOffAt = static_cast<int> (std::llround (noteSeconds * sampleRate));
+    const auto maxLength = noteOffAt + static_cast<int> (std::llround (p.envelope.release * sampleRate));
+    juce::AudioBuffer<float> buffer (1, maxLength); // один канал: голос моно
+
+    voice.setParameters (p);
+    voice.reset();
+    voice.noteOn (frequency);
+    int length = 0;
+    while (length < maxLength)
+    {
+        if (length == noteOffAt)
+            voice.noteOff();
+        buffer.setSample (0, length++, static_cast<float> (voice.nextSample()));
+        if (! voice.isActive()) // огибающая дошла до нуля: дальше только тишина
+            break;
+    }
+    buffer.setSize (1, length, true); // при S = 0 нота кончается раньше предела
+    return buffer;
+}
+```
+
+<MarginNote items={[
+  { label: 'Аудиоданные в программах → Каналы и кадры', description: 'Кадр, канал и отсчёт в буфере.', target: { article: 'audio-data', anchor: 'channels-and-frames' } },
+]}>
+
+`juce::AudioBuffer<float>` создаётся с одним каналом: голос монофонический. Конструктор не обнуляет память ([AudioBuffer](https://docs.juce.com/master/classjuce_1_1AudioBuffer.html)), но цикл записывает каждый отсчёт от 0 до `length − 1`, а `setSize (1, length, true)` отрезает хвост, сохраняя содержимое. Отсчёт голоса вычисляется в `double` и округляется до `float` один раз, при записи в буфер.
+
+</MarginNote>
+
+Цикл останавливается двумя способами. Обычно огибающая проходит release и переходит в покой ровно на последнем отсчёте предела: длина равна $N_\text{max}$, последний отсчёт — 0. При S = 0 огибающая [уходит в покой сразу после спада](/adsr/#edge-cases), ещё до `note_off`, и рендер заканчивается раньше: перкуссионная нота с A = 5 мс и D = 180 мс занимает 8880 отсчётов вместо 28 800. Предел нужен на случай, когда огибающая не затихает сама, например при R = 0: тогда буфер обрывается на `note_off` и последний отсчёт не равен нулю.
+
+## WAV-слой {#wav}
+
+Запись в файл отделена от звука: функция получает готовый буфер и не знает ни о голосе, ни о нотах. Поэтому её можно проверить отдельно, а голос — использовать там, где файла нет, например в аудиоблоке плагина.
+
+```cpp
+// Main.cpp: запись готовых отсчётов в WAV; аудиологики здесь нет.
+#include <juce_audio_formats/juce_audio_formats.h>
+
+bool writeWav (const juce::AudioBuffer<float>& buffer, double sampleRate, int bits,
+               const juce::File& file)
+{
+    file.deleteFile(); // FileOutputStream дописывает в конец существующего файла
+    std::unique_ptr<juce::OutputStream> stream = file.createOutputStream();
+    if (stream == nullptr)
+        return false;
+
+    juce::WavAudioFormat wav;
+    const auto options = juce::AudioFormatWriterOptions{}
+                             .withSampleRate (sampleRate)
+                             .withNumChannels (buffer.getNumChannels())
+                             .withBitsPerSample (bits); // 16 или 24
+    auto writer = wav.createWriterFor (stream, options);
+    if (writer == nullptr)
+        return false;
+    return writer->writeFromAudioSampleBuffer (buffer, 0, buffer.getNumSamples());
+} // деструктор writer записывает размеры чанков и закрывает файл
+```
+
+<MarginNote items={[
+  { label: 'Кто владеет объектом → std::unique_ptr', description: 'Единственный владелец объекта и передача владения.', target: { article: 'cpp-ownership', anchor: 'unique-ptr' } },
+]}>
+
+В JUCE 9 `createWriterFor` принимает поток по ссылке на `std::unique_ptr` и параметры в `AudioFormatWriterOptions`; прежний вариант с сырым указателем помечен устаревшим. Если писатель создан, он забирает поток себе и обнуляет `stream`; если нет, поток остаётся у вызывающего кода ([juce_AudioFormat.h 9.0.3](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_formats/format/juce_AudioFormat.h)). `File::createOutputStream` открывает файл на запись с позиции в конце, поэтому старый файл сначала удаляется: иначе новая запись окажется после прежних байтов.
+
+</MarginNote>
+
+Размеры чанков `RIFF` и `data` в начале файла зависят от числа записанных отсчётов, поэтому JUCE дописывает заголовок в деструкторе писателя ([juce_WavAudioFormat.cpp 9.0.3](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_formats/codecs/juce_WavAudioFormat.cpp)). Файл готов, когда `writer` вышел из области видимости. Между `fmt ` и `RIFF` JUCE вставляет [чанк JUNK](/wav-file/#junk) на 52 байта: если запись превысит 4 ГБ, на его месте окажется `ds64` [формата RF64](/wav-file/#rf64). Поэтому заголовок занимает 104 байта, а не 44, и нота из 52 800 отсчётов в 24 битах весит $104 + 52\,800 \cdot 3 = 158\,504$ байта.
+
+### Разрядность и перевод в целые {#bit-depth}
+
+<MarginNote items={[
+  { label: 'Целочисленный PCM → Из float обратно', description: 'Масштаб, округление к ближайшему и ограничение целой шкалы.', target: { article: 'integer-pcm', anchor: 'encoding' } },
+  { label: 'Целочисленный PCM → Чего перевод не исправляет', description: 'Ошибка квантования и dither при уменьшении разрядности.', target: { article: 'integer-pcm', anchor: 'quantization-and-dither' } },
+]}>
+
+`withBitsPerSample` выбирает размер целого <Term id="pcm" firstMention>PCM</Term>-отсчёта. 16 бит хватает, чтобы послушать ноту, 24 бита оставляют больше точности, если файл пойдёт в дальнейшую обработку. Перевод float в целые JUCE делает в два шага ([juce_AudioFormatWriter.cpp](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_formats/format/juce_AudioFormatWriter.cpp), [juce_AudioDataConverters.h](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_basics/buffers/juce_AudioDataConverters.h)). Сначала отсчёт становится 32-битным целым: значения от −1 и ниже — минимум, от 1 и выше — максимум, остальные — `roundToInt (2147483647 · x)`, где половины округляются к чётному. Затем лишние младшие разряды отбрасываются сдвигом вправо: на 16 для 16 бит, на 8 для 24 бит.
+
+</MarginNote>
+
+Сдвиг вправо у отрицательного числа округляет вниз, к −∞, а не к ближайшему. Поэтому JUCE иногда записывает код на единицу меньше, чем [кодер из статьи о PCM](/integer-pcm/#cpp-encoder): например, $x = -0{,}000005$ при 16 битах даёт у JUCE −1, а округление к ближайшему — 0. Разница не превышает одного шага <Term id="quantization" firstMention>квантования</Term>, а края шкалы совпадают: $x = 1$ даёт 32 767, $x = -1$ — −32 768. Dither писатель не добавляет. Перевод ограничивает только целую шкалу: всё, что выше 0 dBFS, будет срезано, и запас уровня нужно обеспечить до записи.
+
+### Консольное приложение {#console-app}
+
+Проект состоит из семи файлов. Четыре заголовка — код предыдущих статей без изменений; в начало каждого добавлена строка `#pragma once`, чтобы повторное включение не дублировало определения.
+
+```text
+synth-note/
+├── CMakeLists.txt
+├── Main.cpp          — разделы «Рендер ноты», «WAV-слой» и «Проверка результата»
+├── SynthVoice.h      — разделы «Параметры», «Общий интерфейс» и «SynthVoice»
+├── Oscillator.h      — /synth-oscillators/: shapeValue, polyBlep и класс Oscillator
+├── Noise.h           — /noise/: классы WhiteNoise и PinkNoise
+├── AdsrEnvelope.h    — /adsr/: класс AdsrEnvelope и метод start
+└── LowPassFilter.h   — /one-pole-filter/: класс LowPassFilter
+```
+
+<MarginNote items={[
+  { label: 'Основы C++ → inline и цепочки вызовов', description: 'Одно определение функции из заголовка в нескольких единицах трансляции.', target: { article: 'cpp-basics', anchor: 'inline-chaining' } },
+  { label: 'Learn C++ → 7.9 Inline functions and variables', description: 'Почему inline разрешает определения в заголовках.', target: { url: 'https://www.learncpp.com/cpp-tutorial/inline-functions-and-variables/' } },
+]}>
+
+`Main.cpp` — единственная единица трансляции, поэтому функции из заголовков (`polyBlep`, `shapeValue`, `AdsrEnvelope::start`) можно оставить без `inline`. Если заголовки включаются в несколько `.cpp`, такие определения нужно пометить `inline`, иначе компоновщик найдёт их дважды.
+
+</MarginNote>
+
+`CMakeLists.txt` скачивает JUCE модулем FetchContent и объявляет консольное приложение. `FetchContent_MakeAvailable` загружает исходники при настройке проекта и подключает их через `add_subdirectory`, как будто JUCE лежит рядом ([CMake, FetchContent](https://cmake.org/cmake/help/latest/module/FetchContent.html)). `juce_add_console_app` создаёт исполняемый файл, к которому подключаются только нужные модули: `juce_audio_basics` для `AudioBuffer` и `MidiMessage`, `juce_audio_formats` для WAV ([JUCE, CMake API](https://github.com/juce-framework/JUCE/blob/9.0.3/docs/CMake%20API.md)).
+
+```cmake
+cmake_minimum_required (VERSION 3.22)
+project (SynthNote VERSION 0.1.0)
+
+include (FetchContent)
+FetchContent_Declare (JUCE
+    GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
+    GIT_TAG 9.0.3
+    GIT_SHALLOW TRUE)
+FetchContent_MakeAvailable (JUCE) # скачивает JUCE при первой настройке
+
+juce_add_console_app (SynthNote PRODUCT_NAME "Synth Note")
+target_sources (SynthNote PRIVATE Main.cpp)
+target_compile_features (SynthNote PRIVATE cxx_std_20)
+target_compile_definitions (SynthNote PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0)
+target_link_libraries (SynthNote
+    PRIVATE juce::juce_audio_basics juce::juce_audio_formats
+    PUBLIC juce::juce_recommended_config_flags)
+```
+
+`JUCE_WEB_BROWSER=0` и `JUCE_USE_CURL=0` отключают веб-модули, которые консольной программе не нужны; так же сделано в примере ConsoleApp из JUCE. Цель `juce_recommended_config_flags` задаёт флаги оптимизации и отладки. Строгие предупреждения JUCE (`juce_recommended_warning_flags`) не подключены: с ними компилятор жалуется на код предыдущих статей, например на сравнение `double` через `==` в `AdsrEnvelope`.
+
+Сборка и запуск из папки проекта:
+
+```text
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+./build/SynthNote_artefacts/Release/SynthNote
+```
+
+Первая настройка скачивает JUCE и собирает его вспомогательную программу juceaide, поэтому занимает заметно дольше следующих. JUCE кладёт программу в папку `SynthNote_artefacts` с подпапкой конфигурации; путь выше проверен на macOS с генератором CMake по умолчанию.
+
+## Проверка результата {#checks}
+
+Файл легко записать неправильно так, что он всё равно откроется: со срезанными вершинами, щелчком на конце или не той длины. Проверки ниже ловят эти ошибки до прослушивания.
+
+- Пик ниже 0 dBFS: `getMagnitude` находит наибольший модуль отсчёта. Пик 1 и выше при переводе в целые [срезается](/mixing/#output).
+- Последний отсчёт около нуля: ненулевой последний отсчёт — разрыв на границе файла: проигрыватель после него выдаёт тишину, и [на конце слышен щелчок](/adsr/#clicks).
+- Длина совпадает с расчётной: файл читается обратно [через AudioFormatManager](/wav-file/#juce), и `lengthInSamples` сравнивается с формулой (1). Так проверяется и рендер, и заголовок, который писатель дописал при закрытии.
+- Результат одинаков при одинаковом начальном числе: два рендера подряд с вызовом `reset()` должны совпасть до бита.
+
+```cpp
+// Main.cpp: проверки буфера и файла после записи.
+#include <cstdio>
+
+bool checkRender (const juce::AudioBuffer<float>& buffer, const juce::File& file, int expectedLength)
+{
+    const int length = buffer.getNumSamples();
+    const float peak = buffer.getMagnitude (0, 0, length);
+    const float last = buffer.getSample (0, length - 1);
+    std::printf ("peak %.4f (%.2f dBFS), last %.2e, length %d of %d\n", peak,
+                 juce::Decibels::gainToDecibels (peak, -200.0f), last, length, expectedLength);
+
+    juce::AudioFormatManager formats;
+    formats.registerBasicFormats();
+    std::unique_ptr<juce::AudioFormatReader> reader (formats.createReaderFor (file));
+    return reader != nullptr && reader->lengthInSamples == length
+        && peak < 1.0f && std::abs (last) < 1.0e-4f && length == expectedLength;
+}
+```
+
+`main` собирает всё вместе: готовит голос, рендерит ноту A3 дважды, записывает первый рендер в `note.wav` в текущей папке и сравнивает рендеры между собой. Частоту ноты даёт `juce::MidiMessage::getMidiNoteInHertz` — [та же формула](/synth-oscillators/#note-frequency), что в статье об осцилляторах.
+
+```cpp
+// Main.cpp: нота A3 длительностью 0,8 с при 48 кГц; два рендера должны совпасть.
+int main()
+{
+    constexpr double sampleRate = 48000.0, noteSeconds = 0.8;
+    const VoiceParameters params; // значения по умолчанию из VoiceParameters
+    const double frequency = juce::MidiMessage::getMidiNoteInHertz (57); // 220 Гц
+
+    SynthVoice voice;
+    voice.prepare (sampleRate);
+    const auto first = renderNote (voice, params, frequency, noteSeconds, sampleRate);
+    const auto second = renderNote (voice, params, frequency, noteSeconds, sampleRate);
+    const bool same = first.getNumSamples() == second.getNumSamples()
+        && std::equal (first.getReadPointer (0), first.getReadPointer (0) + first.getNumSamples(),
+                       second.getReadPointer (0));
+
+    const auto file = juce::File::getCurrentWorkingDirectory().getChildFile ("note.wav");
+    const int expected = static_cast<int> (std::llround ((noteSeconds + params.envelope.release) * sampleRate));
+    const bool ok = writeWav (first, sampleRate, 24, file) && checkRender (first, file, expected);
+    std::printf ("%s, repeat %s\n", ok ? "ok" : "FAILED", same ? "identical" : "DIFFERENT");
+    return ok && same ? 0 : 1;
+}
+```
+
+Программа собрана Apple Clang 17 на macOS (arm64) с JUCE 9.0.3, загруженным через FetchContent; код этой статьи компилируется с `-Wall -Wextra -Wconversion` без предупреждений. Вывод программы:
+
+```text
+peak 0.8681 (-1.23 dBFS), last 0.00e+00, length 52800 of 52800
+ok, repeat identical
+```
+
+<MarginNote items={[
+  { label: 'Белый и розовый шум → Белый генератор', description: 'Начальное число и повтор последовательности juce::Random.', target: { article: 'noise', anchor: 'white-generator' } },
+]}>
+
+Пик 0,868 ниже худшей оценки 0,95. Он приходится на 13,5 мс, сразу после вершины атаки, когда огибающая ещё около 1; в sustain она держит 0,6, и пик там 0,444. В первые миллисекунды пики источников совпадают не полностью: даже с частотой среза 16 кГц пик ноты 0,909. Последний отсчёт равен нулю точно — огибающая на последнем отсчёте release присваивает уровню цель 0. Повтор совпадает, потому что `reset()` возвращает генератор шума к начальному числу 2026. Повторный запуск программы даёт тот же файл байт в байт; на другом компиляторе или процессоре младшие разряды `std::sin` и `std::pow` могут отличаться, поэтому сравнивать файлы между машинами имеет смысл с допуском.
+
+</MarginNote>
+
+## Послушать и скачать {#listen}
+
+Визуализация считает голос тем же кодом, переписанным на JavaScript, при 48 кГц. Сверху — форма всей ноты: размах повторяет огибающую, пунктир отмечает пик. Рамка показывает, какой участок увеличен снизу; кнопки «Атака», «Sustain» и «Release» выбирают его начало. Звук и файл WAV строятся из тех же отсчётов. Файл повторяет запись JUCE, включая чанк JUNK и правило округления, поэтому при параметрах по умолчанию он совпадает с `note.wav` из программы байт в байт; так же совпали 16- и 24-битные файлы трёх примеров.
+
+<SynthVoiceDemo figure={2} id="synth-voice-demo" />
+
+Пример «Перкуссия» использует S = 0: нота кончается после спада, раньше `note_off`, и статус показывает, сколько отсчётов занял рендер. «Бас» берёт низкую ноту, частоту среза около 600 Гц и короткий release, «Пэд» — медленные атаку и release, квинту с расстройкой и розовый шум. Поставьте R = 0: статус сообщит, что последний отсчёт не равен нулю, а в скачанном файле на конце будет щелчок.
+
+## Что дальше {#next}
+
+<MarginNote items={[
+  { label: 'JUCE → Synthesiser', description: 'Голоса, звуки, события MIDI и выбор голоса для новой ноты.', target: { url: 'https://docs.juce.com/master/classjuce_1_1Synthesiser.html' } },
+  { label: 'JUCE → SynthesiserVoice', description: 'Методы startNote, stopNote, renderNextBlock и clearCurrentNote.', target: { url: 'https://docs.juce.com/master/classjuce_1_1SynthesiserVoice.html' } },
+]}>
+
+Голос из этой статьи переносится в плагин почти без изменений. В JUCE для этого есть `juce::Synthesiser` и `juce::SynthesiserVoice` ([juce_Synthesiser.h 9.0.3](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_basics/synthesisers/juce_Synthesiser.h)). Наследник `SynthesiserVoice` получает `startNote` с номером ноты и `stopNote` с флагом `allowTailOff` — это `noteOn` и `noteOff`. В `renderNextBlock` он **прибавляет** свои отсчёты к буферу, а не перезаписывает его: в тот же буфер пишут и другие голоса. Когда `isActive()` вернул `false`, голос вызывает `clearCurrentNote()`, и синтезатор может отдать его новой ноте.
+
+</MarginNote>
+
+`juce::Synthesiser` делит аудиоблок на части между событиями MIDI — по умолчанию не короче 32 отсчётов, кроме первой части блока, — и сам распределяет ноты по голосам. Несколько объектов голоса дают полифонию (polyphony): каждый хранит своё состояние, а параметры у всех общие, ради этого их и вынесли в `VoiceParameters`. Когда свободных голосов нет, синтезатор может забрать звучащий: сначала самую старую ноту той же высоты, затем самую старую отпущенную, при этом старается не трогать самую низкую и самую высокую ноту ([juce_Synthesiser.cpp](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_basics/synthesisers/juce_Synthesiser.cpp)). Забранный голос надо быстро заглушить, иначе обрыв даст щелчок.
+
+<MarginNote items={[
+  { label: 'C++ в аудиопотоке → new и delete в processBlock', description: 'Почему обработчик блока не выделяет память и где её готовить.', target: { article: 'cpp-audio-thread', anchor: 'no-allocation' } },
+]}>
+
+`renderNote` выделяет буфер под всю ноту, а `writeWav` пишет на диск. Для консольной программы это нормально, но в <Term id="audio-thread" firstMention>аудиопотоке</Term> плагина так нельзя: выделение памяти и обращение к диску могут занять непредсказуемое время, и блок не успеет к сроку ([Bencina, Real-time audio programming 101](http://www.rossbencina.com/code/real-time-audio-programming-101-time-waits-for-nothing)). Голос же ничего не выделяет и годится для аудиопотока как есть: его состояние создаётся вместе с объектом, а `nextSample` только вычисляет.
+
+</MarginNote>
+
+Звучание голоса можно развивать в нескольких направлениях:
+
+- Огибающая фильтра: вторая `AdsrEnvelope`, которая на каждом отсчёте меняет частоту среза, — классический «вау» в начале ноты. Коэффициент тогда пересчитывается часто, и `std::exp` из `setCutoff` стоит вынести или заменить таблицей.
+- [Резонанс](/one-pole-filter/#limits): однополюсному фильтру его взять неоткуда, нужен фильтр второго порядка или петля обратной связи.
+- Модуляция: [LFO](/lfo/) на высоту даёт вибрато, на уровень — [тремоло](/tremolo/), на частоту среза — медленное движение тембра.
+
+## Самопроверка {#self-check}
+
+<SelfCheck question="Нота длится 0,5 с, R = 250 мс, частота дискретизации 44,1 кГц. Каков верхний предел длины рендера и сколько байт займёт 16-битный моно-WAV, записанный JUCE?">
+
+$\operatorname{round}(0{,}5 \cdot 44\,100) + \operatorname{round}(0{,}25 \cdot 44\,100) = 22\,050 + 11\,025 = 33\,075$ отсчётов. Данные займут $33\,075 \cdot 2 = 66\,150$ байт, вместе с заголовком JUCE на 104 байта — 66 254 байта.
+
+</SelfCheck>
+
+<SelfCheck question="Почему noteOn сбрасывает фазы осцилляторов и состояние фильтра только у молчащего голоса?">
+
+У молчащего голоса огибающая равна нулю, и сброс не слышен, зато каждая нота начинается одинаково. Если голос ещё звучит в release, скачок фазы или $y[n-1]$ изменит сигнал на входе VCA при ненулевом усилении — получится щелчок. Поэтому у звучащего голоса меняется только частота.
+
+</SelfCheck>
+
+<SelfCheck question="Рендер с S = 0 оказался короче формулы (1). Это ошибка?">
+
+Нет. При S = 0 огибающая после спада переходит в покой, `isActive()` возвращает `false`, и цикл останавливается до `note_off`. Формула (1) даёт верхний предел длины; совпадать с ней должна нота, огибающая которой дошла до `note_off`.
+
+</SelfCheck>
+
+<SelfCheck question="Значение −0,00001 записывается в 16-битный WAV. Какой код запишет JUCE и какой — округление к ближайшему?">
+
+JUCE: $2\,147\,483\,647 \cdot (-0{,}00001) \approx -21\,474{,}8$, после `roundToInt` −21 475; сдвиг вправо на 16 разрядов округляет вниз и даёт −1. Округление к ближайшему: $-0{,}00001 \cdot 32\,768 \approx -0{,}33$, то есть 0. Разница — один шаг квантования.
+
+</SelfCheck>
+
+## Источники {#sources}
+
+- [JUCE 9.0.3. juce_WavAudioFormat.cpp](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_formats/codecs/juce_WavAudioFormat.cpp), [juce_AudioFormat.h](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_formats/format/juce_AudioFormat.h), [juce_AudioFormatWriterOptions.h](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_formats/format/juce_AudioFormatWriterOptions.h), [juce_AudioFormatWriter.cpp](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_formats/format/juce_AudioFormatWriter.cpp) и [juce_AudioDataConverters.h](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_basics/buffers/juce_AudioDataConverters.h) — создание писателя с `AudioFormatWriterOptions` и передача потока, заголовок с чанком JUNK, запись заголовка в деструкторе, перевод float в int32 через `roundToInt` и сдвиг до 16 и 24 бит.
+- [JUCE. AudioBuffer](https://docs.juce.com/master/classjuce_1_1AudioBuffer.html) — конструктор без обнуления, `setSample`, `setSize`, `getMagnitude`.
+- [JUCE 9.0.3. juce_Synthesiser.h](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_basics/synthesisers/juce_Synthesiser.h) и [juce_Synthesiser.cpp](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_basics/synthesisers/juce_Synthesiser.cpp) — контракт `SynthesiserVoice` (прибавление к буферу, `stopNote` с `allowTailOff`, `clearCurrentNote`), деление блока между событиями MIDI с минимумом 32 отсчёта, выбор голоса для забора.
+- [JUCE 9.0.3. CMake API](https://github.com/juce-framework/JUCE/blob/9.0.3/docs/CMake%20API.md) и пример `examples/CMake/ConsoleApp` — `juce_add_console_app`, `juce_recommended_config_flags` и `juce_recommended_warning_flags`, отключение веб-модулей.
+- [CMake. FetchContent](https://cmake.org/cmake/help/latest/module/FetchContent.html) — загрузка при настройке проекта и подключение через `add_subdirectory` в `FetchContent_MakeAvailable`.
+- <Source id="bencina-2011" /> — почему в аудиопотоке не выделяют память и не обращаются к диску.

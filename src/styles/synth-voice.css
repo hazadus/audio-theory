@@ -1,0 +1,66 @@
+/* Визуализация «Голос синтезатора» статьи /synth-voice/: контейнер, график, статус, плеер и
+   общие контролы — из adsr.css; здесь группы параметров, рамка фрагмента и скачивание WAV. */
+.synth-voice-demo svg .zoom-frame {
+  fill: var(--chart-series-3);
+  fill-opacity: 0.12;
+  stroke: var(--chart-series-3);
+  stroke-width: 1.5;
+}
+
+.adsr-demo-legend .frame {
+  width: 14px;
+  height: 10px;
+  border: 1.5px solid var(--chart-series-3);
+  background: color-mix(in srgb, var(--chart-series-3) 12%, transparent);
+}
+
+.synth-voice-groups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 20px;
+}
+
+.synth-voice-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 10px 12px 12px;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.synth-voice-group legend {
+  padding: 0 4px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.synth-voice-group:last-child {
+  grid-column: 1 / -1;
+}
+
+.synth-voice-download {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+}
+
+.synth-voice-file {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-text-muted);
+}
+
+.synth-voice-file:empty {
+  display: none;
+}
+
+@container (max-width: 559px) {
+  .synth-voice-groups {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

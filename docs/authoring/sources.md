@@ -354,6 +354,16 @@
 - [JUCE 9.0.3. juce_FirstOrderTPTFilter.h](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_dsp/processors/juce_FirstOrderTPTFilter.h) и [.cpp](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_dsp/processors/juce_FirstOrderTPTFilter.cpp) — `setType`, `setCutoffFrequency` с проверкой $0 < f_c < f_s/2$, `prepare`, `reset (value)`, `processSample`, `snapToZero`, расчёт `G` через `tan` и шаг TPT; [ProcessSpec](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_dsp/processors/juce_ProcessContext.h) — поля спецификации.
 - [Ableton. Live 12 Manual, Drift](https://www.ableton.com/en/live-manual/12/live-instrument-reference/#drift) — прочитаны 31.3.1 Subtractive Synthesis (определение) и 31.3.3 Filter Section (фильтры нижних частот 12 и 24 дБ на октаву, резонанс, слежение за клавиатурой).
 
+## Голос синтезатора и запись WAV
+
+Прочитаны при подготовке `/synth-voice/` по [issue #18](https://github.com/hazadus/audio-theory/issues/18):
+
+- [JUCE 9.0.3. juce_AudioFormat.h](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_formats/format/juce_AudioFormat.h), [juce_AudioFormatWriterOptions.h](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_formats/format/juce_AudioFormatWriterOptions.h), [juce_AudioFormatWriter.cpp](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_formats/format/juce_AudioFormatWriter.cpp) и [juce_WavAudioFormat.cpp](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_formats/codecs/juce_WavAudioFormat.cpp) — локальная копия точного релиза: `createWriterFor` с `std::unique_ptr<OutputStream>&` и `AudioFormatWriterOptions` (прежний вариант устарел), `convertFloatsToInts` (насыщение у ±1, `roundToInt (INT_MAX · x)`), сдвиг до 16 и 24 бит в `AudioData::Int16/Int24`, заголовок с `JUNK` на 52 байта, запись заголовка в деструкторе писателя, `File::createOutputStream` с позицией в конце файла.
+- [JUCE 9.0.3. juce_Synthesiser.h](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_basics/synthesisers/juce_Synthesiser.h) и [juce_Synthesiser.cpp](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_basics/synthesisers/juce_Synthesiser.cpp) — контракт `SynthesiserVoice` (`startNote`, `stopNote` с `allowTailOff`, прибавление к буферу в `renderNextBlock`, `clearCurrentNote`), `setMinimumRenderingSubdivisionSize` (32 отсчёта по умолчанию), эвристики `findVoiceToSteal`.
+- [JUCE 9.0.3. CMake API](https://github.com/juce-framework/JUCE/blob/9.0.3/docs/CMake%20API.md) и `examples/CMake/ConsoleApp/CMakeLists.txt` — `juce_add_console_app`, `juce_recommended_config_flags`, `juce_recommended_warning_flags`, `JUCE_WEB_BROWSER=0` и `JUCE_USE_CURL=0`.
+- [CMake. FetchContent](https://cmake.org/cmake/help/latest/module/FetchContent.html) — загрузка при настройке, `FetchContent_MakeAvailable` вызывает `add_subdirectory`, переменная `FETCHCONTENT_SOURCE_DIR_<NAME>`.
+- [Learn C++. 14.10 Constructor member initializer lists](https://www.learncpp.com/cpp-tutorial/constructor-member-initializer-lists/) — члены инициализируются в порядке объявления; не выводить значение одного члена из другого.
+
 ## Белый и розовый шум
 
 Прочитаны при подготовке `/noise/`:
