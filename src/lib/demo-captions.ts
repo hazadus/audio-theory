@@ -56,6 +56,7 @@ export const demoCaptions = {
   FilterStepDemo: { defaultId: 'filter-step', name: 'Переходная характеристика' },
   FilterSmoothingDemo: { defaultId: 'filter-smoothing', name: 'Сглаживание фильтром' },
   SynthVoiceDemo: { defaultId: 'synth-voice-demo', name: 'Голос синтезатора' },
+  DelayEchoDemo: { defaultId: 'delay-echo', name: 'Кольцевой буфер и эхо' },
   FlacPredictionDemo: {
     defaultId: 'flac-prediction',
     name: 'Предсказание FLAC: остаток и коды Райса',

@@ -27,6 +27,7 @@ export type PreviewKind =
   | 'filter-step'
   | 'filter-smoothing'
   | 'synth-voice'
+  | 'delay-ring'
   | 'intro-oscillator'
   | 'intro-envelope'
   | 'intro-lfo';
@@ -56,6 +57,7 @@ export const previewKinds: readonly PreviewKind[] = [
   'filter-step',
   'filter-smoothing',
   'synth-voice',
+  'delay-ring',
   'intro-oscillator',
   'intro-envelope',
   'intro-lfo',
@@ -396,6 +398,7 @@ const builders: Record<PreviewKind, () => Preview> = {
   'adsr-click': adsrClickPreview,
   'filter-step': filterStepPreview,
   'filter-smoothing': filterSmoothingPreview,
+  'delay-ring': delayRingPreview,
   'synth-voice': synthVoicePreview,
   mixing: () => ({
     paths: [
@@ -591,6 +594,32 @@ function filterSmoothingPreview(): Preview {
       { d: 'M16 75H264', color: 'grid', width: 1 },
       { d: saw, color: 'signal', width: 1.25 },
       { d: smooth, color: 'result', width: 2.5 },
+    ],
+    dots: [],
+  };
+}
+
+function delayRingPreview(): Preview {
+  // Слева кольцо буфера со штрихами щелчка и повторов, ячейками записи и чтения; справа повторы,
+  // каждый вдвое тише предыдущего.
+  const cx = 62;
+  const cy = 75;
+  const at = (turn: number, r: number) =>
+    `${f1(cx + r * Math.sin(2 * Math.PI * turn))} ${f1(cy - r * Math.cos(2 * Math.PI * turn))}`;
+  let content = '';
+  for (let k = 0; k < 4; k += 1)
+    content += `M${at(0.02 + 0.2 * k, 40)}L${at(0.02 + 0.2 * k, 40 + 18 * (1 - k / 4))}`;
+  let stems = '';
+  for (let k = 0; k < 6; k += 1) stems += `M${f1(140 + 24 * k)} 75V${f1(75 - 52 * 0.5 ** k)}`;
+  return {
+    paths: [
+      { d: `M${at(0, 34)}A34 34 0 1 1 ${at(0.999, 34)}`, color: 'grid', width: 1.25 },
+      { d: `M${at(0, 40)}A40 40 0 1 1 ${at(0.999, 40)}`, color: 'grid', width: 1.25 },
+      { d: content, color: 'signal', width: 3 },
+      { d: `M${at(0.75, 26)}L${at(0.75, 62)}`, color: 'sample', width: 2.5 },
+      { d: `M${at(0.42, 26)}L${at(0.42, 62)}`, color: 'result', width: 2, dash: '5 3' },
+      { d: 'M132 75H264', color: 'axis', width: 1 },
+      { d: stems, color: 'signal', width: 2.5 },
     ],
     dots: [],
   };

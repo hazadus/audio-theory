@@ -530,6 +530,21 @@
       "publication": "3rd ed. Wiley, 2022. ISBN 978-1-119-83267-6."
     },
     {
+      "id": "zolzer-2011",
+      "type": "book",
+      "authors": ["zolzer"],
+      "editors": true,
+      "title": "DAFX: Digital Audio Effects",
+      "publication": "2nd ed. Wiley, 2011. ISBN 978-0-470-66599-2."
+    },
+    {
+      "id": "pirkle-2019",
+      "type": "book",
+      "authors": ["pirkle"],
+      "title": "Designing Audio Effect Plugins in C++: For AAX, AU, and VST3 With DSP Theory",
+      "publication": "2nd ed. Routledge, 2019. ISBN 978-1-138-59193-6."
+    },
+    {
       "id": "sundararajan-2024",
       "type": "book",
       "authors": ["sundararajan"],

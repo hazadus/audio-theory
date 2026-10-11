@@ -186,6 +186,14 @@ export const visualizations: readonly Visualization[] = [
     preview: 'synth-voice',
   },
   {
+    id: 'delay-echo',
+    slug: 'delay-line',
+    name: 'Кольцевой буфер и эхо',
+    what: 'Задержка, коэффициент g, прямая или обратная связь, момент на схеме буфера; щелчок и его повторы.',
+    sound: true,
+    preview: 'delay-ring',
+  },
+  {
     id: 'intro-tone',
     slug: 'audio-intro',
     name: 'Звук: выше, ниже, громче, тише',

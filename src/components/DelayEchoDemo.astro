@@ -1,0 +1,191 @@
+---
+// «Кольцевой буфер и эхо»: ячейки буфера по кругу с ячейками записи и чтения, выход эха на щелчке
+// и прослушивание тем же алгоритмом. Начальная схема, график и подпись создаются при сборке; без
+// JavaScript, во время загрузки и при ошибке параметры неактивны.
+import AdsrPlayer from '@/components/AdsrPlayer.astro';
+import Icon from '@/components/Icon.astro';
+import {
+  defaultEcho,
+  delayLimits,
+  echoDurationMs,
+  echoModes,
+  feedbackLimits,
+  momentSamples,
+  momentStep,
+  renderEcho,
+  ringState,
+} from '@/lib/delay-line';
+import {
+  delayText,
+  echoCaption,
+  echoModeNames,
+  echoStatusLines,
+  feedbackText,
+  msText,
+  outputSvg,
+  ringSvg,
+} from '@/lib/delay-line-view';
+import { demoCaptions } from '@/lib/demo-captions';
+import '@/styles/adsr.css';
+import '@/styles/delay-line.css';
+
+interface Props {
+  /** Номер рисунка: визуализации и рисунки нумеруются одной последовательностью. */
+  figure: number;
+  /** Якорь для ссылок `#id`; английский kebab-case. */
+  id?: string;
+}
+
+const { figure, id = demoCaptions.DelayEchoDemo.defaultId } = Astro.props;
+const p = defaultEcho;
+const render = renderEcho(p);
+const n = momentSamples(render, p.momentMs);
+const state = ringState(render, n);
+const status = echoStatusLines(render, state);
+const duration = Math.floor(echoDurationMs(render) / momentStep) * momentStep;
+---
+
+<figure
+  id={id}
+  class="adsr-demo delay-demo"
+  aria-labelledby={`${id}-name`}
+  data-delay-echo
+  data-state="static"
+>
+  <div class="adsr-demo-head">
+    <span class="adsr-demo-label">Визуализация {figure}</span>
+    <span class="adsr-demo-name" id={`${id}-name`}>
+      {demoCaptions.DelayEchoDemo.name}
+    </span>
+  </div>
+  <div
+    class="adsr-demo-chart delay-demo-chart"
+    role="region"
+    aria-label="Кольцевой буфер и выход эха"
+    tabindex="0"
+    data-chart
+  >
+    <div class="delay-demo-ring" data-ring-box set:html={ringSvg(render, state, id)} />
+    <div data-output-box set:html={outputSvg(render, n, id)} />
+  </div>
+  <ul class="adsr-demo-legend delay-demo-legend" aria-label="Легенда">
+    <li>
+      <i class="content"></i>содержимое ячеек
+    </li>
+    <li>
+      <i class="write"></i>запись, момент n
+    </li>
+    <li>
+      <i class="read"></i>чтение, момент n − D
+    </li>
+    <li>
+      <i></i>выход y[n]
+    </li>
+  </ul>
+  <div class="adsr-demo-status">
+    <p data-status-buffer>{status.buffer}</p>
+    <p data-status-echo>{status.echo}</p>
+    <p data-status-moment>{status.moment}</p>
+  </div>
+  <p class="visually-hidden" aria-live="polite" data-announce></p>
+  <fieldset class="adsr-demo-controls" data-controls disabled>
+    <legend class="visually-hidden">Параметры эха и момент на схеме</legend>
+    <fieldset class="adsr-demo-choice">
+      <legend>Связь:</legend>
+      {echoModes.map((mode) => (
+        <label>
+          <input
+            type="radio"
+            name={`${id}-mode`}
+            value={mode}
+            checked={mode === p.mode}
+            data-mode
+          />
+          {echoModeNames[mode]}
+        </label>
+      ))}
+    </fieldset>
+    <div class="adsr-demo-grid delay-demo-grid">
+      <div class="adsr-demo-param">
+        <div class="adsr-demo-param-head">
+          <label for={`${id}-delay`}>Задержка</label>
+          <output for={`${id}-delay`} data-output="delay">
+            {delayText(p.delayMs)}
+          </output>
+        </div>
+        <input
+          id={`${id}-delay`}
+          class="adsr-demo-range"
+          type="range"
+          min={delayLimits.min}
+          max={delayLimits.max}
+          step={delayLimits.step}
+          value={p.delayMs}
+          aria-valuetext={delayText(p.delayMs)}
+          data-range="delay"
+        />
+      </div>
+      <div class="adsr-demo-param">
+        <div class="adsr-demo-param-head">
+          <label for={`${id}-feedback`}>Коэффициент g</label>
+          <output for={`${id}-feedback`} data-output="feedback">
+            {feedbackText(p.feedbackPercent)}
+          </output>
+        </div>
+        <input
+          id={`${id}-feedback`}
+          class="adsr-demo-range"
+          type="range"
+          min={feedbackLimits.min}
+          max={feedbackLimits.max}
+          step={feedbackLimits.step}
+          value={p.feedbackPercent}
+          aria-valuetext={feedbackText(p.feedbackPercent)}
+          data-range="feedback"
+        />
+      </div>
+      <div class="adsr-demo-param delay-demo-moment">
+        <div class="adsr-demo-param-head">
+          <label for={`${id}-moment`}>Момент на схеме t</label>
+          <output for={`${id}-moment`} data-output="moment">
+            {msText(p.momentMs)}
+          </output>
+        </div>
+        <input
+          id={`${id}-moment`}
+          class="adsr-demo-range"
+          type="range"
+          min="0"
+          max={duration}
+          step={momentStep}
+          value={p.momentMs}
+          aria-valuetext={msText(p.momentMs)}
+          data-range="moment"
+        />
+      </div>
+    </div>
+    <div class="adsr-demo-actions">
+      <span></span>
+      <button type="button" class="adsr-demo-reset" data-reset>
+        <Icon name="rotate-ccw" size={16} />
+        Сбросить
+      </button>
+    </div>
+    <AdsrPlayer label="Аудиопример: щелчок и его повторы">
+      <b>Громкость.</b> Щелчок резкий, а при g около 1 повторы звучат долго: перед запуском убавьте
+      громкость, особенно в наушниках.
+    </AdsrPlayer>
+    <p class="adsr-demo-note-text" data-controls-note>
+      Параметры и звук работают с включённым JavaScript. Показано начальное состояние.
+    </p>
+  </fieldset>
+  <figcaption class="adsr-demo-caption">
+    <b>Рис. {figure}.</b> <span data-caption>{echoCaption(p)}</span>
+  </figcaption>
+</figure>
+
+<script>
+  import { initDelayEchoDemos } from '@/lib/delay-line-controller';
+
+  initDelayEchoDemos();
+</script>

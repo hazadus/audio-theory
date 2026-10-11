@@ -224,6 +224,7 @@ $$
 
 <MarginNote items={[
   { label: 'Аудиоданные → Размер блока и задержка', description: 'Из чего складывается задержка аудиотракта.', target: { article: 'audio-data', anchor: 'block-time-and-latency' } },
+  { label: 'Линия задержки → Кольцевой буфер', description: 'Как программа хранит отсчёты, чтобы выдать их на заданное число отсчётов позже.', target: { article: 'delay-line', anchor: 'circular-buffer' } },
 ]}>
 
 <Term id="delay-compensation" firstMention define>Компенсация задержки</Term> выравнивает дорожки: хост знает задержку каждого плагина и задерживает остальные пути на недостающую величину. Если на одной дорожке стоит эффект с задержкой 96 отсчётов, все другие дорожки при воспроизведении тоже сдвигаются на 96 отсчётов, и сумма звучит синхронно. DAW делают это автоматически; Ableton Live, например, учитывает и плагины на возвратах ([Ableton, Device Delay Compensation](https://www.ableton.com/en/live-manual/12/working-with-instruments-and-effects/#device-delay-compensation)).
@@ -373,6 +374,7 @@ private:
 
 <MarginNote items={[
   { label: 'C++ в аудиопотоке → Где выделять память', description: 'Подготовка буферов в prepareToPlay с запасом на случай блока больше обещанного.', target: { article: 'cpp-audio-thread', anchor: 'preallocation' } },
+  { label: 'Линия задержки → Сравнение с juce::dsp::DelayLine', description: 'Линия задержки dry внутри DryWetMixer и её интерполяция Thiran.', target: { article: 'delay-line', anchor: 'juce-delay-line' } },
 ]}>
 
 Пример рассчитан на эффект с одинаковым числом входных и выходных каналов и блоки не длиннее, чем передано в `prepareToPlay`: очередь dry внутри `DryWetMixer` имеет размер по этому значению. При проверке в JUCE 9.0.3 вместо `effect` стояла задержка на 96 отсчётов с переворотом полярности. При mix 50 % выход оказался нулевым, значит dry и wet совпали по времени до отсчёта. При включённом bypass выход совпал с входом, задержанным на 96 отсчётов. Наибольшее изменение между соседними отсчётами в переходах осталось таким же, как у самого тестового тона 440 Гц.

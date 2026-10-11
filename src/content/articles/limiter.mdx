@@ -149,6 +149,7 @@ $$
 
 <MarginNote items={[
   { label: 'Dry/wet и bypass → Задержка при выключении', description: 'Компенсация задержки плагинов и почему обход должен сохранять ту же задержку.', target: { article: 'dry-wet-bypass', anchor: 'latency-compensation' } },
+  { label: 'Линия задержки → Кольцевой буфер', description: 'Буфер, который задерживает основной сигнал на длину анализа.', target: { article: 'delay-line', anchor: 'circular-buffer' } },
 ]}>
 
 Предварительный анализ задерживает весь сигнал на длину анализа: при 48 кГц 2 мс дают 96 отсчётов, 5 мс — 240. `DynamicsCompressorNode` в Web Audio задерживает сигнал на 6 мс ([W3C, Web Audio API](https://webaudio.github.io/web-audio-api/#DynamicsCompressorNode)). При сведении в программе это обычно незаметно: рабочая станция компенсирует <Term id="latency" firstMention>задержку</Term> <Term id="plugin" firstMention>плагинов</Term>. Но если компенсация не срабатывает, а обработанную дорожку складывают с необработанной копией, их сумма даёт <Term id="comb-filtering" firstMention>гребенчатую фильтрацию</Term> ([Senior, гл. 10, с. 167](#sources)). При живом мониторинге задержка сама по себе может мешать исполнителю.

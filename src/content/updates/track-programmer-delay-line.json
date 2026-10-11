@@ -1,0 +1,13 @@
+{
+  "id": "track-programmer-delay-line",
+  "date": "2026-10-11",
+  "order": 8,
+  "type": "updated",
+  "track": "programmer",
+  "items": [
+    {
+      "text": "Новый этап «Задержка»: линия задержки, эхо и гребенчатый фильтр",
+      "target": { "track": "programmer", "anchor": "stage-delay" }
+    }
+  ]
+}

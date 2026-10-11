@@ -1,0 +1,17 @@
+{
+  "id": "audio-math-delay-line",
+  "date": "2026-10-11",
+  "order": 7,
+  "type": "updated",
+  "article": "audio-math",
+  "items": [
+    {
+      "text": "Геометрическая прогрессия и её сумма",
+      "target": { "article": "audio-math", "anchor": "geometric-series" }
+    },
+    {
+      "text": "Линейная интерполяция",
+      "target": { "article": "audio-math", "anchor": "linear-interpolation" }
+    }
+  ]
+}

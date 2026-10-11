@@ -2832,5 +2832,40 @@
       "article": "audio-math",
       "anchor": "exponential"
     }
+  },
+  {
+    "id": "delay-line",
+    "ru": "линия задержки",
+    "en": "delay line",
+    "definition": "Блок обработки, который хранит последние отсчёты сигнала и выдаёт вход на заданное число отсчётов позже: y[n] = x[n − D]. На нём построены эхо, хорус, фленжер, реверберация и компенсация задержки.",
+    "target": { "article": "delay-line" }
+  },
+  {
+    "id": "circular-buffer",
+    "ru": "кольцевой буфер",
+    "en": "circular buffer",
+    "definition": "Массив постоянной длины, индекс записи в котором после последней ячейки возвращается к первой. Новый отсчёт затирает самый старый, остальные остаются на месте.",
+    "target": { "article": "delay-line", "anchor": "circular-buffer" }
+  },
+  {
+    "id": "fractional-delay",
+    "ru": "дробная задержка",
+    "en": "fractional delay",
+    "definition": "Задержка на нецелое число отсчётов. Значение между двумя соседними отсчётами вычисляют интерполяцией, например линейной.",
+    "target": { "article": "delay-line", "anchor": "fractional" }
+  },
+  {
+    "id": "linear-interpolation",
+    "ru": "линейная интерполяция",
+    "en": "linear interpolation",
+    "definition": "Оценка значения между двумя известными точками по соединяющей их прямой: a + η·(b − a) при доле η от 0 до 1.",
+    "target": { "article": "audio-math", "anchor": "linear-interpolation" }
+  },
+  {
+    "id": "geometric-progression",
+    "ru": "геометрическая прогрессия",
+    "en": "geometric progression",
+    "definition": "Последовательность a, ar, ar², …, в которой каждое число в r раз больше предыдущего. Если |r| меньше 1, сумма всех членов равна a/(1 − r).",
+    "target": { "article": "audio-math", "anchor": "geometric-series" }
   }
 ]

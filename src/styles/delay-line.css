@@ -1,0 +1,68 @@
+/* Визуализация «Кольцевой буфер и эхо» статьи /delay-line/: контейнер, статус, плеер и общие
+   контролы — из adsr.css; здесь схема буфера, отметки моментов и раскладка параметров. */
+.delay-demo-ring {
+  display: flex;
+  justify-content: center;
+  padding-top: 8px;
+  border-bottom: var(--border-width) solid var(--chart-grid);
+}
+
+.delay-demo svg .cell {
+  fill: none;
+  stroke: var(--chart-grid);
+  stroke-width: 1;
+}
+
+.delay-demo svg .content {
+  stroke: var(--chart-series-1);
+  stroke-width: 3;
+}
+
+.delay-demo svg .write {
+  stroke: var(--chart-series-2);
+  stroke-width: 2.5;
+}
+
+.delay-demo svg .read {
+  stroke: var(--chart-series-3);
+  stroke-width: 2;
+  stroke-dasharray: 5 3;
+}
+
+.delay-demo svg .write-dot {
+  fill: var(--chart-series-2);
+}
+
+.delay-demo svg .read-dot {
+  fill: var(--chart-series-3);
+}
+
+.delay-demo svg .span {
+  stroke: var(--chart-series-3);
+  stroke-width: 5;
+  stroke-opacity: 0.35;
+  stroke-linecap: round;
+}
+
+.delay-demo-legend .content {
+  width: 4px;
+  height: 14px;
+  border: 0;
+  background: var(--chart-series-1);
+}
+
+.delay-demo-legend .write {
+  border-top: 3px solid var(--chart-series-2);
+}
+
+.delay-demo-legend .read {
+  border-top: 2px dashed var(--chart-series-3);
+}
+
+.delay-demo-legend i:not([class]) {
+  border-top-width: 1.5px;
+}
+
+.delay-demo-moment {
+  grid-column: 1 / -1;
+}
