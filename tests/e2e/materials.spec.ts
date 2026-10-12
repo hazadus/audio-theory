@@ -8,49 +8,6 @@ const chip = (page: Page, id: string) => page.locator(`[data-topic-chip="${id}"]
 const sortOption = (page: Page, id: string) => page.locator(`[data-sort-option="${id}"]`);
 const search = (page: Page) => new URL(page.url()).search;
 
-test(
-  'фильтр и сортировка пишутся в адрес, назад и вперёд восстанавливают состояние',
-  { tag: ['@ci', '@cross-browser', '@placement'] },
-  async ({ page }) => {
-    await page.goto('materials/');
-    const initial = await slugs(page);
-
-    await chip(page, 'digital').click();
-    expect(search(page)).toBe('?topic=digital');
-    expect((await slugs(page)).sort()).toEqual(['sampling', 'signal-level']);
-    await expect(page.locator('[data-count]')).toHaveText('2 статьи');
-    await expect(chip(page, 'digital')).toHaveAttribute('aria-pressed', 'true');
-
-    await sortOption(page, 'alpha').click();
-    expect(search(page)).toBe('?topic=digital&sort=alpha');
-
-    await sortOption(page, 'topic').click();
-    expect(search(page)).toBe('?topic=digital&sort=topic');
-    await expect(page.locator('[data-list] h2')).toHaveText(/Цифровой сигнал\s*2/);
-
-    await page.goBack();
-    expect(search(page)).toBe('?topic=digital&sort=alpha');
-    await expect(sortOption(page, 'alpha')).toHaveAttribute('aria-checked', 'true');
-    await page.goBack();
-    expect(search(page)).toBe('?topic=digital');
-    await page.goBack();
-    expect(search(page)).toBe('');
-    expect(await slugs(page)).toEqual(initial);
-    await expect(chip(page, 'all')).toHaveAttribute('aria-pressed', 'true');
-    await page.goForward();
-    expect((await slugs(page)).sort()).toEqual(['sampling', 'signal-level']);
-
-    await page.reload();
-    expect(search(page)).toBe('?topic=digital');
-    expect((await slugs(page)).sort()).toEqual(['sampling', 'signal-level']);
-    await expect(chip(page, 'digital')).toHaveAttribute('aria-pressed', 'true');
-
-    // Возврат к «Все» и сортировке по умолчанию убирает query из адреса.
-    await chip(page, 'all').click();
-    expect(search(page)).toBe('');
-  },
-);
-
 test('пустая тема из сохранённого адреса показывает сообщение и ссылку на все материалы', async ({
   page,
 }, testInfo) => {

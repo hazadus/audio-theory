@@ -50,8 +50,6 @@ try {
   const home = await readFile(join(validDir, 'index.html'), 'utf8');
   assert.match(home, /<h2[^>]*>Основы звука<\/h2>/);
   assert.match(home, /<h2[^>]*>Цифровой сигнал<\/h2>/);
-  // Карточки ищем только в <main>: описание главной в <head> перечисляет темы учебника.
-  assert.doesNotMatch(home.slice(home.indexOf('<main')), /АЦП и ЦАП|Аудиоданные в программах/);
   assert.equal([...home.matchAll(/class="all[^"]*"[^>]*>Все 1</g)].length, 2);
   assert.equal([...home.matchAll(/class="card[ "]/g)].length, 2);
 

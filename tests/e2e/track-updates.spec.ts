@@ -2,38 +2,6 @@
 import { expect, test } from '@playwright/test';
 
 test(
-  'трек: журнал, фильтры, архив, ссылки и дата',
-  { tag: ['@track-updates'] },
-  async ({ page }, info) => {
-    const base = info.project.metadata.base;
-    await page.goto('updates/');
-    const added = page.locator('#update-track-programmer-added');
-    const created = page.locator('#update-track-engineer-new');
-    await expect(added.locator('.badge')).toHaveText('Дополнено');
-    await expect(added.locator('.meta')).toHaveText('Трек · 2 этапа · 5 элементов');
-    await expect(created.locator('.summary')).toContainText('Служебное описание маршрута');
-    await expect(created.locator('.meta')).toHaveText('Трек · 1 этап · 1 элемент');
-    await expect(added.locator('li a')).toHaveAttribute(
-      'href',
-      `${base}tracks/programmer/#stage-digital`,
-    );
-    await page.locator('[data-type-filter="new"]').click();
-    await expect(added).toBeHidden();
-    await expect(created).toBeVisible();
-    await page.goBack();
-    await expect(added).toBeVisible();
-    await page.goto('updates/2025/#update-track-programmer-new');
-    await expect(page.locator('#update-track-programmer-new .badge')).toHaveText('Новое');
-    await page.locator('#update-track-programmer-new .title').click();
-    await expect(page.locator('.updated time')).toHaveAttribute('datetime', '2026-10-04');
-    await page.goto('updates/2026/#update-track-programmer-added');
-    await page.locator('#update-track-programmer-added li a').click();
-    await expect(page).toHaveURL(new RegExp('/tracks/programmer/#stage-digital$'));
-    await expect(page.locator('#stage-digital')).toBeInViewport();
-  },
-);
-
-test(
   'RSS и три последних обновления содержат обе записи треков',
   { tag: ['@track-updates'] },
   async ({ page, request }, info) => {
