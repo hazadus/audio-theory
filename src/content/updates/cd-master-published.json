@@ -1,0 +1,26 @@
+{
+  "id": "cd-master-published",
+  "date": "2026-10-12",
+  "order": 5,
+  "type": "new",
+  "article": "cd-master",
+  "summary": "Что такое мастеринг и почему отправленное на завод — премастер: стеклянный мастер-диск, первый и второй оригиналы и матрицы компакт-диска, наследие грампластинки и кривой RIAA, переход от лент U-matic и CD-R к файлам DDP и требования к мастер-файлам Apple Digital Masters.",
+  "items": [
+    {
+      "text": "Схема: от стеклянного мастер-диска к матрице",
+      "target": { "article": "cd-master", "anchor": "replication-figure" }
+    },
+    {
+      "text": "Что отправляют на завод: U-matic, CD-R и DDP",
+      "target": { "article": "cd-master", "anchor": "cd-master" }
+    },
+    {
+      "text": "От носителя к файлу: Apple Digital Masters",
+      "target": { "article": "cd-master", "anchor": "digital-master" }
+    },
+    {
+      "text": "Термины «мастеринг», «стеклянный мастер-диск» и DDP",
+      "target": { "glossary": "mastering" }
+    }
+  ]
+}

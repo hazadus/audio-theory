@@ -81,7 +81,15 @@
     "serinus": "Serinus J. V.",
     "vickers": "Vickers E.",
     "walther-hansen": "Walther-Hansen M.",
-    "redmon": "Redmon N."
+    "redmon": "Redmon N.",
+    "boden": "Boden L.",
+    "nikamin": "Никамин В. А.",
+    "efimov": "Ефимов А. П.",
+    "nikonov": "Никонов А. В.",
+    "sapozhkov": "Сапожков М. А.",
+    "shorov": "Шоров В. И.",
+    "meerzon": "Меерзон Б. Я.",
+    "drozhzhin": "Дрожжин А."
   },
   "editions": [
     {
@@ -650,6 +658,42 @@
       "title": "Envelope generators — ADSR code",
       "publication": "EarLevel Engineering, 2013.",
       "url": "https://www.earlevel.com/main/2013/06/03/envelope-generators-adsr-code/"
+    },
+    {
+      "id": "boden-1981",
+      "type": "book",
+      "authors": ["boden"],
+      "title": "Basic Disc Mastering",
+      "publication": "Glendale (CA): L. Boden, 1981. 55 p."
+    },
+    {
+      "id": "nikamin-2002",
+      "type": "book",
+      "authors": ["nikamin"],
+      "title": "Цифровая звукозапись. Технологии и стандарты",
+      "publication": "Под ред. М. В. Финкова. СПб.: Наука и Техника, 2002. 256 с. ISBN 5-94387-043-1."
+    },
+    {
+      "id": "sapozhkov-1989",
+      "type": "book",
+      "authors": ["efimov", "nikonov", "sapozhkov", "shorov"],
+      "title": "Акустика: Справочник",
+      "publication": "Под ред. М. А. Сапожкова. 2-е изд., перераб. и доп. М.: Радио и связь, 1989. 336 с. ISBN 5-256-00187-6."
+    },
+    {
+      "id": "meerzon-2002",
+      "type": "book",
+      "authors": ["meerzon"],
+      "title": "Акустические основы звукорежиссуры. Учебное пособие. Часть 3",
+      "publication": "М.: Гуманитарный институт телевидения и радиовещания, 2002. ISBN 5-94237-004-4."
+    },
+    {
+      "id": "drozhzhin-2010",
+      "type": "web",
+      "authors": ["drozhzhin"],
+      "title": "Как производятся диски Blu-ray 3D — репортаж с фабрики Sony",
+      "publication": "3DNews, 18 июня 2010.",
+      "url": "https://3dnews.ru/593813"
     }
   ]
 }

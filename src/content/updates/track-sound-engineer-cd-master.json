@@ -1,0 +1,16 @@
+{
+  "id": "track-sound-engineer-cd-master",
+  "date": "2026-10-12",
+  "order": 6,
+  "type": "updated",
+  "track": "sound-engineer",
+  "items": [
+    {
+      "text": "Этап «Форматы и объём записи»: путь мастера от стеклянного мастер-диска до файла",
+      "target": {
+        "track": "sound-engineer",
+        "anchor": "stage-delivery"
+      }
+    }
+  ]
+}
