@@ -139,7 +139,13 @@ void mixTwo (const float* first, const float* second,
 
 ## Фаза: сумма может расти и уменьшаться {#phase-sum}
 
+<MarginNote items={[
+  { label: 'Математика для аудио → Амплитуда и фаза одним числом', description: 'Сумма синусоид одной частоты как сумма векторов-комплексных амплитуд.', target: { article: 'audio-math', anchor: 'complex-amplitude' } },
+]}>
+
 Для двух синусоид одной <Term id="frequency" firstMention>частоты</Term> результат зависит от разности <Term id="phase" firstMention>фаз</Term>. При совпадении фаз положительные и отрицательные отклонения совпадают по времени: такое сложение называют конструктивным (constructive interference). В противофазе отклонения направлены в разные стороны — сложение деструктивное (destructive interference). Сумма остаётся синусоидой той же частоты, хотя её амплитуда и начальная фаза могут измениться ([Julius O. Smith, Sinusoids at the Same Frequency](https://www.dsprelated.com/freebooks/mdft/Sinusoids_Same_Frequency.html)).
+
+</MarginNote>
 
 Если амплитуда каждого **после усиления** равна 0,5, то:
 

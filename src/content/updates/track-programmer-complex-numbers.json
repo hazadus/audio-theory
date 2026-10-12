@@ -1,0 +1,13 @@
+{
+  "id": "track-programmer-complex-numbers",
+  "date": "2026-10-12",
+  "order": 12,
+  "type": "updated",
+  "track": "programmer",
+  "items": [
+    {
+      "text": "Комплексные числа добавлены в этап «Сигнал и обозначения»",
+      "target": { "track": "programmer", "anchor": "stage-basics" }
+    }
+  ]
+}

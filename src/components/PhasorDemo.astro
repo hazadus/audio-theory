@@ -1,0 +1,767 @@
+---
+// Визуализация вращающегося вектора: комплексная плоскость с вектором e^{j(2πft + φ)} и проекциями,
+// графики вещественной и мнимой части за 2 с с курсором времени, расчёт угла, легенда, статус,
+// ползунки частоты, начальной фазы и времени, анимация, сброс и подпись «Рис. N.».
+// При сборке рисуется начальное состояние; без JS, во время загрузки и при ошибке параметры неактивны.
+import { demoCaptions } from '@/lib/demo-captions';
+import Icon from '@/components/Icon.astro';
+import {
+  defaultState,
+  frequencyStep,
+  maxFrequency,
+  maxPhase,
+  maxTime,
+  minFrequency,
+  minPhase,
+  phaseStep,
+  timeStep,
+} from '@/lib/phasor';
+import {
+  angleFormula,
+  frequencyText,
+  partChartSvg,
+  partFormulaHtml,
+  partNames,
+  parts,
+  phaseText,
+  phasorCaption,
+  phasorStatus,
+  planeSvg,
+  timeText,
+} from '@/lib/phasor-view';
+
+interface Props {
+  /** Номер рисунка: визуализации и рисунки нумеруются одной последовательностью. */
+  figure: number;
+  /** Якорь для ссылок `#id`; английский kebab-case. */
+  id?: string;
+}
+
+const { figure, id = demoCaptions.PhasorDemo.defaultId } = Astro.props;
+
+const state = defaultState;
+const status = phasorStatus(state);
+const fill = (value: number, min: number, max: number) => ((value - min) / (max - min)) * 100;
+const sliders = [
+  {
+    key: 'frequency',
+    label: 'Частота',
+    symbol: 'f',
+    min: minFrequency,
+    max: maxFrequency,
+    step: frequencyStep,
+    value: state.frequency,
+    text: frequencyText(state.frequency),
+    scale: ['−2 Гц', `шаг 0,25`, '2 Гц'],
+  },
+  {
+    key: 'phase',
+    label: 'Начальная фаза',
+    symbol: 'φ',
+    min: minPhase,
+    max: maxPhase,
+    step: phaseStep,
+    value: state.phase,
+    text: phaseText(state.phase),
+    scale: ['−180°', `шаг ${phaseStep}°`, `${maxPhase}°`],
+  },
+  {
+    key: 'time',
+    label: 'Время',
+    symbol: 't',
+    min: 0,
+    max: maxTime,
+    step: timeStep,
+    value: state.time,
+    text: timeText(state.time),
+    scale: ['0 с', 'шаг 0,01 с', '1,99 с'],
+  },
+] as const;
+---
+
+<figure
+  class="phasor-demo"
+  id={id}
+  aria-labelledby={`${id}-name`}
+  data-phasor-demo
+  data-state="static"
+>
+  <div class="phasor-demo-head">
+    <span class="phasor-demo-label">Визуализация {figure}</span>
+    <span class="phasor-demo-name" id={`${id}-name`}>
+      {demoCaptions.PhasorDemo.name}
+    </span>
+  </div>
+  <div class="phasor-demo-plot">
+    <div class="phasor-demo-side" data-plane set:html={planeSvg(state, id)} />
+    <ul class="phasor-demo-charts">
+      {parts.map((part) => (
+        <li class="phasor-demo-chart-item">
+          <div class="phasor-demo-chart-head">
+            <span class="phasor-demo-chart-name">{partNames[part]}</span>
+            <span
+              class="phasor-demo-formula"
+              data-formula={part}
+              set:html={partFormulaHtml(part, state)}
+            />
+          </div>
+          <div
+            class="phasor-demo-chart"
+            data-chart={part}
+            set:html={partChartSvg(part, state, id)}
+          />
+        </li>
+      ))}
+    </ul>
+  </div>
+  <div class="phasor-demo-body">
+    <p class="phasor-demo-angle-line" data-angle>
+      {angleFormula(state)}
+    </p>
+    <ul class="phasor-demo-legend" aria-label="Легенда">
+      <li>
+        <span class="phasor-demo-key vector" aria-hidden="true"></span>вектор <i>z</i> и момент{' '}
+        <i>t</i>
+      </li>
+      <li>
+        <span class="phasor-demo-key re" aria-hidden="true"></span>вещественная часть Re <i>z</i>
+      </li>
+      <li>
+        <span class="phasor-demo-key im" aria-hidden="true"></span>мнимая часть Im <i>z</i>
+      </li>
+    </ul>
+    <p class="phasor-demo-status">
+      <span class="phasor-demo-icon">
+        <Icon name="info" size={18} />
+      </span>
+      <span>
+        <b data-status-title>{status.title}</b> <span data-status-text>{status.text}</span>
+      </span>
+    </p>
+  </div>
+  <p class="visually-hidden" aria-live="polite" data-announce></p>
+  <fieldset class="phasor-demo-controls" data-controls disabled>
+    <legend class="visually-hidden">Параметры визуализации</legend>
+    <div class="phasor-demo-params">
+      {sliders.map((slider) => (
+        <div class="phasor-demo-param">
+          <div class="phasor-demo-param-head">
+            <label for={`${id}-${slider.key}`}>
+              {slider.label} <i>{slider.symbol}</i>
+            </label>
+            <output for={`${id}-${slider.key}`} {...{ [`data-${slider.key}-value`]: '' }}>
+              {slider.text}
+            </output>
+          </div>
+          <input
+            id={`${id}-${slider.key}`}
+            class="phasor-demo-range"
+            type="range"
+            min={slider.min}
+            max={slider.max}
+            step={slider.step}
+            value={slider.value}
+            aria-valuetext={slider.text}
+            style={`--fill: ${fill(slider.value, slider.min, slider.max)}`}
+            {...{ [`data-${slider.key}`]: '' }}
+          />
+          <div class="phasor-demo-scale" aria-hidden="true">
+            {slider.scale.map((label) => (
+              <span>{label}</span>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+    <div class="phasor-demo-actions">
+      <button type="button" class="phasor-demo-play" data-play>
+        <span class="phasor-demo-play-icon play">
+          <Icon name="play" size={16} />
+        </span>
+        <span class="phasor-demo-play-icon pause">
+          <Icon name="pause" size={16} />
+        </span>
+        <span data-play-label>Запустить</span>
+      </button>
+      <button type="button" class="phasor-demo-reset" data-reset>
+        <Icon name="rotate-ccw" size={16} />
+        Сбросить
+      </button>
+    </div>
+    <p class="phasor-demo-note" data-controls-note>
+      Параметры работают с включённым JavaScript. Рисунок показывает начальное состояние.
+    </p>
+  </fieldset>
+  <figcaption class="phasor-demo-caption">
+    <b>Рис. {figure}.</b> {phasorCaption}
+  </figcaption>
+</figure>
+
+<script>
+  import { initPhasorDemos } from '@/lib/phasor-demo-controller';
+
+  initPhasorDemos();
+</script>
+
+<style is:global>
+  /* `overflow: clip`, а не `hidden`: плоскость на широком экране прилипает к верху при прокрутке. */
+  .phasor-demo {
+    container-type: inline-size;
+    margin: var(--space-6) 0;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    overflow: clip;
+    font-family: var(--font-ui);
+    scroll-margin-top: 88px;
+  }
+
+  .phasor-demo-head {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 14px 20px;
+  }
+
+  .phasor-demo-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  .phasor-demo-name {
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .phasor-demo-plot {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px;
+    border-block: var(--border-width) solid var(--color-border);
+    background: var(--chart-bg);
+  }
+
+  .phasor-demo-side {
+    align-self: start;
+    position: sticky;
+    top: 72px;
+    display: flex;
+    justify-content: center;
+    padding: 16px 0 16px 16px;
+  }
+
+  .phasor-demo-plane-svg {
+    display: block;
+    width: 220px;
+    height: 220px;
+    overflow: visible;
+    user-select: none;
+  }
+
+  .phasor-demo-charts {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: 12px 20px 8px 0;
+    list-style: none;
+  }
+
+  .phasor-demo-chart-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 2px 12px;
+    padding-left: 36px;
+    font-size: 14px;
+  }
+
+  .phasor-demo-chart-name {
+    font-weight: 600;
+  }
+
+  .phasor-demo-formula,
+  .phasor-demo-angle-line {
+    font-family: var(--font-text);
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text);
+  }
+
+  /* Отступы — место для подписей делений: они выходят за область построения. */
+  .phasor-demo-chart {
+    padding: 8px 4px 26px 36px;
+  }
+
+  .phasor-demo-svg {
+    display: block;
+    width: 100%;
+    height: 72px;
+    overflow: visible;
+    font-size: var(--text-chart);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .phasor-demo-grid line {
+    stroke: var(--chart-grid);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .phasor-demo-axis {
+    stroke: var(--chart-axis);
+    stroke-width: 1;
+  }
+
+  .phasor-demo-ring {
+    fill: none;
+    stroke: var(--chart-axis);
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .phasor-demo-re,
+  .phasor-demo-im,
+  .phasor-demo-arc,
+  .phasor-demo-arrow,
+  .phasor-demo-proj,
+  .phasor-demo-vector {
+    fill: none;
+    vector-effect: non-scaling-stroke;
+  }
+
+  /* Вещественная часть — серия 2 пунктиром, мнимая — серия 1 сплошной: различимы не только цветом. */
+  .phasor-demo-re {
+    stroke: var(--chart-sample);
+    stroke-width: 2.25;
+    stroke-dasharray: 6 4;
+  }
+
+  .phasor-demo-im {
+    stroke: var(--chart-signal);
+    stroke-width: 2.5;
+  }
+
+  .phasor-demo-cursor {
+    stroke: var(--chart-result);
+    stroke-width: 1.5;
+  }
+
+  .phasor-demo-dot,
+  .phasor-demo-foot {
+    stroke: var(--chart-bg);
+    stroke-width: 2;
+  }
+
+  .phasor-demo-foot {
+    vector-effect: non-scaling-stroke;
+  }
+
+  .phasor-demo-dot.re,
+  .phasor-demo-foot.re {
+    fill: var(--chart-sample);
+  }
+
+  .phasor-demo-dot.im,
+  .phasor-demo-foot.im {
+    fill: var(--chart-signal);
+  }
+
+  .phasor-demo-vector {
+    stroke: var(--chart-result);
+    stroke-width: 2.25;
+  }
+
+  .phasor-demo-tip {
+    fill: var(--chart-result);
+    stroke: var(--chart-bg);
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .phasor-demo-arc {
+    stroke: var(--chart-label);
+    stroke-width: 1.5;
+  }
+
+  .phasor-demo-arrow {
+    stroke: var(--chart-result);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .phasor-demo-proj {
+    stroke-width: 1.5;
+  }
+
+  .phasor-demo-proj.re {
+    stroke: var(--chart-sample);
+    stroke-dasharray: 4 3;
+  }
+
+  .phasor-demo-proj.im {
+    stroke: var(--chart-signal);
+    stroke-dasharray: 1.5 3;
+  }
+
+  .phasor-demo-angle {
+    fill: var(--chart-label);
+    font-family: var(--font-text);
+    font-style: italic;
+  }
+
+  .phasor-demo-ticks {
+    fill: var(--chart-label);
+  }
+
+  .phasor-demo-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 20px;
+  }
+
+  .phasor-demo-angle-line {
+    margin: 0;
+    font-size: 15px;
+    overflow-wrap: anywhere;
+  }
+
+  .phasor-demo-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 14px;
+  }
+
+  .phasor-demo-legend li {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .phasor-demo-legend i,
+  .phasor-demo-param-head i,
+  .phasor-demo-formula i {
+    font-family: var(--font-text);
+  }
+
+  .phasor-demo-key {
+    flex: none;
+    width: 18px;
+  }
+
+  .phasor-demo-key.vector {
+    height: 2.25px;
+    background: var(--chart-result);
+  }
+
+  .phasor-demo-key.re {
+    height: 2.25px;
+    background: repeating-linear-gradient(
+      to right,
+      var(--chart-sample) 0 6px,
+      transparent 6px 10px
+    );
+  }
+
+  .phasor-demo-key.im {
+    height: 2.5px;
+    background: var(--chart-signal);
+  }
+
+  .phasor-demo-status {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin: 0;
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    box-shadow: inset 0 0 0 1px var(--color-border-strong);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .phasor-demo-icon {
+    display: flex;
+    flex: none;
+    margin-top: 1px;
+    color: var(--color-text-muted);
+  }
+
+  .phasor-demo .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .phasor-demo-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+    margin: 0;
+    padding: 14px 20px 16px;
+    border: 0;
+    border-top: var(--border-width) solid var(--color-border);
+  }
+
+  .phasor-demo-params {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px 20px;
+  }
+
+  .phasor-demo-param {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .phasor-demo-param-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 4px 8px;
+    font-size: 14px;
+  }
+
+  .phasor-demo-param-head output {
+    font-size: 15px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* Ползунок как у визуализации форм LFO: дорожка 4 px с заливкой до значения, бегунок 20 px. */
+  .phasor-demo-range {
+    --half-thumb: 10px;
+    --track: linear-gradient(
+        to right,
+        var(--color-accent)
+          calc(var(--half-thumb) + (100% - 2 * var(--half-thumb)) * var(--fill) / 100),
+        var(--color-border) 0
+      )
+      center / 100% 4px no-repeat;
+
+    width: 100%;
+    height: 28px;
+    margin: 0;
+    background: transparent;
+    appearance: none;
+    cursor: pointer;
+    touch-action: pan-y;
+  }
+
+  .phasor-demo-range::-webkit-slider-runnable-track {
+    height: 28px;
+    background: var(--track);
+  }
+
+  .phasor-demo-range::-moz-range-track {
+    height: 28px;
+    background: var(--track);
+  }
+
+  .phasor-demo-range::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+    margin-top: 4px;
+    border: 2px solid var(--color-accent);
+    border-radius: 50%;
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-sm);
+    appearance: none;
+  }
+
+  .phasor-demo-range::-moz-range-thumb {
+    box-sizing: border-box;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--color-accent);
+    border-radius: 50%;
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .phasor-demo-range:focus-visible {
+    box-shadow: none;
+    outline: none;
+  }
+
+  .phasor-demo-range:focus-visible::-webkit-slider-thumb {
+    box-shadow: var(--focus-ring);
+  }
+
+  .phasor-demo-range:focus-visible::-moz-range-thumb {
+    box-shadow: var(--focus-ring);
+  }
+
+  .phasor-demo-scale {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .phasor-demo-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    align-items: center;
+  }
+
+  .phasor-demo-play,
+  .phasor-demo-reset {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    height: 36px;
+    padding: 0 12px;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text);
+    font: 500 14px var(--font-ui);
+    cursor: pointer;
+  }
+
+  .phasor-demo-play {
+    min-width: 124px;
+    border-color: var(--color-accent);
+    background: var(--color-accent-soft);
+    font-weight: 600;
+  }
+
+  .phasor-demo-reset {
+    margin-left: auto;
+  }
+
+  .phasor-demo-play-icon {
+    display: flex;
+  }
+
+  .phasor-demo-play-icon.pause,
+  .phasor-demo[data-playing='true'] .phasor-demo-play-icon.play {
+    display: none;
+  }
+
+  .phasor-demo[data-playing='true'] .phasor-demo-play-icon.pause {
+    display: flex;
+  }
+
+  @media (hover: hover) {
+    .phasor-demo-reset:hover {
+      background: var(--color-bg);
+    }
+
+    .phasor-demo-play:hover {
+      background: var(--color-accent-soft);
+    }
+  }
+
+  /* Неактивные параметры не выглядят рабочими: приглушены, без указателя; сообщение объясняет причину. */
+  .phasor-demo-controls:disabled .phasor-demo-params,
+  .phasor-demo-controls:disabled .phasor-demo-actions {
+    opacity: 0.5;
+  }
+
+  .phasor-demo-controls:disabled * {
+    cursor: not-allowed;
+  }
+
+  .phasor-demo-note {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+  }
+
+  .phasor-demo[data-state='ready'] .phasor-demo-note {
+    display: none;
+  }
+
+  .phasor-demo[data-state='error'] .phasor-demo-note {
+    color: var(--color-error);
+  }
+
+  .phasor-demo-caption {
+    padding: 10px 20px 14px;
+    border-top: var(--border-width) solid var(--color-border);
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+  }
+
+  .phasor-demo-caption b {
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  @container (max-width: 719px) {
+    .phasor-demo-plane-svg {
+      width: 186px;
+      height: 186px;
+    }
+
+    .phasor-demo-params {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  /* Узкий контейнер: плоскость над графиками, без прилипания — иначе она закрывала бы графики. */
+  @container (max-width: 559px) {
+    .phasor-demo-head,
+    .phasor-demo-body,
+    .phasor-demo-controls,
+    .phasor-demo-caption {
+      padding-inline: 16px;
+    }
+
+    .phasor-demo-plot {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
+    }
+
+    .phasor-demo-side {
+      position: static;
+      padding: 14px 0 4px;
+    }
+
+    .phasor-demo-charts {
+      padding: 8px 14px 4px 0;
+    }
+
+    .phasor-demo-chart-head,
+    .phasor-demo-chart {
+      padding-left: 30px;
+    }
+
+    .phasor-demo-svg .minor {
+      display: none;
+    }
+
+    .phasor-demo-reset {
+      margin-left: 0;
+    }
+  }
+</style>

@@ -98,6 +98,14 @@ export const visualizations: readonly Visualization[] = [
     preview: 'lfo',
   },
   {
+    id: 'phasor-demo',
+    slug: 'audio-math',
+    name: 'Вращающийся вектор и его проекции',
+    what: 'Частота со знаком, начальная фаза и время: вращение вектора, вещественная и мнимая части.',
+    sound: false,
+    preview: 'phasor',
+  },
+  {
     id: 'wav-dump',
     slug: 'wav-file',
     name: 'Байты WAV-файла по полям',

@@ -16,6 +16,7 @@ export type PreviewKind =
   | 'compressor'
   | 'loudness'
   | 'lfo'
+  | 'phasor'
   | 'bytes'
   | 'pcm'
   | 'prediction'
@@ -47,6 +48,7 @@ export const previewKinds: readonly PreviewKind[] = [
   'compressor',
   'loudness',
   'lfo',
+  'phasor',
   'bytes',
   'pcm',
   'prediction',
@@ -176,6 +178,29 @@ function compressorPreview(): Preview {
       y: Number(f1(y(v < threshold ? v : out(v)))),
       color: 'sample' as const,
     })),
+  };
+}
+
+/** Комплексная плоскость с вектором и две проекции: косинус пунктиром сверху, синус сплошной снизу. */
+function phasorPreview(): Preview {
+  const angle = Math.PI / 4;
+  const tipX = 48 + 30 * Math.cos(angle);
+  const tipY = 75 - 30 * Math.sin(angle);
+  return {
+    paths: [
+      { d: 'M18 75a30 30 0 1 0 60 0a30 30 0 1 0-60 0', color: 'axis', width: 1.25 },
+      { d: 'M10 75H86M48 37V113', color: 'grid', width: 1 },
+      { d: `M48 75L${f1(tipX)} ${f1(tipY)}`, color: 'result', width: 2 },
+      { d: `M${f1(tipX)} ${f1(tipY)}V75`, color: 'sample', width: 1.25, dash: '3 2' },
+      { d: `M${f1(tipX)} ${f1(tipY)}H48`, color: 'signal', width: 1.25, dash: '1.5 2.5' },
+      { d: wave(96, 264, 42, 26, 1, angle + Math.PI / 2), color: 'sample', width: 2, dash: '5 4' },
+      { d: wave(96, 264, 108, 26, 1, angle), color: 'signal', width: 2 },
+    ],
+    dots: [
+      { x: Number(f1(tipX)), y: Number(f1(tipY)), color: 'result' },
+      { x: 96, y: Number(f1(42 - 26 * Math.cos(angle))), color: 'sample' },
+      { x: 96, y: Number(f1(108 - 26 * Math.sin(angle))), color: 'signal' },
+    ],
   };
 }
 
@@ -372,6 +397,7 @@ const builders: Record<PreviewKind, () => Preview> = {
   compressor: compressorPreview,
   loudness: loudnessPreview,
   lfo: lfoPreview,
+  phasor: phasorPreview,
   bytes: bytesPreview,
   pcm: () => {
     let original = '';

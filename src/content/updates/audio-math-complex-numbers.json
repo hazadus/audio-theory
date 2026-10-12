@@ -1,0 +1,22 @@
+{
+  "id": "audio-math-complex-numbers",
+  "date": "2026-10-12",
+  "order": 11,
+  "type": "updated",
+  "article": "audio-math",
+  "items": [
+    {
+      "text": "Комплексные числа, модуль и аргумент, формула Эйлера",
+      "target": { "article": "audio-math", "anchor": "complex-numbers" }
+    },
+    {
+      "text": "Визуализация вращающегося вектора",
+      "target": { "article": "audio-math", "anchor": "phasor-demo" }
+    },
+    {
+      "text": "Отрицательные частоты и комплексная амплитуда",
+      "target": { "article": "audio-math", "anchor": "negative-frequency" }
+    },
+    { "text": "Термин «комплексное число»", "target": { "glossary": "complex-number" } }
+  ]
+}
