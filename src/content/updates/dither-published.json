@@ -1,0 +1,26 @@
+{
+  "id": "dither-published",
+  "date": "2026-10-12",
+  "order": 7,
+  "type": "new",
+  "article": "dither",
+  "summary": "Что теряется при понижении разрядности тихого сигнала и как дизеринг заменяет искажения ровным шумом: RPDF и TPDF, отношение сигнал/шум и динамический диапазон 16 бит, формирование спектра шума и его цена, история алгоритмов от Meridian и Sony до POW-R и проверка на слух. По статье Боба Каца «Dither».",
+  "items": [
+    {
+      "text": "Тихий тон и его спектр без дизеринга и с TPDF",
+      "target": { "article": "dither", "anchor": "spectrum-figure" }
+    },
+    {
+      "text": "Почему 16 бит с дизерингом слышны глубже 96 дБ",
+      "target": { "article": "dither", "anchor": "snr-and-dynamic-range" }
+    },
+    {
+      "text": "Формирование спектра шума и рост его мощности",
+      "target": { "article": "dither", "anchor": "noise-shaping-figure" }
+    },
+    {
+      "text": "Термины «RPDF-дизеринг» и «модуляция шума»",
+      "target": { "glossary": "rpdf-dither" }
+    }
+  ]
+}

@@ -89,7 +89,9 @@
     "sapozhkov": "Сапожков М. А.",
     "shorov": "Шоров В. И.",
     "meerzon": "Меерзон Б. Я.",
-    "drozhzhin": "Дрожжин А."
+    "drozhzhin": "Дрожжин А.",
+    "lukin": "Lukin A.",
+    "stuart": "Stuart J. R."
   },
   "editions": [
     {
@@ -250,6 +252,30 @@
       "url": "https://www.researchgate.net/publication/3317523_A_theory_of_nonsubtractive_dither"
     },
     {
+      "id": "lipshitz-1992",
+      "type": "article",
+      "authors": ["lipshitz", "wannamaker", "vanderkooy"],
+      "title": "Quantization and Dither: A Theoretical Survey",
+      "publication": "Journal of the Audio Engineering Society. 1992. Vol. 40, № 5. P. 355–375.",
+      "url": "https://hajim.rochester.edu/ece/sites/zduan/teaching/ece472/reading/Lipshitz_1992.pdf"
+    },
+    {
+      "id": "lukin-2002",
+      "type": "web",
+      "authors": ["lukin"],
+      "title": "Sonically Optimized Noise Shaping Techniques",
+      "publication": "2-е изд. 2002.",
+      "url": "http://audio.rightmark.org/lukin/dither/dither.pdf"
+    },
+    {
+      "id": "stuart-meridian",
+      "type": "web",
+      "authors": ["stuart"],
+      "title": "Coding High Quality Digital Audio",
+      "publication": "Meridian Audio. Без даты, последние ссылки — июль 1997.",
+      "url": "http://decoy.iki.fi/dsound/ambisonic/motherlode/source/coding2.pdf"
+    },
+    {
       "id": "valimaki-2007",
       "type": "article",
       "authors": ["valimaki", "huovilainen"],
@@ -335,6 +361,14 @@
       "title": "Audio Mastering",
       "publication": "Digital Domain.",
       "url": "https://www.digido.com/portfolio-item/audio-mastering/"
+    },
+    {
+      "id": "katz-dither",
+      "type": "web",
+      "authors": ["katz"],
+      "title": "Dither",
+      "publication": "Digital Domain.",
+      "url": "https://www.digido.com/portfolio-item/dither/"
     },
     {
       "id": "collins-1998",

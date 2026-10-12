@@ -1,0 +1,16 @@
+{
+  "id": "track-programmer-dither",
+  "date": "2026-10-12",
+  "order": 9,
+  "type": "updated",
+  "track": "programmer",
+  "items": [
+    {
+      "text": "Этап «Байты и форматы файлов»: RPDF и TPDF перед окончательным округлением",
+      "target": {
+        "track": "programmer",
+        "anchor": "stage-files"
+      }
+    }
+  ]
+}

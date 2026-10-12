@@ -1,0 +1,16 @@
+{
+  "id": "track-sound-engineer-dither",
+  "date": "2026-10-12",
+  "order": 8,
+  "type": "updated",
+  "track": "sound-engineer",
+  "items": [
+    {
+      "text": "Этап «Цифровая запись и уровни»: понижение разрядности с дизерингом",
+      "target": {
+        "track": "sound-engineer",
+        "anchor": "stage-recording"
+      }
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "track-musician-dither",
+  "date": "2026-10-12",
+  "order": 10,
+  "type": "updated",
+  "track": "musician",
+  "items": [
+    {
+      "text": "Этап «Запись и динамика»: дизеринг при выпуске",
+      "target": {
+        "track": "musician",
+        "anchor": "stage-recording"
+      }
+    }
+  ]
+}

@@ -250,6 +250,7 @@ $$
 
 <MarginNote items={[
   { label: 'АЦП и ЦАП → Пределы разрядности', description: 'Шум квантования и условия расчёта отношения сигнал/шум.', target: { article: 'adc-dac', anchor: 'quantization-error' } },
+  { label: 'Дизеринг → Отношение сигнал/шум и динамический диапазон', description: 'Почему с дизерингом тихий тон слышен и ниже шума 16-битной записи.', target: { article: 'dither', anchor: 'snr-and-dynamic-range' } },
 ]}>
 
 Разность самого высокого и самого низкого уровня называют <Term id="dynamic-range" firstMention define>динамическим диапазоном</Term>. У записи это разность между громкими и тихими местами, у системы — между наибольшим уровнем без перегрузки и уровнем собственного шума ([Julius O. Smith, Dynamic Range](https://ccrma.stanford.edu/~jos/mdft/Dynamic_Range.html)). Например, 16-битная запись даёт около 96 дБ: $20 \lg 2^{16} \approx 96{,}3$ дБ ([Wikipedia, DBFS](https://en.wikipedia.org/wiki/DBFS)).
