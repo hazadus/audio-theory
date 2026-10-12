@@ -1,0 +1,16 @@
+{
+  "id": "track-musician-bit-depth",
+  "date": "2026-10-12",
+  "order": 4,
+  "type": "updated",
+  "track": "musician",
+  "items": [
+    {
+      "text": "Этап «Запись и динамика»: по желанию — выбор разрядности для записи",
+      "target": {
+        "track": "musician",
+        "anchor": "stage-recording"
+      }
+    }
+  ]
+}

@@ -368,6 +368,7 @@ bool writeWav (const juce::AudioBuffer<float>& buffer, double sampleRate, int bi
 <MarginNote items={[
   { label: 'Целочисленный PCM → Из float обратно', description: 'Масштаб, округление к ближайшему и ограничение целой шкалы.', target: { article: 'integer-pcm', anchor: 'encoding' } },
   { label: 'Целочисленный PCM → Чего перевод не исправляет', description: 'Ошибка квантования и dither при уменьшении разрядности.', target: { article: 'integer-pcm', anchor: 'quantization-and-dither' } },
+  { label: 'Рост разрядности → Сколько дают лишние биты', description: 'Зачем файлу для дальнейшей обработки 24 бита, если выпуск будет 16-битным.', target: { article: 'bit-depth', anchor: 'extra-bits' } },
 ]}>
 
 `withBitsPerSample` выбирает размер целого <Term id="pcm" firstMention>PCM</Term>-отсчёта. 16 бит хватает, чтобы послушать ноту, 24 бита оставляют больше точности, если файл пойдёт в дальнейшую обработку. Перевод float в целые JUCE делает в два шага ([juce_AudioFormatWriter.cpp](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_formats/format/juce_AudioFormatWriter.cpp), [juce_AudioDataConverters.h](https://github.com/juce-framework/JUCE/blob/9.0.3/modules/juce_audio_basics/buffers/juce_AudioDataConverters.h)). Сначала отсчёт становится 32-битным целым: значения от −1 и ниже — минимум, от 1 и выше — максимум, остальные — `roundToInt (2147483647 · x)`, где половины округляются к чётному. Затем лишние младшие разряды отбрасываются сдвигом вправо: на 16 для 16 бит, на 8 для 24 бит.

@@ -1,0 +1,16 @@
+{
+  "id": "track-sound-engineer-bit-depth",
+  "date": "2026-10-12",
+  "order": 2,
+  "type": "updated",
+  "track": "sound-engineer",
+  "items": [
+    {
+      "text": "Этап «Цифровая запись и уровни»: зачем студии 24 бита и float",
+      "target": {
+        "track": "sound-engineer",
+        "anchor": "stage-recording"
+      }
+    }
+  ]
+}

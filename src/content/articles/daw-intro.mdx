@@ -159,7 +159,13 @@ Solo тоже ведёт себя по-разному. В нашем опыте 
 
 ## Экспорт {#export}
 
+<MarginNote items={[
+  { label: 'Рост разрядности → Плавающая точка в DAW', description: 'Чем 32-битный float отличается от 16 и 24 бит и где на выходе возвращается предел полной шкалы.', target: { article: 'bit-depth', anchor: 'float-mixing' } },
+]}>
+
 Пока проект открыт, звук рассчитывается из клипов, инструментов и эффектов. **Экспорт (export, render)** записывает результат в файл: обычно весь общий выход, иногда каждую дорожку отдельно. В Ableton Live для этого есть команда Export Audio/Video. В ней выбирают <Term id="sample-rate" firstMention>частоту дискретизации</Term>, <Term id="bit-depth" firstMention>разрядность</Term> — 16, 24 или 32 бита — и формат ([Ableton: Managing Files and Sets](https://www.ableton.com/en/live-manual/12/managing-files-and-sets/)): <Term id="wav-file" firstMention>WAV</Term>, <Term id="aiff" firstMention>AIFF</Term>, <Term id="flac" firstMention>FLAC</Term> или <Term id="mp3" firstMention>MP3</Term>.
+
+</MarginNote>
 
 Для дальнейшей работы и архива выбирайте формат без потерь, например WAV или FLAC. MP3 подходит для прослушивания и пересылки. Чем отличаются эти форматы, объясняет [статья о сжатии звука](/audio-compression/#bitrate-and-compression), а устройство WAV разобрано в [отдельной статье](/wav-file/). Перед экспортом прослушайте фрагмент целиком и проверьте пик на общем выходе.
 

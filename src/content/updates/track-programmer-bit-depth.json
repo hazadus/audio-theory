@@ -1,0 +1,16 @@
+{
+  "id": "track-programmer-bit-depth",
+  "date": "2026-10-12",
+  "order": 3,
+  "type": "updated",
+  "track": "programmer",
+  "items": [
+    {
+      "text": "Этап «Байты и форматы файлов»: рост длины слова и накопление ошибок округления",
+      "target": {
+        "track": "programmer",
+        "anchor": "stage-files"
+      }
+    }
+  ]
+}
