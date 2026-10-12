@@ -4,6 +4,7 @@
 import ArticleGraph from '@/components/ArticleGraph.astro';
 import Icon from '@/components/Icon.astro';
 import TagList from '@/components/TagList.astro';
+import TextAlignToggle from '@/components/TextAlignToggle.astro';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import type { ArticleData } from '@/lib/articles';
 import type { TocItem } from '@/lib/headings';
@@ -127,27 +128,32 @@ const structuredData = articleStructuredData({
         )}
         <h1>{data.title}</h1>
         <p class="question">{data.question}</p>
-        <div class="meta">
-          {dates.published ? (
-            <span data-pagefind-ignore>
-              Опубликовано{' '}
-              <time datetime={dates.published}>{formatUpdatedDate(dates.published)}</time>
+        <div class="meta-row">
+          <div class="meta">
+            {dates.published ? (
+              <span data-pagefind-ignore>
+                Опубликовано{' '}
+                <time datetime={dates.published}>{formatUpdatedDate(dates.published)}</time>
+              </span>
+            ) : (
+              <span data-pagefind-ignore>Черновик</span>
+            )}
+            {dates.addition && (
+              <span data-pagefind-ignore>
+                Дополнено{' '}
+                <a href={withBase(dates.addition.path)}>
+                  <time datetime={dates.addition.date}>
+                    {formatUpdatedDate(dates.addition.date)}
+                  </time>
+                </a>
+              </span>
+            )}
+            <span class="reading" data-pagefind-ignore>
+              <Icon name="clock" size={16} />
+              {readingMinutes} мин чтения
             </span>
-          ) : (
-            <span data-pagefind-ignore>Черновик</span>
-          )}
-          {dates.addition && (
-            <span data-pagefind-ignore>
-              Дополнено{' '}
-              <a href={withBase(dates.addition.path)}>
-                <time datetime={dates.addition.date}>{formatUpdatedDate(dates.addition.date)}</time>
-              </a>
-            </span>
-          )}
-          <span class="reading" data-pagefind-ignore>
-            <Icon name="clock" size={16} />
-            {readingMinutes} мин чтения
-          </span>
+          </div>
+          <TextAlignToggle compact />
         </div>
         <TagList tags={articleTags} label="Теги" all />
         {articleTracks.length > 0 && (
@@ -164,21 +170,24 @@ const structuredData = articleStructuredData({
 
       {toc.length > 0 && (
         <div class="toc-cell" data-pagefind-ignore>
-          <nav class="toc" aria-label="Содержание" data-toc>
-            <details open>
-              <summary>
-                <span data-toc-label>Содержание</span>
-                <Icon name="chevron-down" size={16} />
-              </summary>
-              <ol>
-                {toc.map((item) => (
-                  <li data-depth={item.depth}>
-                    <a href={`#${item.slug}`}>{item.text}</a>
-                  </li>
-                ))}
-              </ol>
-            </details>
-          </nav>
+          <div class="toc-sticky">
+            <nav class="toc" aria-label="Содержание" data-toc>
+              <details open>
+                <summary>
+                  <span data-toc-label>Содержание</span>
+                  <Icon name="chevron-down" size={16} />
+                </summary>
+                <ol>
+                  {toc.map((item) => (
+                    <li data-depth={item.depth}>
+                      <a href={`#${item.slug}`}>{item.text}</a>
+                    </li>
+                  ))}
+                </ol>
+              </details>
+            </nav>
+            <TextAlignToggle />
+          </div>
         </div>
       )}
 
@@ -369,6 +378,14 @@ const structuredData = articleStructuredData({
     font-style: italic;
     line-height: var(--leading-normal);
     text-wrap: pretty;
+  }
+
+  /* Смартфон: переключатель выравнивания — справа в строке метаданных. */
+  .meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
   }
 
   .meta {
@@ -719,13 +736,21 @@ const structuredData = articleStructuredData({
       padding-top: 180px;
     }
 
-    /* Заголовок «Содержание» — подпись, не кнопка; список прокручивается сам, если длиннее окна. */
-    .toc {
+    /* Оглавление и переключатель выравнивания прилипают вместе; список прокручивается сам, если длиннее окна. */
+    .toc-sticky {
       position: sticky;
       top: 88px;
       max-height: calc(100dvh - 88px - var(--space-6));
       display: flex;
       flex-direction: column;
+      gap: var(--space-6);
+    }
+
+    /* Заголовок «Содержание» — подпись, не кнопка. */
+    .toc {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
       border: 0;
       border-radius: 0;
       background: none;
@@ -753,10 +778,10 @@ const structuredData = articleStructuredData({
       display: none;
     }
 
-    /* 40 px — высота подписи «Содержание». */
+    /* 40 px — высота подписи «Содержание», 96 px — переключатель выравнивания с отступом. */
     .toc ol {
       position: relative;
-      max-height: calc(100dvh - 88px - var(--space-6) - 40px);
+      max-height: calc(100dvh - 88px - var(--space-6) - 40px - 96px);
     }
   }
 
@@ -824,6 +849,16 @@ const structuredData = articleStructuredData({
 
   .prose > :global(p) {
     text-wrap: pretty;
+  }
+
+  /* «По ширине» — только абзацы основного текста (в том числе рядом с заметкой на полях) и врезок «Упрощение» и «Типичная ошибка»; последняя строка слева. */
+  :global(html[data-text-align='justify']) .prose > :global(p),
+  :global(html[data-text-align='justify']) .prose > :global(.margin-note-block > p),
+  :global(html[data-text-align='justify'])
+    :global(.callout:is([data-type='simplification'], [data-type='mistake']) .callout-body > p) {
+    text-align: justify;
+    text-align-last: left;
+    hyphens: auto;
   }
 
   .prose > :global(h2) {

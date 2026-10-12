@@ -8,6 +8,7 @@ import SearchDialog from '@/components/SearchDialog.astro';
 import SiteFooter from '@/components/SiteFooter.astro';
 import SiteHeader from '@/components/SiteHeader.astro';
 import { analyticsConfig, siteConfig } from '@/site.config';
+import { textAlignInitScript } from '@/lib/text-align';
 import { themeInitScript } from '@/lib/theme';
 import { feedPath, feedTitle } from '@/lib/updates-feed';
 import { withBase } from '@/lib/urls';
@@ -42,6 +43,7 @@ const image = {
   <head>
     <meta charset="utf-8" />
     <script is:inline set:html={themeInitScript} />
+    <script is:inline set:html={textAlignInitScript} />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     {description && <meta name="description" content={description} />}
     <title>{fullTitle}</title>

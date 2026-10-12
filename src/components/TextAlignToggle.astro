@@ -1,0 +1,168 @@
+---
+// Переключатель выравнивания текста статьи: два варианта radiogroup; без JS скрыт, текст остаётся слева.
+// `compact` — смартфон: только значки в строке метаданных; обычный — блок «Текст» под оглавлением.
+import { textAlignOptions } from '@/lib/text-align';
+
+interface Props {
+  compact?: boolean;
+}
+
+const { compact = false } = Astro.props;
+
+const icons = {
+  left: 'M4 6h16M4 10h10M4 14h16M4 18h10',
+  justify: 'M4 6h16M4 10h16M4 14h16M4 18h10',
+};
+---
+
+<div class:list={['text-align', { compact }]} data-text-align-toggle hidden>
+  {!compact && <span class="caption">Текст</span>}
+  <div class="group" role="radiogroup" aria-label="Выравнивание текста">
+    {textAlignOptions.map((option) => (
+      <button
+        type="button"
+        role="radio"
+        aria-checked="false"
+        aria-label={option.label}
+        title={option.label}
+        data-value={option.value}
+        tabindex="-1"
+      >
+        <svg
+          width={compact ? 20 : 18}
+          height={compact ? 20 : 18}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.75"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
+          <path d={icons[option.value]} />
+        </svg>
+        {!compact && option.short}
+      </button>
+    ))}
+  </div>
+</div>
+
+<script>
+  import { parseTextAlign } from '@/lib/text-align';
+  import { onTextAlignChange, setTextAlign } from '@/lib/text-align-controller';
+
+  for (const toggle of document.querySelectorAll<HTMLElement>('[data-text-align-toggle]')) {
+    const buttons = [...toggle.querySelectorAll<HTMLButtonElement>('button[role="radio"]')];
+    for (const button of buttons) {
+      button.addEventListener('click', () => setTextAlign(parseTextAlign(button.dataset.value)));
+      // Стрелки переключают вариант и переносят фокус, как у стандартной группы радиокнопок.
+      button.addEventListener('keydown', (event) => {
+        const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key];
+        if (!step) return;
+        event.preventDefault();
+        const next = buttons[(buttons.indexOf(button) + step + buttons.length) % buttons.length];
+        next.focus();
+        setTextAlign(parseTextAlign(next.dataset.value));
+      });
+    }
+    toggle.hidden = false;
+    onTextAlignChange((align) => {
+      for (const button of buttons) {
+        const checked = button.dataset.value === align;
+        button.setAttribute('aria-checked', String(checked));
+        button.tabIndex = checked ? 0 : -1;
+      }
+    });
+  }
+</script>
+
+<style>
+  .text-align:not(.compact) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding-inline: 10px;
+  }
+
+  .caption {
+    color: var(--color-text-muted);
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+  }
+
+  .group {
+    display: flex;
+    align-self: flex-start;
+    gap: 2px;
+    padding: 3px;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+  }
+
+  button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    height: 32px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text-muted);
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    hyphens: none;
+    cursor: pointer;
+  }
+
+  .compact button {
+    width: 44px;
+    height: 36px;
+    padding: 0;
+  }
+
+  button[aria-checked='true'] {
+    background: var(--color-bg);
+    box-shadow: 0 0 0 1px var(--color-border);
+    color: var(--color-text);
+    font-weight: 600;
+  }
+
+  button:focus-visible {
+    box-shadow: var(--focus-ring);
+  }
+
+  .compact {
+    flex: none;
+  }
+
+  /* Десктопный блок живёт в колонке оглавления, мобильный — в строке метаданных. */
+  @media (width >= 1024px) {
+    .compact {
+      display: none;
+    }
+  }
+
+  @media (width < 1024px) {
+    .text-align:not(.compact) {
+      display: none;
+    }
+  }
+
+  .text-align[hidden],
+  .text-align:not(.compact)[hidden] {
+    display: none;
+  }
+
+  @media print {
+    .text-align {
+      display: none;
+    }
+  }
+</style>
