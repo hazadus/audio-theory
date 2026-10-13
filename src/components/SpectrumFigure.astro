@@ -1,0 +1,15 @@
+---
+// Статичные SVG статьи /spectrum/ для Figure: три спектра (синусоида, пила, шум) и две
+// спектрограммы одного сигнала с разным размером кадра. Считаются при сборке функциями spectrum.ts.
+import { examplesSvg, spectrogramSvg } from '@/lib/spectrum-view';
+import '@/styles/spectrum.css';
+
+interface Props {
+  kind: 'examples' | 'spectrogram';
+}
+
+const { kind } = Astro.props;
+const svg = kind === 'examples' ? examplesSvg() : spectrogramSvg();
+---
+
+<Fragment set:html={svg} />

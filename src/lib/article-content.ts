@@ -224,6 +224,18 @@ const blockRules: Record<string, BlockRule> = {
     idRequired: false,
     numberRequired: true,
   },
+  ProbeSineDemo: {
+    sequence: 'figure',
+    numberAttribute: 'figure',
+    idRequired: false,
+    numberRequired: true,
+  },
+  SpectrumAnalyzerDemo: {
+    sequence: 'figure',
+    numberAttribute: 'figure',
+    idRequired: false,
+    numberRequired: true,
+  },
   DelayEchoDemo: {
     sequence: 'figure',
     numberAttribute: 'figure',

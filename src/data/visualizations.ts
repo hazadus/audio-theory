@@ -202,6 +202,22 @@ export const visualizations: readonly Visualization[] = [
     preview: 'delay-ring',
   },
   {
+    id: 'probe-sine',
+    slug: 'spectrum',
+    name: 'Пробная синусоида',
+    what: 'Частота и фаза сигнала, пробная частота, косинус или синус: произведение и сумма по отсчётам.',
+    sound: false,
+    preview: 'probe',
+  },
+  {
+    id: 'spectrum-analyzer',
+    slug: 'spectrum',
+    name: 'Анализатор спектра',
+    what: 'Синусоида, пила, два тона или шум, размер кадра, окно, шкала дБ и усреднение; звучание сигнала.',
+    sound: true,
+    preview: 'analyzer',
+  },
+  {
     id: 'intro-tone',
     slug: 'audio-intro',
     name: 'Звук: выше, ниже, громче, тише',

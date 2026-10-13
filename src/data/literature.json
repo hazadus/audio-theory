@@ -6,6 +6,7 @@
     "alex": "Alex",
     "baker": "Baker B.",
     "becker": "Becker J.",
+    "bellanger": "Bellanger M.",
     "bencina": "Bencina R.",
     "bender": "Bender M.",
     "blauert": "Блауэрт Й.",
@@ -652,6 +653,13 @@
       "authors": ["sundararajan"],
       "title": "Digital Signal Processing: An Introduction",
       "publication": "2nd ed. Springer, 2024. ISBN 978-3-031-56739-1."
+    },
+    {
+      "id": "bellanger-2024",
+      "type": "book",
+      "authors": ["bellanger"],
+      "title": "Digital Signal Processing: Theory and Practice",
+      "publication": "10th ed. / transl. by B. A. Engel. Wiley, 2024. ISBN 978-1-394-18266-4."
     },
     {
       "id": "pirkle-2021",

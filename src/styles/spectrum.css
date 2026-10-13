@@ -1,0 +1,597 @@
+/* Визуализации статьи /spectrum/: «Пробная синусоида» и «Анализатор спектра», статичные рисунки
+   спектров и спектрограммы. Контейнер со звуком повторяет FilterSmoothingDemo; графики
+   визуализаций строятся в пикселях контейнера. */
+.spectrum-demo {
+  container-type: inline-size;
+  margin: var(--space-6) 0;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  overflow: hidden;
+  font-family: var(--font-ui);
+  scroll-margin-top: 88px;
+}
+
+.spectrum-demo-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 20px;
+}
+
+.spectrum-demo-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.spectrum-demo-name {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.spectrum-demo-chart {
+  position: relative;
+  border-block: var(--border-width) solid var(--color-border);
+  background: var(--chart-bg);
+  overflow-x: auto;
+}
+
+.spectrum-demo-chart:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.spectrum-demo svg {
+  display: block;
+  font-size: 12px;
+}
+
+.spectrum-demo svg path {
+  fill: none;
+}
+
+.spectrum-demo svg .label {
+  fill: var(--color-text);
+  font-weight: 600;
+}
+
+.spectrum-demo svg .tick {
+  fill: var(--chart-label);
+  font-variant-numeric: tabular-nums;
+}
+
+.spectrum-demo svg .grid {
+  stroke: var(--chart-grid);
+  stroke-width: 1;
+}
+
+.spectrum-demo svg .zero {
+  stroke: var(--chart-axis);
+  stroke-width: 1;
+}
+
+.spectrum-demo svg .signal {
+  stroke: var(--chart-series-1);
+  stroke-width: 1.2;
+}
+
+.spectrum-demo svg .probe {
+  stroke: var(--chart-series-2);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+}
+
+.spectrum-demo svg .dot {
+  fill: var(--chart-series-1);
+}
+
+.spectrum-demo svg .stem {
+  stroke: var(--chart-series-3);
+  stroke-width: 2;
+}
+
+.spectrum-demo svg .sum {
+  stroke: var(--chart-series-2);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+
+.spectrum-demo svg .sum-dot {
+  fill: var(--chart-series-2);
+}
+
+.spectrum-demo svg .value {
+  fill: var(--color-text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.spectrum-demo svg .spectrum {
+  stroke: var(--chart-series-1);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.spectrum-demo svg .mark {
+  stroke: var(--chart-series-2);
+  stroke-width: 1.2;
+  stroke-dasharray: 6 4;
+}
+
+.spectrum-demo-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0;
+  padding: 12px 20px 0;
+  list-style: none;
+  font-size: 14px;
+}
+
+.spectrum-demo-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.spectrum-demo-legend i {
+  width: 18px;
+  height: 0;
+  border-top: 2px solid var(--chart-series-1);
+}
+
+.spectrum-demo-legend .signal {
+  border-top: 1.5px solid var(--chart-series-1);
+}
+
+.spectrum-demo-legend .probe {
+  border-top: 2px dashed var(--chart-series-2);
+}
+
+.spectrum-demo-legend .stem {
+  width: 4px;
+  height: 14px;
+  border: 0;
+  background: var(--chart-series-3);
+}
+
+.spectrum-demo-legend .sum {
+  border-top: 3px solid var(--chart-series-2);
+}
+
+.spectrum-demo-legend .spectrum {
+  border-top: 2px solid var(--chart-series-1);
+}
+
+.spectrum-demo-legend .mark {
+  border-top: 1.5px dashed var(--chart-series-2);
+}
+
+.spectrum-demo-status {
+  display: grid;
+  gap: 6px;
+  margin: 12px 20px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
+  font-size: 14px;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+}
+
+.spectrum-demo-status p {
+  margin: 0;
+}
+
+.spectrum-demo .visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.spectrum-demo-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  margin: 0;
+  padding: 14px 20px 16px;
+  border: 0;
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.spectrum-demo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 20px;
+}
+
+.spectrum-demo-select {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.spectrum-demo-select select {
+  min-width: 0;
+  min-height: 36px;
+  padding: 4px 8px;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: 16px var(--font-ui);
+}
+
+.spectrum-demo-param {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.spectrum-demo-param-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.spectrum-demo-param-head output {
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.spectrum-demo-range {
+  width: 100%;
+  min-height: 32px;
+  margin: 0;
+  accent-color: var(--color-accent);
+  touch-action: pan-y;
+}
+
+.spectrum-demo-derived {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.spectrum-demo-option {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  min-height: 32px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.spectrum-demo-option input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--color-accent);
+}
+
+.spectrum-demo-tone-note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.spectrum-demo-choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 14px;
+}
+
+.spectrum-demo-choice legend {
+  float: left;
+  margin-right: 4px;
+  padding: 0;
+}
+
+.spectrum-demo-listen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 14px;
+}
+
+.spectrum-demo-listen label {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  min-height: 32px;
+  cursor: pointer;
+}
+
+.spectrum-demo-listen input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--color-accent);
+}
+
+.spectrum-demo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.spectrum-demo-reset {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  height: 36px;
+  padding: 0 12px;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text);
+  font: 500 14px var(--font-ui);
+  cursor: pointer;
+}
+
+.spectrum-demo :is(button, select, input):focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.spectrum-demo-audio {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.spectrum-demo-warning {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 0 0 4px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background: var(--color-warning-bg);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.spectrum-demo-warning > svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--color-warning);
+}
+
+.spectrum-demo-warning b {
+  color: var(--color-warning);
+}
+
+.spectrum-demo-player {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 14px 8px 8px;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.spectrum-demo-play {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  cursor: pointer;
+}
+
+.spectrum-demo-mute {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.spectrum-demo-play-icon,
+.spectrum-demo-mute-icon {
+  display: flex;
+}
+
+.spectrum-demo-play:not([data-playing]) .spectrum-demo-play-icon.stop,
+.spectrum-demo-play[data-playing] .spectrum-demo-play-icon.start,
+.spectrum-demo-mute:not([data-muted]) .spectrum-demo-mute-icon.off,
+.spectrum-demo-mute[data-muted] .spectrum-demo-mute-icon.on {
+  display: none;
+}
+
+.spectrum-demo-volume {
+  display: flex;
+  flex: 1 1 140px;
+  gap: 6px;
+  align-items: center;
+  max-width: 280px;
+}
+
+.spectrum-demo-range.compact {
+  flex: 1;
+  min-width: 0;
+  min-height: 24px;
+}
+
+.spectrum-demo-volume-text {
+  width: 36px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.spectrum-demo-player-state {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+.spectrum-demo-player[data-mode='error'] + .spectrum-demo-player-state,
+.spectrum-demo-player[data-mode='unavailable'] + .spectrum-demo-player-state {
+  color: var(--color-error);
+}
+
+.spectrum-demo-player :disabled {
+  opacity: 0.45;
+}
+
+@media (hover: hover) {
+  .spectrum-demo-reset:hover,
+  .spectrum-demo-mute:not(:disabled):hover {
+    background: var(--color-bg);
+  }
+}
+
+.spectrum-demo-controls:disabled > :not(.spectrum-demo-note-text) {
+  opacity: 0.5;
+}
+
+.spectrum-demo-controls:disabled * {
+  cursor: not-allowed;
+}
+
+.spectrum-demo-note-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+.spectrum-demo[data-state='ready'] .spectrum-demo-note-text {
+  display: none;
+}
+
+.spectrum-demo[data-state='error'] .spectrum-demo-note-text {
+  color: var(--color-error);
+}
+
+.spectrum-demo-caption {
+  padding: 10px 20px 14px;
+  border-top: var(--border-width) solid var(--color-border);
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+.spectrum-demo-caption b {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+@container (max-width: 559px) {
+  .spectrum-demo-head,
+  .spectrum-demo-controls,
+  .spectrum-demo-caption,
+  .spectrum-demo-legend {
+    padding-inline: 16px;
+  }
+
+  .spectrum-demo-status {
+    margin-inline: 16px;
+  }
+
+  .spectrum-demo-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Статичные рисунки в Figure: единицы viewBox, кегль задан на группе. */
+.spectrum-figure path {
+  fill: none;
+}
+
+.spectrum-figure .label {
+  fill: var(--color-text);
+  font-weight: 600;
+}
+
+.spectrum-figure .tick {
+  fill: var(--chart-label);
+  font-variant-numeric: tabular-nums;
+}
+
+.spectrum-figure .grid {
+  stroke: var(--chart-grid);
+  stroke-width: 1.5;
+}
+
+.spectrum-figure .axis {
+  stroke: var(--chart-axis);
+  stroke-width: 1.5;
+}
+
+.spectrum-figure .spectrum {
+  stroke: var(--chart-series-1);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.spectrum-figure .plot {
+  fill: var(--chart-bg);
+  stroke: var(--chart-axis);
+  stroke-width: 1.5;
+}
+
+.spectrum-figure .l5 {
+  fill: var(--chart-series-1);
+}
+
+.spectrum-figure .l4 {
+  fill: var(--chart-series-1);
+  fill-opacity: 0.75;
+}
+
+.spectrum-figure .l3 {
+  fill: var(--chart-series-1);
+  fill-opacity: 0.5;
+}
+
+.spectrum-figure .l2 {
+  fill: var(--chart-series-1);
+  fill-opacity: 0.3;
+}
+
+.spectrum-figure .l1 {
+  fill: var(--chart-series-1);
+  fill-opacity: 0.14;
+}

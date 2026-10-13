@@ -29,6 +29,8 @@ export type PreviewKind =
   | 'filter-smoothing'
   | 'synth-voice'
   | 'delay-ring'
+  | 'probe'
+  | 'analyzer'
   | 'intro-oscillator'
   | 'intro-envelope'
   | 'intro-lfo';
@@ -60,6 +62,8 @@ export const previewKinds: readonly PreviewKind[] = [
   'filter-smoothing',
   'synth-voice',
   'delay-ring',
+  'probe',
+  'analyzer',
   'intro-oscillator',
   'intro-envelope',
   'intro-lfo',
@@ -425,6 +429,8 @@ const builders: Record<PreviewKind, () => Preview> = {
   'filter-step': filterStepPreview,
   'filter-smoothing': filterSmoothingPreview,
   'delay-ring': delayRingPreview,
+  probe: probePreview,
+  analyzer: analyzerPreview,
   'synth-voice': synthVoicePreview,
   mixing: () => ({
     paths: [
@@ -620,6 +626,47 @@ function filterSmoothingPreview(): Preview {
       { d: 'M16 75H264', color: 'grid', width: 1 },
       { d: saw, color: 'signal', width: 1.25 },
       { d: smooth, color: 'result', width: 2.5 },
+    ],
+    dots: [],
+  };
+}
+
+function probePreview(): Preview {
+  // Сверху сигнал с точками отсчётов и пунктирная проба той же частоты, снизу растущая сумма.
+  let stems = '';
+  const dots: PreviewDot[] = [];
+  for (let n = 0; n < 24; n += 1) {
+    const x = 20 + n * 10.4;
+    const v = Math.cos((2 * Math.PI * 2 * n) / 24);
+    dots.push({ x: Number(f1(x)), y: Number(f1(44 - 24 * v)), color: 'signal' });
+    stems += `M${f1(x)} 126V${f1(126 - 20 * v * v)}`;
+  }
+  return {
+    paths: [
+      { d: 'M16 44H264M16 126H264', color: 'grid', width: 1 },
+      { d: wave(20, 260, 44, 24, 2, Math.PI / 2), color: 'sample', width: 1.5, dash: '5 4' },
+      { d: stems, color: 'signal', width: 2 },
+      { d: 'M20 126L260 96', color: 'result', width: 2.5 },
+    ],
+    dots,
+  };
+}
+
+function analyzerPreview(): Preview {
+  // Спектр на логарифмической оси: узкий пик тона с боковыми лепестками и пол шума.
+  let line = '';
+  for (let i = 0; i <= 124; i += 1) {
+    const x = 16 + 2 * i;
+    const d = (x - 110) / 6;
+    const lobe = d === 0 ? 1 : Math.abs(Math.sin(Math.PI * d) / (Math.PI * d)) ** 1.6;
+    const level = Math.max(0.12 + 0.03 * Math.sin(i * 1.7), lobe);
+    line += `${i ? 'L' : 'M'}${x} ${f1(132 - 104 * level)}`;
+  }
+  return {
+    paths: [
+      { d: 'M16 132H264M16 80H264M16 28H264', color: 'grid', width: 1 },
+      { d: 'M110 20V136', color: 'sample', width: 1.25, dash: '5 4' },
+      { d: line, color: 'signal', width: 2 },
     ],
     dots: [],
   };

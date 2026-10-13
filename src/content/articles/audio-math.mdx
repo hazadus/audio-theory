@@ -655,6 +655,12 @@ $$
 
 </SelfCheck>
 
+### Сопряжённое число {#conjugate}
+
+Сопряжённое (complex conjugate) к числу $z=a+jb$ — число $z^*=a-jb$: вещественная часть та же, знак мнимой меняется на противоположный. Его обозначают также $\bar z$. На плоскости сопряжение отражает точку относительно вещественной оси ([J. O. Smith, More Notation and Terminology](https://ccrma.stanford.edu/~jos/mdft/More_Notation_Terminology.html)). Модуль при этом не меняется, а аргумент меняет знак: у $3+j4$ сопряжённое $3-j4$, модуль 5 и угол −53,1°. В полярной форме $\bigl(re^{j\theta}\bigr)^*=re^{-j\theta}$: сопряжённое к вектору, вращающемуся против часовой стрелки, вращается по часовой.
+
+Произведение числа на сопряжённое по [формуле (8)](#eq-complex-product) вещественно: $(a+jb)(a-jb)=a^2+b^2=|z|^2$. Для $3+j4$ это $9+16=25$. Сумма $z+z^*=2a$ тоже вещественна, поэтому $\operatorname{Re}z=(z+z^*)/2$; на этом держится запись косинуса через две экспоненты в [разделе об отрицательных частотах](#negative-frequency). В C++ сопряжённое возвращает `std::conj`. У [спектра](/spectrum/#symmetry) вещественного сигнала верхняя половина бинов сопряжена нижней.
+
 ## Вращающийся вектор {#phasor}
 
 Если угол растёт со временем, точка $e^{j\theta}$ движется по окружности. Подставим угол из [формулы синусоиды (2)](#eq-sinusoid):
@@ -793,6 +799,14 @@ $$
 
 Для сравнения мощности октав используем полосы $[f,2f]$. При переходе к $[2f,4f]$ каждая соответствующая частотная ячейка вдвое шире. У розового закона $1/f$ её PSD вдвое меньше, поэтому произведение плотности на ширину сохраняется. У белого шума PSD постоянна, и мощность следующей октавы удваивается ([Whittle, характеристики розового шума](https://www.firstpr.com.au/dsp/pink-noise/)).
 
+## Порядок роста: запись O {#big-o}
+
+Алгоритмы сравнивают по тому, как число операций растёт с размером входа $N$. Точное число зависит от деталей реализации, поэтому записывают только порядок роста: $f(N)=O(g(N))$, читается «O большое от $g$», если начиная с некоторого $N$ выполняется $|f(N)|\le M\,g(N)$ с постоянной $M$, которая от $N$ не зависит ([Wikipedia, Big O notation](https://en.wikipedia.org/wiki/Big_O_notation)). В $g$ оставляют самое быстрорастущее слагаемое без постоянного множителя: $3N+20$ и $N$ — оба $O(N)$, $6N^2+N$ — $O(N^2)$.
+
+Сумма квадратов $N$ отсчётов для [RMS](#sums-and-rms) требует $N$ умножений и $N$ сложений — $O(N)$: при удвоении $N$ работа удваивается. Два вложенных цикла по $N$ значений дают $N^2$ действий — $O(N^2)$: при удвоении $N$ работа учетверяется. Если на каждом шаге задача делится пополам, шагов $\log_2 N$ — столько раз $N$ можно разделить на 2 до единицы ([логарифм](#logarithms)). При $N=1024$ это 10 шагов. Если на каждом из $\log_2 N$ шагов обрабатываются все $N$ значений, получается $O(N\log N)$; основание логарифма в такой записи не указывают, потому что оно меняет только постоянный множитель.
+
+Числа для $N=1024$: $N\log_2N=10\,240$, $N^2=1\,048\,576$, в 102 раза больше. При $N=8192$ — 106 496 и 67 108 864, разница уже в 630 раз. Запись O не говорит, какой алгоритм быстрее при малых $N$: постоянные множители в ней отброшены. Она показывает, как растёт работа при больших $N$; так сравнивают [ДПФ и БПФ](/spectrum/#fft) — $O(N^2)$ и $O(N\log N)$.
+
 ## Математика в статьях сайта {#applications}
 
 - [Звуковая волна](/sound-wave/#frequency): обратная величина $1/f$, единицы, синус и перевод углов в сдвиг по времени.
@@ -810,6 +824,7 @@ $$
 - [Дизеринг и формирование шума](/dither/#rpdf-tpdf): средние квадраты равномерного и треугольного шума и их сумма, логарифм отношения ширины полос для шума в узкой полосе, разности ошибок в обратной связи формирования шума.
 - [Линия задержки](/delay-line/#circular-buffer): остаток от деления и маска для индекса кольцевого буфера, геометрическая прогрессия и логарифм для повторов эха, амплитуда суммы синусоид в гребенчатом фильтре, линейная интерполяция дробной задержки; её множитель $\cos(\pi f/f_s)$ выводится [через комплексные амплитуды](#complex-amplitude).
 - [Микширование сигналов](/mixing/#phase-sum): верхняя граница модуля суммы и амплитуда суммы синусоид одной частоты; ту же амплитуду даёт [сумма комплексных амплитуд](#complex-amplitude).
+- [Спектр сигнала](/spectrum/#dft): сумма с комплексной экспонентой, модуль и аргумент, [сопряжённые числа](#conjugate) для симметрии спектра, частота бина $kf_s/N$ как обратная пропорциональность длительности кадра, логарифм для децибел и шкалы частот, [порядок роста](#big-o) $O(N^2)$ и $O(N\log N)$.
 
 ## Источники {#sources}
 
@@ -827,6 +842,7 @@ $$
 - [Рабочий текст стандарта C++: побитовый AND](https://eel.is/c++draft/expr.bit.and), [OR](https://eel.is/c++draft/expr.or), [унарные операторы](https://eel.is/c++draft/expr.unary.op), [сдвиги](https://eel.is/c++draft/expr.shift), [умножение и деление](https://eel.is/c++draft/expr.mul) — операции с битами целых, ограничения типов, частное и остаток при делении целых.
 
 - [Wikipedia. Finite difference](https://en.wikipedia.org/wiki/Finite_difference) — разности назад, разности высших порядков и постоянная разность многочлена (раздел Polynomials).
+- [Wikipedia. Big O notation](https://en.wikipedia.org/wiki/Big_O_notation) — определение $O$ через постоянную $M$ и порог, отбрасывание постоянных множителей и младших слагаемых, $O(n\log n)$ для БПФ.
 - <Source id="abramson-2021">[§1.1: Functions and Function Notation](https://openstax.org/books/precalculus-2e/pages/1-1-functions-and-function-notation)</Source> — функция и её аргумент.
 - <Source id="abramson-2021">[§5.1: Angles](https://openstax.org/books/precalculus-2e/pages/5-1-angles)</Source> — радианы, дуга и перевод градусов.
 - <Source id="abramson-2021">[§5.4: Right Triangle Trigonometry](https://openstax.org/books/precalculus-2e/pages/5-4-right-triangle-trigonometry) и [§5.2: Unit Circle, Sine and Cosine Functions](https://openstax.org/books/precalculus-2e/pages/5-2-unit-circle-sine-and-cosine-functions)</Source> — отношения сторон и координаты на окружности.
@@ -839,7 +855,7 @@ $$
 - <Source id="abramson-2021">[§7.4: Sum-to-Product and Product-to-Sum Formulas](https://openstax.org/books/precalculus-2e/pages/7-4-sum-to-product-and-product-to-sum-formulas)</Source> — сумма синусов как произведение.
 - <Source id="hyperphysics">[Cents](https://hyperphysics.gsu.edu/hbase/Music/cents.html) и [Beats](https://hyperphysics.gsu.edu/hbase/Sound/beat.html)</Source> — цент как сотая доля темперированного полутона и частота биений как разность частот.
 - <Source id="smith-2007">[Sinusoids at the Same Frequency](https://www.dsprelated.com/freebooks/mdft/Sinusoids_Same_Frequency.html)</Source> — сумма синусоид через две перпендикулярные составляющие.
-- <Source id="smith-2007">[Complex Basics](https://ccrma.stanford.edu/~jos/mdft/Complex_Basics.html), [The Complex Plane](https://ccrma.stanford.edu/~jos/mdft/Complex_Plane.html), [More Notation and Terminology](https://ccrma.stanford.edu/~jos/mdft/More_Notation_Terminology.html), [Euler's Identity](https://ccrma.stanford.edu/~jos/mdft/Euler_s_Identity.html) и [Proof of Euler's Identity](https://ccrma.stanford.edu/~jos/mdft/Proof_Euler_s_Identity.html)</Source> — обозначение $j$, сложение и умножение, модуль и угол через atan2, полярная форма и умножение в ней, формула Эйлера.
+- <Source id="smith-2007">[Complex Basics](https://ccrma.stanford.edu/~jos/mdft/Complex_Basics.html), [The Complex Plane](https://ccrma.stanford.edu/~jos/mdft/Complex_Plane.html), [More Notation and Terminology](https://ccrma.stanford.edu/~jos/mdft/More_Notation_Terminology.html), [Euler's Identity](https://ccrma.stanford.edu/~jos/mdft/Euler_s_Identity.html) и [Proof of Euler's Identity](https://ccrma.stanford.edu/~jos/mdft/Proof_Euler_s_Identity.html)</Source> — обозначение $j$, сложение и умножение, модуль и угол через atan2, полярная форма и умножение в ней, сопряжённое число как отражение относительно вещественной оси, формула Эйлера.
 - <Source id="smith-2007">[Complex Sinusoids](https://ccrma.stanford.edu/~jos/mdft/Complex_Sinusoids.html), [Projection of Circular Motion](https://ccrma.stanford.edu/~jos/mdft/Projection_Circular_Motion.html), [Positive and Negative Frequencies](https://ccrma.stanford.edu/~jos/mdft/Positive_Negative_Frequencies.html) и [Phasor](https://ccrma.stanford.edu/~jos/mdft/Phasor.html)</Source> — комплексная синусоида и её проекции, косинус и синус через две экспоненты, комплексная амплитуда.
 - [cppreference. std::complex](https://en.cppreference.com/w/cpp/numeric/complex), [std::arg](https://en.cppreference.com/w/cpp/numeric/complex/arg) и [std::polar](https://en.cppreference.com/w/cpp/numeric/complex/polar) — шаблон комплексного числа, `abs`, `norm`, диапазон `arg` и условия `polar`.
 - <Source id="smith-1997">[Гл. 15.1: Implementation by Convolution](https://www.dspguide.com/ch15/1.htm)</Source> — скользящее среднее как среднее последних отсчётов с одинаковыми весами.

@@ -1,0 +1,174 @@
+---
+// «Пробная синусоида»: сигнал из 64 отсчётов, пробный косинус или синус, их произведение и
+// накопленная сумма — одна из двух сумм ДПФ для выбранного бина. Без звука. Начальный рисунок и
+// подпись создаются при сборке; без JavaScript, во время загрузки и при ошибке параметры неактивны.
+import Icon from '@/components/Icon.astro';
+import { demoCaptions } from '@/lib/demo-captions';
+import {
+  defaultProbe,
+  probeKinds,
+  probeMaxBin,
+  probePhaseSteps,
+  probeSignalSteps,
+  renderProbe,
+} from '@/lib/spectrum';
+import {
+  phaseText,
+  probeCaption,
+  probeNames,
+  probeStatus,
+  probeSvg,
+  signalCyclesText,
+} from '@/lib/spectrum-view';
+import '@/styles/spectrum.css';
+
+interface Props {
+  /** Номер рисунка: визуализации и рисунки нумеруются одной последовательностью. */
+  figure: number;
+  /** Якорь для ссылок `#id`; английский kebab-case. */
+  id?: string;
+}
+
+const { figure, id = demoCaptions.ProbeSineDemo.defaultId } = Astro.props;
+const p = defaultProbe;
+const render = renderProbe(p);
+const status = probeStatus(render);
+---
+
+<figure
+  id={id}
+  class="spectrum-demo"
+  aria-labelledby={`${id}-name`}
+  data-probe-sine
+  data-state="static"
+>
+  <div class="spectrum-demo-head">
+    <span class="spectrum-demo-label">Визуализация {figure}</span>
+    <span class="spectrum-demo-name" id={`${id}-name`}>
+      {demoCaptions.ProbeSineDemo.name}
+    </span>
+  </div>
+  <div
+    class="spectrum-demo-chart"
+    role="region"
+    aria-label="График сигнала, пробной синусоиды, произведения и суммы"
+    tabindex="0"
+    data-chart
+    set:html={probeSvg(render, id)}
+  />
+  <ul class="spectrum-demo-legend" aria-label="Легенда">
+    <li>
+      <i class="signal"></i>сигнал x[n], точки — отсчёты
+    </li>
+    <li>
+      <i class="probe"></i>пробная синусоида
+    </li>
+    <li>
+      <i class="stem"></i>произведение
+    </li>
+    <li>
+      <i class="sum"></i>накопленная сумма
+    </li>
+  </ul>
+  <div class="spectrum-demo-status">
+    {status.map((line) => (
+      <p data-status-line>{line}</p>
+    ))}
+  </div>
+  <p class="visually-hidden" aria-live="polite" data-announce></p>
+  <fieldset class="spectrum-demo-controls" data-controls disabled>
+    <legend class="visually-hidden">Сигнал и пробная синусоида</legend>
+    <div class="spectrum-demo-grid">
+      <div class="spectrum-demo-param">
+        <div class="spectrum-demo-param-head">
+          <label for={`${id}-cycles`}>Частота сигнала, периодов на кадр</label>
+          <output for={`${id}-cycles`} data-output="cycles">
+            {signalCyclesText(p.signalStep)}
+          </output>
+        </div>
+        <input
+          id={`${id}-cycles`}
+          class="spectrum-demo-range"
+          type="range"
+          min="0"
+          max={probeSignalSteps.length - 1}
+          step="1"
+          value={p.signalStep}
+          aria-valuetext={signalCyclesText(p.signalStep)}
+          data-range="cycles"
+        />
+      </div>
+      <div class="spectrum-demo-param">
+        <div class="spectrum-demo-param-head">
+          <label for={`${id}-phase`}>Фаза сигнала φ</label>
+          <output for={`${id}-phase`} data-output="phase">
+            {phaseText(p.phaseStep)}
+          </output>
+        </div>
+        <input
+          id={`${id}-phase`}
+          class="spectrum-demo-range"
+          type="range"
+          min="0"
+          max={probePhaseSteps.length - 1}
+          step="1"
+          value={p.phaseStep}
+          aria-valuetext={phaseText(p.phaseStep)}
+          data-range="phase"
+        />
+      </div>
+      <div class="spectrum-demo-param">
+        <div class="spectrum-demo-param-head">
+          <label for={`${id}-bin`}>Пробная частота k, периодов на кадр</label>
+          <output for={`${id}-bin`} data-output="bin">
+            {p.bin}
+          </output>
+        </div>
+        <input
+          id={`${id}-bin`}
+          class="spectrum-demo-range"
+          type="range"
+          min="0"
+          max={probeMaxBin}
+          step="1"
+          value={p.bin}
+          data-range="bin"
+        />
+      </div>
+      <fieldset class="spectrum-demo-choice">
+        <legend>Проба:</legend>
+        {probeKinds.map((kind) => (
+          <label class="spectrum-demo-option">
+            <input
+              type="radio"
+              name={`${id}-probe`}
+              value={kind}
+              checked={kind === p.probe}
+              data-probe
+            />
+            {probeNames[kind]}
+          </label>
+        ))}
+      </fieldset>
+    </div>
+    <div class="spectrum-demo-actions">
+      <span></span>
+      <button type="button" class="spectrum-demo-reset" data-reset>
+        <Icon name="rotate-ccw" size={16} />
+        Сбросить
+      </button>
+    </div>
+    <p class="spectrum-demo-note-text" data-controls-note>
+      Параметры работают с включённым JavaScript. Показано начальное состояние.
+    </p>
+  </fieldset>
+  <figcaption class="spectrum-demo-caption">
+    <b>Рис. {figure}.</b> <span data-caption>{probeCaption(p)}</span>
+  </figcaption>
+</figure>
+
+<script>
+  import { initProbeDemos } from '@/lib/spectrum-controller';
+
+  initProbeDemos();
+</script>

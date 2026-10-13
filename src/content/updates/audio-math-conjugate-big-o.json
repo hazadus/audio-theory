@@ -1,0 +1,17 @@
+{
+  "id": "audio-math-conjugate-big-o",
+  "date": "2026-10-13",
+  "order": 3,
+  "type": "updated",
+  "article": "audio-math",
+  "items": [
+    {
+      "text": "Сопряжённое комплексное число",
+      "target": { "article": "audio-math", "anchor": "conjugate" }
+    },
+    {
+      "text": "Порядок роста: запись O",
+      "target": { "article": "audio-math", "anchor": "big-o" }
+    }
+  ]
+}

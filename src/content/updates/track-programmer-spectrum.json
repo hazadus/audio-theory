@@ -1,0 +1,13 @@
+{
+  "id": "track-programmer-spectrum",
+  "date": "2026-10-13",
+  "order": 2,
+  "type": "updated",
+  "track": "programmer",
+  "items": [
+    {
+      "text": "Новый этап «Спектр»: ДПФ, БПФ и анализатор спектра на JUCE",
+      "target": { "track": "programmer", "anchor": "stage-spectrum" }
+    }
+  ]
+}
