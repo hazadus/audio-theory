@@ -2638,10 +2638,7 @@
     "ru": "эквалайзер",
     "en": "equalizer",
     "definition": "Обработчик, изменяющий относительные уровни частотных областей сигнала.",
-    "target": {
-      "article": "spatial-audio",
-      "anchor": "mid-side"
-    }
+    "target": { "article": "equalization" }
   },
   {
     "id": "mid-component",
@@ -2993,5 +2990,47 @@
     "en": "fast Fourier transform, FFT",
     "definition": "Алгоритм, который вычисляет то же ДПФ за число операций порядка N·log₂N вместо N². Распространённые реализации требуют, чтобы N было степенью двойки.",
     "target": { "article": "spectrum", "anchor": "fft" }
+  },
+  {
+    "id": "high-pass-filter",
+    "ru": "фильтр верхних частот",
+    "en": "high-pass filter, HPF",
+    "definition": "Фильтр, который пропускает частоты выше частоты среза и ослабляет частоты ниже неё. В сведении убирает гул и низкочастотные помехи.",
+    "target": { "article": "equalization", "anchor": "pass-filters" }
+  },
+  {
+    "id": "shelving-filter",
+    "ru": "полочный фильтр",
+    "en": "shelving filter",
+    "definition": "Фильтр, который поднимает или ослабляет на одинаковую величину все частоты по одну сторону от частоты перехода. Низкая полка действует ниже неё, высокая — выше.",
+    "target": { "article": "equalization", "anchor": "shelving" }
+  },
+  {
+    "id": "parametric-equalizer",
+    "ru": "параметрический эквалайзер",
+    "en": "parametric equalizer",
+    "definition": "Эквалайзер, у полос которого плавно регулируются центральная частота, усиление и ширина полосы.",
+    "target": { "article": "equalization", "anchor": "parametric" }
+  },
+  {
+    "id": "quality-factor",
+    "ru": "добротность",
+    "en": "quality factor, Q",
+    "definition": "Отношение центральной частоты полосы к её ширине между частотами среза. Чем больше добротность, тем уже полоса.",
+    "target": { "article": "equalization", "anchor": "parametric" }
+  },
+  {
+    "id": "notch-filter",
+    "ru": "режекторный фильтр",
+    "en": "notch filter",
+    "definition": "Фильтр с очень узким провалом, который убирает одну частоту и почти не трогает соседние, например фон сети или резонанс.",
+    "target": { "article": "equalization", "anchor": "parametric" }
+  },
+  {
+    "id": "graphic-equalizer",
+    "ru": "графический эквалайзер",
+    "en": "graphic equalizer",
+    "definition": "Эквалайзер из ряда ползунков, каждый из которых меняет уровень полосы с фиксированными частотой и шириной, обычно через октаву или треть октавы.",
+    "target": { "article": "equalization", "anchor": "graphic" }
   }
 ]

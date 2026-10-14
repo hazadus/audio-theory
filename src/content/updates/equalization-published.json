@@ -1,0 +1,20 @@
+{
+  "id": "equalization-published",
+  "date": "2026-10-14",
+  "order": 2,
+  "type": "new",
+  "article": "equalization",
+  "summary": "Краткая история эквалайзера от корректоров телефонных линий до плагинов, виды эквалайзеров, задачи эквализации и рабочие приёмы.",
+  "items": [
+    {
+      "text": "Рисунок с формами полос: фильтр верхних частот, полка, колокол и вырез",
+      "target": { "article": "equalization", "anchor": "filter-shapes" }
+    },
+    {
+      "text": "Добротность Q и параметрический эквалайзер",
+      "target": { "article": "equalization", "anchor": "parametric" }
+    },
+    { "text": "Термин «добротность»", "target": { "glossary": "quality-factor" } },
+    { "text": "Термин «полочный фильтр»", "target": { "glossary": "shelving-filter" } }
+  ]
+}

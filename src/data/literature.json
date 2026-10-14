@@ -93,7 +93,10 @@
     "drozhzhin": "Дрожжин А.",
     "lukin": "Lukin A.",
     "stuart": "Stuart J. R.",
-    "wilczek": "Wilczek J."
+    "wilczek": "Wilczek J.",
+    "bohn": "Bohn D. A.",
+    "baxandall": "Baxandall P. J.",
+    "kirchner": "Kirchner A."
   },
   "editions": [
     {
@@ -745,6 +748,29 @@
       "title": "C++ Pointers Explained For Audio Programming",
       "publication": "WolfSound, 17 сентября 2023.",
       "url": "https://thewolfsound.com/c-plus-plus-pointers-explained-for-audio-programming/"
+    },
+    {
+      "id": "bohn-1997",
+      "type": "article",
+      "authors": ["bohn"],
+      "title": "Operator Adjustable Equalizers: An Overview",
+      "publication": "RaneNote 122. Rane Corporation, 1990, ред. август 1997. Доклад 6-й Международной конференции AES по звукоусилению, 1988.",
+      "url": "https://ranecommercial.com/legacy/note122.html"
+    },
+    {
+      "id": "baxandall-1952",
+      "type": "article",
+      "authors": ["baxandall"],
+      "title": "Negative-Feedback Tone Control",
+      "publication": "Wireless World. 1952. Октябрь. P. 402–405."
+    },
+    {
+      "id": "kirchner-2023",
+      "type": "web",
+      "authors": ["kirchner"],
+      "title": "A Brief History of Equalization",
+      "publication": "Black Rooster Audio, 2 мая 2023.",
+      "url": "https://blackroosteraudio.com/en/blogreader/a-brief-history-of-equalization"
     }
   ]
 }

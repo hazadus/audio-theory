@@ -1,0 +1,16 @@
+{
+  "id": "track-sound-engineer-equalization",
+  "date": "2026-10-14",
+  "order": 3,
+  "type": "updated",
+  "track": "sound-engineer",
+  "items": [
+    {
+      "text": "Этап обработки начинается со статьи об эквализации и называется «Частоты, динамика и пространство».",
+      "target": {
+        "track": "sound-engineer",
+        "anchor": "stage-processing"
+      }
+    }
+  ]
+}
