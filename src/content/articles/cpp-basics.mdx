@@ -414,6 +414,56 @@ return juce::File::getSpecialLocation(
 
 </MarginNote>
 
+Ссылку можно и вернуть из функции. Например, процессор плагина хранит параметры в поле `parameters`, а редактору отдаёт их методом `getParameterRefs()`. Рядом объявлен метод `getBypassParameter()`, который возвращает указатель:
+
+```cpp
+// PluginProcessor.h
+[[nodiscard]] Parameters& getParameterRefs() noexcept;
+juce::AudioProcessorParameter* getBypassParameter() const noexcept override;
+// ...
+Parameters parameters{*this};  // поле: сам объект, не ссылка и не указатель
+
+// PluginProcessor.cpp
+Parameters& PluginProcessor::getParameterRefs() noexcept {
+  return parameters;
+}
+
+juce::AudioProcessorParameter* PluginProcessor::getBypassParameter() const noexcept {
+  return &parameters.bypassed;
+}
+```
+
+<MarginNote items={[
+  { label: 'Learn C++ → 12.12 Return by reference and return by address', description: 'Возврат ссылки и адреса, висячая ссылка на локальную переменную.', target: { url: 'https://www.learncpp.com/cpp-tutorial/return-by-reference-and-return-by-address/' } },
+  { label: 'Кто владеет объектом → Граница с хостом', description: 'Почему редактор не переживёт процессор и его ссылки не повиснут.', target: { article: 'cpp-ownership', anchor: 'host-boundary' } },
+]}>
+
+Поле `parameters` — объект типа `Parameters`. Ссылкой результат делает тип возвращаемого значения `Parameters&` в объявлении функции. `return parameters;` называет сам объект, и возвращаемая ссылка привязывается к нему: вызывающий код получает другое имя поля процессора, копия не создаётся. `return &parameters;` здесь не скомпилируется: выражение `&parameters` берёт адрес и имеет тип `Parameters*`, а ссылку к указателю привязать нельзя. Чтобы вернуть адрес, меняют тип результата: `getBypassParameter()` объявлена с `juce::AudioProcessorParameter*` и поэтому пишет `return &parameters.bypassed;`. Возвращать ссылку можно, пока жив объект, к которому она привязана. Поле живёт вместе с процессором, а редактор удаляется раньше процессора. Ссылку на локальную переменную функции возвращать нельзя: переменная исчезнет при выходе из функции, и ссылка станет висячей.
+
+</MarginNote>
+
+Копию `Parameters` вернуть и не удалось бы: структура запрещает копирование и перемещение макросами `JUCE_DECLARE_NON_COPYABLE` и `JUCE_DECLARE_NON_MOVEABLE` (см. [запрет копирования](/cpp-classes/#non-copyable)). По той же причине вызывающий код сохраняет результат в ссылку: `auto& params = p.getParameterRefs();`. Запись `auto params = ...` отбрасывает ссылку и пытается скопировать объект, и компилятор сообщит о вызове удалённого конструктора копирования. Редактор обходится без переменной: `p.getParameterRefs().rate` сразу обращается к полю `rate` объекта процессора.
+
+<MarginNote items={[
+  { label: 'Learn C++ → 12.4 Lvalue references to const', description: 'Ссылка на const: чтение объекта без права изменения.', target: { url: 'https://www.learncpp.com/cpp-tutorial/lvalue-references-to-const/' } },
+  { label: 'C++ в плагине → Статические члены и this', description: 'Почему serialize вызывается через имя класса, без объекта.', target: { article: 'cpp-classes', anchor: 'static-this' } },
+]}>
+
+Ссылочный параметр устроен так же, только ссылка привязывается при вызове. Например, класс `JsonSerializer` сохраняет параметры в JSON. Его метод объявлен так: `static void serialize(const Parameters&, juce::OutputStream&);`. Тип `const Parameters&` говорит, что функция принимает ссылку на `Parameters` и не меняет объект через неё. Имя параметра в объявлении можно опустить; в определении в `JsonSerializer.cpp` он назван `parameters`.
+
+</MarginNote>
+
+```cpp
+void PluginProcessor::getStateInformation(juce::MemoryBlock& destData) {
+  juce::MemoryOutputStream outputStream{destData, true};
+  JsonSerializer::serialize(parameters, outputStream);
+}
+```
+
+Аргумент `parameters` — существующее поле процессора. При вызове ссылка из объявления связывается с этим объектом, и внутри `serialize` имя параметра обозначает само поле, без копии. Поэтому в месте вызова передают объект: `serialize(&parameters, outputStream)` не скомпилируется, потому что `&parameters` — указатель `Parameters*`. Второй аргумент передаётся так же: `outputStream` имеет тип `juce::MemoryOutputStream`, и ссылка на базовый класс `juce::OutputStream&` привязывается к нему (см. [наследование](/cpp-classes/#inheritance)).
+
+Амперсанд ссылки пишут там, где объявляется тип: у параметра, возвращаемого значения, поля или переменной. В вызове функции и после `return` стоят выражения, и `&` в них берёт адрес. Подробнее о двух значениях символа — во врезке ниже.
+
 ### Указатель T* {#pointer}
 
 <MarginNote items={[
@@ -425,7 +475,13 @@ return juce::File::getSpecialLocation(
 
 </MarginNote>
 
-Метод `buffer.getReadPointer(0)` возвращает `const float*` — адрес первого отсчёта канала. Такой указатель вместе с длиной можно превратить в `std::span` (см. [шаблоны](/cpp-classes/#templates)).
+<MarginNote items={[
+  { label: 'Jan Wilczek (WolfSound) → C++ Pointers Explained For Audio Programming', description: 'Указатели на примерах аудиокода: массивы, куча, float** каналов, const и std::span.', target: { url: 'https://thewolfsound.com/c-plus-plus-pointers-explained-for-audio-programming/' } },
+]}>
+
+В аудиокоде указатель обычно показывает на начало блока отсчётов. Метод `buffer.getReadPointer(0)` возвращает `const float*` — адрес первого отсчёта канала 0. Следующие отсчёты лежат в памяти подряд, и `p[i]` читает `i`-й из них. По типу `float*` не видно, указывает он на одно число или на массив и сколько в массиве элементов, поэтому длину передают отдельно, как `buffer.getNumSamples()`.
+
+</MarginNote>
 
 <Callout type="note" title="Два значения символа &">
 
@@ -434,6 +490,90 @@ return juce::File::getSpecialLocation(
 </Callout>
 
 Кто отвечает за удаление объекта, на который указывает указатель, — отдельный вопрос. Он разобран в статье [«Кто владеет объектом»](/cpp-ownership/).
+
+### const в типе указателя {#pointer-const}
+
+<MarginNote items={[
+  { label: 'Learn C++ → 12.9 Pointers and const', description: 'Указатель на const, константный указатель и их сочетание.', target: { url: 'https://www.learncpp.com/cpp-tutorial/pointers-and-const/' } },
+  { label: 'cppreference → Pointer declaration', description: 'Раздел Constness: к чему относится const до и после звёздочки.', target: { url: 'https://en.cppreference.com/w/cpp/language/pointer' } },
+]}>
+
+В типе указателя участвуют два объекта: сам указатель и значение, на которое он показывает, и каждый из них может быть константным. Правило одно: `const` левее `*` относится к значению, правее `*` — к указателю. Поэтому `const float*` и `float const*` — один и тот же тип, порядок `const` и `float` до звёздочки не важен. Длинный тип удобно читать справа налево: `const float* const p` — «`p` — константный указатель на константный `float`». [Таблица 3](#pointer-const-forms) сводит варианты.
+
+</MarginNote>
+
+<DataTable
+  id="pointer-const-forms"
+  number={3}
+  caption="Варианты const в типе указателя на отсчёты. Ошибку при попытке изменить защищённое выдаёт компилятор."
+  columns={[
+    { label: 'Тип', width: '10rem' },
+    { label: 'Как читать' },
+    { label: 'Что нельзя менять' },
+    { label: 'Где встречается' },
+  ]}
+  rows={[
+    ['<code>float*</code>', 'указатель на <code>float</code>', 'всё можно менять', '<code>buffer.getWritePointer(0)</code>'],
+    ['<code>const float*</code>', 'указатель на константный <code>float</code>', 'отсчёты', '<code>buffer.getReadPointer(0)</code>'],
+    ['<code>float const*</code>', 'то же самое: <code>const</code> левее <code>*</code>', 'отсчёты', 'та же запись в другом стиле'],
+    ['<code>float* const</code>', 'константный указатель на <code>float</code>', 'сам указатель: его нельзя перенаправить', 'параметр функции, который тело не должно перенаправлять'],
+    ['<code>const float* const</code>', 'константный указатель на константный <code>float</code>', 'ни отсчёты, ни указатель', 'то же для блока, который функция только читает'],
+    ['<code>float* const*</code>', 'указатель на константный указатель на <code>float</code>', 'указатели каналов в таблице', '<code>buffer.getArrayOfWritePointers()</code>'],
+    ['<code>const float* const*</code>', 'указатель на константный указатель на константный <code>float</code>', 'указатели каналов и отсчёты', '<code>buffer.getArrayOfReadPointers()</code>'],
+  ]}
+/>
+
+Две звёздочки появляются, когда каналов несколько. `juce::AudioBuffer` хранит таблицу указателей на каналы, а `getArrayOfReadPointers()` возвращает адрес этой таблицы с типом `const float* const*`. `const` перед первой звёздочкой защищает отсчёты, `const` между звёздочками — указатели каналов в таблице. Сам возвращённый указатель обычный: его можно перенаправить, таблицу и отсчёты это не затронет. `getArrayOfWritePointers()` возвращает `float* const*`: отсчёты менять можно, подменить канал нельзя. Те же типы получает колбэк аудиоустройства JUCE `audioDeviceIOCallbackWithContext`: входные каналы — `const float* const*`, выходные — `float* const*`.
+
+```cpp
+const float* const* inputs = buffer.getArrayOfReadPointers();
+float* const* outputs = buffer.getArrayOfWritePointers();
+
+const auto x = inputs[1][10];  // канал 1, отсчёт 10: читать можно
+outputs[1][10] = 0.5f * x;     // писать отсчёт через float* const* можно
+// inputs[1][10] = 0.0f;       // ошибка: отсчёты константны
+// outputs[1] = nullptr;       // ошибка: указатели каналов константны
+```
+
+У среднего `const` есть и второе назначение: `float**` неявно превращается в `const float* const*`, но не в `const float**`. Иначе через `const float**` можно было бы записать в таблицу адрес константного числа, а потом изменить это число через исходный `float*`.
+
+### Массивы и std::span {#arrays-span}
+
+<MarginNote items={[
+  { label: 'Learn C++ → 17.1 Introduction to std::array', description: 'Массив с длиной, известной при компиляции.', target: { url: 'https://www.learncpp.com/cpp-tutorial/introduction-to-stdarray/' } },
+  { label: 'Learn C++ → 16.2 Introduction to std::vector and list constructors', description: 'Массив с длиной, заданной при выполнении.', target: { url: 'https://www.learncpp.com/cpp-tutorial/introduction-to-stdvector-and-list-constructors/' } },
+  { label: 'C++ в аудиопотоке → Где выделять память', description: 'Почему размер вектора задают в prepareToPlay, а не в processBlock.', target: { article: 'cpp-audio-thread', anchor: 'preallocation' } },
+]}>
+
+Пару «указатель и длина» компилятор не проверяет: длину легко перепутать, а вызов `process(nullptr, 512)` скомпилируется. Стандартная библиотека хранит длину вместе с данными. `std::array<float, N>` (C++11) — массив, длина `N` которого известна при компиляции; элементы лежат внутри самого объекта. В [учебном плагине из курса JUCE](https://github.com/juce-framework/tremolo-juce-course) так объявлены два осциллятора LFO в классе `Tremolo`: `std::array<juce::dsp::Oscillator<float>, 2u> lfos`. `std::vector<float>` — массив, длина которого задаётся при выполнении; память он берёт в куче и освобождает в деструкторе. Поле `lfoSamples` того же класса — вектор: его размер один раз задаёт `resize` в методе `prepare`, который вызывается из `prepareToPlay`, а `process` только пишет в готовую память. Метод `data()` у обоих контейнеров возвращает указатель на первый элемент, так `lfoSamples.data()` передаётся в функции JUCE, которые принимают указатель и число отсчётов.
+
+</MarginNote>
+
+<MarginNote items={[
+  { label: 'cppreference → std::span', description: 'Невладеющее представление непрерывной области памяти.', target: { url: 'https://en.cppreference.com/w/cpp/container/span' } },
+  { label: 'C++ в плагине → Вариативные шаблоны, CTAD и span', description: 'std::span в коде плагина и вывод аргументов шаблона.', target: { article: 'cpp-classes', anchor: 'variadic-ctad' } },
+]}>
+
+Функции не обязательно знать, в каком контейнере лежат отсчёты. `std::span<float>` (C++20) хранит указатель и длину в одном параметре и не владеет данными. Функция с таким параметром принимает `std::array`, `std::vector` и указатель с длиной из `AudioBuffer`, отсчёты при этом не копируются. `std::span<const float>` даёт доступ только для чтения, как `const float*`.
+
+</MarginNote>
+
+```cpp
+void applyGain(std::span<float> samples, float gain) noexcept {
+  for (auto& sample : samples) {
+    sample *= gain;
+  }
+}
+
+std::array<float, 4> window{0.0f, 0.5f, 1.0f, 0.5f};  // длина известна при компиляции
+std::vector<float> block(512);                       // длина задаётся при выполнении
+
+applyGain(window, 0.5f);
+applyGain(block, 0.5f);
+applyGain({buffer.getWritePointer(0),                 // указатель и длина из AudioBuffer
+           static_cast<size_t>(buffer.getNumSamples())}, 0.5f);
+applyGain(std::span{block}.first(64), 0.0f);          // первые 64 отсчёта
+```
 
 ## Цикл по диапазону {#loops}
 
@@ -496,11 +636,11 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() {
 
 ## Предупреждения компилятора {#warnings}
 
-Файл `cmake/CompilerWarnings.cmake` включает строгий набор предупреждений, и он объясняет несколько особенностей стиля кода. [Таблица 3](#warning-flags) связывает флаги с тем, как они видны в коде.
+Файл `cmake/CompilerWarnings.cmake` включает строгий набор предупреждений, и он объясняет несколько особенностей стиля кода. [Таблица 4](#warning-flags) связывает флаги с тем, как они видны в коде.
 
 <DataTable
   id="warning-flags"
-  number={3}
+  number={4}
   caption="Флаги предупреждений GCC и Clang из CompilerWarnings.cmake и приёмы кода, которые они вызвали."
   columns={[
     { label: 'Флаг', width: '10rem' },
@@ -533,6 +673,18 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() {
 
 </SelfCheck>
 
+<SelfCheck question="Почему getParameterRefs() возвращает Parameters&, хотя в теле написано return parameters, а не return &parameters?">
+
+Ссылкой результат делает тип `Parameters&` в объявлении, а `return parameters;` называет объект, к которому ссылка привяжется. `&parameters` в выражении берёт адрес и даёт `Parameters*`; такой `return` подходит функции, объявленной с типом результата `Parameters*`, а с `Parameters&` не скомпилируется.
+
+</SelfCheck>
+
+<SelfCheck question="Функция получает параметр float* const* channels. Какие строки скомпилируются: channels[0][5] = 0.0f; channels[0] = nullptr; channels = nullptr;?">
+
+Первая и третья. `float` в конце цепочки не константен, поэтому отсчёт менять можно. `const` между звёздочками запрещает подменять указатели каналов в таблице, и вторая строка — ошибка. Сам параметр `channels` не константен: его можно перенаправить, это изменит только локальную копию указателя в функции.
+
+</SelfCheck>
+
 <SelfCheck question="Зачем в tremolo_plugin.h порядок директив #include важен, а в обычном проекте с отдельными .cpp-файлами это не так?">
 
 Плагин собирается как одна единица трансляции: все `.cpp` вставляются в `tremolo_plugin.cpp` после общего заголовка. Компилятор читает текст сверху вниз и должен увидеть объявление класса раньше его использования, поэтому `Tremolo.h` идёт раньше `PluginProcessor.h`. В проекте, где каждый `.cpp` подключает нужные заголовки сам, порядок между файлами задаёт не общий заголовок, а директивы каждого файла.
@@ -547,11 +699,14 @@ JUCE находит функцию по фиксированному имени 
 
 ## Источники {#sources}
 
-- <Source id="learncpp">Главы 2 «C++ Basics: Functions and Files» (уроки [2.7](https://www.learncpp.com/cpp-tutorial/forward-declarations/), [2.8](https://www.learncpp.com/cpp-tutorial/programs-with-multiple-code-files/), [2.10](https://www.learncpp.com/cpp-tutorial/introduction-to-the-preprocessor/), [2.11](https://www.learncpp.com/cpp-tutorial/header-files/), [2.12](https://www.learncpp.com/cpp-tutorial/header-guards/)), 4, 5, 7, 10, 11, 12 и 16</Source> — препроцессор, заголовки, типы, литералы, пространства имён, приведение типов, перегрузка, ссылки, указатели и циклы.
+- <Source id="learncpp">Главы 2 «C++ Basics: Functions and Files» (уроки [2.7](https://www.learncpp.com/cpp-tutorial/forward-declarations/), [2.8](https://www.learncpp.com/cpp-tutorial/programs-with-multiple-code-files/), [2.10](https://www.learncpp.com/cpp-tutorial/introduction-to-the-preprocessor/), [2.11](https://www.learncpp.com/cpp-tutorial/header-files/), [2.12](https://www.learncpp.com/cpp-tutorial/header-guards/)), 4, 5, 7, 10, 11, 12, 16 и 17</Source> — препроцессор, заголовки, типы, литералы, пространства имён, приведение типов, перегрузка, ссылки, возврат ссылки, указатели и `const`, `std::vector`, `std::array` и циклы.
+- <Source id="wilczek-2023-pointers">Разделы о массивах, двойных указателях, `const` и `std::span`</Source> — указатель как адрес блока отсчётов, `std::array` и `std::vector` вместо массивов C, таблица каналов `float**` в колбэке аудиоустройства, чтение `const` справа налево, `std::span` вместо пары «указатель и длина».
+- [cppreference. Pointer declaration](https://en.cppreference.com/w/cpp/language/pointer) — раздел Constness: `const` до и после `*`, равенство `const T*` и `T const*`; [std::span](https://en.cppreference.com/w/cpp/container/span) — невладеющий вид на непрерывную память.
 - [cppreference. static_cast](https://en.cppreference.com/w/cpp/language/static_cast) — допустимые преобразования; [std::size_t](https://en.cppreference.com/w/cpp/types/size_t) — определение и заголовок `<cstddef>`; [noexcept specifier](https://en.cppreference.com/w/cpp/language/noexcept_spec) и [nodiscard](https://en.cppreference.com/w/cpp/language/attributes/nodiscard) — семантика и стандарт появления.
 - [Проект стандарта C++ (eel.is/c++draft)](https://eel.is/c++draft/): [support.types.layout](https://eel.is/c++draft/support.types.layout) — `size_t`, [namespace.unnamed](https://eel.is/c++draft/namespace.unnamed) — анонимное пространство имён, [dcl.attr.grammar](https://eel.is/c++draft/dcl.attr.grammar) — синтаксис атрибутов.
 - [JUCE. JUCE Module Format](https://github.com/juce-framework/JUCE/blob/master/docs/JUCE%20Module%20Format.md) — модуль из одного `.cpp`, который вставляет остальные исходники, и блок `BEGIN_JUCE_MODULE_DECLARATION`.
 - [CMake. UNITY_BUILD](https://cmake.org/cmake/help/latest/prop_tgt/UNITY_BUILD.html) и [target_precompile_headers](https://cmake.org/cmake/help/latest/command/target_precompile_headers.html) — автоматический unity build и предкомпилированные заголовки (CMake 3.16).
 - [cppreference. Modules](https://en.cppreference.com/w/cpp/language/modules) — модули C++20 и отличие `import` от `#include`.
 - [Doxygen. Documenting the code](https://www.doxygen.nl/manual/docblocks.html) — формы комментариев документации.
-- [JUCE. tremolo-juce-course](https://github.com/juce-framework/tremolo-juce-course) — фрагменты кода из папки `complete`: `tremolo_plugin.h`, `tremolo_plugin.cpp`, `PluginProcessor.h`, `PluginProcessor.cpp`, `Parameters.cpp`, `Tremolo.h`, `BypassTransitionSmoother.h`, `cmake/CompilerWarnings.cmake`, `CMakeLists.txt` и `test/source/TestUtils.h`.
+- [JUCE. tremolo-juce-course](https://github.com/juce-framework/tremolo-juce-course) — фрагменты кода из папки `complete`: `tremolo_plugin.h`, `tremolo_plugin.cpp`, `PluginProcessor.h`, `PluginProcessor.cpp`, `Parameters.cpp`, `Tremolo.h`, `BypassTransitionSmoother.h`, `cmake/CompilerWarnings.cmake`, `CMakeLists.txt`, `test/source/TestUtils.h`, `Parameters.h`, `JsonSerializer.h` и `JsonSerializer.cpp`.
+- JUCE 8.0.12: [juce_AudioSampleBuffer.h](https://github.com/juce-framework/JUCE/blob/8.0.12/modules/juce_audio_basics/buffers/juce_AudioSampleBuffer.h) — типы `getReadPointer`, `getWritePointer`, `getArrayOfReadPointers` и `getArrayOfWritePointers`; [juce_AudioIODevice.h](https://github.com/juce-framework/JUCE/blob/8.0.12/modules/juce_audio_devices/audio_io/juce_AudioIODevice.h) — параметры `audioDeviceIOCallbackWithContext`.

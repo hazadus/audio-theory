@@ -337,7 +337,13 @@ void attenuateBlock (juce::AudioBuffer<float>& buffer)
 
 После `attenuateBlock (example)` левый канал содержит `0.0f, 0.25f, -0.25f`, правый — `0.125f, 0.0f, -0.125f`. Каналов по-прежнему два, кадров три, а отдельных отсчётов шесть. У моно функция обойдёт один массив. При нулевой длине она сразу завершится.
 
+<MarginNote items={[
+  { label: 'Основы C++ для JUCE → const в типе указателя', description: 'Чем const float* из getReadPointer() отличается от float* из getWritePointer().', target: { article: 'cpp-basics', anchor: 'pointer-const' } },
+]}>
+
 Указатель `samples` даёт доступ к данным канала. Его не освобождают вручную и не сохраняют для обработки будущего блока: при смене памяти он может стать недействительным. Для чтения без изменения нужен `getReadPointer()`.
+
+</MarginNote>
 
 В <Term id="plugin" firstMention>плагине</Term> JUCE аудио приходит в <Term id="audio-callback" firstMention define>аудиоколбэк</Term> `processBlock()` класса `AudioProcessor`. Он получает входные данные и должен записать выходные. Число кадров может меняться от вызова к вызову, включая нулевые блоки, поэтому длину берут из текущего буфера. Каналы для записи выбирают по конфигурации входов и выходов: переданный буфер может содержать дополнительные входные каналы, менять которые нельзя. Функцию из примера применяют к буферу, где это условие уже проверено ([JUCE, processBlock](https://docs.juce.com/master/classjuce_1_1AudioProcessor.html)).
 

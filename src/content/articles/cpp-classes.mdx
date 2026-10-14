@@ -286,6 +286,7 @@ lfoSamplesToPlot.pushBack(std::span{
 <MarginNote items={[
   { label: 'cppreference → std::span', description: 'Неуправляющее представление непрерывной области памяти.', target: { url: 'https://en.cppreference.com/w/cpp/container/span' } },
   { label: 'Learn C++ → 13.14 Class template argument deduction (CTAD) and deduction guides', description: 'Вывод аргументов шаблона класса и подсказки вывода.', target: { url: 'https://www.learncpp.com/cpp-tutorial/class-template-argument-deduction-ctad-and-deduction-guides/' } },
+  { label: 'Основы C++ для JUCE → Массивы и std::span', description: 'std::span как параметр функции для std::array, std::vector и указателя с длиной.', target: { article: 'cpp-basics', anchor: 'arrays-span' } },
 ]}>
 
 `std::span` (C++20) — «вид» на непрерывный кусок памяти: указатель и длина, без владения данными. Это аналог среза в Go без возможности расти или `memoryview` в Python. Через него в `pushBack` передаются указатель на отсчёты канала и их число, а сами отсчёты не копируются.

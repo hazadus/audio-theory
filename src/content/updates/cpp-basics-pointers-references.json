@@ -1,0 +1,21 @@
+{
+  "id": "cpp-basics-pointers-references",
+  "date": "2026-10-14",
+  "order": 1,
+  "type": "updated",
+  "article": "cpp-basics",
+  "items": [
+    {
+      "text": "Возврат ссылки и ссылочный параметр на примерах getParameterRefs() и JsonSerializer::serialize()",
+      "target": { "article": "cpp-basics", "anchor": "reference" }
+    },
+    {
+      "text": "const в типе указателя: что защищает const до и после звёздочки, указатели на каналы",
+      "target": { "article": "cpp-basics", "anchor": "pointer-const" }
+    },
+    {
+      "text": "std::array, std::vector и std::span вместо пары «указатель и длина»",
+      "target": { "article": "cpp-basics", "anchor": "arrays-span" }
+    }
+  ]
+}

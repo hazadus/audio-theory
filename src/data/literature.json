@@ -92,7 +92,8 @@
     "meerzon": "Меерзон Б. Я.",
     "drozhzhin": "Дрожжин А.",
     "lukin": "Lukin A.",
-    "stuart": "Stuart J. R."
+    "stuart": "Stuart J. R.",
+    "wilczek": "Wilczek J."
   },
   "editions": [
     {
@@ -736,6 +737,14 @@
       "title": "Как производятся диски Blu-ray 3D — репортаж с фабрики Sony",
       "publication": "3DNews, 18 июня 2010.",
       "url": "https://3dnews.ru/593813"
+    },
+    {
+      "id": "wilczek-2023-pointers",
+      "type": "web",
+      "authors": ["wilczek"],
+      "title": "C++ Pointers Explained For Audio Programming",
+      "publication": "WolfSound, 17 сентября 2023.",
+      "url": "https://thewolfsound.com/c-plus-plus-pointers-explained-for-audio-programming/"
     }
   ]
 }
