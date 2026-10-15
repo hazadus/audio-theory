@@ -1,0 +1,21 @@
+{
+  "id": "cpp-classes-templates",
+  "date": "2026-10-15",
+  "order": 2,
+  "type": "updated",
+  "article": "cpp-classes",
+  "items": [
+    {
+      "text": "Шаблоны SampleFifo и StridedQueue изнутри: параметр-тип и параметр-число",
+      "target": { "article": "cpp-classes", "anchor": "class-template-body" }
+    },
+    {
+      "text": "Типы и функции в аргументах шаблона, auto в параметрах и требования к типу-аргументу",
+      "target": { "article": "cpp-classes", "anchor": "template-arguments" }
+    },
+    {
+      "text": "Шаблон serialise в JsonSerializer: кто его вызывает, откуда getVersion() и как работает archive(named(...))",
+      "target": { "article": "cpp-classes", "anchor": "serialise" }
+    }
+  ]
+}

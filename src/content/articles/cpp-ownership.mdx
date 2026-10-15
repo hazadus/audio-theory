@@ -304,7 +304,13 @@ juce::AudioParameterFloat& createModulationRateParameter(
 }
 ```
 
+<MarginNote items={[
+  { label: 'C++ в плагине → auto в параметрах', description: 'Сокращённый шаблон функции, его полная запись и три версии addParameterToProcessor.', target: { article: 'cpp-classes', anchor: 'auto-parameters' } },
+]}>
+
 Передачу владения вынесли в отдельную функцию, потому что так же создаются параметры `bypassed` и `waveform`. Объявление `auto parameter` делает `addParameterToProcessor` шаблоном (abbreviated function template, C++20): тип параметра выводится из аргумента, и для `AudioParameterBool` функция вернёт `AudioParameterBool&`. Результат `make_unique` попадает в `parameter` без копии и без `std::move`: временный `unique_ptr` сразу становится параметром функции.
+
+</MarginNote>
 
 В строке `auto& result = *parameter;` знак `&` в объявлении слева говорит, что `result` — ссылка, то есть другое имя уже существующего объекта. `*` справа — разыменование: `parameter` хранит адрес, а `*parameter` — объект по этому адресу. Без `*` получилась бы ссылка на сам `unique_ptr`, локальную переменную, которая исчезнет при выходе из функции.
 

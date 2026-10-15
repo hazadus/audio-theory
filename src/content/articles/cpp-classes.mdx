@@ -268,6 +268,156 @@ auto sample = twice (0.5f);        // Number выводится как float
 auto precise = twice<double> (3);  // Number задан явно, аргумент преобразуется в double
 ```
 
+<MarginNote items={[
+  { label: 'Learn C++ → 11.7 Function template instantiation', description: 'Как компилятор создаёт функцию из шаблона и когда аргументы указывают явно.', target: { url: 'https://www.learncpp.com/cpp-tutorial/function-template-instantiation/' } },
+  { label: 'Основы C++ для JUCE → static_cast', description: 'Встроенное преобразование типа с угловыми скобками.', target: { article: 'cpp-basics', anchor: 'static-cast' } },
+]}>
+
+Явный аргумент нужен, когда вывести тип не из чего. `std::make_unique<juce::AudioParameterFloat>(...)` передаёт свои аргументы конструктору, и по ним не видно, какой объект создать. `juce::FromVar::convert<SerializableParameters>(parsedResult)` получает `juce::var`, а тип нужен только для результата. Парная ей `juce::ToVar::convert(from(parameters))` выводит тип из аргумента. `static_cast<int>(x)` только похож на шаблон: это встроенная операция языка.
+
+</MarginNote>
+
+### Шаблон класса изнутри {#class-template-body}
+
+<MarginNote items={[
+  { label: 'Learn C++ → 15.5 Class templates with member functions', description: 'Методы шаблона класса и где их определять.', target: { url: 'https://www.learncpp.com/cpp-tutorial/class-templates-with-member-functions/' } },
+]}>
+
+`SampleFifo` целиком, вместе с телами методов, объявлен в заголовке `SampleFifo.h`. Имя `SampleType` внутри класса обозначает тип, который подставят при использовании. Отдельной строки `template` перед методами нет: методы, определённые внутри шаблона класса, пользуются его параметрами.
+
+</MarginNote>
+
+```cpp
+// SampleFifo.h, сокращено
+template <typename SampleType>
+class SampleFifo {
+public:
+  void push(SampleType sample) { /* ... */ }
+  void popAll(juce::AudioBuffer<SampleType>& bufferToFill) { /* ... */ }
+  // ...
+
+private:
+  static constexpr auto initialCapacity = 1024;
+  juce::AbstractFifo fifo{initialCapacity};
+  juce::AudioBuffer<SampleType> buffer{1, initialCapacity};
+};
+```
+
+Поле `SampleFifo<float> lfoSampleFifo;` в классе `Tremolo` заставляет компилятор создать класс, где `SampleType` заменён на `float`: метод `push(float)`, поле `juce::AudioBuffer<float> buffer`.
+
+<MarginNote items={[
+  { label: 'Learn C++ → 11.9 Non-type template parameters', description: 'Параметры шаблона, которые принимают значение, а не тип.', target: { url: 'https://www.learncpp.com/cpp-tutorial/non-type-template-parameters/' } },
+  { label: 'Learn C++ → 26.2 Template non-type parameters', description: 'Те же параметры в шаблонах классов.', target: { url: 'https://www.learncpp.com/cpp-tutorial/template-non-type-parameters/' } },
+]}>
+
+Второй параметр `StridedQueue` — не тип, а число (non-type template parameter). `Size` передаётся дальше в `std::array<T, Size>`, поэтому число точек графика становится частью типа, а массив лежит внутри объекта, без выделения памяти в куче.
+
+</MarginNote>
+
+```cpp
+// detail/StridedQueue.h, сокращено
+template <typename T, size_t Size>
+class StridedQueue {
+  // ...
+private:
+  std::array<T, Size> stridedElements{};
+  size_t elementIndex{0u};
+  size_t stride{1u};
+};
+```
+
+Значение такого параметра должно быть известно при компиляции. В `LfoVisualizer` оно объявлено как `static constexpr auto pointsOnPath = 22050u;` и передано в поле `detail::StridedQueue<float, pointsOnPath> lfoSamplesToPlot;`. Обычная переменная на этом месте не подойдёт:
+
+```cpp
+auto points = 22050u;
+detail::StridedQueue<float, points> queue;  // ошибка: points не константа времени компиляции
+```
+
+Каждый набор аргументов даёт отдельный класс. Тест берёт `StridedQueue<int, 5>`: на пяти целых проще проверить, какие элементы остались в очереди. `StridedQueue<int, 5>` и `StridedQueue<float, 22050>` — два не связанных между собой типа, присвоить объект одного другому нельзя. В тесте `testee.pushBack(std::vector{1, 0, 0, 2, ...})` компилятор выводит `std::vector<int>`, и вектор неявно превращается в параметр `std::span<const int>`. Запись `T(0)` в методе `pushBackZeros` даёт ноль нужного типа: `0.0f` для `float`, `0` для `int`.
+
+<SelfCheck question="Почему detail::StridedQueue<float, points> не компилируется, если points — обычная переменная auto points = 22050u?">
+
+`Size` — параметр шаблона, и его значение входит в тип: от него зависит размер поля `std::array<T, Size>`, то есть размер всего объекта. Тип должен быть известен при компиляции, а значение обычной переменной существует только во время выполнения. Подходит константа `constexpr`, как `pointsOnPath`, или литерал.
+
+</SelfCheck>
+
+### Типы и функции в аргументах {#template-arguments}
+
+Аргументом шаблона бывает и тип без данных, который выбирает поведение. Во втором аргументе `juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear>` пустая структура `Linear` задаёт линейное сглаживание: значение меняется на одну и ту же величину на каждом отсчёте. `Multiplicative` выбрала бы изменение в одно и то же число раз. `BypassTransitionSmoother` пишет короче, `juce::LinearSmoothedValue<float>`. Это шаблон-псевдоним (alias template) того же класса:
+
+```cpp
+// juce_SmoothedValue.h
+template <typename FloatType>
+using LinearSmoothedValue = SmoothedValue <FloatType, ValueSmoothingTypes::Linear>;
+```
+
+<MarginNote items={[
+  { label: 'Learn C++ → 13.15 Alias templates', description: 'Псевдонимы для шаблонов.', target: { url: 'https://www.learncpp.com/cpp-tutorial/alias-templates/' } },
+]}>
+
+`juce::MathConstants<float>::halfPi` — статическая константа шаблона структуры: внутри записано `static constexpr FloatType pi = static_cast<FloatType> (3.141592653589793238L);` и так же для других констант. Аргумент `float` даёт π сразу в нужном типе, и в выражении с `float` нет перехода к `double`.
+
+</MarginNote>
+
+Аргументом бывает и тип функции:
+
+```cpp
+// LfoVisualizer.h
+using ReadAllLfoSamples = std::function<void(juce::AudioBuffer<float>&)>;
+```
+
+Запись `void(juce::AudioBuffer<float>&)` описывает функцию, которая ничего не возвращает и принимает ссылку на буфер. Так `LfoVisualizer` объявляет, какой вызов ему нужен от процессора, и лямбды из `PluginEditor` подходят под эту сигнатуру. `juce::dsp::Oscillator<float>` хранит генератор формы волны так же, в `std::function<float (float)>`. Поэтому лямбда `[](auto phase) { ... }` из `Tremolo.h` при создании осциллятора получает параметр типа `float`.
+
+### auto в параметрах {#auto-parameters}
+
+<MarginNote items={[
+  { label: 'Learn C++ → 11.8 Function templates with multiple template types', description: 'Раздел Abbreviated function templates: auto в параметрах (C++20).', target: { url: 'https://www.learncpp.com/cpp-tutorial/function-templates-with-multiple-template-types/' } },
+  { label: 'Кто владеет объектом → Передача владения процессору', description: 'Что addParameterToProcessor делает с объектом параметра.', target: { article: 'cpp-ownership', anchor: 'juce-handover' } },
+]}>
+
+Функция `addParameterToProcessor` из `Parameters.cpp` объявлена с параметром `auto parameter`. С C++20 это сокращённая запись шаблона функции (abbreviated function template): каждый параметр `auto` становится отдельным параметром шаблона. Её объявление равносильно такому:
+
+</MarginNote>
+
+```cpp
+template <typename Pointer>
+auto& addParameterToProcessor (juce::AudioProcessor& processor, Pointer parameter);
+```
+
+Три функции `create…Parameter` передают в неё `std::unique_ptr<juce::AudioParameterFloat>`, `std::unique_ptr<juce::AudioParameterBool>` и `std::unique_ptr<juce::AudioParameterChoice>`. Компилятор создаёт три версии функции, и тип результата `auto&` в каждой выводится из `return result;`: `AudioParameterFloat&`, `AudioParameterBool&`, `AudioParameterChoice&`. Лямбда с параметром `auto` (C++14) устроена так же: шаблоном становится её оператор вызова, о чём сказано в разделе [«Лямбды»](#lambdas).
+
+### Требования к типу {#template-requirements}
+
+<MarginNote items={[
+  { label: 'Learn C++ → 11.7 Function template instantiation', description: 'Раздел о том, что шаблон с неподходящим типом не компилируется.', target: { url: 'https://www.learncpp.com/cpp-tutorial/function-template-instantiation/' } },
+  { label: 'cppreference → Dependent names', description: 'Имена, смысл которых зависит от параметра шаблона.', target: { url: 'https://en.cppreference.com/w/cpp/language/dependent_name' } },
+]}>
+
+Шаблон не перечисляет, что должен уметь тип-аргумент. Требования следуют из тела: что тело вызывает у параметра, то у типа и должно быть. Компилятор проверяет это при инстанцировании, для конкретного типа:
+
+</MarginNote>
+
+```cpp
+// Шаблон требует от Meter метод getLevel(), но нигде этого не объявляет
+template <typename Meter>
+float readLevel (const Meter& meter)
+{
+    return meter.getLevel();
+}
+
+struct PeakMeter
+{
+    float getLevel() const { return peak; }
+
+    float peak = 0.5f;
+};
+
+auto level = readLevel (PeakMeter {});  // компилируется: метод есть
+auto wrong = readLevel (0.5f);          // ошибка: у float нет getLevel()
+```
+
+Пока шаблон не использован, выражение `meter.getLevel()` полностью не проверяется: тип `Meter` неизвестен, и смысл выражения зависит от него (dependent name). Ошибка из последней строки указывает на `return meter.getLevel();` внутри шаблона, а строки `in instantiation of` в сообщении компилятора ведут к вызову, который её вызвал. Это похоже на утиную типизацию Python, только несоответствие обнаруживается при сборке. В Go такие требования записывают интерфейсом. В C++20 для этого есть концепты (concepts), но код курса и сериализация JUCE их не используют. По этому правилу компилируется и `archive.getVersion()` в методе `serialise` из раздела [«Сохранение параметров»](#serialise).
+
 ### Вариативные шаблоны, CTAD и span {#variadic-ctad}
 
 Функция `juce::ignoreUnused`, о которой шла речь в первой части, написана как вариативный шаблон (C++11): пакет параметров `typename... Types` принимает любое число аргументов любых типов. Тело у неё пустое:
@@ -323,6 +473,159 @@ static_cast<Tremolo::LfoWaveform>(parameters.waveform.getIndex())
 ```
 
 Рядом в `Tremolo.h` объявлено и `enum class ApplySmoothing { no, yes };`. Это приём читаемости: вызов `setModulationRateHz(5.f, ApplySmoothing::no)` понятнее, чем `setModulationRateHz(5.f, false)`.
+
+## Сохранение параметров: шаблон serialise {#serialise}
+
+Хост сохраняет состояние плагина в проекте: вызывает `getStateInformation`, и `PluginProcessor` передаёт параметры в `JsonSerializer::serialize`. Тот записывает их в JSON такого вида (ожидаемый результат из теста `JsonSerializerTest.cpp`):
+
+```json
+{
+  "__version__": 1,
+  "pluginName": "Tremolo",
+  "modulationRateHz": 10.0,
+  "bypassed": true,
+  "modulationWaveform": "Triangle"
+}
+```
+
+Преобразование в JSON и обратно выполняет JUCE, но список полей ей сообщает сам тип. В `JsonSerializer.cpp` для этого объявлена структура `SerializableParameters`:
+
+```cpp
+// JsonSerializer.cpp
+struct SerializableParameters {
+  float rate;
+  bool bypassed;
+  juce::String waveform;
+
+  static constexpr auto marshallingVersion = 1;
+
+  template <typename Archive, typename T>
+  static void serialise(Archive& archive, T& p) {
+    using namespace juce;
+
+    if (archive.getVersion() != 1) {
+      return;
+    }
+
+    std::string pluginName = TREMOLO_PLUGIN_NAME;
+
+    archive(named("pluginName", pluginName));
+
+    if (pluginName != TREMOLO_PLUGIN_NAME) {
+      return;
+    }
+
+    archive(named("modulationRateHz", p.rate), named("bypassed", p.bypassed),
+            named("modulationWaveform", p.waveform));
+  }
+};
+```
+
+Отдельная структура нужна, потому что `Parameters` хранит ссылки на объекты параметров процессора, а в JSON попадают значения: число, флаг и название формы волны. Функция `from()` копирует их в `SerializableParameters`, и результат передаётся в JUCE:
+
+```cpp
+// JsonSerializer::serialize
+const auto json = juce::ToVar::convert(from(parameters));
+
+// JsonSerializer::deserialize
+const auto parsedParameters =
+    juce::FromVar::convert<SerializableParameters>(parsedResult);
+```
+
+### Кто вызывает serialise {#serialise-call}
+
+<MarginNote items={[
+  { label: 'JUCE → SerialisationTraits', description: 'Документация: что должно быть у типа, чтобы его сериализовать.', target: { url: 'https://docs.juce.com/master/structjuce_1_1SerialisationTraits.html' } },
+  { label: 'Learn C++ → 26.4 Class template specialization', description: 'Отдельная версия шаблона класса для конкретного типа.', target: { url: 'https://www.learncpp.com/cpp-tutorial/class-template-specialization/' } },
+]}>
+
+Ни одна строка плагина не вызывает `serialise` по имени: его вызывает JUCE внутри `ToVar::convert` и `FromVar::convert`. Документация `juce::SerialisationTraits` описывает договор: у типа есть константа `marshallingVersion` и либо один шаблон `serialise (Archive&, Item&)`, либо пара `load` и `save`. Договор можно выполнить и снаружи типа, специализацией шаблона `juce::SerialisationTraits<T>`; так JUCE сама поддерживает `std::vector`, `std::optional`, `std::string` и `juce::StringArray`.
+
+</MarginNote>
+
+Наличие этих членов JUCE проверяет при компиляции. Она пробует вызвать `T::serialise` с пробным архивом `juce::detail::DummyArchive` и через `if constexpr` (C++17) выбирает подходящую ветку; сам вызов при этом не выполняется. Если у типа нет ни `marshallingVersion`, ни функций сериализации, сборка остановится на `static_assert` с сообщением `No serialisation function found or marshallingVersion unset`.
+
+### Archive и T: одна функция для записи и чтения {#archive-types}
+
+JUCE подставляет параметры шаблона `serialise` по-разному в зависимости от направления. Типы и значения ниже проверены на JUCE 8.0.12.
+
+- Сохранение, `ToVar::convert`. `Archive` — `juce::ToVar::Visitor`, `T` — `const SerializableParameters`. `getVersion()` возвращает `marshallingVersion`, то есть 1; `archive(named(...))` добавляет свойство в объект JSON.
+- Загрузка, `FromVar::convert<SerializableParameters>`. `Archive` — `juce::FromVar::Visitor`, `T` — `SerializableParameters`. `getVersion()` возвращает значение `"__version__"` из JSON или `std::nullopt`; `archive(named(...))` читает свойство и записывает его в поле.
+- Проверка договора при компиляции. `Archive` — `juce::detail::DummyArchive`, `T` — `SerializableParameters`; вызов не выполняется.
+
+`Visitor` — закрытые вложенные классы `ToVar` и `FromVar`, в своём коде их имя не написать. Шаблону `serialise` имя и не нужно: он примет любой тип, у которого есть `getVersion()` и оператор вызова, по правилу из раздела [«Требования к типу»](#template-requirements).
+
+Параметр `T` нужен из-за константности. При сохранении JUCE передаёт объект по `const&`, ведь запись в JSON не должна его менять. При загрузке объект передаётся по обычной ссылке, чтобы архив заполнил поля. Параметр типа `SerializableParameters&` не принял бы константный объект, а шаблон по `T` принимает оба варианта, и одно тело описывает и запись, и чтение.
+
+<MarginNote items={[
+  { label: 'JUCE → juce_Serialisation.h 8.0.12', description: 'Исходник Named, named() и проверки договора сериализации.', target: { url: 'https://github.com/juce-framework/JUCE/blob/8.0.12/modules/juce_core/serialisation/juce_Serialisation.h' } },
+]}>
+
+`named` — шаблон функции JUCE с двумя перегрузками. Обе возвращают `Named<T>`: структуру из имени `std::string_view name` и ссылки `T& value`. Значение при этом не копируется.
+
+</MarginNote>
+
+```cpp
+// juce_Serialisation.h
+template <typename T> constexpr auto named (std::string_view c, T& t)       { return Named<T>       { c, t }; }
+template <typename T> constexpr auto named (std::string_view c, const T& t) { return Named<const T> { c, t }; }
+```
+
+При сохранении `p.rate` — поле константного объекта, и подходит вторая перегрузка: получается `Named<const float>`. При загрузке выбирается первая, `Named<float>`, и через ссылку архив записывает прочитанное число прямо в поле.
+
+### getVersion() {#get-version}
+
+<MarginNote items={[
+  { label: 'Learn C++ → 12.15 std::optional', description: 'Значение, которого может не быть.', target: { url: 'https://www.learncpp.com/cpp-tutorial/stdoptional/' } },
+  { label: 'cppreference → operator== (std::optional)', description: 'Раздел Compare an optional object with a value: пустой optional не равен никакому значению.', target: { url: 'https://en.cppreference.com/w/cpp/utility/optional/operator_cmp' } },
+]}>
+
+`getVersion()` — метод класса архива: оба `Visitor` объявляют `std::optional<int> getVersion() const`. При сохранении он возвращает версию, с которой пишется объект, то есть `marshallingVersion`, и `ToVar` записывает её в JSON как `"__version__": 1`. При загрузке метод возвращает значение `"__version__"` из JSON, а если такого свойства нет — `std::nullopt`.
+
+</MarginNote>
+
+`archive.getVersion() != 1` сравнивает `std::optional<int>` с числом. Результат `true`, если значения нет или оно отличается от 1, и тогда `serialise` выходит, не читая полей. `FromVar::convert` всё равно возвращает объект: его поля остаются нулевыми, `waveform` — пустой строкой. `deserialize` отклоняет такой результат, потому что пустого названия нет в списке форм волны, и параметры плагина не меняются.
+
+### archive(a, b, c) {#archive-call}
+
+<MarginNote items={[
+  { label: 'Learn C++ → 21.10 Overloading the parenthesis operator', description: 'Объект, который вызывают как функцию.', target: { url: 'https://www.learncpp.com/cpp-tutorial/overloading-the-parenthesis-operator/' } },
+  { label: 'cppreference → Fold expressions', description: 'Свёртка пакета параметров по оператору (C++17).', target: { url: 'https://en.cppreference.com/w/cpp/language/fold' } },
+  { label: 'cppreference → Forwarding references', description: 'Ссылка T&& в шаблоне, которая принимает и переменные, и временные объекты.', target: { url: 'https://en.cppreference.com/w/cpp/language/reference#Forwarding_references' } },
+]}>
+
+`archive(named(...))` вызывает объект как функцию. У обоих `Visitor` перегружен оператор вызова `operator()`, и он объявлен [вариативным шаблоном](#variadic-ctad):
+
+</MarginNote>
+
+```cpp
+// juce_JSONSerialisation.h, ToVar::Visitor и FromVar::Visitor
+template <typename... Ts>
+void operator() (Ts&&... ts)
+{
+    (visit (std::forward<Ts> (ts)), ...);
+}
+```
+
+- `typename... Ts` — пакет параметров: вызов с одним аргументом даёт один тип, с тремя — три.
+- `Ts&&` у параметра шаблона — пересылающая ссылка (forwarding reference). Она принимает и переменную, и временный объект. Результат `named(...)` временный, и обычная ссылка `Ts&` к нему не привязалась бы.
+- `(visit (std::forward<Ts> (ts)), ...)` — выражение свёртки (fold expression, C++17) по оператору «запятая». Компилятор разворачивает его в `visit(a), visit(b), visit(c)`, и вызовы выполняются слева направо. `std::forward` передаёт каждый аргумент дальше в том виде, в каком он пришёл: временный остаётся временным.
+
+`visit` перегружен для разных аргументов. Для `Named<T>` версия `ToVar` добавляет в объект JSON свойство с именем `name` и значением `value`. Версия `FromVar` ищет свойство с этим именем и записывает его в `value`; если свойства нет или его тип не подходит, загрузка помечается неудачной, и `convert` возвращает пустой `std::optional`. Поэтому `archive(a, b, c)` делает то же, что `archive(a); archive(b); archive(c);`, а свойства в JSON идут в порядке аргументов.
+
+Переменная `pluginName` работает в обе стороны. При сохранении архив пишет в JSON её начальное значение — название плагина из макроса `TREMOLO_PLUGIN_NAME`, который задаёт CMake ([«Макросы из CMake»](/cpp-basics/#cmake-macros)). При загрузке архив заменяет значение переменной прочитанным из JSON. Если состояние сохранил другой плагин, названия не совпадут, `serialise` выйдет до чтения параметров, и `deserialize` отклонит результат, как при чужой версии.
+
+<SelfCheck question="Почему serialise принимает T&, а не SerializableParameters&?">
+
+При сохранении JUCE передаёт объект как константный, и `T` выводится как `const SerializableParameters`. Ссылка `SerializableParameters&` к константному объекту не привязывается. Шаблон принимает и константный объект при записи, и изменяемый при чтении, поэтому одна функция описывает оба направления.
+
+</SelfCheck>
+
+<SelfCheck question="Что вернёт archive.getVersion() при загрузке JSON без свойства __version__, и что станет с параметрами плагина?">
+
+`std::nullopt`. Сравнение `std::nullopt != 1` истинно, и `serialise` выходит, не читая полей. `FromVar::convert` вернёт объект с нулевой частотой и пустым названием формы волны, `deserialize` не найдёт пустое название в списке и вернёт ошибку, не меняя параметры.
+
+</SelfCheck>
 
 ## Время жизни объектов и RAII {#lifetime}
 
@@ -518,9 +821,11 @@ lfoVisualizer{
 
 ## Источники {#sources}
 
-- <Source id="learncpp">Главы 13 «Introduction to program-defined types» и 14–15 «Introduction to classes»</Source> — классы, конструкторы, `const`-методы, `this`, статические члены; 24–25 — наследование и виртуальные функции; 11 и 13.13–13.14 — шаблоны; 21 — перегрузка операторов; 20.6–20.7 — лямбды; 22 — перемещение и умные указатели.
+- <Source id="learncpp">Главы 13 «Introduction to program-defined types» и 14–15 «Introduction to classes»</Source> — классы, конструкторы, `const`-методы, `this`, статические члены; 24–25 — наследование и виртуальные функции; 11.6–11.9, 13.13–13.15, 15.5, 26.2 и 26.4 — шаблоны, их инстанцирование, параметры-значения, псевдонимы и специализация; 12.15 — `std::optional`; 21 и 21.10 — перегрузка операторов и оператор вызова; 20.6–20.7 — лямбды; 22 — перемещение и умные указатели.
 - [cppreference. override specifier](https://en.cppreference.com/w/cpp/language/override), [explicit specifier](https://en.cppreference.com/w/cpp/language/explicit), [Destructors](https://en.cppreference.com/w/cpp/language/destructor), [Lambda expressions](https://en.cppreference.com/w/cpp/language/lambda), [std::span](https://en.cppreference.com/w/cpp/container/span) и [Class template argument deduction](https://en.cppreference.com/w/cpp/language/class_template_argument_deduction) — семантика и стандарты появления.
+- cppreference: [Dependent names](https://en.cppreference.com/w/cpp/language/dependent_name), [Parameter pack](https://en.cppreference.com/w/cpp/language/parameter_pack), [Fold expressions](https://en.cppreference.com/w/cpp/language/fold), [Forwarding references](https://en.cppreference.com/w/cpp/language/reference#Forwarding_references), [std::forward](https://en.cppreference.com/w/cpp/utility/forward) и [сравнение std::optional со значением](https://en.cppreference.com/w/cpp/utility/optional/operator_cmp) — правила, на которых построен вызов `archive(...)` и проверка версии.
+- [JUCE. SerialisationTraits](https://docs.juce.com/master/structjuce_1_1SerialisationTraits.html) — договор сериализации: `marshallingVersion`, `serialise` или `load` и `save`, `getVersion()`; исходники 8.0.12 [juce_Serialisation.h](https://github.com/juce-framework/JUCE/blob/8.0.12/modules/juce_core/serialisation/juce_Serialisation.h) (`Named`, `named`, `DummyArchive`, выбор функции через `if constexpr`) и [juce_JSONSerialisation.h](https://github.com/juce-framework/JUCE/blob/8.0.12/modules/juce_core/json/juce_JSONSerialisation.h) (`ToVar::Visitor`, `FromVar::Visitor`, их `operator()` и `getVersion()`); [juce_SmoothedValue.h](https://github.com/juce-framework/JUCE/blob/8.0.12/modules/juce_audio_basics/utilities/juce_SmoothedValue.h) — `ValueSmoothingTypes` и `LinearSmoothedValue`. Поведение `serialise` при сохранении, загрузке и отсутствии версии проверено тестовой программой с JUCE 8.0.12.
 - [Проект стандарта C++](https://eel.is/c++draft/): [dcl.ambig.res](https://eel.is/c++draft/dcl.ambig.res) — правило разбора, из которого следует «most vexing parse».
 - [GoogleTest. Primer](https://google.github.io/googletest/primer.html) — `TEST`, `TEST_F`, `EXPECT_*` и `ASSERT_*`.
 - [JUCE. juce_PlatformDefs.h 8.0.12](https://github.com/juce-framework/JUCE/blob/8.0.12/modules/juce_core/system/juce_PlatformDefs.h) — определения `jassert`, `JUCE_DECLARE_NON_COPYABLE`, `JUCE_DECLARE_NON_MOVEABLE` и `JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR`; [juce_AudioParameterFloat.h](https://github.com/juce-framework/JUCE/blob/8.0.12/modules/juce_audio_processors_headless/utilities/juce_AudioParameterFloat.h) и [juce_AudioParameterBool.h](https://github.com/juce-framework/JUCE/blob/8.0.12/modules/juce_audio_processors_headless/utilities/juce_AudioParameterBool.h) — операторы преобразования и присваивания.
-- [JUCE. tremolo-juce-course](https://github.com/juce-framework/tremolo-juce-course) — фрагменты кода из папки `complete`: `Tremolo.h`, `BypassTransitionSmoother.h`, `PluginProcessor.h`, `PluginProcessor.cpp`, `PluginEditor.h`, `PluginEditor.cpp`, `Parameters.h`, `SampleFifo.h`, `detail/StridedQueue.h`, `LfoVisualizer.cpp` и `test/source/BypassTransitionSmootherTest.cpp`.
+- [JUCE. tremolo-juce-course](https://github.com/juce-framework/tremolo-juce-course) — фрагменты кода из папки `complete`: `Tremolo.h`, `BypassTransitionSmoother.h`, `PluginProcessor.h`, `PluginProcessor.cpp`, `PluginEditor.h`, `PluginEditor.cpp`, `Parameters.h`, `Parameters.cpp`, `JsonSerializer.cpp`, `SampleFifo.h`, `detail/StridedQueue.h`, `LfoVisualizer.h`, `LfoVisualizer.cpp`, `test/source/BypassTransitionSmootherTest.cpp`, `test/source/JsonSerializerTest.cpp` и `test/source/detail/StridedQueueTest.cpp`.

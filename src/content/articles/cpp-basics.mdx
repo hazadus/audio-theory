@@ -234,6 +234,7 @@ const auto outputSample = modulationValue * inputSample;
 
 <MarginNote items={[
   { label: 'Learn C++ → 5.6 Constexpr variables', description: 'Константы времени компиляции и отличие от const.', target: { url: 'https://www.learncpp.com/cpp-tutorial/constexpr-variables/' } },
+  { label: 'C++ в плагине → Шаблон класса изнутри', description: 'Число как параметр шаблона: StridedQueue<float, pointsOnPath> и почему нужен constexpr.', target: { article: 'cpp-classes', anchor: 'class-template-body' } },
 ]}>
 
 `constexpr` (C++11) требует, чтобы значение было известно во время компиляции. Его можно использовать там, где нужна константа: размер массива, параметр шаблона. `constexpr` подразумевает `const`. Так записаны, например, `static constexpr auto modulationDepth = 0.4f;` в `Tremolo` и `constexpr auto versionHint = 1;` при создании параметров.
@@ -447,6 +448,7 @@ juce::AudioProcessorParameter* PluginProcessor::getBypassParameter() const noexc
 <MarginNote items={[
   { label: 'Learn C++ → 12.4 Lvalue references to const', description: 'Ссылка на const: чтение объекта без права изменения.', target: { url: 'https://www.learncpp.com/cpp-tutorial/lvalue-references-to-const/' } },
   { label: 'C++ в плагине → Статические члены и this', description: 'Почему serialize вызывается через имя класса, без объекта.', target: { article: 'cpp-classes', anchor: 'static-this' } },
+  { label: 'C++ в плагине → Сохранение параметров: шаблон serialise', description: 'Как JsonSerializer переводит параметры в JSON и обратно через ToVar и FromVar.', target: { article: 'cpp-classes', anchor: 'serialise' } },
 ]}>
 
 Ссылочный параметр устроен так же, только ссылка привязывается при вызове. Например, класс `JsonSerializer` сохраняет параметры в JSON. Его метод объявлен так: `static void serialize(const Parameters&, juce::OutputStream&);`. Тип `const Parameters&` говорит, что функция принимает ссылку на `Parameters` и не меняет объект через неё. Имя параметра в объявлении можно опустить; в определении в `JsonSerializer.cpp` он назван `parameters`.
