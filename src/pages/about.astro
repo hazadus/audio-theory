@@ -1,8 +1,12 @@
 ---
+import { getCollection } from 'astro:content';
 import Icon from '@/components/Icon.astro';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { withBase } from '@/lib/urls';
 import { siteConfig } from '@/site.config';
+
+// В служебной сборке (ARTICLES_DIR) основной статьи нет: ссылка на неё была бы битой.
+const hasCppBasics = (await getCollection('articles')).some(({ id }) => id === 'cpp-basics');
 ---
 
 <BaseLayout
@@ -38,8 +42,12 @@ import { siteConfig } from '@/site.config';
         оформления фреймворка, на котором построены плагины в статьях. Фрагменты кода из других
         источников, например учебного плагина из курса JUCE, приведены в оформлении оригинала. Чем
         отличаются два стиля, показано в статье{' '}
-        <a href={withBase('/cpp-basics/#code-style')}>«Основы C++ для JUCE»</a>, а полный свод
-        правил собран в файле{' '}
+        {hasCppBasics ? (
+          <a href={withBase('/cpp-basics/#code-style')}>«Основы C++ для JUCE»</a>
+        ) : (
+          '«Основы C++ для JUCE»'
+        )}
+        , а полный свод правил собран в файле{' '}
         <a href={`${siteConfig.repository}/blob/main/docs/authoring/cpp-styleguide.md`}>
           cpp-styleguide.md
         </a>{' '}
