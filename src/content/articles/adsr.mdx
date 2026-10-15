@@ -46,7 +46,7 @@ import Source from '@/components/Source.astro';
 import SynthChain from '@/components/SynthChain.astro';
 import Term from '@/components/Term.astro';
 
-[Источники голоса](/synth-oscillators/) выдают непрерывный сигнал: пока программа вызывает `nextSample`, <Term id="oscillator" firstMention>осцилляторы</Term> звучат с постоянным уровнем. Нота же начинается с нажатия клавиши и заканчивается после отпускания. Эту форму во времени задаёт <Term id="adsr" firstMention>огибающая ADSR</Term>, а применяет к сигналу <Term id="vca" firstMention>VCA</Term> — умножитель усиления. Здесь разбирается вторая часть одноголосного синтезатора: события ноты, четыре стадии огибающей, их расчёт по <Term id="sample" firstMention>отсчётам</Term>, щелчки на краях ноты и класс на C++20.
+[Источники голоса](/synth-oscillators/) выдают непрерывный сигнал: пока программа вызывает `nextSample`, <Term id="oscillator" firstMention>осцилляторы</Term> звучат с постоянным уровнем. Нота же начинается с нажатия клавиши и заканчивается после отпускания. Эту форму во времени задаёт <Term id="adsr" firstMention>огибающая ADSR</Term>, а применяет к сигналу <Term id="vca" firstMention>VCA</Term> — умножитель усиления. Здесь разбирается вторая часть одноголосного синтезатора: события ноты, четыре стадии огибающей, их расчёт по <Term id="sample" firstMention>отсчётам</Term>, щелчки на краях ноты и класс на C++23.
 
 ## Голос и огибающая {#voice}
 
@@ -361,12 +361,13 @@ $$
 
 ## Код на C++ {#cpp}
 
-Класс `AdsrEnvelope` повторяет устройство [осциллятора](/synth-oscillators/#cpp-oscillator): структура `Parameters` отдельно от изменяемого состояния — стадии, уровня, шага и счётчика. `prepare` задаёт частоту дискретизации, `setParameters` — времена и уровень, `noteOn` и `noteOff` переключают стадию, `nextSample` выдаёт следующее значение, `isActive` сообщает, нужен ли ещё голос. Используется только стандартная библиотека C++20.
+Класс `AdsrEnvelope` повторяет устройство [осциллятора](/synth-oscillators/#cpp-oscillator): структура `Parameters` отдельно от изменяемого состояния — стадии, уровня, шага и счётчика. `prepare` задаёт частоту дискретизации, `setParameters` — времена и уровень, `noteOn` и `noteOff` переключают стадию, `nextSample` выдаёт следующее значение, `isActive` сообщает, нужен ли ещё голос. Используется только стандартная библиотека C++23.
 
 ```cpp
 // Огибающая ADSR: параметры отдельно от состояния, стадии — счётчики отсчётов.
 #include <cassert>
 #include <cmath>
+#include <cstdint>
 
 enum class EnvelopeStage { idle, attack, decay, sustain, release };
 enum class Curve { linear, exponential };
@@ -419,21 +420,21 @@ public:
     }
 
 private:
-    static EnvelopeStage following (EnvelopeStage s) noexcept
-    {
-        return s == EnvelopeStage::attack ? EnvelopeStage::decay
-             : s == EnvelopeStage::decay  ? EnvelopeStage::sustain
-                                          : EnvelopeStage::idle;
-    }
-
-    void start (EnvelopeStage next) noexcept;
-
     Parameters params;
     double sampleRate = 48000.0;
     // Состояние: стадия, уровень и участок, который сейчас проходится.
     EnvelopeStage stage = EnvelopeStage::idle;
     double level = 0.0, target = 0.0, step = 0.0, aim = 0.0, coef = 0.0;
-    long long remaining = 0;
+    std::int64_t remaining = 0; // отсчётов до конца стадии
+
+    static EnvelopeStage following (EnvelopeStage current) noexcept
+    {
+        return current == EnvelopeStage::attack ? EnvelopeStage::decay
+             : current == EnvelopeStage::decay  ? EnvelopeStage::sustain
+                                                : EnvelopeStage::idle;
+    }
+
+    void start (EnvelopeStage next) noexcept;
 };
 ```
 
@@ -505,13 +506,16 @@ void startNote (VoiceSources& voice, AdsrEnvelope& envelope, int midiNote)
 {
     if (envelope.isActive()) // голос звучит: меняется шаг фазы, фаза продолжается
     {
-        const double f = noteFrequency (midiNote);
-        voice.osc1.setFrequency (f);
-        voice.osc2.setFrequency (f * std::exp2 (7.0 / 1200.0));
-        voice.sub.setFrequency (f / 2.0);
+        const double frequency = noteFrequency (midiNote);
+        voice.osc1.setFrequency (frequency);
+        voice.osc2.setFrequency (frequency * std::exp2 (7.0 / 1200.0));
+        voice.sub.setFrequency (frequency / 2.0);
     }
     else
+    {
         voice.noteOn (midiNote, 0, 7.0); // в тишине фазы можно сбросить
+    }
+
     envelope.noteOn();
 }
 
@@ -541,7 +545,9 @@ void renderBlock (VoiceSources& voice, const VoiceLevels& levels, AdsrEnvelope& 
             startNote (voice, envelope, currentNote);
         }
         else if (message.isNoteOff() && message.getNoteNumber() == currentNote)
+        {
             envelope.noteOff();
+        }
     }
     render (done, output.getNumSamples());
 }

@@ -6,6 +6,7 @@
 
 - [docs/spec.md](docs/spec.md) — согласованные требования к сайту, материалам и работе агента.
 - [docs/styleguide.md](docs/styleguide.md) — общие соглашения о коде, языке, конфигурации и коммитах.
+- [docs/authoring/cpp-styleguide.md](docs/authoring/cpp-styleguide.md) — стиль примеров на C++ в статьях.
 - [docs/overview.md](docs/overview.md) — обзор устройства: как работают отдельные части сайта.
 - [docs/techstack.md](docs/techstack.md) — используемые технологии и их назначение.
 - [docs/questions.md](docs/questions.md) — открытые вопросы.

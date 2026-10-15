@@ -85,17 +85,17 @@ import Term from '@/components/Term.astro';
 
 Порядок байтов и знак решают разные задачи: little-endian сообщает порядок частей числа, дополнительный код — смысл собранных битов. Если ошибиться только порядком и прочитать `00 FF` как `0x00FF`, получится +255.
 
-Следующие самостоятельные функции рассчитаны на C++17 или новее, восьмибитный байт и платформу с типами `std::uint8_t`, `std::uint32_t`, `std::int32_t`. Указатель `p` должен указывать минимум на два доступных байта. Сборка идёт через беззнаковый тип, затем знак учитывается вычитанием: все промежуточные значения помещаются в типы.
+Следующие самостоятельные функции написаны на C++23 и рассчитаны на восьмибитный байт и платформу с типами `std::uint8_t`, `std::uint32_t`, `std::int32_t`. Указатель `bytes` должен указывать минимум на два доступных байта. Сборка идёт через беззнаковый тип, затем знак учитывается вычитанием: все промежуточные значения помещаются в типы.
 
 ```cpp
 #include <cstdint>
 
-std::int32_t readI16LE (const std::uint8_t* p)
+std::int32_t readI16LE (const std::uint8_t* bytes)
 {
-    const std::uint32_t u = std::uint32_t (p[0])
-                          | (std::uint32_t (p[1]) << 8);
-    return u < 0x8000u ? std::int32_t (u)
-                       : std::int32_t (u) - 65536;
+    const std::uint32_t u = static_cast<std::uint32_t> (bytes[0])
+                          | (static_cast<std::uint32_t> (bytes[1]) << 8);
+    return u < 0x8000u ? static_cast<std::int32_t> (u)
+                       : static_cast<std::int32_t> (u) - 65536;
 }
 ```
 
@@ -107,16 +107,16 @@ std::int32_t readI16LE (const std::uint8_t* p)
 
 <Term id="sign-extension" firstMention define>Расширение знака</Term> заполняет новые старшие биты копиями исходного знакового бита. Число −1 переходит из `FF FF FF` в `FF FF FF FF`; минимум −8388608 — из `80 00 00` в `FF 80 00 00`. Здесь числа показаны старшими байтами слева. Дополнение нулями вместо единиц изменило бы их значения на +16777215 и +8388608.
 
-Следующая функция вычисляет правильное знаковое значение вычитанием $2^{24}$. Результат в `int32_t` уже имеет нужное расширенное представление. У `p` должны быть три доступных байта.
+Следующая функция вычисляет правильное знаковое значение вычитанием $2^{24}$. Результат в `int32_t` уже имеет нужное расширенное представление. У `bytes` должны быть три доступных байта.
 
 ```cpp
-std::int32_t readI24LE (const std::uint8_t* p)
+std::int32_t readI24LE (const std::uint8_t* bytes)
 {
-    const std::uint32_t u = std::uint32_t (p[0])
-                          | (std::uint32_t (p[1]) << 8)
-                          | (std::uint32_t (p[2]) << 16);
-    return (u & 0x800000u) == 0 ? std::int32_t (u)
-                              : std::int32_t (u) - 16777216;
+    const std::uint32_t u = static_cast<std::uint32_t> (bytes[0])
+                          | (static_cast<std::uint32_t> (bytes[1]) << 8)
+                          | (static_cast<std::uint32_t> (bytes[2]) << 16);
+    return (u & 0x800000u) == 0 ? static_cast<std::int32_t> (u)
+                                : static_cast<std::int32_t> (u) - 16777216;
 }
 ```
 
@@ -220,11 +220,11 @@ std::int32_t floatToPcm (float x, int bits)
 {
     if (bits != 8 && bits != 16 && bits != 24 && bits != 32)
         throw std::invalid_argument ("Недопустимая разрядность");
-    if (!std::isfinite (x))
+    if (! std::isfinite (x))
         throw std::invalid_argument ("Нужен конечный отсчёт");
 
     const double scale = std::ldexp (1.0, bits - 1);
-    const double bounded = std::clamp (double (x), -1.0, 1.0);
+    const double bounded = std::clamp (static_cast<double> (x), -1.0, 1.0);
     const double rounded = std::round (bounded * scale);
     return static_cast<std::int32_t> (
         std::clamp (rounded, -scale, scale - 1.0));
@@ -233,20 +233,21 @@ std::int32_t floatToPcm (float x, int bits)
 
 При 16 битах: `floatToPcm (0.5f, 16)` → 16384; `(1.0f, 16)` и `(1.5f, 16)` → 32767; `(−1.5f, 16)` → −32768. При 8 битах выход ещё **центрированный**: к нему нужно прибавить 128 для байта WAV. При отказе функция бросает исключение; такая политика подходит для учебного кодера вне <Term id="audio-callback" firstMention>аудиоколбэка</Term>. В обработчике реального времени проверку и обработку ошибок организуют заранее, без исключений в критичном пути.
 
-Чтобы записать целое обратно в байты, выделим младшие части беззнакового представления. Ниже `q` должен быть допустимым центрированным кодом, `p` — указывать на доступные `bits/8` байтов. Функция проверяет диапазон, но не может проверить длину памяти за указателем.
+Чтобы записать целое обратно в байты, выделим младшие части беззнакового представления. Ниже `q` должен быть допустимым центрированным кодом, `bytes` — указывать на доступные `bits/8` байтов. Функция проверяет диапазон, но не может проверить длину памяти за указателем.
 
 ```cpp
-void writePcmLE (std::int32_t q, int bits, std::uint8_t* p)
+void writePcmLE (std::int32_t q, int bits, std::uint8_t* bytes)
 {
     if (bits != 8 && bits != 16 && bits != 24 && bits != 32)
         throw std::invalid_argument ("Недопустимая разрядность");
+
     const double scale = std::ldexp (1.0, bits - 1);
-    if (double (q) < -scale || double (q) > scale - 1.0)
+    if (static_cast<double> (q) < -scale || static_cast<double> (q) > scale - 1.0)
         throw std::out_of_range ("Код вне диапазона");
-    const std::uint32_t u = bits == 8
-        ? std::uint32_t (q + 128) : std::uint32_t (q);
+
+    const auto u = static_cast<std::uint32_t> (bits == 8 ? q + 128 : q);
     for (int i = 0; i < bits / 8; ++i)
-        p[i] = static_cast<std::uint8_t> ((u >> (8 * i)) & 0xFFu);
+        bytes[i] = static_cast<std::uint8_t> ((u >> (8 * i)) & 0xffu);
 }
 ```
 
@@ -281,7 +282,7 @@ for (std::int32_t q = -32768; q <= 32767; ++q)
 
 ## Пример с juce::AudioData {#juce-audiodata}
 
-`juce::AudioData::Pointer` описывает формат отсчёта, порядок байтов, раскладку каналов и возможность записи. Ниже функции для одного 24-битного отсчёта. Пример рассчитан на **JUCE 9.0.3**, C++17 или новее и модуль `juce_audio_basics`; нужны три доступных байта входа/выхода. `NonInterleaved` задаёт соседние отсчёты одного канала. Здесь преобразуется всего один, без разбора стереокадров.
+`juce::AudioData::Pointer` описывает формат отсчёта, порядок байтов, раскладку каналов и возможность записи. Ниже функции для одного 24-битного отсчёта. Пример рассчитан на **JUCE 9.0.3**, C++23 и модуль `juce_audio_basics`; нужны три доступных байта входа/выхода. `NonInterleaved` задаёт соседние отсчёты одного канала. Здесь преобразуется всего один, без разбора стереокадров.
 
 ```cpp
 #include <juce_audio_basics/juce_audio_basics.h>
@@ -293,16 +294,17 @@ using Pcm24Out = juce::AudioData::Pointer<
     juce::AudioData::Int24, juce::AudioData::LittleEndian,
     juce::AudioData::NonInterleaved, juce::AudioData::NonConst>;
 
-float readWithJuce (const std::uint8_t* p)
+float readWithJuce (const std::uint8_t* bytes)
 {
-    return Pcm24In (p).getAsFloat();
+    return Pcm24In (bytes).getAsFloat();
 }
 
-void writeWithJuce (float x, std::uint8_t* p)
+void writeWithJuce (float x, std::uint8_t* bytes)
 {
-    if (!std::isfinite (x))
+    if (! std::isfinite (x))
         throw std::invalid_argument ("Нужен конечный отсчёт");
-    Pcm24Out (p).setAsFloat (std::clamp (x, -1.0f, 1.0f));
+
+    Pcm24Out (bytes).setAsFloat (std::clamp (x, -1.0f, 1.0f));
 }
 ```
 

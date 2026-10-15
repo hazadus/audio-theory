@@ -230,21 +230,21 @@ $$
 ```cpp
 using Bytes = std::vector<std::uint8_t>;
 
-std::uint16_t readU16 (const Bytes& b, std::size_t pos)
+std::uint16_t readU16 (const Bytes& bytes, std::size_t pos)
 {
-    return static_cast<std::uint16_t> (b.at (pos) | (b.at (pos + 1) << 8));
+    return static_cast<std::uint16_t> (bytes.at (pos) | (bytes.at (pos + 1) << 8));
 }
 
-std::uint32_t readU32 (const Bytes& b, std::size_t pos)
+std::uint32_t readU32 (const Bytes& bytes, std::size_t pos)
 {
-    return readU16 (b, pos) | (std::uint32_t (readU16 (b, pos + 2)) << 16);
+    return readU16 (bytes, pos) | (static_cast<std::uint32_t> (readU16 (bytes, pos + 2)) << 16);
 }
 
-std::string readId (const Bytes& b, std::size_t pos)
+std::string readId (const Bytes& bytes, std::size_t pos)
 {
     std::string id;
     for (std::size_t i = 0; i < 4; ++i)
-        id += static_cast<char> (b.at (pos + i));
+        id += static_cast<char> (bytes.at (pos + i));
     return id;
 }
 ```
@@ -260,19 +260,20 @@ struct WavInfo
     bool hasFmt = false, hasData = false;
 };
 
-WavInfo parseWav (const Bytes& b)
+WavInfo parseWav (const Bytes& bytes)
 {
-    if (b.size() < 12 || readId (b, 0) != "RIFF" || readId (b, 8) != "WAVE")
+    if (bytes.size() < 12 || readId (bytes, 0) != "RIFF" || readId (bytes, 8) != "WAVE")
         throw std::runtime_error ("не RIFF/WAVE");
 
-    const std::size_t end = std::min<std::size_t> (b.size(), 8 + std::size_t (readU32 (b, 4)));
+    const std::size_t riffEnd = 8 + static_cast<std::size_t> (readU32 (bytes, 4));
+    const std::size_t end = std::min (bytes.size(), riffEnd);
     WavInfo info;
     std::size_t pos = 12;
 
     while (pos + 8 <= end)
     {
-        const std::string id = readId (b, pos);
-        const std::size_t size = readU32 (b, pos + 4);
+        const std::string id = readId (bytes, pos);
+        const std::size_t size = readU32 (bytes, pos + 4);
         const std::size_t body = pos + 8;
 
         if (size > end - body)
@@ -280,12 +281,12 @@ WavInfo parseWav (const Bytes& b)
 
         if (id == "fmt " && size >= 16)
         {
-            info.format = readU16 (b, body);
-            info.channels = readU16 (b, body + 2);
-            info.sampleRate = readU32 (b, body + 4);
-            info.byteRate = readU32 (b, body + 8);
-            info.blockAlign = readU16 (b, body + 12);
-            info.bits = readU16 (b, body + 14);
+            info.format = readU16 (bytes, body);
+            info.channels = readU16 (bytes, body + 2);
+            info.sampleRate = readU32 (bytes, body + 4);
+            info.byteRate = readU32 (bytes, body + 8);
+            info.blockAlign = readU16 (bytes, body + 12);
+            info.bits = readU16 (bytes, body + 14);
             info.hasFmt = true;
         }
         else if (id == "data")
@@ -341,16 +342,16 @@ const WavInfo info = parseWav (bytes);
 Запись идёт в обратном порядке: сначала вычисляются размеры, затем байты укладываются по [таблице 1](#fmt-fields). Минимальный файл — одна секунда цифровой тишины, 16 бит, <Term id="mono" firstMention>моно</Term>, 48 000 Гц. Кадр занимает 2 байта, данные — $48\,000 \cdot 2 = 96\,000$ байт. Размер в заголовке RIFF складывается из `WAVE` и двух чанков с их заголовками: $4 + (8 + 16) + (8 + 96\,000) = 96\,036$.
 
 ```cpp
-void putU16 (Bytes& out, std::uint16_t v)
+void putU16 (Bytes& out, std::uint16_t value)
 {
-    out.push_back (v & 0xFF);
-    out.push_back (v >> 8);
+    out.push_back (static_cast<std::uint8_t> (value & 0xffu));
+    out.push_back (static_cast<std::uint8_t> (value >> 8));
 }
 
-void putU32 (Bytes& out, std::uint32_t v)
+void putU32 (Bytes& out, std::uint32_t value)
 {
-    putU16 (out, v & 0xFFFF);
-    putU16 (out, v >> 16);
+    putU16 (out, static_cast<std::uint16_t> (value & 0xffffu));
+    putU16 (out, static_cast<std::uint16_t> (value >> 16));
 }
 
 void putId (Bytes& out, const char* id)
@@ -362,7 +363,7 @@ void writeSilence()
 {
     const std::uint32_t sampleRate = 48000;
     const std::uint16_t channels = 1, bits = 16;
-    const std::uint16_t blockAlign = channels * bits / 8;  // 2 байта на кадр
+    const auto blockAlign = static_cast<std::uint16_t> (channels * bits / 8); // 2 байта на кадр
     const std::uint32_t dataSize = sampleRate * blockAlign; // 96 000 байт = 1 с
 
     Bytes out;
@@ -384,7 +385,8 @@ void writeSilence()
     out.resize (out.size() + dataSize, 0);                   // тишина: все отсчёты 0
 
     std::ofstream ("silence.wav", std::ios::binary)
-        .write (reinterpret_cast<const char*> (out.data()), std::streamsize (out.size()));
+        .write (reinterpret_cast<const char*> (out.data()),
+                static_cast<std::streamsize> (out.size()));
 }
 ```
 
@@ -424,8 +426,8 @@ if (reader != nullptr)
     const auto bits = reader->bitsPerSample;       // 16
     const auto frames = reader->lengthInSamples;   // 4 кадра
 
-    juce::AudioBuffer<float> buffer ((int) channels, (int) frames);
-    reader->read (&buffer, 0, (int) frames, 0, true, true);
+    juce::AudioBuffer<float> buffer (static_cast<int> (channels), static_cast<int> (frames));
+    reader->read (&buffer, 0, static_cast<int> (frames), 0, true, true);
 }
 ```
 

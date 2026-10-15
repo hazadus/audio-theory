@@ -47,7 +47,7 @@ import Source from '@/components/Source.astro';
 import SynthChain from '@/components/SynthChain.astro';
 import Term from '@/components/Term.astro';
 
-[Источники голоса](/synth-oscillators/) дают пилу, прямоугольник и шум — сигналы, в которых много высоких частот. [Огибающая ADSR](/adsr/) меняет громкость ноты во времени, но не её <Term id="timbre" firstMention>тембр</Term>. Тембр меняет <Term id="low-pass-filter" firstMention>фильтр нижних частот</Term>: он пропускает низкие частоты и ослабляет высокие. Здесь разбирается его простейший цифровой вариант — <Term id="one-pole-filter" firstMention>однополюсный фильтр</Term>, которому на каждом <Term id="sample" firstMention>отсчёте</Term> нужен только собственный предыдущий выход. Третья часть одноголосного синтезатора: формула фильтра, частота среза и коэффициент, реакция на скачок, звучание и класс на C++20.
+[Источники голоса](/synth-oscillators/) дают пилу, прямоугольник и шум — сигналы, в которых много высоких частот. [Огибающая ADSR](/adsr/) меняет громкость ноты во времени, но не её <Term id="timbre" firstMention>тембр</Term>. Тембр меняет <Term id="low-pass-filter" firstMention>фильтр нижних частот</Term>: он пропускает низкие частоты и ослабляет высокие. Здесь разбирается его простейший цифровой вариант — <Term id="one-pole-filter" firstMention>однополюсный фильтр</Term>, которому на каждом <Term id="sample" firstMention>отсчёте</Term> нужен только собственный предыдущий выход. Третья часть одноголосного синтезатора: формула фильтра, частота среза и коэффициент, реакция на скачок, звучание и класс на C++23.
 
 ## Голос и фильтр {#voice}
 
@@ -284,7 +284,7 @@ $$
 
 ## Код на C++ {#cpp}
 
-Класс `LowPassFilter` устроен как [осциллятор](/synth-oscillators/#cpp-oscillator) и [огибающая](/adsr/#cpp) серии: параметр — коэффициент `a` — хранится отдельно от состояния `previous`, то есть $y[n-1]$. `prepare` задаёт частоту дискретизации и сбрасывает состояние, `setCutoff` пересчитывает коэффициент по формуле (3), `reset` присваивает состоянию начальное значение, `processSample` вычисляет один отсчёт по формуле (1). Используется только стандартная библиотека C++20.
+Класс `LowPassFilter` устроен как [осциллятор](/synth-oscillators/#cpp-oscillator) и [огибающая](/adsr/#cpp) серии: параметр — коэффициент `a` — хранится отдельно от состояния `previous`, то есть $y[n-1]$. `prepare` задаёт частоту дискретизации и сбрасывает состояние, `setCutoff` пересчитывает коэффициент по формуле (3), `reset` присваивает состоянию начальное значение, `processSample` вычисляет один отсчёт по формуле (1). Используется только стандартная библиотека C++23.
 
 ```cpp
 // Однополюсный фильтр нижних частот: коэффициент a отдельно от состояния y[n-1].
@@ -321,7 +321,8 @@ public:
     }
 
 private:
-    double sampleRate = 48000.0, cutoff = 1000.0;
+    double sampleRate = 48000.0;
+    double cutoff = 1000.0; // Гц
     double a = 0.0;
     double previous = 0.0;
 };
@@ -375,7 +376,7 @@ float nextVoiceSample (VoiceSources& voice, const VoiceLevels& levels,
 // Готовый фильтр первого порядка JUCE: один канал, нижние частоты, 1000 Гц.
 #include <juce_dsp/juce_dsp.h>
 
-juce::dsp::FirstOrderTPTFilter<float> tpt;
+juce::dsp::FirstOrderTPTFilter<float> tpt; // поле процессора
 
 void prepareFilter (double sampleRate, int maximumBlockSize)
 {

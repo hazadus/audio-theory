@@ -1,6 +1,7 @@
 ---
 import Icon from '@/components/Icon.astro';
 import BaseLayout from '@/layouts/BaseLayout.astro';
+import { withBase } from '@/lib/urls';
 import { siteConfig } from '@/site.config';
 ---
 
@@ -28,6 +29,21 @@ import { siteConfig } from '@/site.config';
       <p>
         Черновики статей и визуализаций готовят агенты по установленным правилам. Каждый материал
         перед публикацией читает и проверяет автор. Сайт статический и размещён на GitHub Pages.
+      </p>
+
+      <h2 id="code-style">Стиль кода</h2>
+      <p>
+        Примеры на C++ написаны на C++23 и следуют{' '}
+        <a href="https://juce.com/blog/coding-standards/">JUCE Coding Standards</a> — правилам
+        оформления фреймворка, на котором построены плагины в статьях. Фрагменты кода из других
+        источников, например учебного плагина из курса JUCE, приведены в оформлении оригинала. Чем
+        отличаются два стиля, показано в статье{' '}
+        <a href={withBase('/cpp-basics/#code-style')}>«Основы C++ для JUCE»</a>, а полный свод
+        правил собран в файле{' '}
+        <a href={`${siteConfig.repository}/blob/main/docs/authoring/cpp-styleguide.md`}>
+          cpp-styleguide.md
+        </a>{' '}
+        репозитория проекта.
       </p>
 
       <h2 id="propose">Как предложить тему или исправление</h2>

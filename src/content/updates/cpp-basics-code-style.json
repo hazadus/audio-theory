@@ -1,0 +1,13 @@
+{
+  "id": "cpp-basics-code-style",
+  "date": "2026-10-15",
+  "order": 1,
+  "type": "updated",
+  "article": "cpp-basics",
+  "items": [
+    {
+      "text": "Раздел о стиле примеров на C++ и его отличии от фрагментов учебного плагина",
+      "target": { "article": "cpp-basics", "anchor": "code-style" }
+    }
+  ]
+}

@@ -144,13 +144,13 @@ PluginEditor::PluginEditor(PluginProcessor& p) : AudioProcessorEditor(&p), /* ..
 Если бы этот конструктор не был помечен `explicit`, следующий код компилировался бы без ошибок. Функция `inspect` придумана для примера:
 
 ```cpp
-void inspect(const BypassTransitionSmoother& smoother);
+void inspect (const BypassTransitionSmoother& smoother);
 
-inspect(0.5);                             // из 0.5 создаётся временный BypassTransitionSmoother
+inspect (0.5);                            // из 0.5 создаётся временный BypassTransitionSmoother
 BypassTransitionSmoother smoother = 0.5;  // то же при инициализации через =
 ```
 
-Число `0.5` молча превратилось бы в объект с переходом длиной полсекунды, хотя по вызову `inspect(0.5)` этого не видно. С `explicit` обе строки — ошибка компиляции, и объект создаётся только явно: `inspect(BypassTransitionSmoother{0.5})`. Так же объявлены `explicit Parameters(juce::AudioProcessor&)` и `explicit PluginEditor(PluginProcessor&)`: без `explicit` процессор можно было бы передать в функцию, которая ждёт `const PluginEditor&`, и компилятор создал бы для этого вызова временный редактор.
+Число `0.5` молча превратилось бы в объект с переходом длиной полсекунды, хотя по вызову `inspect (0.5)` этого не видно. С `explicit` обе строки — ошибка компиляции, и объект создаётся только явно: `inspect(BypassTransitionSmoother{0.5})`. Так же объявлены `explicit Parameters(juce::AudioProcessor&)` и `explicit PluginEditor(PluginProcessor&)`: без `explicit` процессор можно было бы передать в функцию, которая ждёт `const PluginEditor&`, и компилятор создал бы для этого вызова временный редактор.
 
 Конструктор с несколькими параметрами тоже может участвовать в неявном преобразовании, но только из списка в фигурных скобках: вызов `f({a, b})` создаст объект параметра из `a` и `b`. `explicit` запрещает и этот случай. Обычно его ставят у всех конструкторов, которые можно вызвать с одним аргументом, если неявное преобразование не нужно.
 
@@ -257,14 +257,15 @@ class StridedQueue { /* ... */ };
 Для функций параметры шаблона обычно выводятся из аргументов:
 
 ```cpp
-template <typename T>
-T twice(T value) {
-  return value + value;
+template <typename Number>
+Number twice (Number value)
+{
+    return value + value;
 }
 
-auto integer = twice(3);          // T выводится как int
-auto sample = twice(0.5f);        // T выводится как float
-auto precise = twice<double>(3);  // T задан явно, аргумент преобразуется в double
+auto integer = twice (3);          // Number выводится как int
+auto sample = twice (0.5f);        // Number выводится как float
+auto precise = twice<double> (3);  // Number задан явно, аргумент преобразуется в double
 ```
 
 ### Вариативные шаблоны, CTAD и span {#variadic-ctad}

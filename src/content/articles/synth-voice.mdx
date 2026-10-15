@@ -44,7 +44,7 @@ import SynthChain from '@/components/SynthChain.astro';
 import SynthVoiceDemo from '@/components/SynthVoiceDemo.astro';
 import Term from '@/components/Term.astro';
 
-Три предыдущие статьи серии построили части одноголосного синтезатора по отдельности: [источники и микшер](/synth-oscillators/), [огибающую ADSR с VCA](/adsr/) и [фильтр нижних частот](/one-pole-filter/). Здесь они собираются в <Term id="synth-voice" firstMention>голос синтезатора</Term> — объект, который по событиям ноты выдаёт <Term id="sample" firstMention>отсчёты</Term>. Голос рендерит одну ноту в буфер JUCE, консольная программа записывает буфер в <Term id="wav-file" firstMention>WAV</Term>, а проверки подтверждают, что файл получился ожидаемым. Код на C++20 и JUCE 9.0.3 разбит на блоки по разделам; вместе с кодом предыдущих статей они собираются в работающий проект.
+Три предыдущие статьи серии построили части одноголосного синтезатора по отдельности: [источники и микшер](/synth-oscillators/), [огибающую ADSR с VCA](/adsr/) и [фильтр нижних частот](/one-pole-filter/). Здесь они собираются в <Term id="synth-voice" firstMention>голос синтезатора</Term> — объект, который по событиям ноты выдаёт <Term id="sample" firstMention>отсчёты</Term>. Голос рендерит одну ноту в буфер JUCE, консольная программа записывает буфер в <Term id="wav-file" firstMention>WAV</Term>, а проверки подтверждают, что файл получился ожидаемым. Код на C++23 и JUCE 9.0.3 разбит на блоки по разделам; вместе с кодом предыдущих статей они собираются в работающий проект.
 
 ## Цепочка голоса {#chain}
 
@@ -207,21 +207,22 @@ public:
     }
 
     // Вызывать между нотами: частоту осцилляторов задаёт noteOn.
-    void setParameters (const VoiceParameters& p) noexcept
+    void setParameters (const VoiceParameters& newParameters) noexcept
     {
-        params = p;
-        osc1.setWaveform (p.shape1);
-        osc2.setWaveform (p.shape2);
-        sub.setWaveform (p.subShape);
-        noise.setColour (p.noiseColour);
-        filter.setCutoff (p.cutoff);
-        envelope.setParameters (p.envelope);
+        params = newParameters;
+        osc1.setWaveform (params.shape1);
+        osc2.setWaveform (params.shape2);
+        sub.setWaveform (params.subShape);
+        noise.setColour (params.noiseColour);
+        filter.setCutoff (params.cutoff);
+        envelope.setParameters (params.envelope);
     }
 
     void noteOn (double frequency) noexcept
     {
         osc1.setFrequency (frequency);
-        osc2.setFrequency (frequency * std::exp2 ((100.0 * params.interval + params.detune) / 1200.0));
+        const double cents = 100.0 * params.interval + params.detune;
+        osc2.setFrequency (frequency * std::exp2 (cents / 1200.0));
         sub.setFrequency (frequency / 2.0);
         if (! envelope.isActive()) // голос молчал: начать с чистого состояния
         {
@@ -237,8 +238,10 @@ public:
 
     double nextSample() noexcept
     {
-        const double mixed = params.level1 * osc1.nextSample() + params.level2 * osc2.nextSample()
-                           + params.subLevel * sub.nextSample() + params.noiseLevel * noise.nextSample();
+        const double mixed = params.level1 * osc1.nextSample()
+                           + params.level2 * osc2.nextSample()
+                           + params.subLevel * sub.nextSample()
+                           + params.noiseLevel * noise.nextSample();
         return filter.processSample (mixed) * envelope.nextSample(); // фильтр, затем VCA
     }
 
@@ -291,14 +294,15 @@ $$
 #include "SynthVoice.h"
 #include <juce_audio_basics/juce_audio_basics.h>
 
-juce::AudioBuffer<float> renderNote (SynthVoice& voice, const VoiceParameters& p,
+juce::AudioBuffer<float> renderNote (SynthVoice& voice, const VoiceParameters& parameters,
                                      double frequency, double noteSeconds, double sampleRate)
 {
+    const double releaseSeconds = parameters.envelope.release;
     const auto noteOffAt = static_cast<int> (std::llround (noteSeconds * sampleRate));
-    const auto maxLength = noteOffAt + static_cast<int> (std::llround (p.envelope.release * sampleRate));
+    const auto maxLength = noteOffAt + static_cast<int> (std::llround (releaseSeconds * sampleRate));
     juce::AudioBuffer<float> buffer (1, maxLength); // один канал: голос моно
 
-    voice.setParameters (p);
+    voice.setParameters (parameters);
     voice.reset();
     voice.noteOn (frequency);
     int length = 0;
@@ -454,7 +458,8 @@ cmake --build build
 // Main.cpp: проверки буфера и файла после записи.
 #include <cstdio>
 
-bool checkRender (const juce::AudioBuffer<float>& buffer, const juce::File& file, int expectedLength)
+bool checkRender (const juce::AudioBuffer<float>& buffer, const juce::File& file,
+                  int expectedLength)
 {
     const int length = buffer.getNumSamples();
     const float peak = buffer.getMagnitude (0, 0, length);
@@ -489,7 +494,8 @@ int main()
                        second.getReadPointer (0));
 
     const auto file = juce::File::getCurrentWorkingDirectory().getChildFile ("note.wav");
-    const int expected = static_cast<int> (std::llround ((noteSeconds + params.envelope.release) * sampleRate));
+    const double totalSeconds = noteSeconds + params.envelope.release;
+    const auto expected = static_cast<int> (std::llround (totalSeconds * sampleRate));
     const bool ok = writeWav (first, sampleRate, 24, file) && checkRender (first, file, expected);
     std::printf ("%s, repeat %s\n", ok ? "ok" : "FAILED", same ? "identical" : "DIFFERENT");
     return ok && same ? 0 : 1;

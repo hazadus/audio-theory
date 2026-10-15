@@ -214,8 +214,7 @@ public:
         for (int frame = 0; frame < buffer.getNumSamples(); ++frame)
         {
             const double modulation = lfo.processSample (0.0);
-            const float gain = static_cast<float>
-                (1.0 - 0.5 * depth * (1.0 + modulation));
+            const auto gain = static_cast<float> (1.0 - 0.5 * depth * (1.0 + modulation));
             for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
                 buffer.getWritePointer (channel)[frame] *= gain;
         }

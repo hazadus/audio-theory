@@ -602,16 +602,16 @@ $$
 ```cpp
 #include <complex>
 
-std::complex<float> z{3.0f, 4.0f};      // 3 + j4
-std::complex<float> w{1.0f, -2.0f};     // 1 − j2
-const std::complex<float> j{0.0f, 1.0f};
+const std::complex<float> z { 3.0f, 4.0f };  // 3 + j4
+const std::complex<float> w { 1.0f, -2.0f }; // 1 − j2
+const std::complex<float> j { 0.0f, 1.0f };
 
-auto sum = z + w;                       // (4, 2)
-auto turned = j * z;                    // (−4, 3): поворот на π/2
-float r = std::abs(z);                  // 5
-float theta = std::arg(z);              // ≈ 0.9273 рад
-float power = std::norm(z);             // 25 = 3² + 4², без корня
-auto back = std::polar(r, theta);       // снова ≈ (3, 4)
+const auto sum = z + w;                      // (4, 2)
+const auto turned = j * z;                   // (−4, 3): поворот на π/2
+const float r = std::abs (z);                // 5
+const float theta = std::arg (z);            // ≈ 0.9273 рад
+const float power = std::norm (z);           // 25 = 3² + 4², без корня
+const auto back = std::polar (r, theta);     // снова ≈ (3, 4)
 ```
 
 ### Формула Эйлера {#euler-formula}

@@ -49,7 +49,7 @@ import SelfCheck from '@/components/SelfCheck.astro';
 import Source from '@/components/Source.astro';
 import Term from '@/components/Term.astro';
 
-<Term id="delay-line" firstMention define>Линия задержки</Term> хранит последние <Term id="sample" firstMention>отсчёты</Term> сигнала и выдаёт их на выход через заданное время. На ней построены [эхо и повторы](/spatial-audio/#delay), хорус, фленжер и реверберация ([Reiss, гл. 3](#sources)), а в плагинах — задержка необработанного сигнала при [компенсации задержки](/dry-wet-bypass/#latency-compensation). Здесь разобрано, как устроена линия задержки в программе: перевод времени в отсчёты, кольцевой буфер и его размер, эхо с обратной связью, гребенчатый фильтр при короткой задержке, задержка на дробное число отсчётов, плавное изменение времени и класс на C++20 в сравнении с `juce::dsp::DelayLine`.
+<Term id="delay-line" firstMention define>Линия задержки</Term> хранит последние <Term id="sample" firstMention>отсчёты</Term> сигнала и выдаёт их на выход через заданное время. На ней построены [эхо и повторы](/spatial-audio/#delay), хорус, фленжер и реверберация ([Reiss, гл. 3](#sources)), а в плагинах — задержка необработанного сигнала при [компенсации задержки](/dry-wet-bypass/#latency-compensation). Здесь разобрано, как устроена линия задержки в программе: перевод времени в отсчёты, кольцевой буфер и его размер, эхо с обратной связью, гребенчатый фильтр при короткой задержке, задержка на дробное число отсчётов, плавное изменение времени и класс на C++23 в сравнении с `juce::dsp::DelayLine`.
 
 ## Задержка в отсчётах {#samples}
 
@@ -377,7 +377,7 @@ $$
 
 ## Код на C++ {#cpp}
 
-Класс `DelayLine` хранит один канал. `prepare` выделяет буфер длиной в степень двойки под наибольшую задержку и вызывается из `prepareToPlay`, `reset` обнуляет его, `push` записывает отсчёт, `read` возвращает отсчёт с задержкой `delaySamples`, интерполируя дробную часть по формуле (7). Используется только стандартная библиотека C++20.
+Класс `DelayLine` хранит один канал. `prepare` выделяет буфер длиной в степень двойки под наибольшую задержку и вызывается из `prepareToPlay`, `reset` обнуляет его, `push` записывает отсчёт, `read` возвращает отсчёт с задержкой `delaySamples`, интерполируя дробную часть по формуле (7). Используется только стандартная библиотека C++23.
 
 ```cpp
 // Линия задержки на кольцевом буфере: размер — степень двойки, индекс по маске.
@@ -418,9 +418,9 @@ public:
         assert (delaySamples >= 1.0f && delaySamples <= static_cast<float> (mask));
         const auto whole = static_cast<std::size_t> (delaySamples);
         const float frac = delaySamples - static_cast<float> (whole);
-        const float a = buffer[(writeIndex - whole) & mask];     // x[n − whole]
-        const float b = buffer[(writeIndex - whole - 1) & mask]; // x[n − whole − 1]
-        return a + frac * (b - a);
+        const float newer = buffer[(writeIndex - whole) & mask];     // x[n − whole]
+        const float older = buffer[(writeIndex - whole - 1) & mask]; // x[n − whole − 1]
+        return newer + frac * (older - newer);
     }
 
 private:
@@ -464,7 +464,7 @@ struct Echo
 // То же эхо на juce::dsp::DelayLine: линейная интерполяция, отдельные позиции для каждого канала.
 #include <juce_dsp/juce_dsp.h>
 
-juce::dsp::DelayLine<float, juce::dsp::DelayLineInterpolationTypes::Linear> line;
+juce::dsp::DelayLine<float, juce::dsp::DelayLineInterpolationTypes::Linear> line; // поле процессора
 
 void prepareEcho (double sampleRate, int maximumBlockSize, int numChannels)
 {

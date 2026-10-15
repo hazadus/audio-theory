@@ -177,16 +177,16 @@ lfoSamples.resize(4u * static_cast<size_t>(expectedMaxFramesPerBlock));
 
 std::vector<float> history;
 
-void process(float* samples, int numSamples) [[clang::nonblocking]]
+void process (float* samples, int numSamples) [[clang::nonblocking]]
 {
     for (int i = 0; i < numSamples; ++i)
-        history.push_back(samples[i]);  // может выделить память
+        history.push_back (samples[i]); // может выделить память
 }
 
 int main()
 {
-    float block[512] {};
-    process(block, 512);
+    std::vector<float> block (512);
+    process (block.data(), static_cast<int> (block.size()));
 }
 ```
 
@@ -284,77 +284,93 @@ void push(SampleType sample) {
 
 ```cpp
 // Очередь указателей: пишет один поток, читает другой, без блокировок
-template <typename T, int Capacity>
-class PointerFifo {
+template <typename Object, int capacity>
+class PointerFifo
+{
 public:
-  bool push(T* object) noexcept {
-    const auto scope = fifo.write(1);
-    if (scope.blockSize1 == 0)
-      return false;  // очередь заполнена
-    slots[static_cast<size_t>(scope.startIndex1)] = object;
-    return true;
-  }
+    bool push (Object* object) noexcept
+    {
+        const auto scope = fifo.write (1);
+        if (scope.blockSize1 == 0)
+            return false; // очередь заполнена
 
-  T* pop() noexcept {
-    const auto scope = fifo.read(1);
-    return scope.blockSize1 > 0 ? slots[static_cast<size_t>(scope.startIndex1)]
-                                : nullptr;
-  }
+        slots[static_cast<std::size_t> (scope.startIndex1)] = object;
+        return true;
+    }
 
-  bool hasFreeSpace() const noexcept { return fifo.getFreeSpace() > 0; }
+    Object* pop() noexcept
+    {
+        const auto scope = fifo.read (1);
+        return scope.blockSize1 > 0 ? slots[static_cast<std::size_t> (scope.startIndex1)]
+                                    : nullptr;
+    }
+
+    bool hasFreeSpace() const noexcept { return fifo.getFreeSpace() > 0; }
 
 private:
-  juce::AbstractFifo fifo{Capacity};
-  std::array<T*, Capacity> slots{};
+    juce::AbstractFifo fifo { capacity };
+    std::array<Object*, capacity> slots {};
 };
 ```
 
 Обмен наборами коэффициентов фильтра:
 
 ```cpp
-struct Coefficients {
-  float b0 = 1.f, b1 = 0.f, b2 = 0.f, a1 = 0.f, a2 = 0.f;
+struct Coefficients
+{
+    float b0 = 1.0f, b1 = 0.0f, b2 = 0.0f, a1 = 0.0f, a2 = 0.0f;
 };
 
-class CoefficientsExchange {
+class CoefficientsExchange
+{
 public:
-  explicit CoefficientsExchange(std::unique_ptr<Coefficients> initial)
-      : active{initial.release()} {}
+    explicit CoefficientsExchange (std::unique_ptr<Coefficients> initial)
+        : active (initial.release())
+    {
+    }
 
-  ~CoefficientsExchange() {  // аудиопоток уже остановлен
-    update();
-    while (auto* waiting = toAudio.pop())
-      delete waiting;
-    delete active;
-  }
+    ~CoefficientsExchange() // аудиопоток уже остановлен
+    {
+        update();
+        while (auto* waiting = toAudio.pop())
+            delete waiting;
+        delete active;
+    }
 
-  // Поток сообщений: новый набор заменяет ещё не отправленный
-  void publish(std::unique_ptr<Coefficients> next) {
-    pending = std::move(next);
-    update();
-  }
+    // Поток сообщений: новый набор заменяет ещё не отправленный
+    void publish (std::unique_ptr<Coefficients> next)
+    {
+        pending = std::move (next);
+        update();
+    }
 
-  // Поток сообщений, ещё и по таймеру: отправить набор, удалить отработавшие
-  void update() {
-    while (auto* old = toDelete.pop())
-      delete old;
-    if (pending != nullptr && toAudio.push(pending.get()))
-      pending.release();  // теперь объектом владеет очередь
-  }
+    // Поток сообщений, ещё и по таймеру: отправить набор, удалить отработавшие
+    void update()
+    {
+        while (auto* old = toDelete.pop())
+            delete old;
 
-  // Аудиопоток, в начале processBlock
-  const Coefficients& current() noexcept {
-    if (toDelete.hasFreeSpace())
-      if (auto* next = toAudio.pop())
-        toDelete.push(std::exchange(active, next));
-    return *active;
-  }
+        if (pending != nullptr && toAudio.push (pending.get()))
+            pending.release(); // теперь объектом владеет очередь
+    }
+
+    // Аудиопоток, в начале processBlock
+    const Coefficients& current() noexcept
+    {
+        if (toDelete.hasFreeSpace())
+        {
+            if (auto* next = toAudio.pop())
+                toDelete.push (std::exchange (active, next));
+        }
+
+        return *active;
+    }
 
 private:
-  std::unique_ptr<Coefficients> pending;
-  Coefficients* active;
-  PointerFifo<Coefficients, 8> toAudio;
-  PointerFifo<Coefficients, 8> toDelete;
+    std::unique_ptr<Coefficients> pending;
+    Coefficients* active; // владеет текущим набором
+    PointerFifo<Coefficients, 8> toAudio;
+    PointerFifo<Coefficients, 8> toDelete;
 };
 ```
 
@@ -431,12 +447,13 @@ private:
 `OwnedArray` хранит указатели и удаляет объекты, когда их убирают из массива через `remove`, `clear` или вместе с самим массивом. Удобно держать в нём, например, <Term id="synth-voice" firstMention>голоса синтезатора</Term>, созданные при подготовке:
 
 ```cpp
-juce::OwnedArray<Voice> voices;  // поле процессора; Voice — свой класс голоса
+juce::OwnedArray<Voice> voices; // поле процессора; Voice — свой класс голоса
 
-void prepareToPlay(double sampleRate, int) override {
-  voices.clear();  // удалит прежние голоса
-  for (int i = 0; i < 8; ++i)
-    voices.add(std::make_unique<Voice>(sampleRate));
+void prepareToPlay (double sampleRate, int) override
+{
+    voices.clear(); // удалит прежние голоса
+    for (int i = 0; i < 8; ++i)
+        voices.add (std::make_unique<Voice> (sampleRate));
 }
 ```
 
@@ -445,18 +462,17 @@ void prepareToPlay(double sampleRate, int) override {
 `Component::SafePointer` нужен, когда компонент может исчезнуть раньше, чем к нему обратятся. Типичный случай — отложенный вызов через `juce::MessageManager::callAsync`. В примере курса [`LongRunningTask`](https://github.com/juce-framework/tremolo-juce-course/blob/main/complete/examples/LongRunningTask/MainComponent_solution.h) фоновый поток сообщает прогресс так:
 
 ```cpp
-juce::MessageManager::callAsync(
-    [this, newProgress]() { progress = newProgress; });
+juce::MessageManager::callAsync ([this, newProgress] { progress = newProgress; });
 ```
 
 Лямбда выполнится позже, в потоке сообщений. В учебном приложении компонент живёт, пока открыто окно, и это допустимо. Но редактор плагина хост закрывает когда угодно, и если он удалён раньше, чем дошла очередь сообщения, `this` станет <Term id="dangling-pointer" firstMention>висячим указателем</Term>. `SafePointer` обнуляется при удалении компонента, и перед обращением его проверяют:
 
 ```cpp
-juce::MessageManager::callAsync(
-    [safeThis = juce::Component::SafePointer{this}, newProgress] {
-      if (safeThis != nullptr)
+juce::MessageManager::callAsync ([safeThis = juce::Component::SafePointer { this }, newProgress]
+{
+    if (safeThis != nullptr)
         safeThis->progress = newProgress;
-    });
+});
 ```
 
 `WeakReference` делает то же для любого класса, который объявил `JUCE_DECLARE_WEAK_REFERENCEABLE`; `SafePointer` построен на нём. Документация предупреждает, что он не потокобезопасен. Кроме того, при создании первой ссылки на объект класс выделяет память под общий узел, через который ссылки узнают об удалении. Поэтому оба класса — инструменты потока сообщений.

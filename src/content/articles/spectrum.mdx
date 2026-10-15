@@ -51,7 +51,7 @@ import SpectrumAnalyzerDemo from '@/components/SpectrumAnalyzerDemo.astro';
 import SpectrumFigure from '@/components/SpectrumFigure.astro';
 import Term from '@/components/Term.astro';
 
-Осциллограмма показывает, как сигнал меняется во времени. О звуке часто спрашивают другое: какие частоты в нём есть и насколько сильна каждая. Ответ даёт <Term id="spectrum" firstMention>спектр</Term>. По <Term id="sample" firstMention>отсчётам</Term> его вычисляет дискретное преобразование Фурье, а на практике — быстрый алгоритм того же преобразования. Статья выводит формулу из сравнения сигнала с пробной синусоидой, разбирает разрешение по частоте, утечку и оконные функции, устройство анализатора спектра и заканчивается кодом на C++20 и JUCE. Понадобятся [комплексные числа и формула Эйлера](/audio-math/#complex-numbers).
+Осциллограмма показывает, как сигнал меняется во времени. О звуке часто спрашивают другое: какие частоты в нём есть и насколько сильна каждая. Ответ даёт <Term id="spectrum" firstMention>спектр</Term>. По <Term id="sample" firstMention>отсчётам</Term> его вычисляет дискретное преобразование Фурье, а на практике — быстрый алгоритм того же преобразования. Статья выводит формулу из сравнения сигнала с пробной синусоидой, разбирает разрешение по частоте, утечку и оконные функции, устройство анализатора спектра и заканчивается кодом на C++23 и JUCE. Понадобятся [комплексные числа и формула Эйлера](/audio-math/#complex-numbers).
 
 ## Что показывает спектр {#what-spectrum-shows}
 
@@ -421,7 +421,7 @@ $$
   { label: 'Основы C++ для JUCE → Массивы и std::span', description: 'Что такое std::span<const float> и какие контейнеры он принимает.', target: { article: 'cpp-basics', anchor: 'arrays-span' } },
 ]}>
 
-Функция `naiveDft` вычисляет формулу (1) двумя вложенными циклами. Для анализатора она слишком медленная, $N^2$ умножений, но годится как эталон: в [тестах](/cpp-classes/#tests) с ней сравнивают результат БПФ на коротких кадрах. Нужна только стандартная библиотека C++20.
+Функция `naiveDft` вычисляет формулу (1) двумя вложенными циклами. Для анализатора она слишком медленная, $N^2$ умножений, но годится как эталон: в [тестах](/cpp-classes/#tests) с ней сравнивают результат БПФ на коротких кадрах. Нужна только стандартная библиотека C++23.
 
 </MarginNote>
 
@@ -438,12 +438,15 @@ std::vector<std::complex<double>> naiveDft (std::span<const float> x)
     std::vector<std::complex<double>> spectrum (size);
 
     for (std::size_t k = 0; k < size; ++k)
+    {
         for (std::size_t n = 0; n < size; ++n)
         {
             // Угол по остатку k·n mod N: при больших N произведение не теряет точность.
             const auto turn = static_cast<double> ((k * n) % size) / static_cast<double> (size);
-            spectrum[k] += static_cast<double> (x[n]) * std::polar (1.0, -2.0 * std::numbers::pi * turn);
+            const auto angle = -2.0 * std::numbers::pi * turn;
+            spectrum[k] += static_cast<double> (x[n]) * std::polar (1.0, angle);
         }
+    }
 
     return spectrum;
 }
@@ -471,7 +474,8 @@ public:
     {
         const auto scope = fifo.write (count);
         std::copy_n (samples, scope.blockSize1, queue.begin() + scope.startIndex1);
-        std::copy_n (samples + scope.blockSize1, scope.blockSize2, queue.begin() + scope.startIndex2);
+        std::copy_n (samples + scope.blockSize1, scope.blockSize2,
+                     queue.begin() + scope.startIndex2);
     }
 
     // Поток сообщений: true, если пришло hopSize новых отсчётов и спектр пересчитан.
@@ -486,7 +490,8 @@ public:
             const auto scope = fifo.read (hopSize);
             auto* tail = history.data() + (fftSize - hopSize);
             std::copy_n (queue.begin() + scope.startIndex1, scope.blockSize1, tail);
-            std::copy_n (queue.begin() + scope.startIndex2, scope.blockSize2, tail + scope.blockSize1);
+            std::copy_n (queue.begin() + scope.startIndex2, scope.blockSize2,
+                         tail + scope.blockSize1);
         }
 
         std::copy (history.begin(), history.end(), fftData.begin());
@@ -495,8 +500,9 @@ public:
 
         for (int k = 0; k <= fftSize / 2; ++k)
         {
+            const auto bin = static_cast<std::size_t> (k);
             const float scale = (k == 0 || k == fftSize / 2) ? 1.0f / fftSize : 2.0f / fftSize;
-            levels[(size_t) k] = juce::Decibels::gainToDecibels (fftData[(size_t) k] * scale, -140.0f);
+            levels[bin] = juce::Decibels::gainToDecibels (fftData[bin] * scale, -140.0f);
         }
         return true;
     }
@@ -505,7 +511,8 @@ public:
 
 private:
     juce::dsp::FFT fft { fftOrder };
-    juce::dsp::WindowingFunction<float> window { fftSize, juce::dsp::WindowingFunction<float>::hann };
+    juce::dsp::WindowingFunction<float> window { fftSize,
+                                                 juce::dsp::WindowingFunction<float>::hann };
     juce::AbstractFifo fifo { 8 * fftSize };
     std::array<float, 8 * fftSize> queue {};
     std::array<float, fftSize> history {};

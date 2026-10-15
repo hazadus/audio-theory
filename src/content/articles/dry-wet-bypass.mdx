@@ -323,11 +323,12 @@ class MixBypassProcessor : public juce::AudioProcessor
 public:
     MixBypassProcessor()
     {
+        // addParameter забирает владение: параметры удалит процессор
         addParameter (mix = new juce::AudioParameterFloat ({ "mix", 1 }, "Mix",
                                                            0.0f, 1.0f, 1.0f));
         addParameter (bypass = new juce::AudioParameterBool ({ "bypass", 1 },
                                                              "Bypass", false));
-        setLatencySamples (latency);
+        setLatencySamples (latencySamples);
     }
 
     juce::AudioProcessorParameter* getBypassParameter() const override
@@ -342,14 +343,16 @@ public:
             static_cast<juce::uint32> (getTotalNumOutputChannels()) };
         effect.prepare (spec);
         mixer.prepare (spec);
-        mixer.setWetLatency (static_cast<float> (latency));
+        mixer.setWetLatency (static_cast<float> (latencySamples));
     }
 
     void processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&) override
     {
-        for (auto ch = getTotalNumInputChannels();
-             ch < getTotalNumOutputChannels(); ++ch)
-            buffer.clear (ch, 0, buffer.getNumSamples());
+        for (auto channel = getTotalNumInputChannels();
+             channel < getTotalNumOutputChannels(); ++channel)
+        {
+            buffer.clear (channel, 0, buffer.getNumSamples());
+        }
 
         mixer.setWetMixProportion (bypass->get() ? 0.0f : mix->get());
 
@@ -360,11 +363,11 @@ public:
     }
 
 private:
-    static constexpr int latency = 96; // пример: анализ 2 мс при 48 кГц
+    static constexpr int latencySamples = 96; // пример: анализ 2 мс при 48 кГц
     juce::AudioParameterFloat* mix = nullptr;
     juce::AudioParameterBool* bypass = nullptr;
-    Effect effect; // обработка, которая задерживает выход на latency
-    juce::dsp::DryWetMixer<float> mixer { latency };
+    Effect effect; // обработка, которая задерживает выход на latencySamples
+    juce::dsp::DryWetMixer<float> mixer { latencySamples };
 };
 ```
 

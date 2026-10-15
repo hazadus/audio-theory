@@ -44,7 +44,7 @@ import SynthChain from '@/components/SynthChain.astro';
 import Term from '@/components/Term.astro';
 import VoiceSourcesDemo from '@/components/VoiceSourcesDemo.astro';
 
-Простой одноголосный синтезатор можно собрать из уже знакомых частей: генераторов периодических волн, шума, независимых уровней и сложения. Здесь собирается первая часть такого синтезатора — источник звука одной ноты: два основных <Term id="oscillator" firstMention>осциллятора</Term>, <Term id="sub-oscillator" firstMention>саб-осциллятор</Term> на <Term id="octave" firstMention>октаву</Term> ниже, шум и микшер. <Term id="envelope" firstMention>Огибающая</Term>, фильтр и запись ноты в <Term id="wav-file" firstMention>WAV</Term> разбираются отдельно; код на C++20 из этой статьи станет их входом.
+Простой одноголосный синтезатор можно собрать из уже знакомых частей: генераторов периодических волн, шума, независимых уровней и сложения. Здесь собирается первая часть такого синтезатора — источник звука одной ноты: два основных <Term id="oscillator" firstMention>осциллятора</Term>, <Term id="sub-oscillator" firstMention>саб-осциллятор</Term> на <Term id="octave" firstMention>октаву</Term> ниже, шум и микшер. <Term id="envelope" firstMention>Огибающая</Term>, фильтр и запись ноты в <Term id="wav-file" firstMention>WAV</Term> разбираются отдельно; код на C++23 из этой статьи станет их входом.
 
 ## Осциллятор и осциллограф {#oscillator-vs-oscilloscope}
 
@@ -464,7 +464,7 @@ $$
 
 ## Код на C++ {#cpp}
 
-Код использует стандартную библиотеку C++20 и повторяет устройство [LFO на C++](/lfo/#cpp-lfo): параметры отдельно от изменяемого состояния, подготовка, сброс и получение одного отсчёта. Первый фрагмент переводит фазу в значение формы и добавляет PolyBLEP.
+Код использует стандартную библиотеку C++23 и повторяет устройство [LFO на C++](/lfo/#cpp-lfo): параметры отдельно от изменяемого состояния, подготовка, сброс и получение одного отсчёта. Первый фрагмент переводит фазу в значение формы и добавляет PolyBLEP.
 
 ```cpp
 // Формы из фазы t ∈ [0, 1) и поправка PolyBLEP около скачков.
@@ -557,7 +557,7 @@ public:
 private:
     // Параметры: меняются по нотам и из интерфейса.
     double sampleRate = 48000.0;
-    double frequency = 440.0;
+    double frequency = 440.0; // Гц
     double increment = frequency / sampleRate;
     Waveform waveform = Waveform::saw;
     bool antialias = true;
@@ -602,10 +602,10 @@ public:
     // Интервал второго осциллятора в полутонах и расстройка в центах.
     void noteOn (int midiNote, int semitones, double cents) noexcept
     {
-        const double f = noteFrequency (midiNote);
-        osc1.setFrequency (f);
-        osc2.setFrequency (f * std::exp2 ((100.0 * semitones + cents) / 1200.0));
-        sub.setFrequency (f / 2.0);
+        const double frequency = noteFrequency (midiNote);
+        osc1.setFrequency (frequency);
+        osc2.setFrequency (frequency * std::exp2 ((100.0 * semitones + cents) / 1200.0));
+        sub.setFrequency (frequency / 2.0);
         for (auto* osc : { &osc1, &osc2, &sub })
             osc->reset();
     }

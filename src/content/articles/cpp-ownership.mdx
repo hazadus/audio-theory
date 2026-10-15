@@ -156,11 +156,14 @@ private:
 </MarginNote>
 
 ```cpp
-struct Lfo { float phase = 0.0f; };
-
-void leak(float rate)
+struct Lfo
 {
-    Lfo* lfo = new Lfo{};
+    float phase = 0.0f;
+};
+
+void leak (float rate)
+{
+    Lfo* lfo = new Lfo {};
     if (rate <= 0.0f)
         return;               // утечка: delete не выполнится
     delete lfo;
@@ -168,7 +171,7 @@ void leak(float rate)
 
 void doubleDelete()
 {
-    Lfo* a = new Lfo{};
+    Lfo* a = new Lfo {};
     Lfo* b = a;               // два указателя на один объект
     delete a;
     delete b;                 // повторное удаление
@@ -176,7 +179,7 @@ void doubleDelete()
 
 float dangling()
 {
-    Lfo* lfo = new Lfo{};
+    Lfo* lfo = new Lfo {};
     float& phase = lfo->phase;
     delete lfo;
     return phase;             // объект уже удалён
@@ -208,9 +211,9 @@ float dangling()
 void owner()
 {
     std::unique_ptr<Lfo> a = std::make_unique<Lfo>();
-    // std::unique_ptr<Lfo> b = a;          // ошибка компиляции: копировать нельзя
-    std::unique_ptr<Lfo> b = std::move(a);  // владелец теперь b, a пуст
-    Lfo* observer = b.get();                // сырой указатель на тот же объект: наблюдатель, не удаляет
+    // std::unique_ptr<Lfo> b = a;           // ошибка компиляции: копировать нельзя
+    std::unique_ptr<Lfo> b = std::move (a);  // владелец теперь b, a пуст
+    Lfo* observer = b.get();                 // сырой указатель-наблюдатель: не удаляет
     observer->phase = 0.25f;
 }   // деструктор b удаляет Lfo, пустой a ничего не делает
 ```
@@ -221,10 +224,10 @@ void owner()
 void handover()
 {
     auto a = std::make_unique<Lfo>();
-    auto b = std::move(a);        // объект тот же, владелец теперь b, a пуст
-    Lfo* raw = b.release();       // b пуст, объект жив, удалить его должен владелец raw
-    std::unique_ptr<Lfo> c{raw};  // адрес снова под управлением unique_ptr: владелец c
-    c.reset();                    // объект удалён сейчас, c пуст
+    auto b = std::move (a);         // объект тот же, владелец теперь b, a пуст
+    Lfo* raw = b.release();         // b пуст, объект жив, удалить его должен владелец raw
+    std::unique_ptr<Lfo> c { raw }; // адрес снова под управлением unique_ptr: владелец c
+    c.reset();                      // объект удалён сейчас, c пуст
 }   // a, b и c пусты, их деструкторы ничего не удаляют
 ```
 
@@ -251,18 +254,18 @@ void handover()
 `std::make_unique<T>(аргументы…)` появилась в C++14. Она создаёт объект в куче, передавая аргументы конструктору `T`, и возвращает владеющий им `std::unique_ptr<T>`. Результат тот же, что у `std::unique_ptr<T>(new T(аргументы…))`, но запись короче:
 
 ```cpp
-std::unique_ptr<juce::AudioParameterFloat> a{new juce::AudioParameterFloat(/* … */)};
-auto b = std::make_unique<juce::AudioParameterFloat>(/* … */);
+std::unique_ptr<juce::AudioParameterFloat> a { new juce::AudioParameterFloat (/* … */) };
+auto b = std::make_unique<juce::AudioParameterFloat> (/* … */);
 ```
 
 Во второй строке имя класса написано один раз, и выражения `new` в коде нет. [Правило R.23](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#rr-make_unique) Core Guidelines советует именно эту запись. Кроме краткости, оно называет безопасность при исключениях, но оговаривает: в коде до C++17.
 
 ```cpp
-void use(std::unique_ptr<Lfo> lfo, int seed);
-int nextSeed();  // может бросить исключение
+void use (std::unique_ptr<Lfo> lfo, int seed);
+int nextSeed(); // может бросить исключение
 
-use(std::unique_ptr<Lfo>(new Lfo{}), nextSeed());  // до C++17 возможна утечка
-use(std::make_unique<Lfo>(), nextSeed());          // утечки нет
+use (std::unique_ptr<Lfo> (new Lfo {}), nextSeed()); // до C++17 возможна утечка
+use (std::make_unique<Lfo>(), nextSeed());           // утечки нет
 ```
 
 <MarginNote items={[
@@ -354,11 +357,11 @@ return *parameter;  // parameter уже пуст
 В других местах JUCE передача владения записана в типе. `addParameterGroup` принимает `std::unique_ptr<AudioProcessorParameterGroup>`, конструктор группы — `std::unique_ptr` на её элементы, а `AudioProcessorValueTreeState::ParameterLayout` собирается из `std::unique_ptr` на параметры. Сырого указателя в пути нет, и `release()` не нужен:
 
 ```cpp
-auto rate = std::make_unique<juce::AudioParameterFloat>(/* … */);
+auto rate = std::make_unique<juce::AudioParameterFloat> (/* … */);
 auto& rateReference = *rate;
-auto group = std::make_unique<juce::AudioProcessorParameterGroup>(
-    "modulation", "Modulation", "|", std::move(rate));
-processor.addParameterGroup(std::move(group));
+auto group = std::make_unique<juce::AudioProcessorParameterGroup> ("modulation", "Modulation", "|",
+                                                                   std::move (rate));
+processor.addParameterGroup (std::move (group));
 ```
 
 `std::move` здесь обязателен: `unique_ptr` нельзя скопировать в параметр функции, его можно только переместить. Без `std::move` код не скомпилируется, поэтому передачу владения нельзя написать случайно. После вызова `rate` и `group` пусты, а объекты принадлежат процессору.

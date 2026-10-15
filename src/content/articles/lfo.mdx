@@ -243,7 +243,7 @@ $$
 
 ## Реализация на C++ без JUCE {#cpp-lfo}
 
-Функция `waveform` преобразует фазу в значение выбранной волны по приведённым выше формулам. Код использует стандартную библиотеку C++20; `WaveShape` задаёт форму. На вход подаётся фаза в диапазоне $[-\pi,\pi)$. Начиная с C++20 число π доступно как `std::numbers::pi` из заголовка `<numbers>` ([математические константы стандартной библиотеки](https://eel.is/c++draft/numbers)).
+Функция `waveform` преобразует фазу в значение выбранной волны по приведённым выше формулам. Код использует стандартную библиотеку C++23; `WaveShape` задаёт форму. На вход подаётся фаза в диапазоне $[-\pi,\pi)$. Начиная с C++20 число π доступно как `std::numbers::pi` из заголовка `<numbers>` ([математические константы стандартной библиотеки](https://eel.is/c++draft/numbers)).
 
 ```cpp
 // Формы LFO: перевод фазы в нормированное значение.
@@ -306,7 +306,7 @@ public:
 
 private:
     double sampleRate = 48000.0;
-    double frequency = 5.0;
+    double frequency = 5.0; // Гц
     double increment = 2.0 * pi * frequency / sampleRate;
     double phase = -pi;
 };
@@ -333,11 +333,8 @@ target_link_libraries (MyPlugin PRIVATE juce::juce_dsp)
 // Подготовка синусоидального LFO перед началом обработки.
 #include <juce_dsp/juce_dsp.h>
 
-juce::dsp::Oscillator<double> lfo;
-lfo.initialise ([] (double phase)
-{
-    return waveform (phase, WaveShape::sine);
-});
+juce::dsp::Oscillator<double> lfo; // поле процессора
+lfo.initialise ([] (double phase) { return waveform (phase, WaveShape::sine); });
 
 const juce::dsp::ProcessSpec spec { 48000.0, 512, 1 };
 lfo.prepare (spec);
