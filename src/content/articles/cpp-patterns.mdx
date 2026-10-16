@@ -1,0 +1,513 @@
+---
+slug: cpp-patterns
+title: Паттерны проектирования в JUCE
+question: Что такое паттерн проектирования и как по паттерну «посетитель» JUCE сохраняет параметры плагина в JSON и читает их обратно?
+topic: cpp
+tags: [cpp-juce, plugins]
+prerequisites:
+  - label: 'C++ в плагине → Сохранение параметров: шаблон serialise'
+    description: Структура SerializableParameters, шаблон serialise и вызовы ToVar::convert и FromVar::convert.
+    target: { article: cpp-classes, anchor: serialise }
+  - label: 'C++ в плагине → virtual и override'
+    description: Виртуальные методы и вызов через указатель на базовый класс.
+    target: { article: cpp-classes, anchor: virtual-override }
+related:
+  - label: 'C++ в плагине → Требования к типу'
+    description: Почему шаблон принимает любой тип с нужными методами и где компилятор сообщает об ошибке.
+    target: { article: cpp-classes, anchor: template-requirements }
+  - label: 'Стандартная библиотека C++ в плагине → std::optional'
+    description: Результат ToVar::convert и FromVar::convert, который пуст при ошибке.
+    target: { article: cpp-std, anchor: optional }
+  - label: 'Кто владеет объектом → std::unique_ptr'
+    description: Вектор std::unique_ptr, в котором хранятся параметры классического примера.
+    target: { article: cpp-ownership, anchor: unique-ptr }
+---
+
+import DataTable from '@/components/DataTable.astro';
+import MarginNote from '@/components/MarginNote.astro';
+import SelfCheck from '@/components/SelfCheck.astro';
+import Source from '@/components/Source.astro';
+import Term from '@/components/Term.astro';
+
+Паттерн проектирования (design pattern) — описание задачи, которая повторяется в разных программах, вместе со схемой её решения из классов и объектов. Названия паттернов закрепила книга Эриха Гаммы, Ричарда Хелма, Ральфа Джонсона и Джона Влиссидеса «Design Patterns» (1995); авторов называют «бандой четырёх» (Gang of Four, GoF), а в каталоге книги 23 паттерна. Эта статья разбирает паттерны, которые встречаются в исходниках JUCE и в <Term id="plugin" firstMention>плагине</Term> <Term id="tremolo" firstMention>тремоло</Term> из [официального курса JUCE](https://github.com/juce-framework/tremolo-juce-course). Пока это один паттерн — посетитель (Visitor): на нём построено сохранение параметров в JSON. Страницы книги указаны по русскому изданию 2020 года, исходники — по JUCE 8.0.12.
+
+## Что такое паттерн {#what-is-pattern}
+
+Идею авторы взяли у архитектора Кристофера Александера: паттерн описывает задачу, которая снова и снова возникает в работе, и суть её решения, причём так, что решение можно применять много раз и ни одна реализация не повторит другую в точности ([Гамма и др., с. 17](#sources)). У Александера речь шла о зданиях и городах, в книге — об объектах и интерфейсах.
+
+Описание каждого паттерна в каталоге состоит из четырёх частей (с. 17–18):
+
+- Имя. Одно-два слова, за которыми стоят задача, решение и последствия. Общий словарь позволяет обсуждать устройство программы короче: класс `ToVar::Visitor` в исходниках JUCE сразу говорит читателю, какая схема в нём реализована.
+- Задача. Когда паттерн применять: проблема, её контекст и признаки негибкого устройства, которые он устраняет.
+- Решение. Какие классы и объекты участвуют, за что отвечает каждый и как они взаимодействуют. Решение описано как схема, которую в каждой программе реализуют по-своему.
+- Результаты. Плюсы и минусы применения: что станет проще менять, что сложнее, сколько это стоит по памяти и времени.
+
+Этим паттерн отличается от класса библиотеки: связный список или хеш-таблицу берут готовыми и используют без изменений, а паттерн каждый раз воплощают заново под конкретную задачу (с. 18). По назначению каталог делит паттерны на три группы (с. 27–28): порождающие связаны с созданием объектов, структурные — с составлением классов и объектов в более крупные структуры, паттерны поведения — с тем, как классы и объекты взаимодействуют и распределяют обязанности. Посетитель относится к паттернам поведения (с. 379).
+
+## Посетитель {#visitor}
+
+### Задача {#visitor-problem}
+
+У плагина есть параметры разных типов: число с единицей измерения (частота модуляции), флаг (обход обработки) и выбор из списка (форма волны). С ними выполняют несколько не связанных между собой операций: записать в JSON, показать строкой в интерфейсе, вернуть значение по умолчанию, проверить диапазон. Если каждую операцию сделать виртуальным методом классов параметров, код записи в JSON окажется разнесён по трём классам и перемешан с кодом интерфейса, а каждая новая операция потребует правки всех классов. В книге та же проблема показана на узлах синтаксического дерева компилятора: проверка типов, генерация кода и форматирование текста программы собраны в каждом классе узла (с. 379–380).
+
+Назначение посетителя по книге: он описывает операцию, которую выполняют с каждым объектом некоторой структуры, и позволяет добавить новую операцию, не изменяя классы этих объектов (с. 379). Для этого операцию выносят в отдельный класс — посетитель, а объекты структуры только «принимают» его и сообщают, какого они типа.
+
+### Участники и двойная диспетчеризация {#double-dispatch}
+
+[Таблица 1](#visitor-participants) перечисляет участников паттерна по книге (с. 383–384) и их роли в примере ниже.
+
+<DataTable
+  id="visitor-participants"
+  number={1}
+  caption="Участники паттерна «посетитель» и классы примера с параметрами плагина."
+  columns={[
+    { label: 'Участник', width: '10rem' },
+    { label: 'Обязанность' },
+    { label: 'В примере', width: '11rem' },
+  ]}
+  rows={[
+    ['Visitor', 'Объявляет операцию посещения для каждого конкретного класса элементов.', '<code>ParameterVisitor</code>'],
+    ['ConcreteVisitor', 'Реализует эти операции для одной задачи и хранит накопленное состояние.', '<code>JsonWriter</code>, <code>DisplayPrinter</code>'],
+    ['Element', 'Объявляет операцию <code>accept</code>, которая принимает посетителя.', '<code>Parameter</code>'],
+    ['ConcreteElement', 'Реализует <code>accept</code>: вызывает у посетителя операцию для своего класса.', '<code>FloatParameter</code>, <code>BoolParameter</code>, <code>ChoiceParameter</code>'],
+    ['ObjectStructure', 'Хранит элементы и позволяет обойти их.', '<code>std::vector</code> в <code>main</code>'],
+  ]}
+/>
+
+Интерфейс посетителя содержит по методу `visit` на каждый конкретный тип параметра. Книга даёт этим методам разные имена (`VisitFloatParameter`, `VisitBoolParameter`) и в сноске допускает перегрузку одного имени (с. 387); пример использует перегрузку. Классы параметров объявлены как `struct`, потому что посетителю нужны их поля.
+
+```cpp
+// Посетитель: по одной операции на каждый конкретный тип параметра
+class ParameterVisitor
+{
+public:
+    virtual ~ParameterVisitor() = default;
+
+    virtual void visit (const FloatParameter& parameter) = 0;
+    virtual void visit (const BoolParameter& parameter) = 0;
+    virtual void visit (const ChoiceParameter& parameter) = 0;
+};
+
+// Элемент: общий для всех параметров метод accept
+struct Parameter
+{
+    explicit Parameter (std::string parameterId) : id (std::move (parameterId)) {}
+    virtual ~Parameter() = default;
+
+    virtual void accept (ParameterVisitor& visitor) const = 0;
+
+    std::string id;
+};
+
+struct FloatParameter : public Parameter
+{
+    FloatParameter (std::string parameterId, float initialValue, std::string valueUnit)
+        : Parameter (std::move (parameterId)), value (initialValue), unit (std::move (valueUnit)) {}
+
+    void accept (ParameterVisitor& visitor) const override { visitor.visit (*this); }
+
+    float value;
+    std::string unit;
+};
+
+struct BoolParameter : public Parameter
+{
+    BoolParameter (std::string parameterId, bool initialValue)
+        : Parameter (std::move (parameterId)), value (initialValue) {}
+
+    void accept (ParameterVisitor& visitor) const override { visitor.visit (*this); }
+
+    bool value;
+};
+
+struct ChoiceParameter : public Parameter
+{
+    ChoiceParameter (std::string parameterId, std::vector<std::string> names, std::size_t selected)
+        : Parameter (std::move (parameterId)), choices (std::move (names)), index (selected) {}
+
+    void accept (ParameterVisitor& visitor) const override { visitor.visit (*this); }
+
+    std::vector<std::string> choices;
+    std::size_t index;
+};
+```
+
+Перед `ParameterVisitor` в полной программе стоят предварительные объявления `struct FloatParameter;`, `struct BoolParameter;` и `struct ChoiceParameter;`: интерфейс ссылается на классы, которые определены ниже. Две операции — два конкретных посетителя. `JsonWriter` собирает свойства JSON в строку `text`, `DisplayPrinter` печатает строки для интерфейса:
+
+```cpp
+// Операция 1: собрать свойства JSON
+class JsonWriter : public ParameterVisitor
+{
+public:
+    void visit (const FloatParameter& parameter) override
+    {
+        add (parameter.id, std::format ("{:.2f}", parameter.value));
+    }
+
+    void visit (const BoolParameter& parameter) override
+    {
+        add (parameter.id, parameter.value ? "true" : "false");
+    }
+
+    void visit (const ChoiceParameter& parameter) override
+    {
+        add (parameter.id, '"' + parameter.choices[parameter.index] + '"');
+    }
+
+    std::string text;
+
+private:
+    void add (const std::string& key, const std::string& value)
+    {
+        if (! text.empty())
+            text += ", ";
+
+        text += std::format ("\"{}\": {}", key, value);
+    }
+};
+
+// Операция 2: строки для интерфейса
+class DisplayPrinter : public ParameterVisitor
+{
+public:
+    void visit (const FloatParameter& parameter) override
+    {
+        std::println ("{}: {:.1f} {}", parameter.id, parameter.value, parameter.unit);
+    }
+
+    void visit (const BoolParameter& parameter) override
+    {
+        std::println ("{}: {}", parameter.id, parameter.value ? "on" : "off");
+    }
+
+    void visit (const ChoiceParameter& parameter) override
+    {
+        std::println ("{}: {}", parameter.id, parameter.choices[parameter.index]);
+    }
+};
+```
+
+`main` создаёт параметры, хранит их в векторе указателей на базовый класс и обходит его обоими посетителями:
+
+```cpp
+int main()
+{
+    std::vector<std::unique_ptr<Parameter>> parameters;
+    parameters.push_back (std::make_unique<FloatParameter> ("rate", 2.5f, "Hz"));
+    parameters.push_back (std::make_unique<BoolParameter> ("bypassed", false));
+    parameters.push_back (std::make_unique<ChoiceParameter> (
+        "waveform", std::vector<std::string> { "Sine", "Triangle" }, 1));
+
+    JsonWriter json;
+    DisplayPrinter display;
+
+    for (const auto& parameter : parameters)
+    {
+        parameter->accept (json);
+        parameter->accept (display);
+    }
+
+    std::println ("{{ {} }}", json.text);
+}
+```
+
+Программа собрана Apple clang 17 с `-std=c++23 -Wall -Wextra -pedantic` и выводит:
+
+```text
+rate: 2.5 Hz
+bypassed: off
+waveform: Triangle
+{ "rate": 2.50, "bypassed": false, "waveform": "Triangle" }
+```
+
+<MarginNote items={[
+  { label: 'Learn C++ → 25.2 Virtual functions and polymorphism', description: 'Вызов виртуального метода выбирается по типу объекта, а не указателя.', target: { url: 'https://www.learncpp.com/cpp-tutorial/virtual-functions/' } },
+  { label: 'Learn C++ → 11.3 Function overload resolution and ambiguous matches', description: 'Как компилятор выбирает перегрузку по типам аргументов.', target: { url: 'https://www.learncpp.com/cpp-tutorial/function-overload-resolution-and-ambiguous-matches/' } },
+]}>
+
+Вызов `parameter->accept (json)` проходит через два виртуальных вызова. Первый выбирает `accept` по настоящему типу объекта, на который указывает `parameter`: для первого элемента это `FloatParameter::accept`. Внутри него выражение `*this` имеет тип `const FloatParameter&`, известный компилятору, поэтому перегрузка `visit (const FloatParameter&)` выбирается при сборке. Сам `visit` тоже виртуальный, и второй вызов выбирает реализацию по настоящему типу посетителя — `JsonWriter`. Выполненный код зависит от двух типов сразу: элемента и посетителя. Книга называет это двойной диспетчеризацией (double dispatch, с. 388–389).
+
+</MarginNote>
+
+В C++ виртуальный вызов учитывает тип только одного объекта — того, у которого вызван метод; это одинарная диспетчеризация. Выбор перегрузки по типу аргумента происходит при компиляции и видит только объявленный тип. Поэтому `json.visit (*parameter)` без `accept` не собирается: `*parameter` имеет тип `Parameter&`, а перегрузки `visit (const Parameter&)` нет. `accept` и нужен для того, чтобы перейти от базового типа к конкретному.
+
+Обход в примере выполняет `main`, перебирая вектор. Книга называет три варианта: обходит сама структура объектов, отдельный итератор или посетитель (с. 389–390). Чаще всего обход берёт на себя структура: составной элемент в своём `accept` передаёт посетителя каждому вложенному элементу, а затем посещается сам (с. 388).
+
+### Результаты {#visitor-consequences}
+
+Книга перечисляет достоинства и недостатки паттерна (с. 385–386):
+
+- Новая операция — новый класс. Чтобы, например, сбрасывать параметры к значениям по умолчанию, достаточно написать ещё одного посетителя; классы параметров не меняются.
+- Родственный код собран в одном месте. Всё, что относится к JSON, находится в `JsonWriter`, всё об интерфейсе — в `DisplayPrinter`.
+- Посетитель накапливает состояние. `JsonWriter` собирает строку в своём поле `text`; без посетителя её пришлось бы передавать дополнительным аргументом или хранить в глобальной переменной.
+- Посетитель может работать с классами, у которых нет общей базы: в интерфейс посетителя можно добавить операцию для любого типа. В примере общая база `Parameter` нужна только ради `accept`.
+- Новый тип элемента требует правки всех посетителей. Чтобы добавить `IntParameter`, придётся объявить новый чисто виртуальный `visit` в `ParameterVisitor`, и компилятор потребует реализовать его во всех посетителях. Поэтому паттерн подходит, когда набор классов элементов меняется редко, а операции добавляются часто.
+- Инкапсуляция ослабевает. Посетитель работает с данными элемента, и элемент должен открыть их: поэтому параметры в примере объявлены как `struct` с открытыми полями.
+
+<MarginNote items={[
+  { label: 'cppreference → std::variant', description: 'Тип-сумма: хранит значение одного из перечисленных типов.', target: { url: 'https://en.cppreference.com/w/cpp/utility/variant' } },
+  { label: 'cppreference → std::visit', description: 'Вызов функции для значения, которое хранит std::variant.', target: { url: 'https://en.cppreference.com/w/cpp/utility/variant/visit' } },
+]}>
+
+Если набор типов закрыт и известен заранее, в современном C++ вместо иерархии с `accept` часто используют `std::variant<FloatParameter, BoolParameter, ChoiceParameter>` (C++17) и `std::visit`. Тогда выбор функции по типу хранимого значения выполняет библиотека, а классам параметров не нужны ни общая база, ни виртуальные методы. Сериализация JUCE не использует ни этот вариант, ни виртуальные методы: её посетители выбираются при компиляции.
+
+</MarginNote>
+
+## Посетитель в JUCE: ToVar и FromVar {#juce-visitor}
+
+Сохранение параметров тремоло в JSON разобрано в статье [«C++ в плагине»](/cpp-classes/#serialise): там показано, кто вызывает `serialise`, чем становятся `Archive` и `T` и как работают `getVersion()` и `archive(a, b, c)`. Здесь тот же код читается как реализация посетителя. Классы `juce::ToVar` и `juce::FromVar` объявлены в [`juce_JSONSerialisation.h`](https://github.com/juce-framework/JUCE/blob/8.0.12/modules/juce_core/json/juce_JSONSerialisation.h), договор сериализации — в [`juce_Serialisation.h`](https://github.com/juce-framework/JUCE/blob/8.0.12/modules/juce_core/serialisation/juce_Serialisation.h). Каждый из двух классов содержит закрытый вложенный класс `Visitor`: это два конкретных посетителя, один записывает объект в дерево `juce::var`, другой заполняет объект из него.
+
+### serialise вместо accept {#serialise-accept}
+
+Элемент — структура `SerializableParameters` из `JsonSerializer.cpp`. Роль `accept` играет её шаблон `serialise`: он получает посетителя-архив и передаёт ему свои поля.
+
+```cpp
+// JsonSerializer.cpp, SerializableParameters::serialise
+template <typename Archive, typename T>
+static void serialise(Archive& archive, T& p) {
+  // ... проверка версии и названия плагина
+  archive(named("modulationRateHz", p.rate), named("bypassed", p.bypassed),
+          named("modulationWaveform", p.waveform));
+}
+```
+
+Клиент паттерна — функция `ToVar::convert`. Она создаёт посетителя, применяет его к объекту и забирает результат:
+
+```cpp
+// juce_JSONSerialisation.h, ToVar::Visitor
+template <typename T>
+static std::optional<var> convert (const T& t, const Options& options)
+{
+    // ... выбор версии
+    Visitor visitor { versionToUse, options.getVersionIncluded() };
+    detail::doSave (visitor, t);
+    return visitor.value;
+}
+```
+
+`detail::doSave` при компиляции выбирает, что вызвать: `serialise` или пару `load` и `save`, если тип объявил их вместо одного шаблона. `FromVar::Visitor::convert` устроен так же, но вызывает `detail::doLoad` и возвращает `std::optional<T>`.
+
+<MarginNote items={[
+  { label: 'C++ в плагине → Archive и T', description: 'Какие типы подставляются в serialise при записи, чтении и проверке договора.', target: { article: 'cpp-classes', anchor: 'archive-types' } },
+]}>
+
+От классической схемы JUCE отличается в трёх местах. Во-первых, элемент передаёт посетителю не себя, а свои поля, каждое со своим именем через `named`. Посетителю не нужно знать `SerializableParameters`: метода «посетить SerializableParameters» у него нет, есть только операции для `Named<float>`, `Named<bool>`, `Named<juce::String>`. Во-вторых, `serialise` — шаблон по типу архива, а не виртуальный `accept (Visitor&)`. Для каждого архива компилятор создаёт свою версию функции, поэтому общий базовый класс посетителей не нужен: `ToVar::Visitor` и `FromVar::Visitor` ничем не связаны, кроме набора методов. В-третьих, одна функция обслуживает две операции в обе стороны: при записи `named` хранит константные ссылки и посетитель читает поля, при чтении ссылки изменяемые и посетитель `FromVar` записывает в них прочитанные значения. У GoF посетитель элемент только читает.
+
+</MarginNote>
+
+### visit вместо операций для каждого класса {#visit-overloads}
+
+`archive(a, b, c)` вызывает `visit` для каждого аргумента по очереди ([«archive(a, b, c)»](/cpp-classes/#archive-call)). У посетителя `ToVar` шесть перегрузок `visit`:
+
+```cpp
+// juce_JSONSerialisation.h, ToVar::Visitor: перегрузки visit без тел
+template <typename T>
+void visit (const T& t);
+
+template <typename T>
+void visit (const Named<T>& named);
+
+template <typename T>
+void visit (const SerialisationSize<T>&);
+
+void visit (const bool& t);
+void visit (const String& t);
+void visit (const var& t);
+```
+
+<MarginNote items={[
+  { label: 'Learn C++ → 11.1 Introduction to function overloading', description: 'Несколько функций с одним именем и разными параметрами.', target: { url: 'https://www.learncpp.com/cpp-tutorial/introduction-to-function-overloading/' } },
+  { label: 'Learn C++ → 8.4 Constexpr if statements', description: 'Ветвление, которое компилятор вычисляет при сборке и отбрасывает лишние ветви.', target: { url: 'https://www.learncpp.com/cpp-tutorial/constexpr-if-statements/' } },
+]}>
+
+Каждая перегрузка соответствует операции «посетить конкретный класс» из книги, только выбирает её компилятор по типу аргумента, без виртуального вызова. `Named<T>` добавляет свойство в объект JSON, `SerialisationSize<T>` начинает массив, `bool`, `juce::String` и `juce::var` записываются как есть. Эти типы не имеют общей базы, а книга среди достоинств посетителя называет как раз умение посещать объекты без общего родительского класса (с. 385–386). Общий шаблон `visit (const T&)` разбирает остальное через `if constexpr` (C++17): целые числа записывает как `int64`, вещественные — как `double`, а для любого другого типа вызывает `convert` рекурсивно. Вложенную структуру при этом записывает новый посетитель, а сама структура снова передаёт ему свои поля через собственный `serialise`.
+
+</MarginNote>
+
+Двойная диспетчеризация здесь тоже есть, но обе её половины происходят при сборке. Тип архива выбирает, какая версия `serialise` будет создана, тип поля выбирает перегрузку `visit`. Виртуальных вызовов нет; взамен тип каждого поля должен быть известен при компиляции. Объект за указателем на базовый класс JUCE так не запишет: среди готовых специализаций договора нет `std::unique_ptr`.
+
+У `FromVar::Visitor` тот же набор перегрузок с изменяемыми ссылками. Вещественное поле он читает только из числа JSON с дробной частью: проверка `source.isDouble()` отклоняет целое. В файле `{"__version__": 1, "modulationRateHz": 10, …}`, отредактированном вручную, загрузка не удастся, а `10.0` прочитается.
+
+### Контейнер обходит свои элементы {#traversal}
+
+Обход структуры JUCE поручает самим элементам. Специализация договора для `std::vector` сначала сообщает архиву размер, затем передаёт ему каждый элемент:
+
+```cpp
+// juce_Serialisation.h, SerialisationTraits<std::vector<Ts...>>
+template <typename Archive, typename T>
+static void save (Archive& archive, const T& t)
+{
+    archive (serialisationSize (t.size()));
+
+    for (auto& element : t)
+        archive (element);
+}
+```
+
+Это составной элемент из книги: его операция приёма передаёт посетителя каждому вложенному элементу (с. 388). Посетитель `ToVar` на `SerialisationSize` создаёт пустой массив JSON и дальше добавляет в него значения. `load` устроен так же, но перед обходом меняет размер вектора по длине массива. Пример ниже — собственная структура настроек эквалайзера, проверенная с JUCE 8.0.12:
+
+```cpp
+// Полоса эквалайзера и набор полос: оба типа выполняют договор сериализации JUCE
+struct Band
+{
+    float frequencyHz = 0.0f;
+    float gainDb = 0.0f;
+
+    static constexpr auto marshallingVersion = 1;
+
+    template <typename Archive, typename Item>
+    static void serialise (Archive& archive, Item& band)
+    {
+        archive (juce::named ("frequencyHz", band.frequencyHz), juce::named ("gainDb", band.gainDb));
+    }
+};
+
+struct Preset
+{
+    std::vector<Band> bands;
+
+    static constexpr auto marshallingVersion = 1;
+
+    template <typename Archive, typename Item>
+    static void serialise (Archive& archive, Item& preset)
+    {
+        archive (juce::named ("bands", preset.bands));
+    }
+};
+```
+
+`juce::ToVar::convert` для `Preset` с полосами 100 Гц, −3 дБ и 2000 Гц, +1,5 дБ даёт такой JSON (через `juce::JSON::toString`):
+
+```json
+{
+  "__version__": 1,
+  "bands": [
+    {
+      "__version__": 1,
+      "frequencyHz": 100.0,
+      "gainDb": -3.0
+    },
+    {
+      "__version__": 1,
+      "frequencyHz": 2000.0,
+      "gainDb": 1.5
+    }
+  ]
+}
+```
+
+Обход идёт сверху вниз: `Preset::serialise` передаёт поле `bands`, договор вектора — каждую полосу, `Band::serialise` — два числа. Каждый вложенный объект записывает свой посетитель, поэтому у каждой полосы есть собственное свойство `"__version__"`.
+
+### Состояние посетителя {#visitor-state}
+
+<MarginNote items={[
+  { label: 'Стандартная библиотека C++ в плагине → std::optional', description: 'Проверка результата convert перед чтением полей.', target: { article: 'cpp-std', anchor: 'optional' } },
+]}>
+
+Книга отмечает, что посетитель может накапливать состояние при обходе (с. 386). У `ToVar::Visitor` это поле `std::optional<var> value`: в нём растёт дерево JSON, которое `convert` вернёт в конце. Если поле записать не удалось, посетитель вызывает `value.reset()`, а дальнейшие записи начинаются с проверки `if (! value.has_value()) return;` и ничего не добавляют. У `FromVar::Visitor` состояние — исходное дерево `input`, позиция в массиве `currentArrayIndex` и флаг `failed`. Отсутствующее свойство, неподходящий тип значения или попытка прочитать элемент за концом массива ставят `failed = true`, и `convert` возвращает пустой `std::optional`, даже если ошибка была в одном поле вложенного объекта.
+
+</MarginNote>
+
+### Что добавить легко, а что трудно {#juce-tradeoffs}
+
+<MarginNote items={[
+  { label: 'JUCE → SerialisationTraits', description: 'Документация договора: marshallingVersion, serialise или load и save.', target: { url: 'https://docs.juce.com/master/structjuce_1_1SerialisationTraits.html' } },
+  { label: 'Learn C++ → 26.4 Class template specialization', description: 'Отдельная версия шаблона класса для конкретного типа.', target: { url: 'https://www.learncpp.com/cpp-tutorial/class-template-specialization/' } },
+]}>
+
+Чтобы сохранять новый тип данных, его делают элементом. Для своей структуры достаточно объявить `marshallingVersion` и `serialise`, а для чужого типа, который нельзя править, — специализировать `juce::SerialisationTraits<T>` ([«Кто вызывает serialise»](/cpp-classes/#serialise-call)). Посетителей при этом менять не нужно. Главный недостаток посетителя по книге — правка всех посетителей при каждом новом классе элемента — здесь смягчён: любая структура раскладывается на небольшой набор видов, для которых в архивах уже есть `visit`: числа, `bool`, `juce::String`, `juce::var`, именованные поля и размеры контейнеров. Тип без договора останавливает сборку. Поле `juce::MemoryBlock` в структуре приводит к ошибке `static_assert` с сообщением `No serialisation function found or marshallingVersion unset`.
+
+</MarginNote>
+
+Этот недостаток проявляется на уровне базовых видов. Если понадобится новый вид, который не сводится к существующим, придётся добавить перегрузку `visit` в каждый архив, точно как `visit (const IntParameter&)` в каждого посетителя классического примера.
+
+Чтобы добавить операцию, пишут нового посетителя. JUCE сама поступает так в модуле `juce_midi_ci`: классы `Reader` и `Writer` из [`juce_CIMarshalling.h`](https://github.com/juce-framework/JUCE/blob/8.0.12/modules/juce_midi_ci/detail/juce_CIMarshalling.h) переводят структуры сообщений MIDI-CI в байты и обратно. Структуры описывают свои поля тем же договором; например, `SerialisationTraits<ci::Message::Header>` в [`juce_CIMessageMeta.h`](https://github.com/juce-framework/JUCE/blob/8.0.12/modules/juce_midi_ci/detail/juce_CIMessageMeta.h) передаёт архиву поля заголовка в порядке байтов сообщения. Формат другой — поля без имён, в порядке байтов сообщения, — а договор `serialise`, `load` и `save` тот же. Оба класса лежат в пространстве имён `detail` и не входят в открытый интерфейс JUCE.
+
+Собственный архив можно написать и для `SerializableParameters`. Документация JUCE такого способа не описывает, но шаблон `serialise` примет любой тип с `getVersion()` и оператором вызова ([«Требования к типу»](/cpp-classes/#template-requirements)). Посетитель ниже печатает поля вместо записи в JSON; структура `SerializableParameters` при этом не меняется:
+
+```cpp
+// Ещё один посетитель для того же serialise: печатает поля в поток.
+// Обрабатывает только Named с типами, которые умеет выводить std::ostream.
+class PrintArchive
+{
+public:
+    explicit PrintArchive (std::ostream& output) : stream (output) {}
+
+    std::optional<int> getVersion() const { return 1; }
+
+    template <typename... Items>
+    void operator() (const Items&... items)
+    {
+        (print (items), ...);
+    }
+
+private:
+    std::ostream& stream;
+
+    template <typename Value>
+    void print (const juce::Named<Value>& item)
+    {
+        stream << item.name << " = " << std::boolalpha << item.value << '\n';
+    }
+};
+```
+
+Вызов `SerializableParameters::serialise (archive, parameters)` для частоты 2,5 Гц, выключенного обхода и треугольной формы волны печатает (проверено с JUCE 8.0.12 и Apple clang 17):
+
+```text
+pluginName = Tremolo
+modulationRateHz = 2.5
+bypassed = false
+modulationWaveform = Triangle
+```
+
+`getVersion()` возвращает 1, поэтому `serialise` проходит проверку версии. Вложенную структуру или вектор этот архив не обработает: для них нужен рекурсивный вызов договора, который JUCE выполняет закрытой функцией `detail::doSave`. Для настоящего формата хранения надёжнее `ToVar` и `FromVar`, а пример показывает, что новая операция не требует правки элемента. [Таблица 2](#juce-visitor-participants) сводит соответствие участников.
+
+<DataTable
+  id="juce-visitor-participants"
+  number={2}
+  caption="Участники паттерна «посетитель» в сериализации JUCE 8.0.12."
+  columns={[
+    { label: 'Участник', width: '10rem' },
+    { label: 'В JUCE' },
+  ]}
+  rows={[
+    ['Visitor', 'Общего класса нет: требования к архиву — методы <code>getVersion()</code> и <code>operator()</code>, которые использует шаблон <code>serialise</code>.'],
+    ['ConcreteVisitor', '<code>ToVar::Visitor</code> (запись в <code>juce::var</code>), <code>FromVar::Visitor</code> (чтение), <code>midi_ci::detail::Marshalling::Writer</code> и <code>Reader</code> (байты MIDI-CI).'],
+    ['Element', 'Тип с <code>marshallingVersion</code> и <code>serialise</code> или <code>load</code> и <code>save</code>, внутри типа или в специализации <code>SerialisationTraits&lt;T&gt;</code>.'],
+    ['VisitConcreteElement', 'Перегрузки <code>visit</code> для <code>Named&lt;T&gt;</code>, <code>SerialisationSize&lt;T&gt;</code>, <code>bool</code>, <code>String</code>, <code>var</code>, чисел и вложенных типов.'],
+    ['ObjectStructure', 'Сам объект: <code>serialise</code> передаёт поля, специализации для <code>std::vector</code>, <code>std::map</code> и других контейнеров обходят элементы.'],
+    ['Client', '<code>ToVar::convert</code> и <code>FromVar::convert</code>: создают посетителя, вызывают <code>detail::doSave</code> или <code>detail::doLoad</code>, возвращают <code>std::optional</code>.'],
+  ]}
+/>
+
+## Самопроверка {#self-check}
+
+<SelfCheck question="Почему в классическом примере нельзя написать json.visit (*parameter) и обойтись без accept?">
+
+`parameter` — указатель на `Parameter`, и выражение `*parameter` имеет объявленный тип `Parameter&`. Перегрузку `visit` компилятор выбирает при сборке по этому типу, а версии для `const Parameter&` нет, поэтому вызов не собирается. Виртуальный вызов `accept` выбирается по настоящему типу объекта, и внутри него `*this` уже имеет конкретный тип, например `const FloatParameter&`.
+
+</SelfCheck>
+
+<SelfCheck question="В плагин добавили целочисленный параметр. Что придётся изменить в классическом примере, а что — в SerializableParameters?">
+
+В классическом примере — класс `IntParameter` с `accept`, новый чисто виртуальный `visit (const IntParameter&)` в `ParameterVisitor` и его реализации в `JsonWriter` и `DisplayPrinter`. В `SerializableParameters` — только поле `int` и ещё один `named(...)` в `serialise`: общий шаблон `visit` в архивах JUCE уже записывает и читает целые числа через `if constexpr`.
+
+</SelfCheck>
+
+<SelfCheck question="Что вернёт FromVar::convert<Preset> для JSON, где у одной полосы &quot;frequencyHz&quot;: 100 без дробной части?">
+
+Пустой `std::optional<Preset>`. Парсер JSON читает `100` как целое, а вещественное поле посетитель `FromVar` принимает только из значения, для которого `isDouble()` истинно. Посетитель ставит `failed = true`, и ошибка во вложенной полосе делает пустым результат всего `convert`. Значение `100.0` прочитается.
+
+</SelfCheck>
+
+## Источники {#sources}
+
+- <Source id="gamma-1995">Гл. 1, §1.1 «Что такое паттерн проектирования», с. 17–19; гл. 5, «Паттерн Visitor (посетитель)», с. 379–395 (русское издание 2020 года)</Source> — определение паттерна и четыре части его описания, группы паттернов; назначение, мотивация, участники, результаты, двойная диспетчеризация и варианты обхода структуры посетителем.
+- [JUCE 8.0.12. juce_JSONSerialisation.h](https://github.com/juce-framework/JUCE/blob/8.0.12/modules/juce_core/json/juce_JSONSerialisation.h) — `ToVar::Visitor` и `FromVar::Visitor`: `convert`, перегрузки `visit`, поля `value`, `failed`, `currentArrayIndex`, проверка `isDouble()` при чтении вещественных чисел.
+- [JUCE 8.0.12. juce_Serialisation.h](https://github.com/juce-framework/JUCE/blob/8.0.12/modules/juce_core/serialisation/juce_Serialisation.h) и [документация SerialisationTraits](https://docs.juce.com/master/structjuce_1_1SerialisationTraits.html) — договор сериализации, `Named`, `SerialisationSize`, специализации для контейнеров стандартной библиотеки, выбор функции в `detail::doSave` и `detail::doLoad`, `static_assert` для типа без договора.
+- JUCE 8.0.12, модуль `juce_midi_ci`: [juce_CIMarshalling.h](https://github.com/juce-framework/JUCE/blob/8.0.12/modules/juce_midi_ci/detail/juce_CIMarshalling.h) — архивы `Reader` и `Writer` для байтов сообщений MIDI-CI; [juce_CIMessageMeta.h](https://github.com/juce-framework/JUCE/blob/8.0.12/modules/juce_midi_ci/detail/juce_CIMessageMeta.h) — специализации `SerialisationTraits` для заголовка сообщения и MUID.
+- [JUCE. tremolo-juce-course, JsonSerializer.cpp](https://github.com/juce-framework/tremolo-juce-course/blob/main/complete/tremolo_plugin/source/JsonSerializer.cpp) — структура `SerializableParameters` и вызовы `ToVar::convert` и `FromVar::convert`.
+- <Source id="learncpp">Уроки [25.2 «Virtual functions and polymorphism»](https://www.learncpp.com/cpp-tutorial/virtual-functions/), [25.7 «Pure virtual functions, abstract base classes, and interface classes»](https://www.learncpp.com/cpp-tutorial/pure-virtual-functions-abstract-base-classes-and-interface-classes/), [11.1](https://www.learncpp.com/cpp-tutorial/introduction-to-function-overloading/) и [11.3](https://www.learncpp.com/cpp-tutorial/function-overload-resolution-and-ambiguous-matches/), [8.4 «Constexpr if statements»](https://www.learncpp.com/cpp-tutorial/constexpr-if-statements/), [26.4 «Class template specialization»](https://www.learncpp.com/cpp-tutorial/class-template-specialization/)</Source> — виртуальные и чисто виртуальные методы, перегрузка и её выбор при компиляции, `if constexpr`, специализация шаблона класса.
+- cppreference: [std::variant](https://en.cppreference.com/w/cpp/utility/variant) и [std::visit](https://en.cppreference.com/w/cpp/utility/variant/visit) — тип-сумма (C++17) и вызов функции для хранимого значения.
+- Классический пример собран Apple clang 17 с `-std=c++23 -Wall -Wextra -pedantic`. Пример `Preset`, архив `PrintArchive`, отказ `FromVar` при отсутствующем поле, неверном типе и целом числе в вещественном поле, а также ошибка компиляции для `juce::MemoryBlock` проверены тестовой программой с модулем `juce_core` JUCE 8.0.12.

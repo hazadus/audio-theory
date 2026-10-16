@@ -1,0 +1,22 @@
+{
+  "id": "cpp-patterns-published",
+  "date": "2026-10-17",
+  "order": 1,
+  "type": "new",
+  "article": "cpp-patterns",
+  "summary": "Что такое паттерн проектирования по книге банды четырёх и как устроен паттерн «посетитель»: классический пример с параметрами плагина и двойной диспетчеризацией, затем сериализация JUCE в ToVar и FromVar, где посетители выбираются при компиляции, а одна функция serialise описывает и запись, и чтение.",
+  "items": [
+    {
+      "text": "Двойная диспетчеризация на примере параметров плагина",
+      "target": { "article": "cpp-patterns", "anchor": "double-dispatch" }
+    },
+    {
+      "text": "Посетители ToVar и FromVar в сериализации JUCE",
+      "target": { "article": "cpp-patterns", "anchor": "juce-visitor" }
+    },
+    {
+      "text": "Что легко и что трудно добавить в сериализацию JUCE",
+      "target": { "article": "cpp-patterns", "anchor": "juce-tradeoffs" }
+    }
+  ]
+}

@@ -96,7 +96,11 @@
     "wilczek": "Wilczek J.",
     "bohn": "Bohn D. A.",
     "baxandall": "Baxandall P. J.",
-    "kirchner": "Kirchner A."
+    "kirchner": "Kirchner A.",
+    "gamma": "Gamma E.",
+    "helm": "Helm R.",
+    "johnson-r": "Johnson R.",
+    "vlissides": "Vlissides J."
   },
   "editions": [
     {
@@ -771,6 +775,14 @@
       "title": "A Brief History of Equalization",
       "publication": "Black Rooster Audio, 2 мая 2023.",
       "url": "https://blackroosteraudio.com/en/blogreader/a-brief-history-of-equalization"
+    },
+    {
+      "id": "gamma-1995",
+      "type": "book",
+      "authors": ["gamma", "helm", "johnson-r", "vlissides"],
+      "title": "Design Patterns: Elements of Reusable Object-Oriented Software",
+      "publication": "Addison-Wesley, 1995. ISBN 978-0-201-63361-0.",
+      "translation": "Гамма Э., Хелм Р., Джонсон Р., Влиссидес Дж. Паттерны объектно-ориентированного проектирования. СПб.: Питер, 2020. 448 с. (Библиотека программиста). ISBN 978-5-4461-1595-2."
     }
   ]
 }

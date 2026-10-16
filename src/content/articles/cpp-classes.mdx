@@ -548,7 +548,7 @@ const auto parsedParameters =
   { label: 'Learn C++ → 26.4 Class template specialization', description: 'Отдельная версия шаблона класса для конкретного типа.', target: { url: 'https://www.learncpp.com/cpp-tutorial/class-template-specialization/' } },
 ]}>
 
-Ни одна строка плагина не вызывает `serialise` по имени: его вызывает JUCE внутри `ToVar::convert` и `FromVar::convert`. Документация `juce::SerialisationTraits` описывает договор: у типа есть константа `marshallingVersion` и либо один шаблон `serialise (Archive&, Item&)`, либо пара `load` и `save`. Договор можно выполнить и снаружи типа, специализацией шаблона `juce::SerialisationTraits<T>`; так JUCE сама поддерживает `std::vector`, `std::optional`, `std::string` и `juce::StringArray`.
+Ни одна строка плагина не вызывает `serialise` по имени: его вызывает JUCE внутри `ToVar::convert` и `FromVar::convert`. Документация `juce::SerialisationTraits` описывает договор: у типа есть константа `marshallingVersion` и либо один шаблон `serialise (Archive&, Item&)`, либо пара `load` и `save`. Договор можно выполнить и снаружи типа, специализацией шаблона `juce::SerialisationTraits<T>`; так JUCE сама поддерживает `std::vector`, `std::optional`, `std::string` и `juce::StringArray`. Такая схема, в которой тип перечисляет свои поля, а разные архивы выполняют с ними разные операции, — паттерн «посетитель»; он разобран в статье [«Паттерны проектирования в JUCE»](/cpp-patterns/#juce-visitor).
 
 </MarginNote>
 
