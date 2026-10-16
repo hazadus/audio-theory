@@ -17,7 +17,8 @@ import type { SeriesPosition } from '@/lib/first-steps';
 import type { NavTrack } from '@/lib/track-navigation';
 import { formatUpdatedDate } from '@/lib/format-date';
 import { articleStructuredData, serializeJsonLd } from '@/lib/structured-data';
-import { materialsHref } from '@/lib/materials';
+import { articlesLabel, materialsHref } from '@/lib/materials';
+import { prerequisitesInitScript } from '@/lib/prerequisites';
 import { withBase } from '@/lib/urls';
 import { siteConfig } from '@/site.config';
 import '@/styles/code.css';
@@ -120,7 +121,7 @@ const structuredData = articleStructuredData({
         </ol>
       </nav>
 
-      <header class="head">
+      <header class:list={['head', { 'has-series': series }]}>
         {series && (
           <a class="series-label" href={`${withBase('/')}#first-steps`} data-pagefind-ignore>
             Первое знакомство · {series.number} из {series.total}
@@ -128,48 +129,52 @@ const structuredData = articleStructuredData({
         )}
         <h1>{data.title}</h1>
         <p class="question">{data.question}</p>
-        <div class="meta-row">
-          <div class="meta">
-            {dates.published ? (
-              <span data-pagefind-ignore>
-                Опубликовано{' '}
-                <time datetime={dates.published}>{formatUpdatedDate(dates.published)}</time>
+        {/* В DOM метаданные идут сразу после лида; от 1280 px сетка выносит их в правое поле. */}
+        <aside class="about" aria-label="О статье" data-pagefind-ignore>
+          <div class="meta-row">
+            <div class="meta">
+              {dates.published ? (
+                <span>
+                  Опубликовано{' '}
+                  <time datetime={dates.published}>{formatUpdatedDate(dates.published)}</time>
+                </span>
+              ) : (
+                <span>Черновик</span>
+              )}
+              {dates.addition && (
+                <span>
+                  Дополнено{' '}
+                  <a href={withBase(dates.addition.path)}>
+                    <time datetime={dates.addition.date}>
+                      {formatUpdatedDate(dates.addition.date)}
+                    </time>
+                  </a>
+                </span>
+              )}
+              <span class="reading">
+                <Icon name="clock" size={16} />
+                {readingMinutes} мин чтения
               </span>
-            ) : (
-              <span data-pagefind-ignore>Черновик</span>
-            )}
-            {dates.addition && (
-              <span data-pagefind-ignore>
-                Дополнено{' '}
-                <a href={withBase(dates.addition.path)}>
-                  <time datetime={dates.addition.date}>
-                    {formatUpdatedDate(dates.addition.date)}
-                  </time>
-                </a>
-              </span>
-            )}
-            <span class="reading" data-pagefind-ignore>
-              <Icon name="clock" size={16} />
-              {readingMinutes} мин чтения
-            </span>
+            </div>
+            <TextAlignToggle compact />
           </div>
-          <TextAlignToggle compact />
-        </div>
+          {articleTracks.length > 0 && (
+            <p class="in-tracks" data-in-tracks data-pagefind-ignore>
+              <span class="in-tracks-label">В треках</span>
+              {articleTracks.map((item) => (
+                <a href={item.href}>
+                  {item.title}, этап {item.stageNumber}
+                </a>
+              ))}
+            </p>
+          )}
+        </aside>
         <TagList tags={articleTags} label="Теги" all />
-        {articleTracks.length > 0 && (
-          <p class="in-tracks" data-in-tracks data-pagefind-ignore>
-            <span>В треках:</span>
-            {articleTracks.map((item) => (
-              <a href={item.href}>
-                {item.title}, этап {item.stageNumber}
-              </a>
-            ))}
-          </p>
-        )}
       </header>
 
       {toc.length > 0 && (
         <div class="toc-cell" data-pagefind-ignore>
+          <TextAlignToggle />
           <div class="toc-sticky">
             <nav class="toc" aria-label="Содержание" data-toc>
               <details open>
@@ -186,7 +191,6 @@ const structuredData = articleStructuredData({
                 </ol>
               </details>
             </nav>
-            <TextAlignToggle />
           </div>
         </div>
       )}
@@ -194,15 +198,22 @@ const structuredData = articleStructuredData({
       <article class="body" data-article-body>
         {prerequisites.length > 0 && (
           <aside class="prerequisites" aria-label="Что нужно знать заранее" data-pagefind-ignore>
-            <div class="label">Что нужно знать заранее</div>
-            <ul>
-              {links(prerequisites).map((item) => (
-                <li>
-                  <a href={item.href}>{item.label}</a>
-                  <span class="note">{item.description}</span>
-                </li>
-              ))}
-            </ul>
+            <details data-prerequisites>
+              <summary>
+                <Icon name="chevron-right" size={16} />
+                <span class="label">Что нужно знать заранее</span>
+                <span class="count">{articlesLabel(prerequisites.length)}</span>
+              </summary>
+              <ul>
+                {links(prerequisites).map((item) => (
+                  <li>
+                    <a href={item.href}>{item.label}</a>
+                    <span class="note">{item.description}</span>
+                  </li>
+                ))}
+              </ul>
+            </details>
+            <script is:inline set:html={prerequisitesInitScript} />
           </aside>
         )}
         <div class="prose">
@@ -275,6 +286,7 @@ const structuredData = articleStructuredData({
 <script>
   import { initCodeBlocks } from '@/lib/code-block-controller';
   import { initHeadingLinks } from '@/lib/heading-links-controller';
+  import { initPrerequisites } from '@/lib/prerequisites-controller';
   import { initReadingProgress } from '@/lib/reading-progress-controller';
   import { initToc } from '@/lib/toc-controller';
   import { initTrackNavigation } from '@/lib/track-navigation-controller';
@@ -284,6 +296,7 @@ const structuredData = articleStructuredData({
   initCodeBlocks();
   initReadingProgress();
   initTrackNavigation();
+  initPrerequisites();
 </script>
 
 <style>
@@ -378,6 +391,13 @@ const structuredData = articleStructuredData({
     font-style: italic;
     line-height: var(--leading-normal);
     text-wrap: pretty;
+  }
+
+  /* «О статье» до 1280 px — строки под лидом: даты и время чтения, затем «В треках». */
+  .about {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
   }
 
   /* Смартфон: переключатель выравнивания — справа в строке метаданных. */
@@ -541,8 +561,8 @@ const structuredData = articleStructuredData({
     }
   }
 
-  .in-tracks span {
-    color: var(--color-text-muted);
+  .in-tracks-label::after {
+    content: ':';
   }
 
   .reading {
@@ -632,14 +652,55 @@ const structuredData = articleStructuredData({
     gap: var(--space-6);
   }
 
+  /* Свёрнут по умолчанию; в заголовке — число статей. Без JS раскрывается как обычный <details>. */
   .prerequisites {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: var(--space-4) var(--space-5);
     border: var(--border-width) solid var(--color-border);
     border-radius: var(--radius-lg);
     font-family: var(--font-ui);
+  }
+
+  .prerequisites summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 0 var(--space-5);
+    border-radius: var(--radius-lg);
+    color: var(--color-text);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .prerequisites summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .prerequisites summary:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+
+  .prerequisites summary :global(.icon) {
+    flex: none;
+    color: var(--color-text-muted);
+    transition: transform var(--duration-fast);
+  }
+
+  .prerequisites details[open] summary :global(.icon) {
+    transform: rotate(90deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .prerequisites summary :global(.icon) {
+      transition: none;
+    }
+  }
+
+  .prerequisites .count {
+    margin-inline-start: auto;
+    color: var(--color-text-muted);
+    font-size: 13px;
+    white-space: nowrap;
   }
 
   .label,
@@ -653,10 +714,12 @@ const structuredData = articleStructuredData({
     text-transform: uppercase;
   }
 
+  /* Пункты выровнены по подписи: 20 px поля + 16 px значок + 10 px зазор. */
   .prerequisites ul {
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
+    padding: 0 var(--space-5) var(--space-4) 46px;
     font-size: 15px;
     line-height: var(--leading-normal);
   }
@@ -727,23 +790,27 @@ const structuredData = articleStructuredData({
       margin-inline: 0;
     }
 
-    /* Колонка оглавления занимает всю высоту статьи, а список прилипает под шапкой при прокрутке. */
+    /* Колонка оглавления занимает всю высоту статьи и начинается на уровне заголовка.
+       Переключатель «Текст» стоит над оглавлением и уходит вверх при прокрутке, оглавление прилипает под шапкой. */
     .toc-cell {
       grid-column: 1;
       grid-row: 1 / span 3;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
       max-width: none;
       margin-inline: 0;
-      padding-top: 180px;
+      /* Высота крошек и зазор до заголовка: верх подписи «Текст» на уровне H1. */
+      padding-top: 39px;
     }
 
-    /* Оглавление и переключатель выравнивания прилипают вместе; список прокручивается сам, если длиннее окна. */
+    /* Список прокручивается сам, если длиннее окна. */
     .toc-sticky {
       position: sticky;
       top: 88px;
       max-height: calc(100dvh - 88px - var(--space-6));
       display: flex;
       flex-direction: column;
-      gap: var(--space-6);
     }
 
     /* Заголовок «Содержание» — подпись, не кнопка. */
@@ -778,56 +845,124 @@ const structuredData = articleStructuredData({
       display: none;
     }
 
-    /* 40 px — высота подписи «Содержание», 96 px — переключатель выравнивания с отступом. */
+    /* 40 px — высота подписи «Содержание». */
     .toc ol {
       position: relative;
-      max-height: calc(100dvh - 88px - var(--space-6) - 40px - 96px);
+      max-height: calc(100dvh - 88px - var(--space-6) - 40px);
     }
   }
 
-  @media (width >= 1280px) {
-    .page {
-      column-gap: var(--space-9);
-    }
-  }
-
-  /* Только статьи с заметками резервируют правое поле. 240 + 24 + 680 + 48 + 208 = 1200 px.
-     Текст сужается при нехватке места; широкие блоки используют освободившееся правое поле. */
+  /* Правое поле есть у каждой статьи: метаданные сверху, заметки ниже. 240 + 24 + 680 + 48 + 208 = 1200 px.
+     Текст сужается при нехватке места; на статьях с заметками широкие блоки используют правое поле. */
   @media screen and (width >= 1280px) {
-    .page:has(:global(.margin-note)) {
+    .page {
       grid-template-columns: 240px minmax(0, 1fr);
       column-gap: var(--space-6);
     }
 
-    .page:has(:global(.margin-note)) .body {
+    .body {
       max-width: none;
     }
 
-    .page:has(:global(.margin-note)) :is(.breadcrumbs, .head, .prerequisites, .related),
-    .page:has(:global(.margin-note)) :global(.article-graph) {
+    :is(.breadcrumbs, .prerequisites, .series-nav, .track-nav, .related),
+    .page :global(.article-graph) {
       max-width: min(var(--content-width), 100% - 256px);
     }
 
-    .page:has(:global(.margin-note)) .prose > :global(*) {
+    .prose > :global(*) {
       width: calc(100% - 256px);
       box-sizing: border-box;
     }
 
-    .page:has(:global(.margin-note)) .prose > :global(.margin-note-block) {
+    .prose > :global(.margin-note-block) {
       width: 100%;
     }
 
     .page:has(:global(.margin-note)) .prose > :global(:is(figure, .data-table)) {
       width: min(var(--wide-width), 100%);
     }
+
+    /* Заголовок, лид и теги — в колонке текста; «О статье» — в правом поле с верхом на уровне заголовка.
+       Поле позиционировано абсолютно в своей ячейке сетки: высоту заголовка оно не меняет и, если длиннее,
+       свисает рядом с началом текста. */
+    .head {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 208px;
+      column-gap: 48px;
+      max-width: none;
+    }
+
+    .head > :not(.about),
+    .head > :global(.tag-list) {
+      grid-column: 1;
+    }
+
+    .about {
+      position: absolute;
+      inset: 0 0 auto;
+      grid-column: 2;
+      grid-row: 1;
+      gap: 20px;
+      color: var(--color-text-muted);
+      font-family: var(--font-ui);
+      font-size: 14px;
+      line-height: var(--leading-normal);
+    }
+
+    .head.has-series .about {
+      grid-row: 2;
+    }
+
+    .about .meta {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    /* Дата — отдельной строкой под «Опубликовано» и «Дополнено». */
+    .about .meta > span:has(time) {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .about .meta time {
+      color: var(--color-text);
+      white-space: nowrap;
+    }
+
+    .about .reading {
+      margin-top: 6px;
+    }
+
+    .about .in-tracks {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+      padding-top: var(--space-4);
+      border-top: var(--border-width) solid var(--color-border);
+    }
+
+    /* Подпись группы — как у «Содержания». */
+    .in-tracks-label {
+      margin-bottom: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: var(--tracking-wide);
+      text-transform: uppercase;
+    }
+
+    .in-tracks-label::after {
+      content: none;
+    }
   }
 
   @media print {
-    .page:has(:global(.margin-note)) {
+    .page {
       grid-template-columns: minmax(0, 1fr);
     }
 
-    .page:has(:global(.margin-note)) :is(.breadcrumbs, .head, .body) {
+    :is(.breadcrumbs, .head, .body) {
       grid-column: 1;
     }
 
