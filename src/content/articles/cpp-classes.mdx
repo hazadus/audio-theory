@@ -18,6 +18,9 @@ related:
   - label: 'Тремоло: глубина модуляции и усиление'
     description: Эффект, класс Tremolo которого разобран в этой статье по частям.
     target: { article: tremolo, anchor: juce-processing }
+  - label: 'Стандартная библиотека C++ в плагине: optional, контейнеры, лямбды и std::function'
+    description: std::optional, индекс с проверкой и без, алгоритмы, лямбды и std::function в коде плагина.
+    target: { article: cpp-std }
   - label: Dry/wet и bypass → Пример на C++ и JUCE
     description: Класс BypassTransitionSmoother, из которого взяты примеры конструкторов и const-методов.
     target: { article: dry-wet-bypass, anchor: juce-example }
@@ -366,7 +369,13 @@ using LinearSmoothedValue = SmoothedValue <FloatType, ValueSmoothingTypes::Linea
 using ReadAllLfoSamples = std::function<void(juce::AudioBuffer<float>&)>;
 ```
 
+<MarginNote items={[
+  { label: 'Стандартная библиотека C++ → std::function', description: 'Как LfoVisualizer хранит лямбды редактора в полях std::function.', target: { article: 'cpp-std', anchor: 'function' } },
+]}>
+
 Запись `void(juce::AudioBuffer<float>&)` описывает функцию, которая ничего не возвращает и принимает ссылку на буфер. Так `LfoVisualizer` объявляет, какой вызов ему нужен от процессора, и лямбды из `PluginEditor` подходят под эту сигнатуру. `juce::dsp::Oscillator<float>` хранит генератор формы волны так же, в `std::function<float (float)>`. Поэтому лямбда `[](auto phase) { ... }` из `Tremolo.h` при создании осциллятора получает параметр типа `float`.
+
+</MarginNote>
 
 ### auto в параметрах {#auto-parameters}
 
@@ -384,7 +393,7 @@ template <typename Pointer>
 auto& addParameterToProcessor (juce::AudioProcessor& processor, Pointer parameter);
 ```
 
-Три функции `create…Parameter` передают в неё `std::unique_ptr<juce::AudioParameterFloat>`, `std::unique_ptr<juce::AudioParameterBool>` и `std::unique_ptr<juce::AudioParameterChoice>`. Компилятор создаёт три версии функции, и тип результата `auto&` в каждой выводится из `return result;`: `AudioParameterFloat&`, `AudioParameterBool&`, `AudioParameterChoice&`. Лямбда с параметром `auto` (C++14) устроена так же: шаблоном становится её оператор вызова, о чём сказано в разделе [«Лямбды»](#lambdas).
+Три функции `create…Parameter` передают в неё `std::unique_ptr<juce::AudioParameterFloat>`, `std::unique_ptr<juce::AudioParameterBool>` и `std::unique_ptr<juce::AudioParameterChoice>`. Компилятор создаёт три версии функции, и тип результата `auto&` в каждой выводится из `return result;`: `AudioParameterFloat&`, `AudioParameterBool&`, `AudioParameterChoice&`. Лямбда с параметром `auto` (C++14) устроена так же: шаблоном становится её оператор вызова, о чём сказано в разделе [«Лямбды»](/cpp-std/#lambdas) статьи о стандартной библиотеке.
 
 ### Требования к типу {#template-requirements}
 
@@ -578,6 +587,7 @@ template <typename T> constexpr auto named (std::string_view c, const T& t) { re
 <MarginNote items={[
   { label: 'Learn C++ → 12.15 std::optional', description: 'Значение, которого может не быть.', target: { url: 'https://www.learncpp.com/cpp-tutorial/stdoptional/' } },
   { label: 'cppreference → operator== (std::optional)', description: 'Раздел Compare an optional object with a value: пустой optional не равен никакому значению.', target: { url: 'https://en.cppreference.com/w/cpp/utility/optional/operator_cmp' } },
+  { label: 'Стандартная библиотека C++ → std::optional', description: 'Проверка и чтение значения, операторы * и -> без проверки на пустоту.', target: { article: 'cpp-std', anchor: 'optional' } },
 ]}>
 
 `getVersion()` — метод класса архива: оба `Visitor` объявляют `std::optional<int> getVersion() const`. При сохранении он возвращает версию, с которой пишется объект, то есть `marshallingVersion`, и `ToVar` записывает её в JSON как `"__version__": 1`. При загрузке метод возвращает значение `"__version__"` из JSON, а если такого свойства нет — `std::nullopt`.
@@ -745,55 +755,11 @@ TEST_F(BypassTransitionSmootherTest, OffOnTransitionIsSmooth) {
 
 Проверки `EXPECT_EQ`, `EXPECT_TRUE`, `EXPECT_NEAR`, `EXPECT_FLOAT_EQ` при неудаче помечают тест проваленным, но он продолжает выполняться. `ASSERT_*` при неудаче прерывает тест сразу, и его берут для предусловий, без которых дальнейшие проверки бессмысленны. Поля фикстуры объявлены `protected`, потому что каждый `TEST_F` технически является наследником фикстуры. Для сравнения вещественных чисел используют `EXPECT_NEAR` и `EXPECT_FLOAT_EQ`, а не `==`, о чём предупреждает флаг `-Wfloat-equal`.
 
-## Стандартная библиотека и лямбды {#next}
+## Стандартная библиотека {#next}
 
-[Таблица 1](#std-headers) перечисляет стандартные заголовки, подключённые в `tremolo_plugin.h`.
+Типы стандартной библиотеки, которые встречаются в плагине, разобраны в отдельной статье [«Стандартная библиотека C++ в плагине»](/cpp-std/): подключённые заголовки, `std::optional`, контейнеры и алгоритмы, лямбды и `std::function`.
 
-<DataTable
-  id="std-headers"
-  number={1}
-  caption="Стандартные заголовки, подключённые в tremolo_plugin.h, и то, что из них используется в плагине."
-  columns={[
-    { label: 'Заголовок', width: '8rem' },
-    { label: 'Что даёт' },
-  ]}
-  rows={[
-    ['<code>&lt;vector&gt;</code>', '<code>std::vector&lt;T&gt;</code> — динамический массив, как <code>list</code> в Python и срез в Go. Поле <code>lfoSamples</code> в <code>Tremolo</code>.'],
-    ['<code>&lt;array&gt;</code>', '<code>std::array&lt;T, N&gt;</code> — массив фиксированного размера, заданного при компиляции. Поле <code>lfos</code>.'],
-    ['<code>&lt;memory&gt;</code>', '<code>std::unique_ptr</code> и <code>std::shared_ptr</code>; <code>std::make_unique</code> при создании параметров.'],
-    ['<code>&lt;functional&gt;</code>', '<code>std::function&lt;Сигнатура&gt;</code> — хранит любую вызываемую сущность, включая лямбду.'],
-    ['<code>&lt;algorithm&gt;</code>', '<code>std::min</code>, <code>std::max</code>, <code>std::rotate</code> и другие алгоритмы; <code>std::rotate</code> в <code>StridedQueue</code>.'],
-    ['<code>&lt;cmath&gt;</code>', '<code>std::sin</code>, <code>std::abs</code>, <code>std::floor</code>; <code>triangle</code> в <code>Tremolo</code>.'],
-    ['<code>&lt;ranges&gt;</code>', '<code>std::views::iota</code> и другие ленивые адаптеры диапазонов.'],
-    ['<code>&lt;span&gt;</code>', '<code>std::span</code> — вид на непрерывную память.'],
-  ]}
-/>
-
-### Лямбды {#lambdas}
-
-<MarginNote items={[
-  { label: 'Learn C++ → 20.6 Introduction to lambdas (anonymous functions)', description: 'Анонимные функции и их синтаксис.', target: { url: 'https://www.learncpp.com/cpp-tutorial/introduction-to-lambdas-anonymous-functions/' } },
-  { label: 'Learn C++ → 20.7 Lambda captures', description: 'Что лямбда захватывает из окружения.', target: { url: 'https://www.learncpp.com/cpp-tutorial/lambda-captures/' } },
-]}>
-
-Лямбда-выражение (lambda expression, C++11) — анонимная функция вида `[захват](параметры) { тело }`. В квадратных скобках перечислено, что она берёт из окружения: `[this]` — указатель на текущий объект, `[x]` — копию `x`, `[&x]` — ссылку на `x`, `[=]` и `[&]` — всё по значению или по ссылке. В отличие от замыканий Python и Go, захват по ссылке не продлевает жизнь объекта: если лямбда переживёт захваченную переменную, она обратится к уже освобождённой памяти.
-
-</MarginNote>
-
-В плагине лямбды связывают редактор с процессором и реагируют на события интерфейса:
-
-```cpp
-bypassButton.onClick = [this]() {
-  bypassButton.setButtonText(bypassButton.getToggleState() ? "Bypassed" : "Off");
-};
-
-lfoVisualizer{
-    [&p](juce::AudioBuffer<float>& b) { p.readAllLfoSamples(b); },
-    [&p] { return p.getSampleRateThreadSafe(); },
-    [&p] { return p.getParameterRefs().bypassed.get(); }},
-```
-
-Захват `[&p]` безопасен, потому что редактор живёт не дольше процессора: по правилам JUCE редактор удаляется раньше процессора. Лямбда `[](auto phase) { ... }` в `Tremolo.h` принимает параметр типа `auto` (C++14), то есть работает как шаблон: тип выводится при вызове.
+## Самопроверка {#self-check}
 
 <SelfCheck question="Что произойдёт, если в PluginEditor написать void resize() вместо void resized() и не поставить override?">
 
@@ -821,8 +787,8 @@ lfoVisualizer{
 
 ## Источники {#sources}
 
-- <Source id="learncpp">Главы 13 «Introduction to program-defined types» и 14–15 «Introduction to classes»</Source> — классы, конструкторы, `const`-методы, `this`, статические члены; 24–25 — наследование и виртуальные функции; 11.6–11.9, 13.13–13.15, 15.5, 26.2 и 26.4 — шаблоны, их инстанцирование, параметры-значения, псевдонимы и специализация; 12.15 — `std::optional`; 21 и 21.10 — перегрузка операторов и оператор вызова; 20.6–20.7 — лямбды; 22 — перемещение и умные указатели.
-- [cppreference. override specifier](https://en.cppreference.com/w/cpp/language/override), [explicit specifier](https://en.cppreference.com/w/cpp/language/explicit), [Destructors](https://en.cppreference.com/w/cpp/language/destructor), [Lambda expressions](https://en.cppreference.com/w/cpp/language/lambda), [std::span](https://en.cppreference.com/w/cpp/container/span) и [Class template argument deduction](https://en.cppreference.com/w/cpp/language/class_template_argument_deduction) — семантика и стандарты появления.
+- <Source id="learncpp">Главы 13 «Introduction to program-defined types» и 14–15 «Introduction to classes»</Source> — классы, конструкторы, `const`-методы, `this`, статические члены; 24–25 — наследование и виртуальные функции; 11.6–11.9, 13.13–13.15, 15.5, 26.2 и 26.4 — шаблоны, их инстанцирование, параметры-значения, псевдонимы и специализация; 12.15 — `std::optional`; 21 и 21.10 — перегрузка операторов и оператор вызова; 22 — перемещение и умные указатели.
+- [cppreference. override specifier](https://en.cppreference.com/w/cpp/language/override), [explicit specifier](https://en.cppreference.com/w/cpp/language/explicit), [Destructors](https://en.cppreference.com/w/cpp/language/destructor), [std::span](https://en.cppreference.com/w/cpp/container/span) и [Class template argument deduction](https://en.cppreference.com/w/cpp/language/class_template_argument_deduction) — семантика и стандарты появления.
 - cppreference: [Dependent names](https://en.cppreference.com/w/cpp/language/dependent_name), [Parameter pack](https://en.cppreference.com/w/cpp/language/parameter_pack), [Fold expressions](https://en.cppreference.com/w/cpp/language/fold), [Forwarding references](https://en.cppreference.com/w/cpp/language/reference#Forwarding_references), [std::forward](https://en.cppreference.com/w/cpp/utility/forward) и [сравнение std::optional со значением](https://en.cppreference.com/w/cpp/utility/optional/operator_cmp) — правила, на которых построен вызов `archive(...)` и проверка версии.
 - [JUCE. SerialisationTraits](https://docs.juce.com/master/structjuce_1_1SerialisationTraits.html) — договор сериализации: `marshallingVersion`, `serialise` или `load` и `save`, `getVersion()`; исходники 8.0.12 [juce_Serialisation.h](https://github.com/juce-framework/JUCE/blob/8.0.12/modules/juce_core/serialisation/juce_Serialisation.h) (`Named`, `named`, `DummyArchive`, выбор функции через `if constexpr`) и [juce_JSONSerialisation.h](https://github.com/juce-framework/JUCE/blob/8.0.12/modules/juce_core/json/juce_JSONSerialisation.h) (`ToVar::Visitor`, `FromVar::Visitor`, их `operator()` и `getVersion()`); [juce_SmoothedValue.h](https://github.com/juce-framework/JUCE/blob/8.0.12/modules/juce_audio_basics/utilities/juce_SmoothedValue.h) — `ValueSmoothingTypes` и `LinearSmoothedValue`. Поведение `serialise` при сохранении, загрузке и отсутствии версии проверено тестовой программой с JUCE 8.0.12.
 - [Проект стандарта C++](https://eel.is/c++draft/): [dcl.ambig.res](https://eel.is/c++draft/dcl.ambig.res) — правило разбора, из которого следует «most vexing parse».

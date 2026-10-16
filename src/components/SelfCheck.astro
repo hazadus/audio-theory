@@ -71,6 +71,8 @@ const { question } = Astro.props;
 
   .self-check-question {
     flex: 1;
+    /* WebKit при hyphens: auto не применяет overflow-wrap: anywhere во flex-элементе, и длинный идентификатор расширяет страницу. */
+    hyphens: manual;
   }
 
   .self-check-toggle {

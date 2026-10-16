@@ -1,0 +1,22 @@
+{
+  "id": "cpp-std-published",
+  "date": "2026-10-16",
+  "order": 1,
+  "type": "new",
+  "article": "cpp-std",
+  "summary": "Стандартная библиотека C++ на коде плагина тремоло: std::optional и почему его операторы разыменования не проверяют пустоту, индекс контейнера с проверкой и без, ёмкость вектора, std::rotate, лямбды и std::function. Заметки на полях ведут на уроки Learn C++.",
+  "items": [
+    {
+      "text": "Почему операторы разыменования std::optional ничего не проверяют",
+      "target": { "article": "cpp-std", "anchor": "optional-operators" }
+    },
+    {
+      "text": "Индекс контейнера с проверкой и без",
+      "target": { "article": "cpp-std", "anchor": "containers" }
+    },
+    {
+      "text": "Лямбды и std::function в редакторе плагина",
+      "target": { "article": "cpp-std", "anchor": "callables" }
+    }
+  ]
+}

@@ -471,6 +471,7 @@ void PluginProcessor::getStateInformation(juce::MemoryBlock& destData) {
 <MarginNote items={[
   { label: 'Learn C++ → 12.7 Introduction to pointers', description: 'Адрес объекта, разыменование и указатель как переменная.', target: { url: 'https://www.learncpp.com/cpp-tutorial/introduction-to-pointers/' } },
   { label: 'Learn C++ → 12.8 Null pointers', description: 'nullptr и проверки перед разыменованием.', target: { url: 'https://www.learncpp.com/cpp-tutorial/null-pointers/' } },
+  { label: 'Стандартная библиотека C++ → Операторы * и -> без проверки', description: 'Те же операторы у std::optional: перегрузка без проверки на пустоту.', target: { article: 'cpp-std', anchor: 'optional-operators' } },
 ]}>
 
 Указатель хранит адрес объекта. Он может быть `nullptr` и может указывать на другой объект после переприсваивания. Доступ к члену через указатель записывают `->`, разыменование — `*p`. Тип `const void*` — указатель на байты неизвестного типа, которые нельзя менять. Так JUCE передаёт плагину сохранённое состояние: `void setStateInformation(const void* data, int sizeInBytes)`. Объекта «массив с длиной» здесь нет, поэтому размер идёт отдельным параметром.

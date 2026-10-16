@@ -249,7 +249,13 @@ std::string readId (const Bytes& bytes, std::size_t pos)
 }
 ```
 
+<MarginNote items={[
+  { label: 'Стандартная библиотека C++ → Контейнеры: индекс с проверкой и без', description: 'Чем at() с исключением std::out_of_range отличается от operator[].', target: { article: 'cpp-std', anchor: 'containers' } },
+]}>
+
 `readU16` ставит второй байт на место старшего: сдвиг на 8 бит умножает его на 256. `readU32` так же собирает 32-битное число из двух 16-битных половин. Метод `at` проверяет границы и выбрасывает исключение, если файл обрывается посреди поля.
+
+</MarginNote>
 
 ```cpp
 struct WavInfo

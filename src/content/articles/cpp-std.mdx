@@ -1,0 +1,394 @@
+---
+slug: cpp-std
+title: 'Стандартная библиотека C++ в плагине: optional, контейнеры, лямбды и std::function'
+question: Какие типы стандартной библиотеки C++ использует плагин на JUCE, и где они проверяют ошибки, а где нет?
+topic: cpp
+tags: [cpp-juce, plugins]
+prerequisites:
+  - label: 'C++ в плагине: классы, шаблоны и время жизни'
+    description: Классы, шаблоны и перегрузка операторов, на которых построены типы стандартной библиотеки.
+    target: { article: cpp-classes }
+  - label: Основы C++ для JUCE → Массивы и std::span
+    description: std::array, std::vector, data() и std::span на примерах учебного плагина.
+    target: { article: cpp-basics, anchor: arrays-span }
+related:
+  - label: 'C++ в аудиопотоке → Скрытые выделения'
+    description: Какие операции std::vector и std::function выделяют память и почему их не вызывают в processBlock.
+    target: { article: cpp-audio-thread, anchor: hidden-allocations }
+  - label: 'C++ в плагине → getVersion()'
+    description: Сравнение std::optional с числом в шаблоне serialise.
+    target: { article: cpp-classes, anchor: get-version }
+  - label: 'Кто владеет объектом → std::unique_ptr'
+    description: Умный указатель из &lt;memory&gt; и передача владения через std::move.
+    target: { article: cpp-ownership, anchor: unique-ptr }
+---
+
+import DataTable from '@/components/DataTable.astro';
+import MarginNote from '@/components/MarginNote.astro';
+import SelfCheck from '@/components/SelfCheck.astro';
+import Source from '@/components/Source.astro';
+import Term from '@/components/Term.astro';
+
+Эта статья продолжает [«C++ в плагине: классы, шаблоны и время жизни»](/cpp-classes/) и разбирает типы стандартной библиотеки, которые встречаются в <Term id="plugin" firstMention>плагине</Term> <Term id="tremolo" firstMention>тремоло</Term> из [официального курса JUCE](https://github.com/juce-framework/tremolo-juce-course): `std::optional`, контейнеры, алгоритмы, лямбды и `std::function`. Фрагменты взяты из готовой версии в папке [`complete`](https://github.com/juce-framework/tremolo-juce-course/tree/main/complete) (JUCE 8.0.12, C++23); на полях стоят ссылки на уроки [Learn C++](https://www.learncpp.com/) и справочник cppreference.
+
+У многих типов стандартной библиотеки есть два способа получить значение: быстрый, который ничего не проверяет, и проверяющий, который при ошибке бросает исключение. Код курса выбирает между ними по месту: в <Term id="audio-thread" firstMention>аудиопотоке</Term> — быстрый способ с проверкой границ заранее, в остальном коде — тот, что удобнее читать. `std::unique_ptr` разобран в статье [«Кто владеет объектом»](/cpp-ownership/), `std::atomic` и очереди — в [«C++ в аудиопотоке»](/cpp-audio-thread/).
+
+## Заголовки стандартной библиотеки {#headers}
+
+[Таблица 1](#std-headers) перечисляет стандартные заголовки, подключённые в `tremolo_plugin.h`.
+
+<DataTable
+  id="std-headers"
+  number={1}
+  caption="Стандартные заголовки, подключённые в tremolo_plugin.h, и то, что из них используется в плагине."
+  columns={[
+    { label: 'Заголовок', width: '8rem' },
+    { label: 'Что даёт' },
+  ]}
+  rows={[
+    ['<code>&lt;vector&gt;</code>', '<code>std::vector&lt;T&gt;</code> — динамический массив, как <code>list</code> в Python и срез в Go. Поле <code>lfoSamples</code> в <code>Tremolo</code>.'],
+    ['<code>&lt;array&gt;</code>', '<code>std::array&lt;T, N&gt;</code> — массив фиксированного размера, заданного при компиляции. Поле <code>lfos</code> в <code>Tremolo</code> и хранилище <code>StridedQueue</code>.'],
+    ['<code>&lt;deque&gt;</code>', '<code>std::deque&lt;T&gt;</code> — двусторонняя очередь. Заголовок подключён, но в плагине и тестах <code>complete</code> не используется.'],
+    ['<code>&lt;memory&gt;</code>', '<code>std::unique_ptr</code> и <code>std::shared_ptr</code>; <code>std::make_unique</code> при создании параметров.'],
+    ['<code>&lt;functional&gt;</code>', '<code>std::function&lt;Сигнатура&gt;</code> — хранит любую вызываемую сущность, включая лямбду.'],
+    ['<code>&lt;algorithm&gt;</code>', '<code>std::min</code>, <code>std::max</code>, <code>std::rotate</code>, <code>std::fill</code> и другие алгоритмы; <code>std::rotate</code> и <code>std::fill</code> в <code>StridedQueue</code>.'],
+    ['<code>&lt;cmath&gt;</code>', '<code>std::sin</code>, <code>std::abs</code>, <code>std::floor</code>; <code>triangle</code> в <code>Tremolo</code>.'],
+    ['<code>&lt;ranges&gt;</code>', '<code>std::views::iota</code> и другие ленивые адаптеры диапазонов.'],
+    ['<code>&lt;span&gt;</code>', '<code>std::span</code> — вид на непрерывную память.'],
+  ]}
+/>
+
+`<optional>` в этом списке нет, хотя `std::optional` в плагине используется: его подключает модуль `juce_core` в файле `juce_StandardHeader.h`. Цикл с `std::views::iota` разобран в разделе [«Цикл по диапазону»](/cpp-basics/#loops), `std::span` — в разделе [«Массивы и std::span»](/cpp-basics/#arrays-span).
+
+## std::optional {#optional}
+
+<MarginNote items={[
+  { label: 'Learn C++ → 12.15 std::optional', description: 'Создание, проверка и чтение значения, которого может не быть.', target: { url: 'https://www.learncpp.com/cpp-tutorial/stdoptional/' } },
+  { label: 'cppreference → std::optional', description: 'Полный список членов класса и вспомогательных функций.', target: { url: 'https://en.cppreference.com/w/cpp/utility/optional' } },
+]}>
+
+`std::optional<T>` (C++17) хранит либо значение типа `T`, либо отметку, что значения нет. Он заменяет «особые» значения вроде `-1` или `0`, которые могли бы оказаться и настоящими данными. В Python то же выражают через `None`, в TypeScript — тип `number | undefined`, в Go — пару `(value, ok)`. В отличие от указателя, `optional` не ссылается на объект в другом месте: значение и флаг лежат внутри самого объекта `optional`, и в <Term id="heap" firstMention>куче</Term> ничего не выделяется.
+
+</MarginNote>
+
+В плагине `std::optional` возвращают функции, у которых результата может не быть. `juce::ToVar::convert` превращает структуру с параметрами в дерево `juce::var` для JSON и возвращает `std::optional<juce::var>`: если какое-то поле преобразовать не удалось, результат пуст. Как JUCE доходит до этого результата, показано в разделе [«Сохранение параметров: шаблон serialise»](/cpp-classes/#serialise).
+
+```cpp
+// JsonSerializer.cpp
+const auto json = juce::ToVar::convert(from(parameters));
+
+if (!json.has_value()) {
+  return;
+}
+
+juce::JSON::writeToStream(output, *json,
+                          juce::JSON::FormatOptions{}
+                              .withSpacing(juce::JSON::Spacing::multiLine)
+                              .withMaxDecimalPlaces(2));
+```
+
+Сначала `has_value()` проверяет, есть ли значение, и при пустом результате функция выходит. Только после этого `*json` достаёт сам `juce::var` и передаёт его в `writeToStream`.
+
+### Проверить и достать значение {#optional-access}
+
+<MarginNote items={[
+  { label: 'cppreference → std::optional::value', description: 'Значение или исключение std::bad_optional_access.', target: { url: 'https://en.cppreference.com/w/cpp/utility/optional/value' } },
+  { label: 'cppreference → std::optional::value_or', description: 'Значение или запасное значение.', target: { url: 'https://en.cppreference.com/w/cpp/utility/optional/value_or' } },
+]}>
+
+Пустой `optional` получается конструктором по умолчанию или присваиванием `std::nullopt`. Есть ли значение, сообщают `has_value()` и оператор преобразования к `bool`. Он объявлен `explicit`, поэтому работает в условии `if (json)`, но не даёт случайно сложить `optional` с числом. Достать значение можно так:
+
+</MarginNote>
+
+- `*opt` возвращает ссылку на значение, `opt->member` — обращается к полю значения. Ни один из операторов не проверяет, есть ли значение.
+- `opt.value()` возвращает ссылку на значение, а у пустого `optional` бросает исключение `std::bad_optional_access`.
+- `opt.value_or (x)` возвращает значение или запасное `x`, если значения нет.
+
+```cpp
+std::optional<double> lastTimestampSeconds;                  // пусто: std::nullopt
+
+const auto empty = lastTimestampSeconds.has_value();         // false
+const auto fallback = lastTimestampSeconds.value_or (0.0);   // 0.0
+
+lastTimestampSeconds = 0.016;                                // теперь значение есть
+const auto seconds = *lastTimestampSeconds;                  // 0.016
+
+if (lastTimestampSeconds)                                    // explicit operator bool
+    lastTimestampSeconds = std::nullopt;                     // снова пусто
+```
+
+Присваивание `lastTimestampSeconds = 0.016` кладёт значение в `optional`, а `std::nullopt` снова делает его пустым. Сравнение `optional` с обычным числом, например `archive.getVersion() != 1`, разобрано в разделе [«getVersion()»](/cpp-classes/#get-version): пустой `optional` не равен никакому значению.
+
+### Операторы * и -> без проверки {#optional-operators}
+
+<MarginNote items={[
+  { label: 'cppreference → std::optional::operator*', description: 'operator* и operator->; поведение при пустом optional до и после C++26.', target: { url: 'https://en.cppreference.com/w/cpp/utility/optional/operator*' } },
+  { label: 'C++ в плагине → Перегрузка операторов', description: 'Как класс задаёт собственные версии операторов.', target: { article: 'cpp-classes', anchor: 'operator-overloading' } },
+]}>
+
+`*` и `->` у `optional` — методы `operator*` и `operator->`, которые класс [перегружает](/cpp-classes/#operator-overloading); со встроенными операторами указателя их роднит только запись. Синтаксис скопирован у указателя, чтобы `optional` читался так же: `*json` — само значение, `parsedParameters->rate` — его поле. Упрощённая модель показывает, что делают эти методы:
+
+</MarginNote>
+
+```cpp
+// Упрощённая модель optional: значение и флаг лежат внутри объекта
+template <typename Value>
+class SimpleOptional
+{
+public:
+    SimpleOptional() = default;
+    SimpleOptional (Value newValue) : storage { newValue }, engaged { true } {}
+
+    bool has_value() const noexcept { return engaged; }
+
+    Value& operator*() noexcept { return storage; }    // флаг не проверяется
+    Value* operator->() noexcept { return &storage; }  // флаг не проверяется
+
+    Value& value()
+    {
+        if (! engaged)
+            throw std::bad_optional_access {};
+
+        return storage;
+    }
+
+private:
+    Value storage {};  // в std::optional — память под Value без вызова конструктора
+    bool engaged = false;
+};
+```
+
+`operator*` возвращает ссылку на хранилище, `operator->` — указатель на него, и ни один не смотрит на флаг `engaged`. Проверка есть только в `value()`. Настоящий `std::optional` устроен так же: оба оператора объявлены `noexcept` и не бросают исключений. Их проверка ложится на вызывающий код, а `value()` делает её сам ценой сравнения и возможного исключения. Методы `has_value` и `value` названы, как в стандартной библиотеке, а не по [стилю примеров сайта](/cpp-basics/#code-style).
+
+Разыменование пустого `optional` — неопределённое поведение (undefined behavior): стандарт не говорит, что произойдёт, и компилятор вправе считать, что этого не бывает. Программа необязательно упадёт. При проверке с Apple clang 17 и libc++ без дополнительных флагов `*` у пустого `std::optional<double>` вернул `0.0`, и программа продолжила работу с этим числом.
+
+<MarginNote items={[
+  { label: 'libc++ → Hardening Modes', description: 'Режимы проверок libc++ и макрос _LIBCPP_HARDENING_MODE.', target: { url: 'https://libcxx.llvm.org/Hardening.html' } },
+  { label: 'libstdc++ → Macros', description: 'Макрос _GLIBCXX_ASSERTIONS и проверки предусловий.', target: { url: 'https://gcc.gnu.org/onlinedocs/libstdc++/manual/using_macros.html' } },
+]}>
+
+Ошибку ловят проверочные режимы стандартной библиотеки. В libc++ их включает макрос `_LIBCPP_HARDENING_MODE`: в режиме `_LIBCPP_HARDENING_MODE_FAST` та же программа аварийно останавливается, в режиме `_LIBCPP_HARDENING_MODE_DEBUG` ещё и печатает `optional operator* called on a disengaged value`. По умолчанию режим `none`, то есть проверок нет, если поставщик библиотеки не выбрал другой. В libstdc++ (GCC) операторы `optional` проверяет макрос `_GLIBCXX_ASSERTIONS`. C++26 вводит в стандарт понятие усиленной реализации (hardened implementation): если она включена, пустой `optional` у `*` и `->` вызывает нарушение контракта и остановку программы, без неё поведение по-прежнему не определено. Включается ли такой режим, решает реализация.
+
+</MarginNote>
+
+### optional в коде курса {#optional-in-course}
+
+<MarginNote items={[
+  { label: 'Основы C++ для JUCE → noexcept и [[nodiscard]]', description: 'Что происходит, когда исключение покидает функцию noexcept.', target: { article: 'cpp-basics', anchor: 'attributes' } },
+]}>
+
+Курс везде пишет одну пару строк: сначала `has_value()`, потом `*` или `->`. Пустой результат здесь ожидаем: JSON может прийти от другой версии плагина, а у первого кадра ещё нет предыдущего. Для обычной ситуации исключение не нужно, достаточно ветки `if`. `value()` нужен там, где пустой `optional` означает ошибку в программе и её надо остановить. В функции `noexcept`, а в курсе так помечены методы обработки звука вроде `Tremolo::process`, исключение из `value()` до обработчика не дойдёт: программа завершится через `std::terminate`.
+
+</MarginNote>
+
+При загрузке состояния `juce::FromVar::convert<SerializableParameters>` возвращает `std::optional<SerializableParameters>`. После проверки поля структуры читаются через `->`:
+
+```cpp
+// JsonSerializer.cpp
+const auto parsedParameters =
+    juce::FromVar::convert<SerializableParameters>(parsedResult);
+
+if (!parsedParameters.has_value()) {
+  return juce::Result::fail(
+      "failed to parse parameters from JSON representation");
+}
+
+// ...
+parameters.rate = parsedParameters->rate;
+parameters.bypassed = parsedParameters->bypassed;
+```
+
+`parsedParameters->rate` значит то же, что `(*parsedParameters).rate`: `operator->` возвращает указатель на хранимую структуру, а к нему компилятор применяет обычный `->`.
+
+Третий пример — поле `std::optional<double> lastTimestampSeconds` в `LfoVisualizer`. Компонент рисует кривую <Term id="lfo" firstMention>LFO</Term> и при каждом обновлении экрана получает время кадра. Сколько отсчётов добавить на график, он считает по разнице с предыдущим кадром, а у первого кадра предыдущего нет:
+
+```cpp
+// LfoVisualizer.cpp
+void LfoVisualizer::updateSamplesQueue(double timestampSeconds) {
+  if (!lastTimestampSeconds.has_value()) {
+    lastTimestampSeconds = timestampSeconds;
+    return;
+  }
+
+  // ...
+  if (isBypassed()) {
+    const auto secondsPassed = timestampSeconds - *lastTimestampSeconds;
+    // ...
+  }
+
+  lastTimestampSeconds = timestampSeconds;
+}
+```
+
+Поле объявлено без инициализатора, поэтому до первого кадра оно пусто. Первый вызов только запоминает время и выходит, следующие вычитают из нового времени предыдущее. Значение `0.0` вместо пустого `optional` здесь не подошло бы. Документация `juce::VBlankAttachment` обещает только, что время кадра в секундах монотонно растёт, но не говорит, от какого момента его отсчитывают. Разница с нулём могла бы оказаться любой, например временем с запуска системы.
+
+## Контейнеры: индекс с проверкой и без {#containers}
+
+<MarginNote items={[
+  { label: 'Learn C++ → 16.3 std::vector and the unsigned length and subscript problem', description: 'operator[] без проверки границ и at() с проверкой.', target: { url: 'https://www.learncpp.com/cpp-tutorial/stdvector-and-the-unsigned-length-and-subscript-problem/' } },
+  { label: 'cppreference → std::vector::operator[]', description: 'Обращение за пределами size() — неопределённое поведение.', target: { url: 'https://en.cppreference.com/w/cpp/container/vector/operator_at' } },
+  { label: 'Основы C++ для JUCE → Массивы и std::span', description: 'std::array, std::vector, data() и std::span.', target: { article: 'cpp-basics', anchor: 'arrays-span' } },
+]}>
+
+Чем `std::array` отличается от `std::vector` и как передать их в функцию через `std::span`, разобрано в разделе [«Массивы и std::span»](/cpp-basics/#arrays-span). У обоих контейнеров доступ к элементу устроен так же, как у `optional`. `v[i]` не проверяет индекс: обращение за пределами `size()` — неопределённое поведение, как выход за границу массива в C. `v.at (i)` сравнивает индекс с размером и при ошибке бросает `std::out_of_range`. В Python и Go проверяет любой индекс, в C++ проверку выбирают явно.
+
+</MarginNote>
+
+```cpp
+std::array<float, 4> window { 0.0f, 0.5f, 1.0f, 0.5f };
+
+window[4];      // неопределённое поведение: элемента 4 нет
+window.at (4);  // бросает std::out_of_range
+```
+
+В плагине встречаются оба способа. `Tremolo::processChannelwise` вызывается из `processBlock`, объявлена `noexcept` и пишет в `lfoSamples[i]` без проверки. Границу она обеспечивает заранее: число отсчётов ограничено размером вектора через `std::min`, а `jassert` в отладочной сборке сообщает, если хост прислал блок больше обещанного.
+
+```cpp
+// Tremolo.h
+const auto samplesToProcess = std::min(
+    lfoSamples.size(), static_cast<size_t>(buffer.getNumSamples()));
+
+// detect if the host is misbehaving; if this fails, then many more frames
+// have been given for processing than declared in prepare()
+jassert(samplesToProcess <= lfoSamples.size());
+
+// generate LFO signal
+for (const auto i : std::views::iota(0u, samplesToProcess)) {
+  lfoSamples[i] = getNextLfoValue();
+  lfoSampleFifo.push(lfoSamples[i]);
+}
+```
+
+`LfoVisualizer::samplesToPath` строит кривую в <Term id="message-thread" firstMention>потоке сообщений</Term> и читает точки через `lfoSamplesToPlot.at(i)`. Метод `at` класса `StridedQueue` передаёт вызов `std::array::at`, поэтому неверный индекс там бросит `std::out_of_range`, и программа не прочитает чужую память.
+
+### Размер и ёмкость вектора {#vector-capacity}
+
+<MarginNote items={[
+  { label: 'Learn C++ → 16.10 std::vector resizing and capacity', description: 'Длина и ёмкость вектора, перевыделение памяти.', target: { url: 'https://www.learncpp.com/cpp-tutorial/stdvector-resizing-and-capacity/' } },
+  { label: 'cppreference → std::vector::push_back', description: 'Когда перевыделение делает ссылки и итераторы недействительными.', target: { url: 'https://en.cppreference.com/w/cpp/container/vector/push_back' } },
+  { label: 'C++ в аудиопотоке → Скрытые выделения', description: 'push_back и resize в таблице операций, которые выделяют память.', target: { article: 'cpp-audio-thread', anchor: 'hidden-allocations' } },
+]}>
+
+У вектора есть длина `size()` — сколько элементов в нём лежит, и ёмкость `capacity()` — под сколько элементов выделена память. `resize (n)` меняет длину, `reserve (n)` — только ёмкость. Если `push_back` или `resize` не помещаются в ёмкость, вектор выделяет новый блок в куче, переносит туда элементы и освобождает старый. После такого перевыделения указатель из `data()`, ссылки на элементы и итераторы указывают на освобождённую память. Поэтому `Tremolo::prepare` один раз задаёт размер `lfoSamples` с запасом, `lfoSamples.resize(4u * static_cast<size_t>(expectedMaxFramesPerBlock))`, а `processChannelwise` только пишет в готовые элементы и передаёт `lfoSamples.data()` в функции JUCE.
+
+</MarginNote>
+
+## Алгоритмы {#algorithms}
+
+<MarginNote items={[
+  { label: 'Learn C++ → 18.3 Introduction to standard library algorithms', description: 'Алгоритмы из &lt;algorithm&gt; и диапазоны итераторов.', target: { url: 'https://www.learncpp.com/cpp-tutorial/introduction-to-standard-library-algorithms/' } },
+  { label: 'cppreference → std::rotate', description: 'Циклический сдвиг диапазона на месте.', target: { url: 'https://en.cppreference.com/w/cpp/algorithm/rotate' } },
+]}>
+
+Функции из `<algorithm>` работают с диапазоном, заданным парой итераторов `begin()` и `end()`, и не зависят от вида контейнера. `StridedQueue` хранит последние точки графика LFO в `std::array` и при поступлении новых отсчётов сдвигает старые к началу вызовом `std::rotate`:
+
+</MarginNote>
+
+```cpp
+// detail/StridedQueue.h
+if (availableStridedCount < stridedElements.size()) {
+  // rotate when not overwritten completely
+  std::rotate(stridedElements.begin(),
+              stridedElements.begin() + availableStridedCount,
+              stridedElements.end());
+}
+```
+
+`std::rotate (first, middle, last)` циклически сдвигает элементы: тот, на который указывает `middle`, становится первым, а элементы от `first` до `middle` переезжают в конец. Сдвиг выполняется обменом элементов внутри того же массива, новой памяти не нужно. Освободившиеся места в конце затем заполняются новыми точками, а `pushBackZeros` заполняет их нулями через `std::fill`. `std::min` и `std::max` возвращают меньшее и большее из двух значений одного типа, поэтому в `pushBackZeros` размеры сначала приводятся к `int`: `std::max(0, static_cast<int>(stridedElements.size()) - static_cast<int>(availableStridedCount))`.
+
+## Лямбды и std::function {#callables}
+
+Лямбда создаёт вызываемый объект прямо в месте использования, а `std::function` позволяет хранить такой объект в поле класса и вызывать позже. В редакторе плагина они работают вместе: редактор передаёт лямбды в `LfoVisualizer`, а тот хранит их в полях типа `std::function`.
+
+### Лямбды {#lambdas}
+
+<MarginNote items={[
+  { label: 'Learn C++ → 20.6 Introduction to lambdas (anonymous functions)', description: 'Анонимные функции и их синтаксис.', target: { url: 'https://www.learncpp.com/cpp-tutorial/introduction-to-lambdas-anonymous-functions/' } },
+  { label: 'Learn C++ → 20.7 Lambda captures', description: 'Что лямбда захватывает из окружения.', target: { url: 'https://www.learncpp.com/cpp-tutorial/lambda-captures/' } },
+]}>
+
+Лямбда-выражение (lambda expression, C++11) — анонимная функция вида `[захват](параметры) { тело }`. В квадратных скобках перечислено, что она берёт из окружения: `[this]` — указатель на текущий объект, `[x]` — копию `x`, `[&x]` — ссылку на `x`, `[=]` и `[&]` — всё по значению или по ссылке. В отличие от замыканий Python и Go, захват по ссылке не продлевает жизнь объекта: если лямбда переживёт захваченную переменную, она обратится к уже освобождённой памяти.
+
+</MarginNote>
+
+В плагине лямбды связывают редактор с процессором и реагируют на события интерфейса:
+
+```cpp
+bypassButton.onClick = [this]() {
+  bypassButton.setButtonText(bypassButton.getToggleState() ? "Bypassed" : "Off");
+};
+
+lfoVisualizer{
+    [&p](juce::AudioBuffer<float>& b) { p.readAllLfoSamples(b); },
+    [&p] { return p.getSampleRateThreadSafe(); },
+    [&p] { return p.getParameterRefs().bypassed.get(); }},
+```
+
+Захват `[&p]` безопасен, потому что редактор живёт не дольше процессора: по правилам JUCE редактор удаляется раньше процессора. Лямбда `[](auto phase) { ... }` в `Tremolo.h` принимает параметр типа `auto` (C++14), то есть работает как шаблон: тип выводится при вызове. Такие параметры разобраны в разделе [«auto в параметрах»](/cpp-classes/#auto-parameters).
+
+### std::function {#function}
+
+<MarginNote items={[
+  { label: 'Learn C++ → 20.1 Function Pointers', description: 'Раздел Using std::function: тип из &lt;functional&gt; и запись сигнатуры.', target: { url: 'https://www.learncpp.com/cpp-tutorial/function-pointers/' } },
+  { label: 'cppreference → std::function::operator()', description: 'Вызов пустого std::function бросает std::bad_function_call.', target: { url: 'https://en.cppreference.com/w/cpp/utility/functional/function/operator()' } },
+]}>
+
+У каждой лямбды свой безымянный тип, поэтому поле класса нельзя объявить «типом этой лямбды». `std::function<Сигнатура>` (C++11) хранит любой вызываемый объект с подходящей сигнатурой: лямбду, обычную функцию или объект с `operator()`. Сигнатура записывается как тип функции: `bool()` — без параметров, возвращает `bool`. Как тип функции стоит в аргументе шаблона, показано в разделе [«Типы и функции в аргументах»](/cpp-classes/#template-arguments). `LfoVisualizer` объявляет псевдонимы для трёх таких полей:
+
+</MarginNote>
+
+```cpp
+// LfoVisualizer.h
+using ReadAllLfoSamples = std::function<void(juce::AudioBuffer<float>&)>;
+using GetCurrentSampleRate = std::function<double()>;
+using IsBypassed = std::function<bool()>;
+```
+
+Конструктор принимает три объекта по значению и переносит их в поля через `std::move`, чтобы не копировать захваченные данные ещё раз:
+
+```cpp
+// LfoVisualizer.cpp
+LfoVisualizer::LfoVisualizer(ReadAllLfoSamples readSamples,
+                             GetCurrentSampleRate getRate,
+                             IsBypassed getIsBypassed)
+    : readAllLfoSamples{std::move(readSamples)},
+      getCurrentSampleRate{std::move(getRate)},
+      isBypassed{std::move(getIsBypassed)} {
+```
+
+Дальше поля вызываются как обычные функции: `getCurrentSampleRate()`, `isBypassed()`, `readAllLfoSamples(buffer)`. `LfoVisualizer` не знает ни класса процессора, ни того, как устроены лямбды: ему достаточно сигнатур, и вместо процессора ему можно передать любые функции с теми же сигнатурами. Тот же приём использует сама JUCE: конструктор `juce::VBlankAttachment` принимает `std::function<void (double)>`, и `LfoVisualizer` передаёт в него лямбду `[this](double timestampSeconds) { update(timestampSeconds); }`. В отличие от `optional`, пустой `std::function` при вызове проверяет себя сам и бросает `std::bad_function_call`. Присваивание лямбды с большим захватом может выделить память в куче, поэтому `std::function` задают заранее, а не в аудиопотоке: этот случай есть в таблице [«Скрытые выделения»](/cpp-audio-thread/#hidden-allocations).
+
+## Самопроверка {#self-check}
+
+<SelfCheck question="Что будет, если убрать из updateSamplesQueue проверку has_value(), а в первом кадре окажется включён bypass?">
+
+Ветка `isBypassed()` вычислит `*lastTimestampSeconds` у пустого `optional`. Это неопределённое поведение: без проверочного режима библиотеки программа, скорее всего, возьмёт какое-то число, например `0.0`, получит огромный промежуток времени и передаст в `pushBackZeros` огромное число нулевых отсчётов. В режиме проверок libc++ программа аварийно остановится на этой строке.
+
+</SelfCheck>
+
+<SelfCheck question="Чем parsedParameters->rate отличается от parsedParameters.value().rate?">
+
+Если значение есть, ничем: оба читают поле `rate` хранимой структуры. У пустого `optional` первый вариант даёт неопределённое поведение, второй бросает `std::bad_optional_access`. В `deserialize` пустой результат уже отсеян проверкой `has_value()`, поэтому повторная проверка внутри `value()` не нужна.
+
+</SelfCheck>
+
+<SelfCheck question="Почему processChannelwise пишет lfoSamples[i], а не lfoSamples.at(i)?">
+
+Метод объявлен `noexcept` и работает в аудиопотоке. Если `at` бросит `std::out_of_range`, исключение не сможет покинуть метод, и программа завершится через `std::terminate`. Вместо проверки на каждом отсчёте метод один раз ограничивает число отсчётов через `std::min`, после чего каждый индекс заведомо меньше `lfoSamples.size()`.
+
+</SelfCheck>
+
+<SelfCheck question="Что станет с указателем lfoSamples.data(), если в processChannelwise вызвать lfoSamples.push_back(0.0f)?">
+
+Если длина уже равна ёмкости, вектор выделит новый блок, перенесёт элементы и освободит старый. Указатель, полученный раньше, станет указывать на освобождённую память. Кроме того, выделение памяти в аудиопотоке может задержать обработку блока, поэтому размер задают в `prepare`.
+
+</SelfCheck>
+
+## Источники {#sources}
+
+- <Source id="learncpp">Уроки 12.15 «std::optional», 16.3, 16.10, 18.3, 20.1, 20.6 и 20.7</Source> — `std::optional` и неопределённое поведение при разыменовании пустого, `value()` и `value_or()`; `operator[]` без проверки границ и `at()` с `std::out_of_range`; длина, ёмкость и перевыделение вектора; алгоритмы; `std::function` в разделе Using std::function; лямбды и захват.
+- cppreference: [std::optional](https://en.cppreference.com/w/cpp/utility/optional), [operator\*, operator->](https://en.cppreference.com/w/cpp/utility/optional/operator*) (неопределённое поведение до C++26, нарушение контракта в усиленной реализации C++26, `noexcept` по LWG 2762), [value](https://en.cppreference.com/w/cpp/utility/optional/value), [value_or](https://en.cppreference.com/w/cpp/utility/optional/value_or), [std::vector::operator\[\]](https://en.cppreference.com/w/cpp/container/vector/operator_at), [push_back](https://en.cppreference.com/w/cpp/container/vector/push_back) (инвалидация при перевыделении), [std::rotate](https://en.cppreference.com/w/cpp/algorithm/rotate), [std::function::operator()](https://en.cppreference.com/w/cpp/utility/functional/function/operator()) и [Standard library hardening](https://en.cppreference.com/w/cpp/standard_library#Standard_library_hardening).
+- [LLVM. libc++ Hardening Modes](https://libcxx.llvm.org/Hardening.html) — режимы `none`, `fast`, `extensive`, `debug`, макрос `_LIBCPP_HARDENING_MODE`, режим `none` по умолчанию, `std::optional` как контейнер не больше чем из одного элемента. Поведение пустого `optional` без флагов и в режимах `fast` и `debug` проверено программой с Apple clang 17.
+- [GCC. libstdc++ Macros](https://gcc.gnu.org/onlinedocs/libstdc++/manual/using_macros.html) — `_GLIBCXX_ASSERTIONS`; исходник [optional GCC 14](https://github.com/gcc-mirror/gcc/blob/releases/gcc-14/libstdc%2B%2B-v3/include/std/optional): `operator*` и `operator->` вызывают `_M_get()` с `__glibcxx_assert`.
+- [JUCE 8.0.12. juce_JSONSerialisation.h](https://github.com/juce-framework/JUCE/blob/8.0.12/modules/juce_core/json/juce_JSONSerialisation.h) — `ToVar::convert` возвращает `std::optional<var>`, `FromVar::convert` — `std::optional<T>`; [juce_StandardHeader.h](https://github.com/juce-framework/JUCE/blob/8.0.12/modules/juce_core/system/juce_StandardHeader.h) — подключение `<optional>`; [juce_VBlankAttachment.h](https://github.com/juce-framework/JUCE/blob/8.0.12/modules/juce_gui_basics/windows/juce_VBlankAttachment.h) — конструктор с `std::function<void (double)>` и монотонно растущее время кадра в секундах.
+- [JUCE. tremolo-juce-course](https://github.com/juce-framework/tremolo-juce-course) — фрагменты кода из папки `complete`: `tremolo_plugin.h`, `JsonSerializer.cpp`, `LfoVisualizer.h`, `LfoVisualizer.cpp`, `Tremolo.h`, `detail/StridedQueue.h`, `PluginEditor.h` и `PluginEditor.cpp`.
