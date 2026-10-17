@@ -1,0 +1,38 @@
+{
+  "id": "nonlinear-aliasing-published",
+  "date": "2026-10-17",
+  "order": 11,
+  "type": "new",
+  "article": "nonlinear-aliasing",
+  "summary": "Почему цифровая нелинейная обработка даёт составляющие, которых нет у аналоговой: сочетания частот двух тонов, отражение всего, что выше fs/2, и отличие отражений от интермодуляции. Тест двумя тонами 19 и 20 кГц и измерения компрессоров Боба Каца с оговорками. Передискретизация: граница отражения, фильтры и задержка, измерения juce::dsp::Oversampling. Метод антипроизводной для tanh и его сравнение с передискретизацией, класс насыщения с передискретизацией на C++23 и JUCE.",
+  "items": [
+    {
+      "text": "Два тона и отражения: спектр и звук при 1–8× передискретизации",
+      "target": {
+        "article": "nonlinear-aliasing",
+        "anchor": "two-tone-aliasing"
+      }
+    },
+    {
+      "text": "Измерения Каца: цифровые модели и аналоговые компрессоры",
+      "target": {
+        "article": "nonlinear-aliasing",
+        "anchor": "katz-measurements"
+      }
+    },
+    {
+      "text": "Метод антипроизводной",
+      "target": {
+        "article": "nonlinear-aliasing",
+        "anchor": "adaa"
+      }
+    },
+    {
+      "text": "Насыщение с juce::dsp::Oversampling",
+      "target": {
+        "article": "nonlinear-aliasing",
+        "anchor": "cpp"
+      }
+    }
+  ]
+}

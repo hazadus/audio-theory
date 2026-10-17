@@ -35,6 +35,7 @@ export type PreviewKind =
   | 'convolution'
   | 'pole-zero'
   | 'distortion'
+  | 'nonlinear-aliasing'
   | 'intro-oscillator'
   | 'intro-envelope'
   | 'intro-lfo';
@@ -71,6 +72,7 @@ export const previewKinds: readonly PreviewKind[] = [
   'convolution',
   'pole-zero',
   'distortion',
+  'nonlinear-aliasing',
   'intro-oscillator',
   'intro-envelope',
   'intro-lfo',
@@ -441,6 +443,7 @@ const builders: Record<PreviewKind, () => Preview> = {
   convolution: convolutionPreview,
   'pole-zero': poleZeroPreview,
   distortion: distortionPreview,
+  'nonlinear-aliasing': nonlinearAliasingPreview,
   'synth-voice': synthVoicePreview,
   mixing: () => ({
     paths: [
@@ -777,6 +780,54 @@ function distortionPreview(): Preview {
       },
       { d: curve, color: 'result', width: 2.5 },
       { d: bars, color: 'sample', width: 10 },
+    ],
+    dots: [],
+  };
+}
+
+function nonlinearAliasingPreview(): Preview {
+  // Спектр выхода tanh при 44,1 кГц: тоны 19 и 20 кГц, сочетания 18 и 21 кГц и пунктир отражений
+  // по всей полосе; уровни — из модели статьи при +6 дБ.
+  const x = (khz: number) => 16 + (248 * khz) / 22.05;
+  const y = (db: number) => 24 - 1.1 * db;
+  const stems = (lines: readonly (readonly [number, number])[]) =>
+    lines.map(([khz, db]) => `M${f1(x(khz))} 134V${f1(y(db))}`).join('');
+  const aliases = [
+    [3.7, -79],
+    [4.7, -79],
+    [7.8, -63.5],
+    [8.8, -56.5],
+    [9.8, -56.5],
+    [10.8, -63.5],
+    [11.9, -63.5],
+    [12.9, -44.5],
+    [13.9, -33.3],
+    [14.9, -33.3],
+    [15.9, -44.5],
+    [16.9, -63.5],
+  ] as const;
+  return {
+    paths: [
+      { d: 'M16 134H264', color: 'grid', width: 1 },
+      { d: stems(aliases), color: 'sample', width: 2, dash: '3 2' },
+      {
+        d: stems([
+          [17, -56.5],
+          [18, -33.3],
+          [21, -33.3],
+          [22, -56.5],
+        ]),
+        color: 'result',
+        width: 3,
+      },
+      {
+        d: stems([
+          [19, -7.4],
+          [20, -7.4],
+        ]),
+        color: 'signal',
+        width: 4,
+      },
     ],
     dots: [],
   };

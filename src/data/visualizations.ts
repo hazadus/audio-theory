@@ -242,6 +242,14 @@ export const visualizations: readonly Visualization[] = [
     preview: 'distortion',
   },
   {
+    id: 'two-tone-aliasing',
+    slug: 'nonlinear-aliasing',
+    name: 'Два тона и отражения',
+    what: 'Кривая, входное усиление, частота дискретизации и передискретизация 1–8×: отражения тонов 19 и 20 кГц в спектре и на слух.',
+    sound: true,
+    preview: 'nonlinear-aliasing',
+  },
+  {
     id: 'intro-tone',
     slug: 'audio-intro',
     name: 'Звук: выше, ниже, громче, тише',

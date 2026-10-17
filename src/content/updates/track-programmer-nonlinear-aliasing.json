@@ -1,0 +1,16 @@
+{
+  "id": "track-programmer-nonlinear-aliasing",
+  "date": "2026-10-17",
+  "order": 12,
+  "type": "updated",
+  "track": "programmer",
+  "items": [
+    {
+      "text": "В этап «Динамика и нелинейность» добавлена статья об алиасинге и передискретизации",
+      "target": {
+        "track": "programmer",
+        "anchor": "stage-dynamics-nonlinearity"
+      }
+    }
+  ]
+}

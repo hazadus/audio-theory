@@ -1,0 +1,16 @@
+{
+  "id": "track-musician-nonlinear-aliasing",
+  "date": "2026-10-17",
+  "order": 14,
+  "type": "updated",
+  "track": "musician",
+  "items": [
+    {
+      "text": "В этап «Запись и динамика» по желанию добавлен опыт с двумя тонами и отражениями",
+      "target": {
+        "track": "musician",
+        "anchor": "stage-recording"
+      }
+    }
+  ]
+}

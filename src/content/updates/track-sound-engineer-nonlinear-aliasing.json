@@ -1,0 +1,16 @@
+{
+  "id": "track-sound-engineer-nonlinear-aliasing",
+  "date": "2026-10-17",
+  "order": 13,
+  "type": "updated",
+  "track": "sound-engineer",
+  "items": [
+    {
+      "text": "В этап «Частоты, динамика и пространство» по желанию добавлена статья об алиасинге в нелинейной обработке",
+      "target": {
+        "track": "sound-engineer",
+        "anchor": "stage-processing"
+      }
+    }
+  ]
+}

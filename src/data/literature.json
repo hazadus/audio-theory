@@ -391,6 +391,14 @@
       "url": "https://www.digido.com/portfolio-item/dither/"
     },
     {
+      "id": "katz-analog-saved-my-life",
+      "type": "web",
+      "authors": ["katz"],
+      "title": "Analog Saved My Life: The Good, The Bad and The Ugly",
+      "publication": "Digital Domain, 2022.",
+      "url": "https://www.digido.com/portfolio-item/analog-saved-my-life-the-good-the-bad-and-the-ugly/"
+    },
+    {
       "id": "collins-1998",
       "type": "article",
       "authors": ["collins"],

@@ -63,6 +63,7 @@ export const demoCaptions = {
   ConvolutionDemo: { defaultId: 'convolution-steps', name: 'Свёртка по шагам' },
   PoleZeroDemo: { defaultId: 'pole-zero', name: 'Нули и полюса' },
   DistortionDemo: { defaultId: 'transfer-curve', name: 'Передаточная кривая' },
+  NonlinearAliasingDemo: { defaultId: 'two-tone-aliasing', name: 'Два тона и отражения' },
   FlacPredictionDemo: {
     defaultId: 'flac-prediction',
     name: 'Предсказание FLAC: остаток и коды Райса',
