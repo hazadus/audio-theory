@@ -19,6 +19,7 @@
     "gullings": "Gullings K.",
     "hamm": "Hamm C.",
     "hartmann": "Hartmann W. M.",
+    "herman": "Herman E.",
     "hughes": "Hughes B.",
     "huovilainen": "Huovilainen A.",
     "hutchinson": "Hutchinson R.",
@@ -51,6 +52,7 @@
     "smith-sw": "Smith S. W.",
     "sottek": "Sottek R.",
     "spanias": "Spanias A.",
+    "strang": "Strang G.",
     "stroustrup": "Stroustrup B.",
     "sundararajan": "Sundararajan D.",
     "supurovic": "Supurovic P.",
@@ -63,6 +65,7 @@
     "wannamaker": "Wannamaker R. A.",
     "whittle": "Whittle R.",
     "wright": "Wright J. N.",
+    "zavalishin": "Zavalishin V.",
     "zolzer": "Zölzer U.",
     "zwicker": "Zwicker E.",
     "atkinson": "Atkinson J.",
@@ -176,6 +179,14 @@
       "title": "Introductory Statistics 2e",
       "publication": "OpenStax, 2023.",
       "url": "https://openstax.org/books/introductory-statistics-2e/"
+    },
+    {
+      "id": "strang-2016",
+      "type": "book",
+      "authors": ["strang", "herman"],
+      "title": "Calculus Volume 1",
+      "publication": "OpenStax, 2016.",
+      "url": "https://openstax.org/books/calculus-volume-1/"
     },
     {
       "id": "davies-2023",
@@ -632,6 +643,14 @@
       "authors": ["reiss", "mcpherson"],
       "title": "Audio Effects: Theory, Implementation and Application",
       "publication": "2nd ed. Routledge, 2026. ISBN 978-1-032-97428-6."
+    },
+    {
+      "id": "zavalishin-2020",
+      "type": "book",
+      "authors": ["zavalishin"],
+      "title": "The Art of VA Filter Design",
+      "publication": "Rev. 2.1.2. 2020.",
+      "url": "https://www.discodsp.net/VAFilterDesign_2.1.2.pdf"
     },
     {
       "id": "zolzer-2022",

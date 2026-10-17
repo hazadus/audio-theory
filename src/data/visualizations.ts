@@ -218,6 +218,22 @@ export const visualizations: readonly Visualization[] = [
     preview: 'analyzer',
   },
   {
+    id: 'convolution-steps',
+    slug: 'digital-filters',
+    name: 'Свёртка по шагам',
+    what: 'Вход, импульсная характеристика и номер выходного отсчёта: сдвиг, произведения и сумма.',
+    sound: false,
+    preview: 'convolution',
+  },
+  {
+    id: 'pole-zero',
+    slug: 'digital-filters',
+    name: 'Нули и полюса',
+    what: 'Положение нулей и полюсов биквада на z-плоскости: АЧХ, ФЧХ, импульсная характеристика и розовый шум через фильтр.',
+    sound: true,
+    preview: 'pole-zero',
+  },
+  {
     id: 'intro-tone',
     slug: 'audio-intro',
     name: 'Звук: выше, ниже, громче, тише',

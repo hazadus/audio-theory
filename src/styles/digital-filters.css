@@ -1,0 +1,315 @@
+/* Визуализации статьи /digital-filters/: «Свёртка по шагам» и «Нули и полюса», статичные рисунки.
+   Контейнер, параметры и плеер берутся из spectrum.css (.spectrum-demo-*); здесь — серии графиков,
+   z-плоскость и раскладка плоскости рядом с графиками. */
+
+/* Свёртка: входные отсчёты, характеристика, выход и текущие произведения. */
+.filters-demo svg .input,
+.filters-demo svg .kernel,
+.filters-demo svg .output,
+.filters-demo svg .active {
+  stroke-width: 2.5;
+}
+
+.filters-demo svg .input,
+.filters-demo svg .output {
+  stroke: var(--chart-series-1);
+}
+
+.filters-demo svg .kernel {
+  stroke: var(--chart-series-2);
+}
+
+.filters-demo svg .active {
+  stroke: var(--chart-series-3);
+}
+
+.filters-demo svg .input-dot,
+.filters-demo svg .output-dot {
+  fill: var(--chart-series-1);
+}
+
+.filters-demo svg .kernel-dot {
+  fill: var(--chart-bg);
+  stroke: var(--chart-series-2);
+  stroke-width: 2;
+}
+
+.filters-demo svg .active-dot {
+  fill: var(--chart-series-3);
+}
+
+.filters-demo svg .pending {
+  fill: none;
+  stroke: var(--chart-axis);
+  stroke-width: 1.5;
+  stroke-dasharray: 2 2;
+}
+
+.filters-demo svg .overlap {
+  fill: var(--color-accent-soft);
+  fill-opacity: 0.35;
+  stroke: var(--chart-series-3);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+}
+
+.filters-demo svg .value-small {
+  fill: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Нули и полюса. */
+.filters-demo-body {
+  display: grid;
+  grid-template-columns: minmax(220px, 340px) minmax(0, 1fr);
+  border-block: var(--border-width) solid var(--color-border);
+  background: var(--chart-bg);
+}
+
+.filters-demo-body .spectrum-demo-chart {
+  border-block: 0;
+}
+
+.filters-demo-plane {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 8px 0;
+  border-right: var(--border-width) solid var(--color-border);
+  touch-action: none;
+  cursor: grab;
+}
+
+.filters-demo[data-dragging] .filters-demo-plane {
+  cursor: grabbing;
+}
+
+.filters-demo-plane svg {
+  overflow: visible;
+}
+
+.filters-demo svg .unit {
+  fill: none;
+  stroke: var(--chart-axis);
+  stroke-width: 1.5;
+}
+
+.filters-demo svg .pole-mark {
+  stroke: var(--chart-series-1);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.filters-demo svg .pole-mark.unstable {
+  stroke: var(--color-error);
+}
+
+.filters-demo svg .zero-mark {
+  fill: var(--chart-bg);
+  stroke: var(--chart-series-2);
+  stroke-width: 2.5;
+}
+
+.filters-demo svg .response {
+  stroke: var(--chart-series-1);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.filters-demo svg .response.faded {
+  stroke-opacity: 0.35;
+  stroke-dasharray: 5 4;
+}
+
+.filters-demo svg .impulse {
+  stroke: var(--chart-series-2);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.filters-demo svg .impulse.unstable {
+  stroke: var(--color-error);
+}
+
+.filters-demo svg .alert-text {
+  fill: var(--color-error);
+  font-weight: 600;
+}
+
+.filters-demo-alert {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 12px 20px 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background: var(--color-error-bg);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.filters-demo-alert[hidden] {
+  display: none;
+}
+
+.filters-demo-alert > svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--color-error);
+}
+
+.filters-demo-alert b {
+  color: var(--color-error);
+}
+
+.filters-demo-hint {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+.filters-demo-presets,
+.filters-demo-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filters-demo-presets [aria-pressed='true'] {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.filters-demo-steps .spectrum-demo-reset:disabled {
+  opacity: 0.45;
+}
+
+/* Легенда. */
+.spectrum-demo-legend .filters-key {
+  display: inline-grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  border: 0;
+  border-radius: 50%;
+  font-style: normal;
+}
+
+.spectrum-demo-legend .filters-key.active {
+  background: var(--chart-series-3);
+}
+
+.spectrum-demo-legend .filters-key.output {
+  background: var(--chart-series-1);
+}
+
+.spectrum-demo-legend .filters-key.pending {
+  border: 1.5px dashed var(--chart-axis);
+}
+
+.spectrum-demo-legend .filters-key.pole {
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  color: var(--chart-series-1);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.spectrum-demo-legend .filters-key.zero {
+  border: 2.5px solid var(--chart-series-2);
+}
+
+.spectrum-demo-legend .filters-key.unit {
+  width: 18px;
+  height: 0;
+  border-radius: 0;
+  border-top: 1.5px solid var(--chart-axis);
+}
+
+@container (max-width: 639px) {
+  .filters-demo-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .filters-demo-plane {
+    border-right: 0;
+    border-bottom: var(--border-width) solid var(--color-border);
+  }
+}
+
+@container (max-width: 559px) {
+  .filters-demo-alert {
+    margin-inline: 16px;
+  }
+}
+
+/* Статичные рисунки в Figure: единицы viewBox, кегль задан на группе. */
+.filters-figure path {
+  fill: none;
+}
+
+.filters-figure .label {
+  fill: var(--color-text);
+  font-weight: 600;
+}
+
+.filters-figure .tick {
+  fill: var(--chart-label);
+  font-variant-numeric: tabular-nums;
+}
+
+.filters-figure .grid {
+  stroke: var(--chart-grid);
+  stroke-width: 1.5;
+}
+
+.filters-figure .axis {
+  stroke: var(--chart-axis);
+  stroke-width: 1.5;
+}
+
+.filters-figure .stem {
+  stroke: var(--chart-series-1);
+  stroke-width: 2.5;
+}
+
+.filters-figure .dot,
+.filters-figure .dot-series-a {
+  fill: var(--chart-series-1);
+}
+
+.filters-figure .dot-series-b {
+  fill: var(--chart-series-2);
+}
+
+.filters-figure .series-a {
+  stroke: var(--chart-series-1);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+
+.filters-figure .series-b {
+  stroke: var(--chart-series-2);
+  stroke-width: 2.5;
+  stroke-dasharray: 9 5;
+  stroke-linejoin: round;
+}
+
+.filters-figure .mark {
+  stroke: var(--chart-axis);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 5;
+}
+
+.filters-figure .label-a {
+  fill: var(--chart-series-1);
+  font-weight: 600;
+}
+
+.filters-figure .label-b {
+  fill: var(--chart-series-2);
+  font-weight: 600;
+}

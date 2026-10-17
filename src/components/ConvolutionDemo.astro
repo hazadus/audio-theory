@@ -1,0 +1,149 @@
+---
+// «Свёртка по шагам»: короткий вход, импульсная характеристика, развёрнутая и сдвинутая на n, и
+// накопление выходных отсчётов. Без звука. Начальный рисунок и подпись создаются при сборке; без
+// JavaScript, во время загрузки и при ошибке параметры неактивны.
+import Icon from '@/components/Icon.astro';
+import { demoCaptions } from '@/lib/demo-captions';
+import {
+  convolutionInputKinds,
+  convolutionKernelKinds,
+  convolutionLength,
+  defaultConvolution,
+  renderConvolution,
+} from '@/lib/digital-filters';
+import {
+  convolutionCaption,
+  convolutionStatus,
+  convolutionSvg,
+  inputNames,
+  kernelNames,
+} from '@/lib/digital-filters-view';
+import '@/styles/spectrum.css';
+import '@/styles/digital-filters.css';
+
+interface Props {
+  /** Номер рисунка: визуализации и рисунки нумеруются одной последовательностью. */
+  figure: number;
+  /** Якорь для ссылок `#id`; английский kebab-case. */
+  id?: string;
+}
+
+const { figure, id = demoCaptions.ConvolutionDemo.defaultId } = Astro.props;
+const p = defaultConvolution;
+const render = renderConvolution(p);
+const status = convolutionStatus(render);
+---
+
+<figure
+  id={id}
+  class="spectrum-demo filters-demo"
+  aria-labelledby={`${id}-name`}
+  data-convolution
+  data-state="static"
+>
+  <div class="spectrum-demo-head">
+    <span class="spectrum-demo-label">Визуализация {figure}</span>
+    <span class="spectrum-demo-name" id={`${id}-name`}>
+      {demoCaptions.ConvolutionDemo.name}
+    </span>
+  </div>
+  <div
+    class="spectrum-demo-chart"
+    role="region"
+    aria-label="График входа, импульсной характеристики и выхода"
+    tabindex="0"
+    data-chart
+    set:html={convolutionSvg(render, id)}
+  />
+  <ul class="spectrum-demo-legend" aria-label="Легенда">
+    <li>
+      <i class="filters-key active"></i>отсчёты, которые перемножаются для y[n]
+    </li>
+    <li>
+      <i class="filters-key output"></i>уже посчитанные отсчёты выхода
+    </li>
+    <li>
+      <i class="filters-key pending"></i>ещё не посчитанные
+    </li>
+  </ul>
+  <div class="spectrum-demo-status">
+    {status.map((line) => (
+      <p data-status-line>{line}</p>
+    ))}
+  </div>
+  <p class="visually-hidden" aria-live="polite" data-announce></p>
+  <fieldset class="spectrum-demo-controls" data-controls disabled>
+    <legend class="visually-hidden">Вход, импульсная характеристика и шаг</legend>
+    <div class="spectrum-demo-grid">
+      <div class="spectrum-demo-param">
+        <div class="spectrum-demo-select">
+          <label for={`${id}-input`}>Вход x</label>
+          <select id={`${id}-input`} data-select="input">
+            {convolutionInputKinds.map((kind) => (
+              <option value={kind} selected={kind === p.input}>
+                {inputNames[kind]}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div class="spectrum-demo-select">
+          <label for={`${id}-kernel`}>Характеристика h</label>
+          <select id={`${id}-kernel`} data-select="kernel">
+            {convolutionKernelKinds.map((kind) => (
+              <option value={kind} selected={kind === p.kernel}>
+                {kernelNames[kind]}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div class="spectrum-demo-param">
+        <div class="spectrum-demo-param-head">
+          <label for={`${id}-step`}>Выходной отсчёт n</label>
+          <output for={`${id}-step`} data-output="step">
+            {render.n}
+          </output>
+        </div>
+        <input
+          id={`${id}-step`}
+          class="spectrum-demo-range"
+          type="range"
+          min="0"
+          max={convolutionLength(p) - 1}
+          step="1"
+          value={render.n}
+          data-range="step"
+        />
+        <div class="filters-demo-steps">
+          <button type="button" class="spectrum-demo-reset" data-step="-1">
+            <Icon name="arrow-left" size={16} />
+            Шаг назад
+          </button>
+          <button type="button" class="spectrum-demo-reset" data-step="1">
+            Шаг вперёд
+            <Icon name="arrow-right" size={16} />
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="spectrum-demo-actions">
+      <span></span>
+      <button type="button" class="spectrum-demo-reset" data-reset>
+        <Icon name="rotate-ccw" size={16} />
+        Сбросить
+      </button>
+    </div>
+    <p class="spectrum-demo-note-text" data-controls-note>
+      Параметры работают с включённым JavaScript. Показано начальное состояние.
+    </p>
+  </fieldset>
+  <figcaption class="spectrum-demo-caption">
+    <b>Рис. {figure}.</b> <span data-caption>{convolutionCaption(render)}</span>
+  </figcaption>
+</figure>
+
+<script>
+  import { initConvolutionDemos } from '@/lib/digital-filters-controller';
+
+  initConvolutionDemos();
+</script>

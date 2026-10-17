@@ -1,0 +1,23 @@
+{
+  "id": "audio-math-roots-derivative",
+  "date": "2026-10-17",
+  "order": 4,
+  "type": "updated",
+  "article": "audio-math",
+  "items": [
+    {
+      "text": "Комплексные корни квадратного уравнения",
+      "target": {
+        "article": "audio-math",
+        "anchor": "quadratic-roots"
+      }
+    },
+    {
+      "text": "Скорость изменения: производная",
+      "target": {
+        "article": "audio-math",
+        "anchor": "derivative"
+      }
+    }
+  ]
+}

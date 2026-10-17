@@ -1,0 +1,16 @@
+{
+  "id": "track-programmer-filters",
+  "date": "2026-10-17",
+  "order": 5,
+  "type": "updated",
+  "track": "programmer",
+  "items": [
+    {
+      "text": "Новый этап «Фильтры»: свёртка, КИХ и БИХ, биквад и фильтры JUCE",
+      "target": {
+        "track": "programmer",
+        "anchor": "stage-filters"
+      }
+    }
+  ]
+}

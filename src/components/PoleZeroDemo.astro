@@ -1,0 +1,245 @@
+---
+// «Нули и полюса»: пара полюсов и пара нулей биквада на z-плоскости, АЧХ, ФЧХ и импульсная
+// характеристика; звук розового шума до и после фильтра. Полюсы и нули перетаскиваются по плоскости
+// или задаются ползунками. Начальный рисунок и подпись создаются при сборке; без JavaScript, во время
+// загрузки и при ошибке параметры неактивны.
+import Icon from '@/components/Icon.astro';
+import { demoCaptions } from '@/lib/demo-captions';
+import {
+  defaultPoleZero,
+  poleZeroPresets,
+  radiusLimits,
+  renderPoleZero,
+} from '@/lib/digital-filters';
+import {
+  frequencyStep,
+  frequencySteps,
+  frequencyText,
+  planeSvg,
+  poleZeroCaption,
+  poleZeroStatus,
+  presetNames,
+  radiusText,
+  responseSvg,
+} from '@/lib/digital-filters-view';
+import { initialVolume } from '@/lib/sampling-audio';
+import { volumeStep, volumeText } from '@/lib/sampling-player';
+import '@/styles/spectrum.css';
+import '@/styles/digital-filters.css';
+
+interface Props {
+  /** Номер рисунка: визуализации и рисунки нумеруются одной последовательностью. */
+  figure: number;
+  /** Якорь для ссылок `#id`; английский kebab-case. */
+  id?: string;
+}
+
+const { figure, id = demoCaptions.PoleZeroDemo.defaultId } = Astro.props;
+const p = defaultPoleZero;
+const render = renderPoleZero(p);
+const status = poleZeroStatus(render);
+const sliders = [
+  { key: 'pole-radius', label: 'Радиус полюсов r', max: radiusLimits.pole, value: p.pole.radius },
+  { key: 'zero-radius', label: 'Радиус нулей r', max: radiusLimits.zero, value: p.zero.radius },
+] as const;
+const angles = [
+  { key: 'pole-angle', label: 'Частота полюсов', value: p.pole.angle },
+  { key: 'zero-angle', label: 'Частота нулей', value: p.zero.angle },
+] as const;
+---
+
+<figure
+  id={id}
+  class="spectrum-demo filters-demo"
+  aria-labelledby={`${id}-name`}
+  data-pole-zero
+  data-state="static"
+>
+  <div class="spectrum-demo-head">
+    <span class="spectrum-demo-label">Визуализация {figure}</span>
+    <span class="spectrum-demo-name" id={`${id}-name`}>
+      {demoCaptions.PoleZeroDemo.name}
+    </span>
+  </div>
+  <div class="filters-demo-body">
+    <div class="filters-demo-plane" data-plane set:html={planeSvg(render, id)} />
+    <div
+      class="spectrum-demo-chart filters-demo-response"
+      role="region"
+      aria-label="АЧХ, ФЧХ и импульсная характеристика"
+      tabindex="0"
+      data-chart
+      set:html={responseSvg(render, id)}
+    />
+  </div>
+  <ul class="spectrum-demo-legend" aria-label="Легенда">
+    <li>
+      <i class="filters-key pole" aria-hidden="true">
+        ×
+      </i>
+      полюс
+    </li>
+    <li>
+      <i class="filters-key zero" aria-hidden="true"></i>нуль
+    </li>
+    <li>
+      <i class="filters-key unit"></i>единичная окружность |z| = 1
+    </li>
+  </ul>
+  <p class="filters-demo-alert" role="alert" data-unstable hidden>
+    <Icon name="triangle-alert" size={18} />
+    <span>
+      <b>Фильтр неустойчив.</b> Полюсы на единичной окружности или вне её: выход растёт без предела.
+      Звук отключён, верните полюсы внутрь окружности.
+    </span>
+  </p>
+  <div class="spectrum-demo-status">
+    {status.map((line) => (
+      <p data-status-line>{line}</p>
+    ))}
+  </div>
+  <p class="visually-hidden" aria-live="polite" data-announce></p>
+  <fieldset class="spectrum-demo-controls" data-controls disabled>
+    <legend class="visually-hidden">Нули, полюсы и прослушивание</legend>
+    <p class="filters-demo-hint">
+      Перетащите крестик или кружок на плоскости: пара под осью следует за ним зеркально. Те же
+      положения задают ползунки.
+    </p>
+    <div class="filters-demo-presets" role="group" aria-label="Примеры фильтров">
+      {poleZeroPresets.map((preset) => (
+        <button
+          type="button"
+          class="spectrum-demo-reset"
+          aria-pressed={preset === 'lowpass' ? 'true' : 'false'}
+          data-preset={preset}
+        >
+          {presetNames[preset]}
+        </button>
+      ))}
+    </div>
+    <div class="spectrum-demo-grid">
+      {sliders.map((slider, index) => (
+        <>
+          <div class="spectrum-demo-param">
+            <div class="spectrum-demo-param-head">
+              <label for={`${id}-${slider.key}`}>{slider.label}</label>
+              <output for={`${id}-${slider.key}`} data-output={slider.key}>
+                {radiusText(slider.value)}
+              </output>
+            </div>
+            <input
+              id={`${id}-${slider.key}`}
+              class="spectrum-demo-range"
+              type="range"
+              min="0"
+              max={slider.max}
+              step="0.001"
+              value={slider.value}
+              aria-valuetext={radiusText(slider.value)}
+              data-range={slider.key}
+            />
+          </div>
+          <div class="spectrum-demo-param">
+            <div class="spectrum-demo-param-head">
+              <label for={`${id}-${angles[index].key}`}>{angles[index].label}</label>
+              <output for={`${id}-${angles[index].key}`} data-output={angles[index].key}>
+                {frequencyText(angles[index].value)}
+              </output>
+            </div>
+            <input
+              id={`${id}-${angles[index].key}`}
+              class="spectrum-demo-range"
+              type="range"
+              min="0"
+              max={frequencySteps.length - 1}
+              step="1"
+              value={frequencyStep(angles[index].value)}
+              aria-valuetext={frequencyText(angles[index].value)}
+              data-range={angles[index].key}
+            />
+          </div>
+        </>
+      ))}
+    </div>
+    <div class="spectrum-demo-actions">
+      <div class="spectrum-demo-listen" role="radiogroup" aria-label="Что слушать">
+        <label>
+          <input type="radio" name={`${id}-listen`} value="dry" data-listen />
+          До фильтра
+        </label>
+        <label>
+          <input type="radio" name={`${id}-listen`} value="wet" checked data-listen />
+          После фильтра
+        </label>
+      </div>
+      <button type="button" class="spectrum-demo-reset" data-reset>
+        <Icon name="rotate-ccw" size={16} />
+        Сбросить
+      </button>
+    </div>
+    <div class="spectrum-demo-audio">
+      <p class="spectrum-demo-warning" role="note">
+        <Icon name="volume-2" size={18} />
+        <span>
+          <b>Громкость.</b> Розовый шум звучит резко, а узкий резонанс выделяет почти чистый тон:
+          перед запуском убавьте громкость, особенно в наушниках.
+        </span>
+      </p>
+      <div
+        class="spectrum-demo-player"
+        role="group"
+        aria-label="Аудиопример: розовый шум через фильтр"
+        data-player-group
+        data-mode="ready"
+      >
+        <button type="button" class="spectrum-demo-play" aria-label="Воспроизвести" data-play>
+          <span class="spectrum-demo-play-icon start">
+            <Icon name="play" size={18} />
+          </span>
+          <span class="spectrum-demo-play-icon stop">
+            <Icon name="square" size={16} />
+          </span>
+        </button>
+        <div class="spectrum-demo-volume">
+          <button type="button" class="spectrum-demo-mute" aria-label="Выключить звук" data-mute>
+            <span class="spectrum-demo-mute-icon on">
+              <Icon name="volume-2" size={18} />
+            </span>
+            <span class="spectrum-demo-mute-icon off">
+              <Icon name="volume-x" size={18} />
+            </span>
+          </button>
+          <input
+            class="spectrum-demo-range compact"
+            type="range"
+            min="0"
+            max="100"
+            step={volumeStep}
+            value={initialVolume * 100}
+            aria-label="Громкость"
+            aria-valuetext={volumeText(initialVolume * 100)}
+            data-volume
+          />
+          <span class="spectrum-demo-volume-text" data-volume-text>
+            {volumeText(initialVolume * 100)}
+          </span>
+        </div>
+      </div>
+      <p class="spectrum-demo-player-state" role="status" data-player-state>
+        Остановлен
+      </p>
+    </div>
+    <p class="spectrum-demo-note-text" data-controls-note>
+      Параметры и звук работают с включённым JavaScript. Показано начальное состояние.
+    </p>
+  </fieldset>
+  <figcaption class="spectrum-demo-caption">
+    <b>Рис. {figure}.</b> <span data-caption>{poleZeroCaption(render)}</span>
+  </figcaption>
+</figure>
+
+<script>
+  import { initPoleZeroDemos } from '@/lib/digital-filters-controller';
+
+  initPoleZeroDemos();
+</script>

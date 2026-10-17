@@ -1,4 +1,5 @@
 // Геометрия статичных превью карточек визуализаций: область 280 × 150, без осей и подписей.
+import { presetParameters, renderPoleZero } from '@/lib/digital-filters';
 import { ladderFrequency } from '@/lib/music-theory';
 
 export type PreviewKind =
@@ -31,6 +32,8 @@ export type PreviewKind =
   | 'delay-ring'
   | 'probe'
   | 'analyzer'
+  | 'convolution'
+  | 'pole-zero'
   | 'intro-oscillator'
   | 'intro-envelope'
   | 'intro-lfo';
@@ -64,6 +67,8 @@ export const previewKinds: readonly PreviewKind[] = [
   'delay-ring',
   'probe',
   'analyzer',
+  'convolution',
+  'pole-zero',
   'intro-oscillator',
   'intro-envelope',
   'intro-lfo',
@@ -431,6 +436,8 @@ const builders: Record<PreviewKind, () => Preview> = {
   'delay-ring': delayRingPreview,
   probe: probePreview,
   analyzer: analyzerPreview,
+  convolution: convolutionPreview,
+  'pole-zero': poleZeroPreview,
   'synth-voice': synthVoicePreview,
   mixing: () => ({
     paths: [
@@ -669,6 +676,70 @@ function analyzerPreview(): Preview {
       { d: line, color: 'signal', width: 2 },
     ],
     dots: [],
+  };
+}
+
+function convolutionPreview(): Preview {
+  // Сверху вход, посередине развёрнутая характеристика под ним, внизу растущий выход.
+  const xs = [2, 1, 3, 4];
+  const hs = [4, 2, 1, 3];
+  const ys = [6, 5, 14, 25, 14, 20, 16];
+  const dots: PreviewDot[] = [];
+  let input = '';
+  let kernel = '';
+  let output = '';
+  xs.forEach((v, k) => {
+    const x = 100 + k * 26;
+    input += `M${x} 48V${48 - 7 * v}`;
+    dots.push({ x, y: 48 - 7 * v, color: 'signal' });
+  });
+  hs.forEach((v, k) => {
+    const x = 22 + k * 26;
+    kernel += `M${x} 92V${92 - 7 * v}`;
+    dots.push({ x, y: 92 - 7 * v, color: 'sample' });
+  });
+  ys.forEach((v, n) => {
+    if (n > 3) return;
+    const x = 100 + n * 26;
+    output += `M${x} 138V${f1(138 - 1.3 * v)}`;
+    dots.push({ x, y: Number(f1(138 - 1.3 * v)), color: 'result' });
+  });
+  return {
+    paths: [
+      { d: 'M16 48H264M16 92H264M16 138H264', color: 'grid', width: 1 },
+      { d: input, color: 'signal', width: 2.5 },
+      { d: kernel, color: 'sample', width: 2.5 },
+      { d: output, color: 'result', width: 2.5 },
+    ],
+    dots,
+  };
+}
+
+function poleZeroPreview(): Preview {
+  // Слева единичная окружность с парой полюсов (крестики) и нулём; справа АЧХ с резонансным пиком.
+  const cx = 70;
+  const cy = 75;
+  const r = 52;
+  const circle = `M${cx + r} ${cy}A${r} ${r} 0 1 0 ${cx - r} ${cy}A${r} ${r} 0 1 0 ${cx + r} ${cy}`;
+  const cross = (x: number, y: number) =>
+    `M${x - 6} ${y - 6}L${x + 6} ${y + 6}M${x - 6} ${y + 6}L${x + 6} ${y - 6}`;
+  const px = cx + 0.82 * r;
+  const py = 0.42 * r;
+  // АЧХ резонансного ФНЧ из примеров визуализации: 0 … −40 дБ на 20 … 120 px.
+  const r5 = renderPoleZero(presetParameters('resonant'));
+  let line = '';
+  r5.magnitudes.forEach((db, i) => {
+    const x = 146 + (118 * i) / (r5.magnitudes.length - 1);
+    line += `${i ? 'L' : 'M'}${f1(x)} ${f1(24 + 2.6 * Math.min(40, -db))}`;
+  });
+  return {
+    paths: [
+      { d: `M12 ${cy}H128M${cx} 16V134`, color: 'grid', width: 1 },
+      { d: circle, color: 'axis', width: 1.5 },
+      { d: cross(px, cy - py) + cross(px, cy + py), color: 'signal', width: 2.5 },
+      { d: line, color: 'signal', width: 2 },
+    ],
+    dots: [{ x: cx - r, y: cy, color: 'sample' }],
   };
 }
 

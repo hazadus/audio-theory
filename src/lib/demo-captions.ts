@@ -60,6 +60,8 @@ export const demoCaptions = {
   DelayEchoDemo: { defaultId: 'delay-echo', name: 'Кольцевой буфер и эхо' },
   ProbeSineDemo: { defaultId: 'probe-sine', name: 'Пробная синусоида' },
   SpectrumAnalyzerDemo: { defaultId: 'spectrum-analyzer', name: 'Анализатор спектра' },
+  ConvolutionDemo: { defaultId: 'convolution-steps', name: 'Свёртка по шагам' },
+  PoleZeroDemo: { defaultId: 'pole-zero', name: 'Нули и полюса' },
   FlacPredictionDemo: {
     defaultId: 'flac-prediction',
     name: 'Предсказание FLAC: остаток и коды Райса',

@@ -1,0 +1,24 @@
+---
+// Статичные SVG статьи /digital-filters/ для Figure: импульсные характеристики КИХ и БИХ, АЧХ и ФЧХ
+// двух простых фильтров, отклик на щелчок линейно-фазового КИХ и биквада. Считаются при сборке
+// функциями digital-filters.ts.
+import {
+  impulseFigureSvg,
+  preRingingFigureSvg,
+  responseFigureSvg,
+} from '@/lib/digital-filters-view';
+import '@/styles/digital-filters.css';
+
+interface Props {
+  kind: 'impulse' | 'response' | 'pre-ringing';
+}
+
+const { kind } = Astro.props;
+const svg = {
+  impulse: impulseFigureSvg,
+  response: responseFigureSvg,
+  'pre-ringing': preRingingFigureSvg,
+}[kind]();
+---
+
+<Fragment set:html={svg} />
