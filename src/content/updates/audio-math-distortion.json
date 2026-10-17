@@ -1,0 +1,30 @@
+{
+  "id": "audio-math-distortion",
+  "date": "2026-10-17",
+  "order": 7,
+  "type": "updated",
+  "article": "audio-math",
+  "items": [
+    {
+      "text": "Гиперболический тангенс и арктангенс",
+      "target": {
+        "article": "audio-math",
+        "anchor": "saturating-functions"
+      }
+    },
+    {
+      "text": "Чётные и нечётные функции",
+      "target": {
+        "article": "audio-math",
+        "anchor": "even-odd"
+      }
+    },
+    {
+      "text": "Степени синуса и кратные частоты",
+      "target": {
+        "article": "audio-math",
+        "anchor": "sine-powers"
+      }
+    }
+  ]
+}

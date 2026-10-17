@@ -234,6 +234,14 @@ export const visualizations: readonly Visualization[] = [
     preview: 'pole-zero',
   },
   {
+    id: 'transfer-curve',
+    slug: 'distortion',
+    name: 'Передаточная кривая',
+    what: 'Форма кривой, входное усиление и асимметрия: гармоники, постоянная составляющая и тон 220 Гц до и после.',
+    sound: true,
+    preview: 'distortion',
+  },
+  {
     id: 'intro-tone',
     slug: 'audio-intro',
     name: 'Звук: выше, ниже, громче, тише',

@@ -1,0 +1,16 @@
+{
+  "id": "track-programmer-distortion",
+  "date": "2026-10-17",
+  "order": 8,
+  "type": "updated",
+  "track": "programmer",
+  "items": [
+    {
+      "text": "Новый этап «Динамика и нелинейность»: компрессор и дисторшн",
+      "target": {
+        "track": "programmer",
+        "anchor": "stage-dynamics-nonlinearity"
+      }
+    }
+  ]
+}

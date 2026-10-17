@@ -1,0 +1,16 @@
+{
+  "id": "track-musician-distortion",
+  "date": "2026-10-17",
+  "order": 10,
+  "type": "updated",
+  "track": "musician",
+  "items": [
+    {
+      "text": "В этап «Запись и динамика» по желанию добавлены разделы о мягких кривых и сатурации в сведении",
+      "target": {
+        "track": "musician",
+        "anchor": "stage-recording"
+      }
+    }
+  ]
+}

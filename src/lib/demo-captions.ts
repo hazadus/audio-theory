@@ -62,6 +62,7 @@ export const demoCaptions = {
   SpectrumAnalyzerDemo: { defaultId: 'spectrum-analyzer', name: 'Анализатор спектра' },
   ConvolutionDemo: { defaultId: 'convolution-steps', name: 'Свёртка по шагам' },
   PoleZeroDemo: { defaultId: 'pole-zero', name: 'Нули и полюса' },
+  DistortionDemo: { defaultId: 'transfer-curve', name: 'Передаточная кривая' },
   FlacPredictionDemo: {
     defaultId: 'flac-prediction',
     name: 'Предсказание FLAC: остаток и коды Райса',

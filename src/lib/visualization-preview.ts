@@ -34,6 +34,7 @@ export type PreviewKind =
   | 'analyzer'
   | 'convolution'
   | 'pole-zero'
+  | 'distortion'
   | 'intro-oscillator'
   | 'intro-envelope'
   | 'intro-lfo';
@@ -69,6 +70,7 @@ export const previewKinds: readonly PreviewKind[] = [
   'analyzer',
   'convolution',
   'pole-zero',
+  'distortion',
   'intro-oscillator',
   'intro-envelope',
   'intro-lfo',
@@ -438,6 +440,7 @@ const builders: Record<PreviewKind, () => Preview> = {
   analyzer: analyzerPreview,
   convolution: convolutionPreview,
   'pole-zero': poleZeroPreview,
+  distortion: distortionPreview,
   'synth-voice': synthVoicePreview,
   mixing: () => ({
     paths: [
@@ -740,6 +743,42 @@ function poleZeroPreview(): Preview {
       { d: line, color: 'signal', width: 2 },
     ],
     dots: [{ x: cx - r, y: cy, color: 'sample' }],
+  };
+}
+
+function distortionPreview(): Preview {
+  // Слева передаточная кривая tanh и пунктир y = x, справа нечётные гармоники тона после неё.
+  const cx = 70;
+  const size = 52;
+  let curve = '';
+  for (let i = 0; i <= 60; i += 1) {
+    const u = -1 + i / 30;
+    curve += `${i ? 'L' : 'M'}${f1(cx + size * u)} ${f1(75 - size * Math.tanh(2.5 * u))}`;
+  }
+  const levels = [0, -15.5, -28.4, -41];
+  const bars = levels
+    .map((db, i) => {
+      const x = 156 + 34 * i;
+      return `M${x} 134V${f1(24 - db * 1.4)}`;
+    })
+    .join('');
+  return {
+    paths: [
+      {
+        d: `M${cx - size} 75H${cx + size}M${cx} ${75 - size}V${75 + size}`,
+        color: 'grid',
+        width: 1,
+      },
+      {
+        d: `M${cx - size} ${75 + size}L${cx + size} ${75 - size}`,
+        color: 'axis',
+        width: 1,
+        dash: '3 3',
+      },
+      { d: curve, color: 'result', width: 2.5 },
+      { d: bars, color: 'sample', width: 10 },
+    ],
+    dots: [],
   };
 }
 

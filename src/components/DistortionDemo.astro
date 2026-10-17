@@ -1,0 +1,227 @@
+---
+// «Передаточная кривая»: кривая без памяти с регуляторами формы, входного усиления и асимметрии,
+// вход и выход во времени, уровни гармоник и прослушивание петли до и после кривой той же моделью.
+// Начальный рисунок и подпись создаются при сборке; без JavaScript, во время загрузки и при ошибке
+// параметры неактивны.
+import Icon from '@/components/Icon.astro';
+import { demoCaptions } from '@/lib/demo-captions';
+import {
+  biasRange,
+  curveShapes,
+  defaultDistortion,
+  driveRange,
+  renderDistortion,
+} from '@/lib/distortion';
+import {
+  biasText,
+  distortionCaption,
+  distortionStatus,
+  distortionSvg,
+  driveText,
+  shapeNames,
+} from '@/lib/distortion-view';
+import { initialVolume } from '@/lib/sampling-audio';
+import { volumeStep, volumeText } from '@/lib/sampling-player';
+import '@/styles/distortion.css';
+
+interface Props {
+  /** Номер рисунка: визуализации и рисунки нумеруются одной последовательностью. */
+  figure: number;
+  /** Якорь для ссылок `#id`; английский kebab-case. */
+  id?: string;
+}
+
+const { figure, id = demoCaptions.DistortionDemo.defaultId } = Astro.props;
+const p = defaultDistortion;
+const render = renderDistortion(p);
+const status = distortionStatus(render);
+---
+
+<figure
+  id={id}
+  class="distortion-demo"
+  aria-labelledby={`${id}-name`}
+  data-distortion
+  data-state="static"
+>
+  <div class="distortion-demo-head">
+    <span class="distortion-demo-label">Визуализация {figure}</span>
+    <span class="distortion-demo-name" id={`${id}-name`}>
+      {demoCaptions.DistortionDemo.name}
+    </span>
+  </div>
+  <div
+    class="distortion-demo-chart"
+    role="region"
+    aria-label="График кривой, формы волны и гармоник"
+    tabindex="0"
+    data-chart
+    set:html={distortionSvg(render, id)}
+  />
+  <ul class="distortion-demo-legend" aria-label="Легенда">
+    <li>
+      <i class="used"></i>участок кривой, который проходит тон
+    </li>
+    <li>
+      <i class="identity"></i>прямая y = x
+    </li>
+    <li>
+      <i class="in"></i>вход
+    </li>
+    <li>
+      <i class="out"></i>выход
+    </li>
+    <li>
+      <i class="bar odd"></i>нечётные гармоники
+    </li>
+    <li>
+      <i class="bar even"></i>чётные гармоники
+    </li>
+    <li>
+      <i class="bar dc"></i>постоянная составляющая (DC)
+    </li>
+  </ul>
+  <div class="distortion-demo-status">
+    <p data-status-drive>{status.drive}</p>
+    <p data-status-harmonics>{status.harmonics}</p>
+    <p data-status-dc>{status.dc}</p>
+  </div>
+  <p class="visually-hidden" aria-live="polite" data-announce></p>
+  <fieldset class="distortion-demo-controls" data-controls disabled>
+    <legend class="visually-hidden">Параметры кривой</legend>
+    <div class="distortion-demo-grid">
+      <div class="distortion-demo-param">
+        <div class="distortion-demo-select">
+          <label for={`${id}-shape`}>Кривая</label>
+          <select id={`${id}-shape`} data-select="shape">
+            {curveShapes.map((shape) => (
+              <option value={shape} selected={shape === p.shape}>
+                {shapeNames[shape]}
+              </option>
+            ))}
+          </select>
+        </div>
+        <label class="distortion-demo-check">
+          <input type="checkbox" checked={p.removeDc} data-check="remove-dc" />
+          Убрать постоянную составляющую
+        </label>
+      </div>
+      <div class="distortion-demo-param">
+        <div class="distortion-demo-param-head">
+          <label for={`${id}-drive`}>Входное усиление G</label>
+          <output for={`${id}-drive`} data-output="drive">
+            {driveText(p.driveDb)}
+          </output>
+        </div>
+        <input
+          id={`${id}-drive`}
+          class="distortion-demo-range"
+          type="range"
+          min={driveRange.min}
+          max={driveRange.max}
+          step={driveRange.step}
+          value={p.driveDb}
+          aria-valuetext={driveText(p.driveDb)}
+          data-range="drive"
+        />
+        <div class="distortion-demo-param-head">
+          <label for={`${id}-bias`}>Смещение рабочей точки b</label>
+          <output for={`${id}-bias`} data-output="bias">
+            {biasText(p.bias)}
+          </output>
+        </div>
+        <input
+          id={`${id}-bias`}
+          class="distortion-demo-range"
+          type="range"
+          min={biasRange.min}
+          max={biasRange.max}
+          step={biasRange.step}
+          value={p.bias}
+          aria-valuetext={biasText(p.bias)}
+          data-range="bias"
+        />
+      </div>
+    </div>
+    <div class="distortion-demo-actions">
+      <button type="button" class="distortion-demo-reset" data-reset>
+        <Icon name="rotate-ccw" size={16} />
+        Сбросить
+      </button>
+    </div>
+    <div class="distortion-demo-audio">
+      <p class="distortion-demo-warning" role="note">
+        <Icon name="volume-2" size={18} />
+        <span>
+          <b>Громкость.</b> Звучит чистый тон 220&nbsp;Гц, а после кривой — резкий гудящий тон.
+          Перед запуском убавьте громкость, особенно в наушниках.
+        </span>
+      </p>
+      <div
+        class="distortion-demo-player"
+        role="group"
+        aria-label="Аудиопример: тон до и после кривой"
+        data-player-group
+        data-mode="ready"
+      >
+        <button type="button" class="distortion-demo-play" aria-label="Воспроизвести" data-play>
+          <span class="distortion-demo-play-icon start">
+            <Icon name="play" size={18} />
+          </span>
+          <span class="distortion-demo-play-icon stop">
+            <Icon name="square" size={16} />
+          </span>
+        </button>
+        <div class="distortion-demo-listen" role="radiogroup" aria-label="Что слушать">
+          <label>
+            <input type="radio" name={`${id}-listen`} value="dry" data-listen />
+            Исходный тон
+          </label>
+          <label>
+            <input type="radio" name={`${id}-listen`} value="wet" checked data-listen />
+            После кривой
+          </label>
+        </div>
+        <div class="distortion-demo-volume">
+          <button type="button" class="distortion-demo-mute" aria-label="Выключить звук" data-mute>
+            <span class="distortion-demo-mute-icon on">
+              <Icon name="volume-2" size={18} />
+            </span>
+            <span class="distortion-demo-mute-icon off">
+              <Icon name="volume-x" size={18} />
+            </span>
+          </button>
+          <input
+            class="distortion-demo-range compact"
+            type="range"
+            min="0"
+            max="100"
+            step={volumeStep}
+            value={initialVolume * 100}
+            aria-label="Громкость"
+            aria-valuetext={volumeText(initialVolume * 100)}
+            data-volume
+          />
+          <span class="distortion-demo-volume-text" data-volume-text>
+            {volumeText(initialVolume * 100)}
+          </span>
+        </div>
+      </div>
+      <p class="distortion-demo-player-state" role="status" data-player-state>
+        Остановлен
+      </p>
+    </div>
+    <p class="distortion-demo-note-text" data-controls-note>
+      Параметры и звук работают с включённым JavaScript. Показано начальное состояние.
+    </p>
+  </fieldset>
+  <figcaption class="distortion-demo-caption">
+    <b>Рис. {figure}.</b> <span data-caption>{distortionCaption(p)}</span>
+  </figcaption>
+</figure>
+
+<script>
+  import { initDistortionDemos } from '@/lib/distortion-controller';
+
+  initDistortionDemos();
+</script>

@@ -1,0 +1,519 @@
+/* Визуализация статьи /distortion/: «Передаточная кривая». Контейнер со звуком повторяет
+   FilterSmoothingDemo; график строится в пикселях контейнера. */
+.distortion-demo {
+  container-type: inline-size;
+  margin: var(--space-6) 0;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  overflow: hidden;
+  font-family: var(--font-ui);
+  scroll-margin-top: 88px;
+}
+
+.distortion-demo-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 20px;
+}
+
+.distortion-demo-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.distortion-demo-name {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.distortion-demo-chart {
+  position: relative;
+  border-block: var(--border-width) solid var(--color-border);
+  background: var(--chart-bg);
+  overflow-x: auto;
+}
+
+.distortion-demo-chart:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.distortion-demo svg {
+  display: block;
+  font-size: 12px;
+}
+
+.distortion-demo svg path {
+  fill: none;
+}
+
+.distortion-demo svg .label {
+  fill: var(--color-text);
+  font-weight: 600;
+}
+
+.distortion-demo svg .tick {
+  fill: var(--chart-label);
+  font-variant-numeric: tabular-nums;
+}
+
+.distortion-demo svg .grid {
+  stroke: var(--chart-grid);
+  stroke-width: 1;
+}
+
+.distortion-demo svg .zero {
+  stroke: var(--chart-axis);
+  stroke-width: 1;
+}
+
+.distortion-demo svg .in {
+  stroke: var(--chart-signal);
+  stroke-width: 1.2;
+  stroke-dasharray: 5 4;
+  stroke-linejoin: round;
+}
+
+.distortion-demo svg .out {
+  stroke: var(--chart-series-2);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+
+.distortion-demo svg .curve {
+  stroke: var(--chart-series-2);
+  stroke-width: 1.2;
+}
+
+.distortion-demo svg .used {
+  stroke: var(--chart-series-2);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.distortion-demo svg .identity {
+  stroke: var(--chart-label);
+  stroke-width: 1.2;
+  stroke-dasharray: 2 4;
+}
+
+.distortion-demo svg .dot {
+  fill: var(--chart-bg);
+  stroke: var(--chart-series-2);
+  stroke-width: 2;
+}
+
+.distortion-demo svg .bar.odd {
+  fill: var(--chart-series-2);
+}
+
+.distortion-demo svg .bar.even {
+  fill: var(--chart-series-1);
+}
+
+.distortion-demo svg .bar.dc {
+  fill: var(--chart-series-5);
+}
+
+.distortion-demo svg .bar.dc.removed {
+  fill: none;
+  stroke: var(--chart-series-5);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+}
+
+.distortion-demo-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0;
+  padding: 12px 20px 0;
+  list-style: none;
+  font-size: 14px;
+}
+
+.distortion-demo-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.distortion-demo-legend i {
+  width: 18px;
+  height: 0;
+  border-top: 2px solid var(--chart-series-1);
+}
+
+.distortion-demo-legend .in {
+  border-top: 1.5px dashed var(--chart-signal);
+}
+
+.distortion-demo-legend .out {
+  border-top: 3px solid var(--chart-series-2);
+}
+
+.distortion-demo-legend .used {
+  border-top: 4px solid var(--chart-series-2);
+}
+
+.distortion-demo-legend .identity {
+  border-top: 1.5px dotted var(--chart-label);
+}
+
+.distortion-demo-legend .bar {
+  width: 10px;
+  height: 12px;
+  border: 0;
+}
+
+.distortion-demo-legend .bar.odd {
+  background: var(--chart-series-2);
+}
+
+.distortion-demo-legend .bar.even {
+  background: var(--chart-series-1);
+}
+
+.distortion-demo-legend .bar.dc {
+  background: var(--chart-series-5);
+}
+
+.distortion-demo-status {
+  display: grid;
+  gap: 6px;
+  margin: 12px 20px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
+  font-size: 14px;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+}
+
+.distortion-demo-status p {
+  margin: 0;
+}
+
+.distortion-demo .visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.distortion-demo-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  margin: 0;
+  padding: 14px 20px 16px;
+  border: 0;
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.distortion-demo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 20px;
+}
+
+.distortion-demo-select {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.distortion-demo-select select {
+  min-width: 0;
+  min-height: 36px;
+  padding: 4px 8px;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: 16px var(--font-ui);
+}
+
+.distortion-demo-param {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.distortion-demo-param-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.distortion-demo-param-head output {
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.distortion-demo-range {
+  width: 100%;
+  min-height: 32px;
+  margin: 0;
+  accent-color: var(--color-accent);
+  touch-action: pan-y;
+}
+
+.distortion-demo-check {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 32px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.distortion-demo-check input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--color-accent);
+}
+
+.distortion-demo-listen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 14px;
+}
+
+.distortion-demo-listen label {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  min-height: 32px;
+  cursor: pointer;
+}
+
+.distortion-demo-listen input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--color-accent);
+}
+
+.distortion-demo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.distortion-demo-reset {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  height: 36px;
+  padding: 0 12px;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text);
+  font: 500 14px var(--font-ui);
+  cursor: pointer;
+}
+
+.distortion-demo :is(button, select, input):focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.distortion-demo-audio {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.distortion-demo-warning {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 0 0 4px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background: var(--color-warning-bg);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.distortion-demo-warning > svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--color-warning);
+}
+
+.distortion-demo-warning b {
+  color: var(--color-warning);
+}
+
+.distortion-demo-player {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 14px 8px 8px;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.distortion-demo-play {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  cursor: pointer;
+}
+
+.distortion-demo-mute {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.distortion-demo-play-icon,
+.distortion-demo-mute-icon {
+  display: flex;
+}
+
+.distortion-demo-play:not([data-playing]) .distortion-demo-play-icon.stop,
+.distortion-demo-play[data-playing] .distortion-demo-play-icon.start,
+.distortion-demo-mute:not([data-muted]) .distortion-demo-mute-icon.off,
+.distortion-demo-mute[data-muted] .distortion-demo-mute-icon.on {
+  display: none;
+}
+
+.distortion-demo-volume {
+  display: flex;
+  flex: 1 1 140px;
+  gap: 6px;
+  align-items: center;
+  max-width: 280px;
+}
+
+.distortion-demo-range.compact {
+  flex: 1;
+  min-width: 0;
+  min-height: 24px;
+}
+
+.distortion-demo-volume-text {
+  width: 36px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.distortion-demo-player-state {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+.distortion-demo-player[data-mode='error'] + .distortion-demo-player-state,
+.distortion-demo-player[data-mode='unavailable'] + .distortion-demo-player-state {
+  color: var(--color-error);
+}
+
+.distortion-demo-player :disabled {
+  opacity: 0.45;
+}
+
+@media (hover: hover) {
+  .distortion-demo-reset:hover,
+  .distortion-demo-mute:not(:disabled):hover {
+    background: var(--color-bg);
+  }
+}
+
+.distortion-demo-controls:disabled > :not(.distortion-demo-note-text) {
+  opacity: 0.5;
+}
+
+.distortion-demo-controls:disabled * {
+  cursor: not-allowed;
+}
+
+.distortion-demo-note-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+.distortion-demo[data-state='ready'] .distortion-demo-note-text {
+  display: none;
+}
+
+.distortion-demo[data-state='error'] .distortion-demo-note-text {
+  color: var(--color-error);
+}
+
+.distortion-demo-caption {
+  padding: 10px 20px 14px;
+  border-top: var(--border-width) solid var(--color-border);
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+.distortion-demo-caption b {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+@container (max-width: 559px) {
+  .distortion-demo-head,
+  .distortion-demo-controls,
+  .distortion-demo-caption,
+  .distortion-demo-legend {
+    padding-inline: 16px;
+  }
+
+  .distortion-demo-status {
+    margin-inline: 16px;
+  }
+
+  .distortion-demo-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

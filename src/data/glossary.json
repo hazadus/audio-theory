@@ -340,6 +340,27 @@
     }
   },
   {
+    "id": "distortion",
+    "ru": "дисторшн",
+    "en": "distortion",
+    "definition": "Эффект, который намеренно искажает форму волны передаточной кривой и добавляет гармоники. В узком смысле — сильное искажение, когда сигнал большую часть времени проходит изогнутый участок кривой.",
+    "target": { "article": "distortion", "anchor": "memoryless" }
+  },
+  {
+    "id": "saturation",
+    "ru": "сатурация",
+    "en": "saturation",
+    "definition": "Мягкое насыщение: с ростом входа выход растёт всё медленнее и плавно подходит к пределу. Тихий сигнал почти не меняется, громкий получает гармоники и сжатые пики.",
+    "target": { "article": "distortion", "anchor": "soft-curves" }
+  },
+  {
+    "id": "transfer-curve",
+    "ru": "передаточная кривая",
+    "en": "transfer curve, waveshaper",
+    "definition": "Функция y = f(x), по которой обработка без памяти пересчитывает каждый входной отсчёт в выходной. Прямая y = x ничего не меняет, любой изгиб добавляет гармоники.",
+    "target": { "article": "distortion", "anchor": "memoryless" }
+  },
+  {
     "id": "pumping",
     "ru": "накачка",
     "en": "pumping",
@@ -1240,6 +1261,13 @@
     }
   },
   {
+    "id": "hyperbolic-tangent",
+    "ru": "гиперболический тангенс",
+    "en": "hyperbolic tangent, tanh",
+    "definition": "Функция tanh u = (eᵘ − e⁻ᵘ)/(eᵘ + e⁻ᵘ). Около нуля почти совпадает с u, при росте |u| плавно приближается к ±1, не достигая их.",
+    "target": { "article": "audio-math", "anchor": "saturating-functions" }
+  },
+  {
     "id": "summation",
     "ru": "суммирование",
     "en": "summation",
@@ -1258,6 +1286,20 @@
       "article": "audio-math",
       "anchor": "piecewise"
     }
+  },
+  {
+    "id": "odd-function",
+    "ru": "нечётная функция",
+    "en": "odd function",
+    "definition": "Функция, для которой f(−u) = −f(u) при любом u. Её график симметричен относительно начала координат; пример — синус.",
+    "target": { "article": "audio-math", "anchor": "even-odd" }
+  },
+  {
+    "id": "even-function",
+    "ru": "чётная функция",
+    "en": "even function",
+    "definition": "Функция, для которой f(−u) = f(u) при любом u. Её график симметричен относительно вертикальной оси; примеры — косинус и модуль.",
+    "target": { "article": "audio-math", "anchor": "even-odd" }
   },
   {
     "id": "rounding",

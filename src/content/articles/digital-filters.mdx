@@ -60,6 +60,7 @@ import Term from '@/components/Term.astro';
 
 <MarginNote items={[
   { label: 'Тремоло → Принцип', description: 'Умножение сигнала на LFO и глубина модуляции.', target: { article: 'tremolo', anchor: 'principle' } },
+  { label: 'Дисторшн и сатурация → Нелинейность без памяти', description: 'Передаточная кривая y = f(x) и гармоники, которые она добавляет.', target: { article: 'distortion', anchor: 'memoryless' } },
 ]}>
 
 Поэтому <Term id="compressor" firstMention>компрессор</Term> и дисторшн к LTI-системам не относятся: у компрессора усиление зависит от уровня входа, у дисторшна выход — нелинейная функция входа, вроде <Term id="clipping" firstMention>среза</Term>. <Term id="tremolo" firstMention>Тремоло</Term> умножает сигнал на <Term id="lfo" firstMention>LFO</Term>: оно линейно, но не инвариантно во времени — отсчёт ослабляется по-разному в зависимости от фазы LFO в момент его прихода. Так же ведёт себя фильтр, у которого во время работы двигают <Term id="cutoff-frequency" firstMention>частоту среза</Term>: пока ручка неподвижна, это LTI-система, а пока её крутят — нет. К этому случаю статья вернётся в разделе о [смене коэффициентов](#coefficient-changes).
